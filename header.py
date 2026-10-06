@@ -3,25 +3,29 @@
 # Process Name: AI-Breadboard Root - Header
 # =============================================================================
 # Description:
-#   Module defining root path to the project.
+#   Определение корневого каталога проекта (__root__) и нормализация системных путей.
+#
+#   Зачем нужен этот модуль:
+#     1. Единый источник истины для импортов: гарантирует корректную загрузку внутренних
+#        пакетов (src, apps, logger) независимо от рабочей директории, из которой запущен скрипт.
+#     2. Кроссплатформенная нормализация: выравнивает переменные окружения USERPROFILE/HOME
+#        и добавляет __root__ в sys.path.
+#     3. Поддержка внешних переопределений: считывает переменную AIBREADBOARD_DIR при наличии.
 #
 # Usage Examples:
 #   Python API:
-#     from header import set_project_root
+#     import header
+#     from header import __root__
 #
-#     res = set_project_root()
+#     config_path = __root__ / "config" / "dashboard.json"
 #
 # File: header.py
 # Project: ai-breadboard
 # Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
+# Updated: 2026-10-06 00:05:00
 # =============================================================================
-
-"""Module defining root path to the project.
-
-All imports are built relative to the project root path determined by this module."""
 
 import os
 import sys

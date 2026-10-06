@@ -16,7 +16,7 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 00:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ try:
     import psutil
 except ImportError:
     psutil = None
+from logger import logger
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from apps.windows.core.software_audit import SoftwareAuditEngine

@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 06:36:00
+Updated: 2026-10-06 02:30:00
 =============================================================================
 -->
 
@@ -29,8 +29,8 @@ Updated: 2026-10-04 06:36:00
   <title>AI Assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260923_v2" rel="stylesheet">
-  <script src="/html/js/toast.js?v=20260923_v2"></script>
+  <link href="/html/css/main.css?v=20261004_v17" rel="stylesheet">
+  <script src="/html/js/toast.js?v=20261004_v17"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -174,11 +174,11 @@ Updated: 2026-10-04 06:36:00
     </div>
     <div class="offcanvas-body p-3 d-flex flex-column justify-content-between" id="mainTabs">
       <div class="drawer-sections-wrapper">
-        <!-- Группа: Стандартные -->
+        <!-- Группа: Стандартные и Чат -->
         <div class="nav-drawer-group mb-3">
           <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
-            <i class="bi bi-grid-fill text-primary"></i>
-            <span data-i18n="tabs.groupStandard">Стандартные</span>
+            <i class="bi bi-chat-dots-fill text-primary"></i>
+            <span data-i18n="tabs.groupStandard">Стандартные и Чат</span>
           </div>
           <div class="list-group list-group-flush rounded border">
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 active" data-tab="tab-chat" data-bs-target="#tab-chat" type="button">
@@ -189,20 +189,227 @@ Updated: 2026-10-04 06:36:00
               <span class="fs-6">🎙️</span>
               <span class="fw-medium" data-i18n="tabs.voice">Голос и диаризация</span>
             </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-scenarios" data-bs-target="#tab-scenarios" type="button">
+              <span class="fs-6">📋</span>
+              <span class="fw-medium" data-i18n="tabs.scenarios">Сценарии и чат</span>
+            </button>
           </div>
         </div>
 
+        <!-- Группа: Оборудование и Телеметрия -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-cpu-fill text-info"></i>
+            <span>Оборудование и Телеметрия</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-about-system" data-bs-target="#tab-about-system" type="button">
+              <span class="fs-6">ℹ️</span>
+              <span class="fw-medium" data-i18n="tabs.aboutSystem">О Системе</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-hardware-monitor" data-bs-target="#tab-hardware-monitor" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium" data-i18n="tabs.sensorLogs">Датчики и сенсоры (LHM)</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-telemetry-history" data-bs-target="#tab-telemetry-history" type="button">
+              <span class="fs-6">📈</span>
+              <span class="fw-medium">История и графики</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-telemetry-research" data-bs-target="#tab-telemetry-research" type="button">
+              <span class="fs-6">🔬</span>
+              <span class="fw-medium">Исследования телеметрии</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-telemetry-config" data-bs-target="#tab-telemetry-config" type="button">
+              <span class="fs-6">⚙️</span>
+              <span class="fw-medium">Конфигурация телеметрии</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-ai-benchmark" data-bs-target="#tab-ai-benchmark" type="button">
+              <span class="fs-6">🏎️</span>
+              <span class="fw-medium">AI Benchmark</span>
+            </button>
+          </div>
+        </div>
 
-        <!-- Группа: Расширенные -->
+        <!-- Группа: Дисковая подсистема и накопители -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-hdd-fill text-warning"></i>
+            <span>Дисковая подсистема</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-storage-manager" data-bs-target="#tab-storage-manager" type="button">
+              <span class="fs-6">💽</span>
+              <span class="fw-medium">Диски и тома (Storage)</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-disk-speed" data-bs-target="#tab-disk-speed" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium">Скорость дисков (DiskSpd)</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-storage-wear" data-bs-target="#tab-storage-wear" type="button">
+              <span class="fs-6">🔋</span>
+              <span class="fw-medium">Износ дисков и батареи</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-file-recovery" data-bs-target="#tab-file-recovery" type="button">
+              <span class="fs-6">🗂️</span>
+              <span class="fw-medium" data-i18n="tabs.fileRecovery">Восстановление файлов</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-file-history-search" data-bs-target="#tab-file-history-search" type="button">
+              <span class="fs-6">🔍</span>
+              <span class="fw-medium" data-i18n="tabs.fileHistorySearch">Поиск истории файлов AI</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Диагностика и форензика -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Диагностика и форензика</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-process-leaks" data-bs-target="#tab-process-leaks" type="button">
+              <span class="fs-6">🔍</span>
+              <span class="fw-medium">1. Утечки и микрофризы</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-forensics" data-bs-target="#tab-forensics" type="button">
+              <span class="fs-6">⏱️</span>
+              <span class="fw-medium">2. Поведенческая форензика</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-throttling" data-bs-target="#tab-throttling" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium">3. Качество ядра и Троттлинг</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-peripherals" data-bs-target="#tab-peripherals" type="button">
+              <span class="fs-6">🔌</span>
+              <span class="fw-medium">4. Сеть и периферия</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-software-transparency" data-bs-target="#tab-software-transparency" type="button">
+              <span class="fs-6">🔍</span>
+              <span class="fw-medium" data-i18n="tabs.softwareTransparency">5. Прозрачность ПО</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Управление Windows и Sysadmin -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-gear-wide-connected text-primary"></i>
+            <span>Управление Windows</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-system-control" data-bs-target="#tab-system-control" type="button">
+              <span class="fs-6">🛠️</span>
+              <span class="fw-medium">System Control</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-windows-admin" data-bs-target="#tab-windows-admin" type="button">
+              <span class="fs-6">🖥️</span>
+              <span class="fw-medium">Windows Sysadmin</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-startup-auditor" data-bs-target="#tab-startup-auditor" type="button">
+              <span class="fs-6">🚀</span>
+              <span class="fw-medium" data-i18n="tabs.startupAuditor">Автозапуск программ</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-services-manager" data-bs-target="#tab-services-manager" type="button">
+              <span class="fs-6">⚙️</span>
+              <span class="fw-medium">Службы Windows</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-task-scheduler" data-bs-target="#tab-task-scheduler" type="button">
+              <span class="fs-6">📅</span>
+              <span class="fw-medium">Планировщик задач</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-process-manager" data-bs-target="#tab-process-manager" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium">Диспетчер процессов</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-registry-viewer" data-bs-target="#tab-registry-viewer" type="button">
+              <span class="fs-6">🗝️</span>
+              <span class="fw-medium">Редактор реестра</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-software-manager" data-bs-target="#tab-software-manager" type="button">
+              <span class="fs-6">📦</span>
+              <span class="fw-medium">Пакетный менеджер Winget</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-user-directories" data-bs-target="#tab-user-directories" type="button">
+              <span class="fs-6">📁</span>
+              <span class="fw-medium" data-i18n="tabs.userDirectories">Директории пользователей</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Безопасность и Целостность -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-shield-lock-fill text-danger"></i>
+            <span>Безопасность и Обслуживание</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-defender" data-bs-target="#tab-defender" type="button">
+              <span class="fs-6">🛡️</span>
+              <span class="fw-medium">Defender Security</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-firewall-manager" data-bs-target="#tab-firewall-manager" type="button">
+              <span class="fs-6">🧱</span>
+              <span class="fw-medium">Брандмауэр Windows</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-security-acl" data-bs-target="#tab-security-acl" type="button">
+              <span class="fs-6">🔑</span>
+              <span class="fw-medium">Права доступа и ACL</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-servicing-integrity" data-bs-target="#tab-servicing-integrity" type="button">
+              <span class="fs-6">🩺</span>
+              <span class="fw-medium">Обслуживание SFC/DISM</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-boot-recovery" data-bs-target="#tab-boot-recovery" type="button">
+              <span class="fs-6">🚀</span>
+              <span class="fw-medium">Загрузка и WinRE</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-windows-backup" data-bs-target="#tab-windows-backup" type="button">
+              <span class="fs-6">💾</span>
+              <span class="fw-medium">Windows Backup</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Сеть и Логи -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-hdd-network-fill text-secondary"></i>
+            <span>Сеть и Журналы</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-network" data-bs-target="#tab-network" type="button">
+              <span class="fs-6">🌐</span>
+              <span class="fw-medium" data-i18n="tabs.network">Сетевой терминал</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-performance-tracing" data-bs-target="#tab-performance-tracing" type="button">
+              <span class="fs-6">📊</span>
+              <span class="fw-medium">Трассировка ETW (logman)</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-event-logs" data-bs-target="#tab-event-logs" type="button">
+              <span class="fs-6">📝</span>
+              <span class="fw-medium">Журналы событий (Event Logs)</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-system-logs" data-bs-target="#tab-system-logs" type="button">
+              <span class="fs-6">📜</span>
+              <span class="fw-medium" data-i18n="tabs.systemLogs">Логи операционной системы</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Расширенные и ИИ -->
         <div class="nav-drawer-group mb-3">
           <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
             <i class="bi bi-sliders2 text-info"></i>
-            <span data-i18n="tabs.groupExtended">Расширенные</span>
+            <span data-i18n="tabs.groupExtended">Расширенные и ИИ</span>
           </div>
           <div class="list-group list-group-flush rounded border">
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-rag" data-bs-target="#tab-rag" type="button">
               <span class="fs-6">🧠</span>
               <span class="fw-medium" data-i18n="tabs.rag">RAG</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-models" data-bs-target="#tab-models" type="button">
+              <span class="fs-6">🤖</span>
+              <span class="fw-medium" data-i18n="tabs.models">Модели и API</span>
             </button>
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-news" data-bs-target="#tab-news" type="button">
               <span class="fs-6">📰</span>
@@ -235,40 +442,6 @@ Updated: 2026-10-04 06:36:00
             </button>
           </div>
         </div>
-
-        <!-- Группа: Диагностика и форензика -->
-        <div class="nav-drawer-group mb-3">
-          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
-            <i class="bi bi-shield-check text-success"></i>
-            <span>Диагностика и форензика</span>
-          </div>
-          <div class="list-group list-group-flush rounded border">
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-process-leaks" data-bs-target="#tab-process-leaks" type="button">
-              <span class="fs-6">🔍</span>
-              <span class="fw-medium">1. Утечки и микрофризы</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-forensics" data-bs-target="#tab-forensics" type="button">
-              <span class="fs-6">⏱️</span>
-              <span class="fw-medium">2. Поведенческая форензика</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-throttling" data-bs-target="#tab-throttling" type="button">
-              <span class="fs-6">⚡</span>
-              <span class="fw-medium">3. Качество ядра и Троттлинг</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-storage-wear" data-bs-target="#tab-storage-wear" type="button">
-              <span class="fs-6">💽</span>
-              <span class="fw-medium">4. Износ дисков и батареи</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-peripherals" data-bs-target="#tab-peripherals" type="button">
-              <span class="fs-6">🔌</span>
-              <span class="fw-medium">5. Сеть и периферия</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-system-logs" data-bs-target="#tab-system-logs" type="button">
-              <span class="fs-6">📜</span>
-              <span class="fw-medium" data-i18n="tabs.systemLogs">Логи операционной системы</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Footer Drawer -->
@@ -282,27 +455,59 @@ Updated: 2026-10-04 06:36:00
   <div class="tab-content" id="mainTabContent">
     <!-- Tabs will be injected via JavaScript -->
     <div id="tab-chat" class="tab-pane fade show active"></div>
-    <div id="tab-rag" class="tab-pane fade"></div>
-    <div id="tab-telegram-rag" class="tab-pane fade"></div>
-    <div id="tab-news" class="tab-pane fade"></div>
     <div id="tab-voice" class="tab-pane fade"></div>
-    <div id="tab-plugins" class="tab-pane fade"></div>
-    <div id="tab-admin" class="tab-pane fade"></div>
-    <div id="tab-help" class="tab-pane fade"></div>
+    <div id="tab-scenarios" class="tab-pane fade"></div>
+    <div id="tab-about-system" class="tab-pane fade"></div>
+    <div id="tab-hardware-monitor" class="tab-pane fade"></div>
+    <div id="tab-telemetry-history" class="tab-pane fade"></div>
+    <div id="tab-telemetry-research" class="tab-pane fade"></div>
+    <div id="tab-telemetry-config" class="tab-pane fade"></div>
+    <div id="tab-ai-benchmark" class="tab-pane fade"></div>
+    <div id="tab-storage-manager" class="tab-pane fade"></div>
+    <div id="tab-disk-speed" class="tab-pane fade"></div>
+    <div id="tab-storage-wear" class="tab-pane fade"></div>
+    <div id="tab-file-recovery" class="tab-pane fade"></div>
+    <div id="tab-file-history-search" class="tab-pane fade"></div>
     <div id="tab-process-leaks" class="tab-pane fade"></div>
     <div id="tab-forensics" class="tab-pane fade"></div>
     <div id="tab-throttling" class="tab-pane fade"></div>
-    <div id="tab-storage-wear" class="tab-pane fade"></div>
     <div id="tab-peripherals" class="tab-pane fade"></div>
+    <div id="tab-software-transparency" class="tab-pane fade"></div>
+    <div id="tab-system-control" class="tab-pane fade"></div>
+    <div id="tab-windows-admin" class="tab-pane fade"></div>
+    <div id="tab-startup-auditor" class="tab-pane fade"></div>
+    <div id="tab-services-manager" class="tab-pane fade"></div>
+    <div id="tab-task-scheduler" class="tab-pane fade"></div>
+    <div id="tab-process-manager" class="tab-pane fade"></div>
+    <div id="tab-registry-viewer" class="tab-pane fade"></div>
+    <div id="tab-software-manager" class="tab-pane fade"></div>
+    <div id="tab-user-directories" class="tab-pane fade"></div>
+    <div id="tab-defender" class="tab-pane fade"></div>
+    <div id="tab-firewall-manager" class="tab-pane fade"></div>
+    <div id="tab-security-acl" class="tab-pane fade"></div>
+    <div id="tab-servicing-integrity" class="tab-pane fade"></div>
+    <div id="tab-boot-recovery" class="tab-pane fade"></div>
+    <div id="tab-windows-backup" class="tab-pane fade"></div>
+    <div id="tab-network" class="tab-pane fade"></div>
+    <div id="tab-performance-tracing" class="tab-pane fade"></div>
+    <div id="tab-event-logs" class="tab-pane fade"></div>
     <div id="tab-system-logs" class="tab-pane fade"></div>
+    <div id="tab-rag" class="tab-pane fade"></div>
+    <div id="tab-telegram-rag" class="tab-pane fade"></div>
+    <div id="tab-models" class="tab-pane fade"></div>
+    <div id="tab-news" class="tab-pane fade"></div>
+    <div id="tab-plugins" class="tab-pane fade"></div>
+    <div id="tab-admin" class="tab-pane fade"></div>
+    <div id="tab-help" class="tab-pane fade"></div>
   </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/html/js/ai_table_modal.js"></script>
-<script src="/html/js/chatService.js?v=20260925_v1"></script>
-<script src="/html/js/window-api.js?v=20260925_v1"></script>
-<script type="module" src="/html/js/main.js?v=20260925_v1"></script>
+<script src="/html/js/chatService.js?v=20261004_v17"></script>
+<script src="/html/js/window-api.js?v=20261004_v17"></script>
+<script type="module" src="/html/js/main.js?v=20261004_v17"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">
@@ -388,9 +593,15 @@ Updated: 2026-10-04 06:36:00
             <span data-i18n="userSettings.theme">Тема оформления</span>
           </label>
           <select class="form-select theme-selector" id="modal-theme-selector">
-            <option value="light" data-i18n="userSettings.themeLight">☀️ Светлая</option>
-            <option value="dark" data-i18n="userSettings.themeDark">🌙 Тёмная</option>
             <option value="system" data-i18n="userSettings.themeSystem">🌓 Системная</option>
+            <optgroup label="☀️ Светлые темы">
+              <option value="light" data-i18n="userSettings.themeLight">☀️ Светлая (Классическая)</option>
+              <option value="brick" data-i18n="userSettings.themeBrick">🧱 Кирпичная (Терракота)</option>
+            </optgroup>
+            <optgroup label="🌙 Тёмные темы">
+              <option value="dark" data-i18n="userSettings.themeDark">🌙 Тёмная (Контрастная)</option>
+              <option value="terminal" data-i18n="userSettings.themeTerminal">📟 Терминал (Matrix / CRT)</option>
+            </optgroup>
           </select>
         </div>
       </div>

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 02:30:00
  * =============================================================================
  */
 
@@ -43,20 +43,61 @@ window.applyTranslations = applyTranslations;
 // Карта вкладок: имя → [htmlUrl, jsUrl]
 // Пути явные — не генерируются из имени
 const TABS = {
-  'chat':           ['/html/chat/index.html',                 '/html/chat/main.js'],
-  'rag':            ['/html/rag_tab/index.html',              '/html/rag_tab/main.js'],
-  'telegram-rag':   ['/html/telegram_rag_tab/index.html',     '/html/telegram_rag_tab/main.js'],
-  'news':           ['/html/news_tab/index.html',             '/html/news_tab/main.js'],
-  'voice':          ['/html/voice_tab/index.html',            '/html/voice_tab/main.js'],
-  'plugins':        ['/html/plugins_tab/index.html',          '/html/plugins_tab/main.js'],
-  'admin':          ['/html/admin_tab/index.html',            '/html/admin_tab/main.js'],
-  'help':           ['/html/help/index.html',                 '/html/help/main.js'],
-  'process-leaks':  ['/html/process_leaks_tab/index.html',    '/html/process_leaks_tab/main.js'],
-  'forensics':      ['/html/forensics_tab/index.html',        '/html/forensics_tab/main.js'],
-  'throttling':     ['/html/throttling_tab/index.html',       '/html/throttling_tab/main.js'],
-  'storage-wear':   ['/html/storage_wear_tab/index.html',     '/html/storage_wear_tab/main.js'],
-  'peripherals':    ['/html/peripherals_tab/index.html',      '/html/peripherals_tab/main.js'],
-  'system-logs':    ['/html/system_logs_tab/index.html',      '/html/system_logs_tab/main.js'],
+  // Базовые ИИ и коммуникации
+  'chat':                     ['/html/chat/index.html',                         '/html/chat/main.js'],
+  'voice':                    ['/html/voice_tab/index.html',                    '/html/voice_tab/main.js'],
+  'scenarios':                ['/html/scenarios_tab/index.html',                '/html/scenarios_tab/main.js'],
+  'rag':                      ['/html/rag_tab/index.html',                      '/html/rag_tab/main.js'],
+  'telegram-rag':             ['/html/telegram_rag_tab/index.html',             '/html/telegram_rag_tab/main.js'],
+  'news':                     ['/html/news_tab/index.html',                     '/html/news_tab/main.js'],
+  'models':                   ['/html/models_tab/index.html',                   '/html/models_tab/main.js'],
+  'plugins':                  ['/html/plugins_tab/index.html',                  '/html/plugins_tab/main.js'],
+  'admin':                    ['/html/admin_tab/index.html',                    '/html/admin_tab/main.js'],
+  'help':                     ['/html/help/index.html',                         '/html/help/main.js'],
+
+  // Оборудование, Датчики и Телеметрия
+  'about-system':             ['/html/about_system_tab/index.html',             '/html/about_system_tab/main.js'],
+  'hardware-monitor':         ['/html/hardware_monitor_tab/index.html',         '/html/hardware_monitor_tab/main.js'],
+  'telemetry-history':        ['/html/telemetry_history_tab/index.html',        '/html/telemetry_history_tab/main.js'],
+  'telemetry-research':       ['/html/telemetry_research_tab/index.html',       '/html/telemetry_research_tab/main.js'],
+  'ai-benchmark':             ['/html/ai_benchmark_tab/index.html',             '/html/ai_benchmark_tab/main.js'],
+  'process-leaks':            ['/html/process_leaks_tab/index.html',            '/html/process_leaks_tab/main.js'],
+  'forensics':                ['/html/forensics_tab/index.html',                '/html/forensics_tab/main.js'],
+  'throttling':               ['/html/throttling_tab/index.html',               '/html/throttling_tab/main.js'],
+  'peripherals':              ['/html/peripherals_tab/index.html',              '/html/peripherals_tab/main.js'],
+  'software-transparency':    ['/html/software_transparency_tab/index.html',    '/html/software_transparency_tab/main.js'],
+
+  // Накопители и Диски
+  'storage-manager':          ['/html/storage_manager_tab/index.html',          '/html/storage_manager_tab/main.js'],
+  'disk-speed':               ['/html/disk_speed_tab/index.html',               '/html/disk_speed_tab/main.js'],
+  'storage-wear':             ['/html/storage_wear_tab/index.html',             '/html/storage_wear_tab/main.js'],
+  'file-recovery':            ['/html/file_recovery_tab/index.html',            '/html/file_recovery_tab/main.js'],
+  'file-history-search':      ['/html/file_history_ai_search_tab/index.html',   '/html/file_history_ai_search_tab/main.js'],
+
+  // Управление Windows и Sysadmin
+  'system-control':           ['/html/system_control_tab/index.html',           '/html/system_control_tab/main.js'],
+  'windows-admin':            ['/html/windows_admin_tab/index.html',            '/html/windows_admin_tab/main.js'],
+  'startup-auditor':          ['/html/startup_auditor_tab/index.html',          '/html/startup_auditor_tab/main.js'],
+  'services-manager':         ['/html/services_manager_tab/index.html',         '/html/services_manager_tab/main.js'],
+  'task-scheduler':           ['/html/task_scheduler_tab/index.html',           '/html/task_scheduler_tab/main.js'],
+  'process-manager':          ['/html/process_manager_tab/index.html',          '/html/process_manager_tab/main.js'],
+  'registry-viewer':          ['/html/registry_viewer_tab/index.html',          '/html/registry_viewer_tab/main.js'],
+  'software-manager':         ['/html/software_manager_tab/index.html',         '/html/software_manager_tab/main.js'],
+  'user-directories':         ['/html/user_directories_tab/index.html',         '/html/user_directories_tab/main.js'],
+
+  // Безопасность и Целостность
+  'firewall-manager':         ['/html/firewall_manager_tab/index.html',         '/html/firewall_manager_tab/main.js'],
+  'defender':                 ['/html/defender_tab/index.html',                 '/html/defender_tab/main.js'],
+  'security-acl':             ['/html/security_acl_tab/index.html',             '/html/security_acl_tab/main.js'],
+  'servicing-integrity':      ['/html/servicing_integrity_tab/index.html',      '/html/servicing_integrity_tab/main.js'],
+  'boot-recovery':            ['/html/boot_recovery_tab/index.html',            '/html/boot_recovery_tab/main.js'],
+  'windows-backup':           ['/html/windows_backup_tab/index.html',           '/html/windows_backup_tab/main.js'],
+
+  // Сеть и Системные Логи
+  'network':                  ['/html/network_tab/index.html',                  '/html/network_tab/main.js'],
+  'performance-tracing':      ['/html/performance_tracing_tab/index.html',      '/html/performance_tracing_tab/main.js'],
+  'event-logs':               ['/html/event_logs_tab/index.html',               '/html/event_logs_tab/main.js'],
+  'system-logs':              ['/html/system_logs_tab/index.html',              '/html/system_logs_tab/main.js'],
 };
 
 // Lazy-загрузка: вкладка грузится при первом открытии

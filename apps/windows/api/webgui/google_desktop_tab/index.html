@@ -1,0 +1,318 @@
+<!--
+=============================================================================
+Process Name: AI-Breadboard Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон веб-интерфейса системного модуля (index).
+
+Usage Examples:
+    Web Route:
+      /src/api/webgui/google_desktop_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/google_desktop_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:13:56
+=============================================================================
+-->
+
+<!-- Google User Desktop Web Tab Module -->
+<style>
+  .gdesktop-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .gdesktop-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 64px;
+    gap: 0.2rem;
+  }
+  .gdesktop-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    line-height: 1.1;
+  }
+  .gdesktop-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
+  }
+  .gdesktop-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .gdesktop-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.5rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .gdesktop-subnav .nav-link {
+    color: #94a3b8;
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+  }
+  .gdesktop-subnav .nav-link:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .gdesktop-subnav .nav-link.active {
+    color: #000;
+    background: #38bdf8;
+    font-weight: 600;
+  }
+  .gdesktop-table {
+    font-size: 0.82rem;
+  }
+  .gdesktop-table td, .gdesktop-table th {
+    vertical-align: middle;
+  }
+</style>
+
+<div class="gdesktop-container" id="google-desktop-tab-root">
+  <!-- Top Header Banner & Actions -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 py-2 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-4">🌐</span>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold text-white" style="font-size: 1rem;">Google User Desktop</span>
+          <span class="badge bg-danger text-white border border-light-subtle px-2 py-0.5" style="font-size: 0.7rem;">Workspace Aggregator</span>
+        </div>
+        <div class="text-secondary small" style="font-size: 0.76rem;">
+          <span data-i18n="auto__gmail_google_calendar_docs_sheets__31dc39"></span> Google Drive
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Selector & Sync Controls -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <div class="d-flex align-items-center gap-1.5 bg-dark bg-opacity-50 border border-secondary px-2 py-1 rounded">
+        <label for="gdesktop-account-select" class="small text-muted mb-0 me-1" style="font-size: 0.75rem;"><span data-i18n="auto___5b16fc"></span>:</label>
+        <select class="form-select form-select-sm bg-dark text-light border-0 py-0 px-2" id="gdesktop-account-select" style="font-size: 0.8rem; width: auto; cursor: pointer;">
+          <option value=""><span data-i18n="auto___94a96c"></span>...</option>
+        </select>
+      </div>
+
+      <button class="btn btn-xs btn-outline-info rounded-pill px-3 py-1.5" style="font-size: 0.78rem;" id="btn-gdesktop-refresh" title="<span data-i18n="auto___19efd8"></span>">
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
+      </button>
+
+      <button class="btn btn-xs btn-outline-success rounded-pill px-3 py-1.5" style="font-size: 0.78rem;" id="btn-gdesktop-sync" title="<span data-i18n="auto___d5b581"></span> API Google">
+        <i class="bi bi-cloud-arrow-down-fill me-1"></i> <span data-i18n="auto___7ceddd"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Metric Cards -->
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="gdesktop-card">
+        <span class="gdesktop-label"><span data-i18n="auto___aedea9"></span></span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gdesktop-value text-info text-truncate" style="font-size: 1.05rem;" id="gdesktop-acc-name">-</span>
+          <span class="badge bg-secondary" id="gdesktop-acc-status" style="font-size: 0.68rem;">-</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="gdesktop-card">
+        <span class="gdesktop-label"><span data-i18n="auto___5e10ab"></span> (Gmail)</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gdesktop-value text-warning" id="gdesktop-mail-count">0</span>
+          <span class="text-muted small"><span data-i18n="auto___c66f45"></span></span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="gdesktop-card">
+        <span class="gdesktop-label"><span data-i18n="auto___97c74f"></span></span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gdesktop-value text-success" id="gdesktop-calendar-count">0</span>
+          <span class="text-muted small"><span data-i18n="auto___d4eca8"></span></span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="gdesktop-card">
+        <span class="gdesktop-label"><span data-i18n="auto___cdbcb8"></span></span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gdesktop-value text-primary" id="gdesktop-docs-drive-count">0 / 0</span>
+          <span class="text-muted small">Docs / Drive</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-navigation Tabs -->
+  <div class="gdesktop-panel mb-3">
+    <div class="gdesktop-panel-header">
+      <ul class="nav nav-pills gdesktop-subnav gap-1" id="gdesktop-subnav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="gdesktop-tab-mail-btn" data-bs-toggle="pill" data-bs-target="#gdesktop-pane-mail" type="button" role="tab">
+            📬 Gmail <span data-i18n="auto___108aa2"></span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="gdesktop-tab-calendar-btn" data-bs-toggle="pill" data-bs-target="#gdesktop-pane-calendar" type="button" role="tab">
+            📅 Google <span data-i18n="auto___fa3a2f"></span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="gdesktop-tab-docs-btn" data-bs-toggle="pill" data-bs-target="#gdesktop-pane-docs" type="button" role="tab">
+            📄 <span data-i18n="auto___a65e97"></span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="gdesktop-tab-drive-btn" data-bs-toggle="pill" data-bs-target="#gdesktop-pane-drive" type="button" role="tab">
+            📁 Google <span data-i18n="auto___ca0407"></span>
+          </button>
+        </li>
+      </ul>
+      <span class="text-muted small" id="gdesktop-last-refreshed"><span data-i18n="auto___484f3b"></span>: -</span>
+    </div>
+
+    <div class="tab-content p-3" id="gdesktop-tab-content">
+      <!-- 1. Gmail Pane -->
+      <div class="tab-pane fade show active" id="gdesktop-pane-mail" role="tabpanel">
+        <!-- Gmail API Info Badge -->
+        <div class="alert alert-warning border border-warning-subtle text-light small shadow-sm rounded-3 mb-3 p-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: rgba(245, 158, 11, 0.1);" role="alert">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-envelope-exclamation-fill text-warning fs-5"></i>
+            <div>
+              <span class="fw-bold text-warning me-1"><span data-i18n="auto__gmail_api__a058db"></span>):</span>
+              <span class="text-light-50"><span data-i18n="auto__gmail__8c0930"></span> <strong>Enable</strong>:</span>
+            </div>
+          </div>
+          <a href="https://console.developers.google.com/apis/api/gmail.googleapis.com/overview" target="_blank" rel="noopener noreferrer" class="btn btn-warning btn-sm fw-bold rounded-pill text-dark text-nowrap py-1 px-3" style="font-size: 0.78rem;">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Google Cloud Console — Gmail API Overview
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle gdesktop-table mb-0">
+            <thead>
+              <tr class="text-secondary small text-uppercase">
+                <th style="width: 200px;"><span data-i18n="auto___522b04"></span></th>
+                <th><span data-i18n="auto___96f68e"></span></th>
+                <th style="width: 170px;"><span data-i18n="auto___a5b49d"></span></th>
+                <th><span data-i18n="auto___71c575"></span></th>
+              </tr>
+            </thead>
+            <tbody id="gdesktop-mail-tbody">
+              <tr>
+                <td colspan="4" class="text-center py-4 text-muted"><span data-i18n="auto___0f6ce9"></span> Gmail...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. Google Calendar Pane -->
+      <div class="tab-pane fade" id="gdesktop-pane-calendar" role="tabpanel">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle gdesktop-table mb-0">
+            <thead>
+              <tr class="text-secondary small text-uppercase">
+                <th><span data-i18n="auto___bb9263"></span></th>
+                <th style="width: 180px;"><span data-i18n="auto___cb26bd"></span></th>
+                <th style="width: 180px;"><span data-i18n="auto___ec5bfc"></span></th>
+                <th style="width: 180px;"><span data-i18n="auto___82bd05"></span></th>
+                <th style="width: 100px;" class="text-center"><span data-i18n="auto___046e47"></span></th>
+              </tr>
+            </thead>
+            <tbody id="gdesktop-calendar-tbody">
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted"><span data-i18n="auto___6d5084"></span>...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. Google Docs Pane -->
+      <div class="tab-pane fade" id="gdesktop-pane-docs" role="tabpanel">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle gdesktop-table mb-0">
+            <thead>
+              <tr class="text-secondary small text-uppercase">
+                <th><span data-i18n="auto___5c9ffd"></span></th>
+                <th style="width: 220px;"><span data-i18n="auto___d25691"></span> (MIME)</th>
+                <th style="width: 170px;"><span data-i18n="auto___e0a8de"></span></th>
+                <th style="width: 160px;" class="text-center"><span data-i18n="auto___9978ac"></span></th>
+              </tr>
+            </thead>
+            <tbody id="gdesktop-docs-tbody">
+              <tr>
+                <td colspan="4" class="text-center py-4 text-muted"><span data-i18n="auto___6a3add"></span>...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. Google Drive Pane -->
+      <div class="tab-pane fade" id="gdesktop-pane-drive" role="tabpanel">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle gdesktop-table mb-0">
+            <thead>
+              <tr class="text-secondary small text-uppercase">
+                <th><span data-i18n="auto___1e5ae1"></span></th>
+                <th style="width: 220px;"><span data-i18n="auto___31e483"></span></th>
+                <th style="width: 120px;"><span data-i18n="auto___98713e"></span></th>
+                <th style="width: 170px;"><span data-i18n="auto___730822"></span></th>
+                <th style="width: 100px;" class="text-center"><span data-i18n="auto___046e47"></span></th>
+              </tr>
+            </thead>
+            <tbody id="gdesktop-drive-tbody">
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted"><span data-i18n="auto__google__2bcb83"></span>...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Viewer Modal -->
+  <div class="modal fade" id="gdesktopDocViewerModal" tabindex="-1" aria-labelledby="gdesktopDocViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-light border border-secondary shadow-lg">
+        <div class="modal-header border-secondary py-2">
+          <h6 class="modal-title d-flex align-items-center gap-2" id="gdesktopDocViewerModalLabel">
+            <i class="bi bi-file-earmark-text text-info"></i> <span id="gdesktop-doc-modal-title"><span data-i18n="auto___26d5fd"></span></span>
+          </h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-3 font-monospace small bg-black bg-opacity-50" id="gdesktop-doc-modal-body" style="white-space: pre-wrap; max-height: 450px;">
+          <span data-i18n="auto___f2a34f"></span>...
+        </div>
+        <div class="modal-footer border-secondary py-1.5">
+          <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:43:00
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
@@ -36,7 +36,7 @@
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
 // Copyright: © 2026 hypo69
-// Updated: 2026-10-04 00:43:00
+// Updated: 2026-10-04 00:22:00
 // =============================================================================
 
 (function () {
@@ -157,6 +157,23 @@
     if (el) el.textContent = text !== null && text !== undefined ? String(text) : '--';
   }
 
+  function setStatusText(id, isPositive, activeText = 'Active', inactiveText = 'Disabled') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const active = Boolean(isPositive);
+    el.textContent = active ? activeText : inactiveText;
+    el.className = active ? 'text-success fw-bold' : 'text-danger fw-bold';
+  }
+
+  function setFormattedStatusHtml(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!text) { el.innerHTML = '--'; return; }
+    el.innerHTML = String(text)
+      .replace(/\b(OFF|Disabled|Выключено|Отключен|Отключено|Inactive)\b/gi, '<strong class="text-danger fw-bold">$1</strong>')
+      .replace(/\b(ON|Active|Enabled|Включен|Включено)\b/gi, '<strong class="text-success fw-bold">$1</strong>');
+  }
+
   function setHtml(id, html) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
@@ -224,24 +241,14 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-about-system', async () => {
         updateLocalClock();
-        if (isLiveActive && !isUpdating) {
-          if (activeSubtab !== 'subtab-overview') {
-            await refreshActiveSubtab();
-          }
-        }
         await updateCacheStatus();
-      }, 3000, { pollerId: 'tab-about-system_clock', immediate: true });
+      }, 5000, { pollerId: 'tab-about-system_clock', immediate: true });
     } else {
       if (liveIntervalId) clearInterval(liveIntervalId);
       liveIntervalId = setInterval(async () => {
         updateLocalClock();
-        if (isLiveActive && !isUpdating) {
-          if (activeSubtab !== 'subtab-overview') {
-            await refreshActiveSubtab();
-          }
-        }
         await updateCacheStatus();
-      }, 3000);
+      }, 5000);
     }
   }
 
@@ -538,11 +545,11 @@
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
-              <div class="font-monospace text-light" title="Записано данных">
-                <i class="bi bi-arrow-up-circle text-warning me-1"></i>${formatBytesLocal(d.bytes_written)}
+              <div class="font-monospace text-light" style="white-space: nowrap;" title="Записано за сессию">
+                <i class="bi bi-arrow-up-circle text-warning me-1"></i>Записано: ${formatBytesLocal(d.bytes_written)}
               </div>
-              <div class="small font-monospace text-info mt-0.5" title="Прочитано данных">
-                <i class="bi bi-arrow-down-circle text-info me-1"></i>${formatBytesLocal(d.bytes_read)}
+              <div class="small font-monospace text-info mt-0.5" style="white-space: nowrap;" title="Прочитано за сессию">
+                <i class="bi bi-arrow-down-circle text-info me-1"></i>Прочитано: ${formatBytesLocal(d.bytes_read)}
               </div>
             `;
 
@@ -636,7 +643,10 @@
         if (data.display_title) setText('about-kpi-os-title', data.display_title);
         if (data.display_host) setText('about-kpi-os-host', data.display_host);
         if (data.uptime_human) setText('about-spec-uptime', `Uptime: ${data.uptime_human}`);
-        if (data.os_install_date) setText('about-ident-install-date', data.os_install_date);
+        if (data.os_install_date) {
+          setText('about-ident-install-date', data.os_install_date);
+          setText('about-kpi-os-install', data.os_install_date);
+        }
       }
     } catch (e) {
       console.warn('[AboutSystemTab] fetchKpiOs error:', e);
@@ -649,8 +659,14 @@
       const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
       const data = await cachedFetch('/api/v1/dashboard/security', 'dash_sec', opts);
       if (data) {
-        if (data.display_title) setText('about-kpi-sec-title', data.display_title);
-        if (data.display_subtitle) setText('about-kpi-sec-sub', data.display_subtitle);
+        if (data.display_title) {
+          const el = document.getElementById('about-kpi-sec-title');
+          if (el) {
+            el.textContent = data.display_title;
+            el.className = `about-sys-value ${data.status === 'Active & Protected' ? 'text-success' : 'text-danger fw-bold'} text-truncate mt-1`;
+          }
+        }
+        if (data.display_subtitle) setFormattedStatusHtml('about-kpi-sec-sub', data.display_subtitle);
       }
     } catch (e) {
       console.warn('[AboutSystemTab] fetchKpiSecurity error:', e);
@@ -664,7 +680,7 @@
       const data = await cachedFetch('/api/v1/dashboard/checkpoints', 'dash_chk', opts);
       if (data) {
         if (data.display_title) setText('about-kpi-prot-title', data.display_title);
-        if (data.display_subtitle) setText('about-kpi-prot-sub', data.display_subtitle);
+        if (data.display_subtitle) setFormattedStatusHtml('about-kpi-prot-sub', data.display_subtitle);
       }
     } catch (e) {
       console.warn('[AboutSystemTab] fetchKpiCheckpoints error:', e);
@@ -729,15 +745,15 @@
    * Реестр панелей и частоты их опроса
    */
   const panelPollingRegistry = {
-    'about_kpi_os': { fn: fetchKpiOs, defaultFreq: '5' },
-    'about_kpi_sec': { fn: fetchKpiSecurity, defaultFreq: '5' },
-    'about_kpi_prot': { fn: fetchKpiCheckpoints, defaultFreq: '5' },
-    'about_kpi_stor': { fn: fetchKpiStorage, defaultFreq: '5' },
+    'about_kpi_os': { fn: fetchKpiOs, defaultFreq: 'manual' },
+    'about_kpi_sec': { fn: fetchKpiSecurity, defaultFreq: 'manual' },
+    'about_kpi_prot': { fn: fetchKpiCheckpoints, defaultFreq: 'manual' },
+    'about_kpi_stor': { fn: fetchKpiStorage, defaultFreq: 'manual' },
     'about_hw_specs': { fn: fetchHardwareSpecs, defaultFreq: 'start' },
-    'about_user_env': { fn: fetchUserEnvSecurity, defaultFreq: '5' },
-    'about_disks': { fn: fetchDisksVolumes, defaultFreq: '10' },
-    'about_wear': { fn: fetchWearPanel, defaultFreq: '10' },
-    'about_battery': { fn: fetchBatteryPanel, defaultFreq: '10' },
+    'about_user_env': { fn: fetchUserEnvSecurity, defaultFreq: 'manual' },
+    'about_disks': { fn: fetchDisksVolumes, defaultFreq: 'manual' },
+    'about_wear': { fn: fetchWearPanel, defaultFreq: 'manual' },
+    'about_battery': { fn: fetchBatteryPanel, defaultFreq: 'manual' },
     'about_hw_tree': { fn: fetchHwTreePanel, defaultFreq: 'start' }
   };
 
@@ -861,6 +877,7 @@
       const lang = snap.system_language || 'Русский (Россия) [ru-RU]';
       const userLoc = snap.user_locale || 'ru-RU';
       const sysLoc = snap.system_locale || 'ru-RU';
+      const instLang = snap.os_install_language || snap.install_language || '';
       const tz = snap.timezone || 'UTC+03:00';
       const cp = snap.codepage || 'UTF-8 (ACP: 65001)';
       const inputs = Array.isArray(snap.input_languages) && snap.input_languages.length > 0
@@ -872,12 +889,17 @@
       setText('about-ident-domain', `Workgroup / Host: ${host}`);
       setText('about-ident-username', user);
       setText('about-ident-language', lang);
-      setText('about-ident-locales', `Локали: User: ${userLoc} | Sys: ${sysLoc}`);
+      const localesText = instLang
+        ? `Локали: User: ${userLoc} | Sys: ${sysLoc} | Оригинал: ${instLang}`
+        : `Локали: User: ${userLoc} | Sys: ${sysLoc}`;
+      setText('about-ident-locales', localesText);
       setText('about-ident-timezone', tz);
       setText('about-ident-codepage', `Кодировка: ${cp}`);
       setText('about-ident-inputs', inputs);
       setText('about-ident-os-build', osBuild);
-      setText('about-ident-install-date', snap.os_install_date || 'Не определена');
+      const installDate = snap.os_install_date || 'Не определена';
+      setText('about-ident-install-date', installDate);
+      setText('about-kpi-os-install', installDate);
 
       // Top KPI Card 1: Operating System
       setText('about-kpi-os-title', `${snap.os_name || 'Windows 11'} (${snap.cpu?.architecture || 'AMD64'})`);
@@ -1033,15 +1055,20 @@
 
       // KPI 2: Security & Defender
       const defActive = sec.defender_enabled !== false;
-      setText('about-kpi-sec-title', defActive ? 'Active & Protected' : 'Attention Required');
+      const kpiSecTitle = document.getElementById('about-kpi-sec-title');
+      if (kpiSecTitle) {
+        kpiSecTitle.textContent = defActive ? 'Active & Protected' : 'Attention Required';
+        kpiSecTitle.className = `about-sys-value ${defActive ? 'text-success' : 'text-danger fw-bold'} text-truncate mt-1`;
+      }
       const fwOk = sec.firewall_overall_enabled !== false;
       const uacOk = sec.uac_enabled !== false;
-      setText('about-kpi-sec-sub', `Firewall: ${fwOk ? 'ON' : 'OFF'} | UAC: ${uacOk ? 'ON' : 'OFF'}`);
+      setFormattedStatusHtml('about-kpi-sec-sub', `Firewall: ${fwOk ? 'ON' : 'OFF'} | UAC: ${uacOk ? 'ON' : 'OFF'}`);
 
       // KPI 3: System Protection
       const countPoints = rest.restore_points_count || 0;
       setText('about-kpi-prot-title', `${countPoints} Checkpoints`);
-      setText('about-kpi-prot-sub', `Protection: ${rest.system_protection_enabled ? 'Active' : 'Disabled'}`);
+      const protActive = Boolean(rest.system_protection_enabled);
+      setFormattedStatusHtml('about-kpi-prot-sub', `Protection: ${protActive ? 'Active' : 'Disabled'}`);
 
       // KPI 4: Cleanable estimate & Total Disk Size
       const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 150;
@@ -1050,12 +1077,17 @@
       setText('about-kpi-stor-clean', `Cleanable: ~${cleanMb} MB${totalGbTxt}`);
 
       // Security table rows
-      setText('about-sec-defender', defActive ? 'Enabled' : 'Disabled');
-      setText('about-sec-realtime', sec.realtime_protection_enabled !== false ? 'Enabled' : 'Disabled');
-      setText('about-sec-fw-domain', sec.firewall_profiles?.Domain ? 'Active' : 'Disabled');
-      setText('about-sec-fw-private', sec.firewall_profiles?.Private ? 'Active' : 'Disabled');
-      setText('about-sec-fw-public', sec.firewall_profiles?.Public ? 'Active' : 'Disabled');
-      setText('about-sec-uac', uacOk ? 'Enabled' : 'Disabled');
+      setStatusText('about-sec-defender', defActive, 'Enabled', 'Disabled');
+      setStatusText('about-sec-realtime', sec.realtime_protection_enabled !== false && sec.realtime_protection_enabled !== 0 && sec.realtime_protection_enabled !== 'Disabled', 'Enabled', 'Disabled');
+      
+      const fwDom = sec.firewall_profiles?.Domain ?? sec.firewall_domain_enabled;
+      const fwPriv = sec.firewall_profiles?.Private ?? sec.firewall_private_enabled;
+      const fwPub = sec.firewall_profiles?.Public ?? sec.firewall_public_enabled;
+
+      setStatusText('about-sec-fw-domain', fwDom === true || fwDom === 'Active' || fwDom === 1 || fwDom === 'ON', 'Active', 'Disabled');
+      setStatusText('about-sec-fw-private', fwPriv === true || fwPriv === 'Active' || fwPriv === 1 || fwPriv === 'ON', 'Active', 'Disabled');
+      setStatusText('about-sec-fw-public', fwPub === true || fwPub === 'Active' || fwPub === 1 || fwPub === 'ON', 'Active', 'Disabled');
+      setStatusText('about-sec-uac', uacOk, 'Enabled', 'Disabled');
 
       // Power Scheme & Updates
       if (pwr.active_plan_name) setText('about-spec-power', pwr.active_plan_name);
@@ -1801,12 +1833,36 @@
     container.innerHTML = filtered.map((node, idx) => {
       const propsEntries = Object.entries(node.properties || {});
       const propsHtml = propsEntries.length > 0
-        ? propsEntries.map(([k, v]) => `
+        ? propsEntries.map(([k, v]) => {
+            const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
+            const valStr = String(v ?? '');
+            let valHtml = escapeHtml(valStr);
+
+            // Специфичное выделение частот и статусов совместимости памяти RAM
+            if (cleanKey.includes('Номинальная частота')) {
+              valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
+            } else if (cleanKey.includes('Текущая рабочая частота')) {
+              const isWarning = valStr.includes('⚠️') || valStr.includes('занижена');
+              if (isWarning) {
+                valHtml = `<span class="badge border border-warning-subtle fw-bold px-2 py-0.5" style="color: #facc15; background: rgba(234, 179, 8, 0.18);"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr)}</span>`;
+              } else if (valStr && valStr !== 'N/A') {
+                valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);">${escapeHtml(valStr)}</span>`;
+              }
+            } else if (valStr.includes('⚠️') || valStr.includes('Потенциал не раскрыт') || valStr.includes('Узкое место')) {
+              valHtml = `<span class="badge border border-warning-subtle fw-semibold px-2 py-0.5 text-wrap" style="color: #facc15; background: rgba(234, 179, 8, 0.18); text-align: start;"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr.replace(/^⚠️\s*/, ''))}</span>`;
+            } else if (valStr.includes('✅') || valStr.includes('Оптимально')) {
+              valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);"><i class="bi bi-check-circle-fill me-1"></i>${escapeHtml(valStr.replace(/^✅\s*/, ''))}</span>`;
+            } else if (cleanKey.includes('Эффективность планки')) {
+              valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
+            }
+
+            return `
             <div class="about-sys-prop-row">
-              <span class="about-sys-prop-key">${escapeHtml(k)}</span>
-              <span class="about-sys-prop-val">${escapeHtml(String(v))}</span>
+              <span class="about-sys-prop-key">${cleanKey}</span>
+              <span class="about-sys-prop-val">${valHtml}</span>
             </div>
-          `).join('')
+          `;
+          }).join('')
         : '<div class="text-muted small py-1">Свойства не указаны</div>';
 
       const iconClass = getNodeIcon(node.category);

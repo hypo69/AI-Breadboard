@@ -1,0 +1,461 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Telemetry Config Tab View
+=============================================================================
+Description:
+  Клиентский веб-интерфейс редактора файла конфигурации телеметрии
+  (%APPDATA%\AI-Breadboard\apps\windows\telemetry\config.json) с поддержкой
+  визуального и текстового редактирования и применения на лету.
+
+Usage Examples:
+  Web Route:
+    /windows/api/webgui/telemetry_config_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/telemetry_config_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-06 03:32:00
+=============================================================================
+-->
+
+<div class="container-fluid p-2" id="telemetry-config-tab-container">
+
+  <!-- Header & Status Card -->
+  <div class="card shadow-sm border-secondary-subtle mb-3" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 10px;">
+    <div class="card-body p-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-3">
+          <div class="fs-2">⚙️</div>
+          <div>
+            <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+              Редактор конфигурации телеметрии
+              <span class="badge bg-success-subtle text-success border border-success-subtle fs-7">Hot Reload Активен</span>
+            </h5>
+            <small class="text-secondary d-block mt-1">
+              Управление параметрами сбора, режимами реального времени (TC), интервалами опроса датчиков и SQLite БД с мгновенным перечитыванием на каждом тике
+            </small>
+          </div>
+        </div>
+
+        <!-- Toolbar Buttons -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button id="tc-cfg-btn-reload" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Перечитать конфигурацию с диска">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span>Перечитать</span>
+          </button>
+          <button id="tc-cfg-btn-reset" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 shadow-sm" title="Сбросить к исходному шаблону по умолчанию">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span>По умолчанию</span>
+          </button>
+          <button id="tc-cfg-btn-save" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm px-3" title="Сохранить изменения и применить на лету">
+            <i class="bi bi-check2-circle"></i>
+            <span class="fw-semibold">Сохранить и применить</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- File Location & Meta Bar -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-2 border-top border-secondary border-opacity-25 fs-8 text-secondary">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-file-earmark-code text-info"></i>
+          <span>Файл: <code class="text-info bg-dark px-2 py-0.5 rounded border border-secondary border-opacity-25" id="tc-cfg-file-path">%APPDATA%\AI-Breadboard\apps\windows\telemetry\config.json</code></span>
+          <button class="btn btn-link btn-sm p-0 text-muted hover-info" id="tc-cfg-copy-path-btn" title="Скопировать путь">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span id="tc-cfg-mtime-wrap"><i class="bi bi-clock-history me-1"></i>Изменен: <span id="tc-cfg-mtime" class="text-white">-</span></span>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="tc-cfg-active-mode-badge">Режим: TELEMETRY</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert / Toast Banner -->
+  <div id="tc-cfg-alert" class="alert alert-dismissible fade show d-none mb-3 py-2 px-3" role="alert">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle fs-5" id="tc-cfg-alert-icon"></i>
+      <span id="tc-cfg-alert-msg">Сообщение</span>
+    </div>
+    <button type="button" class="btn-close py-2" id="tc-cfg-alert-close" aria-label="Закрыть"></button>
+  </div>
+
+  <!-- Editor Mode Navigation Tabs -->
+  <ul class="nav nav-tabs nav-tabs-bordered mb-3" id="tc-cfg-view-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active d-flex align-items-center gap-2" id="tc-tab-gui-btn" data-bs-toggle="tab" data-bs-target="#tc-tab-gui" type="button" role="tab">
+        <i class="bi bi-sliders"></i>
+        <span>Визуальный конфигуратор</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link d-flex align-items-center gap-2" id="tc-tab-json-btn" data-bs-toggle="tab" data-bs-target="#tc-tab-json" type="button" role="tab">
+        <i class="bi bi-code-square"></i>
+        <span>Исходный JSON</span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content" id="tc-cfg-tab-content">
+    
+    <!-- 1. GUI FORM TAB -->
+    <div class="tab-pane fade show active" id="tc-tab-gui" role="tabpanel">
+      <form id="tc-cfg-form" onsubmit="return false;">
+        
+        <div class="row g-3">
+          <!-- Column 1: Core Telemetry & DB Options -->
+          <div class="col-lg-6">
+            
+            <!-- Section 0: Telemetry Mode & Flush (Standard vs TC Realtime) -->
+            <div class="card bg-dark bg-opacity-50 border-primary border-opacity-50 shadow-sm mb-3">
+              <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-primary border-opacity-25 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-broadcast text-primary"></i>
+                  <h6 class="mb-0 fw-bold text-white fs-7">Режим работы телеметрии и Flush в БД</h6>
+                </div>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="tc-current-mode-status">TELEMETRY</span>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label text-muted fs-8 mb-1">Режим телеметрии (telemetry_mode):</label>
+                    <select class="form-select form-select-sm bg-dark text-white border-primary" id="tc-field-telemetry-mode">
+                      <option value="telemetry">telemetry — Стандартный режим (Flush каждые 30с или при 100МБ)</option>
+                      <option value="tc">tc — Режим реального времени TC (Flush каждые 5с, автовозврат через 5 мин)</option>
+                    </select>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Период Flush в стандартном режиме:</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="1" min="1" class="form-control bg-dark text-white border-secondary" id="tc-field-standard-flush-interval" value="30.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Период Flush в режиме TC (реальное время):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="0.5" min="0.5" class="form-control bg-dark text-white border-secondary" id="tc-field-tc-flush-interval" value="5.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Таймаут возврата из режима TC в стандартный:</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="10" min="10" class="form-control bg-dark text-white border-secondary" id="tc-field-tc-mode-timeout" value="300.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Макс. размер базы данных SQLite:</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="5" min="1" class="form-control bg-dark text-white border-secondary" id="tc-field-max-db-size" value="100.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">МБ</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 1: Main Engine Parameters -->
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow-sm mb-3">
+              <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-secondary border-opacity-25 d-flex align-items-center gap-2">
+                <i class="bi bi-speedometer2 text-info"></i>
+                <h6 class="mb-0 fw-bold text-white fs-7">Параметры сбора сенсоров и нагрузки</h6>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-3">
+                  
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Профиль сбора (mode):</label>
+                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="tc-field-mode">
+                      <option value="minimal">Minimal (Легковесный CPU/RAM/Диск)</option>
+                      <option value="hybrid" selected>Hybrid (Базовый + тяжелые периодически)</option>
+                      <option value="full">Full (Полный непрерывный стек)</option>
+                    </select>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Режим фильтрации процессов:</label>
+                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="tc-field-process-mode">
+                      <option value="top_n" selected>Top-N процессов (по нагрузке)</option>
+                      <option value="all">Все запущенные процессы</option>
+                    </select>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Быстрый базовый интервал (сек):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="0.1" min="0.1" class="form-control bg-dark text-white border-secondary" id="tc-field-interval" value="5.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Интервал тяжелых сенсоров (сек):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="1" min="1" class="form-control bg-dark text-white border-secondary" id="tc-field-heavy-interval" value="60.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Количество Top-процессов:</label>
+                    <input type="number" step="1" min="1" max="500" class="form-control form-control-sm bg-dark text-white border-secondary" id="tc-field-top-processes" value="10">
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Интервал агрегации (Rollup, сек):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="1" min="10" class="form-control bg-dark text-white border-secondary" id="tc-field-agg-interval" value="3600">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-12 pt-2 border-top border-secondary border-opacity-25">
+                    <div class="form-check form-switch mb-1">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-field-low-priority" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-field-low-priority">Пониженный приоритет процесса телеметрии (BELOW_NORMAL_PRIORITY_CLASS)</label>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-field-heavy-auto-switch" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-field-heavy-auto-switch">Авто-переключение тяжелого режима в гибридный по истечении лимита</label>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: SQLite DB & Buffer Management -->
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow-sm mb-3">
+              <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-secondary border-opacity-25 d-flex align-items-center gap-2">
+                <i class="bi bi-database text-info"></i>
+                <h6 class="mb-0 fw-bold text-white fs-7">База данных SQLite и буферизация</h6>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-3">
+                  
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Срок хранения записей (дней):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="1" min="1" class="form-control bg-dark text-white border-secondary" id="tc-field-retention-days" value="7">
+                      <span class="input-group-text bg-dark text-muted border-secondary">дн</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Интервал автоочистки БД (сек):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="1" min="5" class="form-control bg-dark text-white border-secondary" id="tc-field-db-cleanup-interval" value="300.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Период сброса буфера (сек):</label>
+                    <div class="input-group input-group-sm">
+                      <input type="number" step="1" min="1" class="form-control bg-dark text-white border-secondary" id="tc-field-flush-interval" value="5.0">
+                      <span class="input-group-text bg-dark text-muted border-secondary">с</span>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Режим буферизации:</label>
+                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="tc-field-buffer-mode">
+                      <option value="memory" selected>Memory (Память с периодическим сбросом)</option>
+                      <option value="direct">Direct (Прямая запись без буфера)</option>
+                      <option value="file">File (JSONL аварийный буфер)</option>
+                    </select>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label text-muted fs-8 mb-1">Размер буфера (записей):</label>
+                    <input type="number" step="1" min="1" class="form-control form-control-sm bg-dark text-white border-secondary" id="tc-field-buffer-size" value="50">
+                  </div>
+
+                  <div class="col-12 pt-2 border-top border-secondary border-opacity-25">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-field-auto-vacuum" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-field-auto-vacuum">Автоматический VACUUM SQLite базы данных при очистке</label>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Heavy Collectors -->
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow-sm mb-3">
+              <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-secondary border-opacity-25 d-flex align-items-center gap-2">
+                <i class="bi bi-cpu text-warning"></i>
+                <h6 class="mb-0 fw-bold text-white fs-7">Тяжелые периодические коллекторы (Heavy Collectors)</h6>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-2">
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-hc-hw-sensors" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-hc-hw-sensors">Аппаратные датчики (LHM)</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-hc-smart" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-hc-smart">SMART накопителей</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-hc-ping" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-hc-ping">Сетевой пинг и Fast.com</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-hc-wmi" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-hc-wmi">WMI инвентарь оборудования</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Column 2: Sensors Matrix & W64/ETW Monitoring -->
+          <div class="col-lg-6">
+            
+            <!-- Section 4: Individual Sensors Grid -->
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow-sm mb-3">
+              <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-diagram-3 text-success"></i>
+                  <h6 class="mb-0 fw-bold text-white fs-7">Индивидуальные сенсоры и интервалы</h6>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary fs-8" id="tc-sensors-count-badge">9 сенсоров</span>
+              </div>
+              <div class="card-body p-3">
+                <div class="table-responsive">
+                  <table class="table table-dark table-sm table-hover align-middle mb-0 fs-8 border-secondary border-opacity-25" id="tc-sensors-table">
+                    <thead>
+                      <tr class="text-secondary border-bottom border-secondary border-opacity-25">
+                        <th style="width: 40px;">Вкл</th>
+                        <th>Сенсор</th>
+                        <th style="width: 130px;">Интервал (сек)</th>
+                        <th>Метрики</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tc-sensors-tbody">
+                      <!-- Rendered dynamically by main.js -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 5: W64 & ETW Events -->
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow-sm mb-3">
+              <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-secondary border-opacity-25 d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-danger"></i>
+                <h6 class="mb-0 fw-bold text-white fs-7">W64 и ETW мониторинг системных событий</h6>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-2">
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-enabled" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-enabled">W64 сборщик активен</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-file" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-file">Мониторинг файлов</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-proc" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-proc">Мониторинг процессов</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-reg" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-reg">Мониторинг реестра</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-net" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-net">Сетевые события</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-evlog" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-evlog">Журнал событий Windows</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-etw-proc" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-etw-proc">ETW трассировка процессов</label>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="tc-w64-etw-disk" checked>
+                      <label class="form-check-label text-white fs-8" for="tc-w64-etw-disk">ETW трассировка диска</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- 2. RAW JSON EDITOR TAB -->
+    <div class="tab-pane fade" id="tc-tab-json" role="tabpanel">
+      <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow-sm">
+        <div class="card-header bg-dark bg-opacity-75 py-2 px-3 border-secondary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-filetype-json text-warning"></i>
+            <h6 class="mb-0 fw-bold text-white fs-7">Прямое редактирование JSON</h6>
+            <span class="badge bg-secondary-subtle text-secondary fs-8" id="tc-json-status">Готов</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="tc-btn-format-json" title="Авто-форматирование с отступами">
+              <i class="bi bi-text-indent-left"></i>
+              <span>Форматировать</span>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="tc-btn-copy-json" title="Скопировать весь JSON в буфер">
+              <i class="bi bi-clipboard"></i>
+              <span>Копировать</span>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <textarea class="form-control font-monospace bg-dark text-info border-secondary border-opacity-25 fs-8" id="tc-raw-json-editor" rows="22" spellcheck="false" style="tab-size: 2; line-height: 1.45;"></textarea>
+          <div id="tc-json-error" class="text-danger fs-8 mt-2 d-none d-flex align-items-center gap-1">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span id="tc-json-error-text">Ошибка парсинга</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

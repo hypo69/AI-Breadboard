@@ -14,7 +14,7 @@
  * Package: src/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-05 23:30:00
  * =============================================================================
  */
 
@@ -97,11 +97,11 @@
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
-              <div class="font-monospace text-light" title="Записано данных">
-                <i class="bi bi-arrow-up-circle text-warning me-1"></i>${formatBytesLocal(d.bytes_written)}
+              <div class="font-monospace text-light" style="white-space: nowrap;" title="Записано за сессию">
+                <i class="bi bi-arrow-up-circle text-warning me-1"></i>Записано: ${formatBytesLocal(d.bytes_written)}
               </div>
-              <div class="small font-monospace text-info mt-0.5" title="Прочитано данных">
-                <i class="bi bi-arrow-down-circle text-info me-1"></i>${formatBytesLocal(d.bytes_read)}
+              <div class="small font-monospace text-info mt-0.5" style="white-space: nowrap;" title="Прочитано за сессию">
+                <i class="bi bi-arrow-down-circle text-info me-1"></i>Прочитано: ${formatBytesLocal(d.bytes_read)}
               </div>
             `;
 

@@ -3,7 +3,7 @@
 Process Name: Windows Web Interface - Index View
 =============================================================================
 Description:
-  Шаблон клиентского веб-интерфейса index.
+  Шаблон клиентского веб-интерфейса журнала событий Windows с модулем Log Intelligence.
 
 Usage Examples:
     Web Route:
@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/event_logs_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-06 02:28:00
 =============================================================================
 -->
 
@@ -29,47 +29,88 @@ Updated: 2026-10-01 13:04:40
       <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
         <div class="text-muted small text-uppercase fw-semibold">Критические ошибки (Critical) 🚨</div>
         <div class="fs-4 fw-bold mt-1 text-danger" id="el-critical-count">--</div>
-        <div class="small text-muted mt-1" id="el-critical-sub">wevtutil Level 1</div>
+        <div class="small text-muted mt-1" id="el-critical-sub">Level 1 (WevtAPI)</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
         <div class="text-muted small text-uppercase fw-semibold">Ошибки (Errors) ⚠️</div>
         <div class="fs-4 fw-bold mt-1 text-warning" id="el-error-count">--</div>
-        <div class="small text-muted mt-1" id="el-error-sub">wevtutil Level 2</div>
+        <div class="small text-muted mt-1" id="el-error-sub">Level 2 (WevtAPI)</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Предупреждения (Warning) ⚡</div>
-        <div class="fs-4 fw-bold mt-1 text-info" id="el-warn-count">--</div>
-        <div class="small text-muted mt-1" id="el-warn-sub">wevtutil Level 3</div>
+        <div class="text-muted small text-uppercase fw-semibold">Здоровье ОС (Health Score) 🛡️</div>
+        <div class="fs-4 fw-bold mt-1 text-success font-monospace" id="el-health-score">--</div>
+        <div class="small text-muted mt-1" id="el-health-sub">Data Researcher EDA</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Журналы событий 📁</div>
-        <div class="fs-4 fw-bold mt-1 text-primary" id="el-logs-count">--</div>
-        <div class="small text-muted mt-1" id="el-logs-sub">System / App / Security</div>
+        <div class="text-muted small text-uppercase fw-semibold">Избыточность / Шум (Rdup) 📉</div>
+        <div class="fs-4 fw-bold mt-1 text-info font-monospace" id="el-redundancy-pct">--</div>
+        <div class="small text-muted mt-1" id="el-redundancy-sub">Дедупликация шаблонов</div>
       </div>
     </div>
   </div>
 
-  <!-- Action Bar -->
+  <!-- Action & Intelligence Bar -->
   <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
       <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="el-refresh-btn">
         <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить журнал</span>
+        <span>Обновить</span>
       </button>
       <select class="form-select form-select-sm bg-dark text-white border-secondary" id="el-channel-select" style="width: 180px;">
         <option value="System">Журнал System</option>
         <option value="Application">Журнал Application</option>
         <option value="Security">Журнал Security</option>
       </select>
+      <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="el-intel-analyze-btn">
+        <i class="bi bi-cpu"></i>
+        <span>Log Intelligence (EDA)</span>
+      </button>
+      <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1.5" id="el-intel-audit-btn">
+        <i class="bi bi-shield-shaded"></i>
+        <span>Полный аудит</span>
+      </button>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="el-search-input" placeholder="Поиск по тексту или EventID..." style="width: 260px;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="el-rag-query-input" placeholder="RAG поиск (напр: сбой сети)..." style="width: 240px;">
+      <button class="btn btn-sm btn-info text-dark fw-semibold" id="el-rag-search-btn">
+        <i class="bi bi-search"></i>
+      </button>
+      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="el-search-input" placeholder="Фильтр таблицы..." style="width: 170px;">
+    </div>
+  </div>
+
+  <!-- Intelligence Digest Banner (Hidden by default) -->
+  <div id="el-intel-banner" class="alert alert-dark border-info shadow-sm mb-3 d-none">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-info text-dark fw-bold font-monospace" id="el-strategy-badge">STRATEGY</span>
+          <strong class="text-light fs-6" id="el-intel-title">Аналитический вердикт Log Intelligence</strong>
+        </div>
+        <div class="small text-secondary font-monospace" id="el-intel-rationale">--</div>
+        <div class="small text-warning mt-1" id="el-intel-recommendation"></div>
+      </div>
+      <div class="text-end">
+        <span class="badge bg-secondary font-monospace" id="el-chunks-badge">0 RAG chunks</span>
+        <button class="btn-close btn-close-white ms-2" id="el-intel-close-btn" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAG Search Results Panel (Hidden by default) -->
+  <div id="el-rag-results-card" class="card bg-dark text-white border-info shadow-sm mb-3 d-none">
+    <div class="card-header border-info bg-black d-flex justify-content-between align-items-center py-2 px-3">
+      <span class="fw-semibold text-info"><i class="bi bi-brain me-2"></i>Результаты Adaptive Log RAG</span>
+      <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="el-rag-close-btn">Закрыть</button>
+    </div>
+    <div class="card-body p-2" id="el-rag-results-body">
+      <!-- Dynamic Search Items -->
     </div>
   </div>
 
@@ -77,7 +118,7 @@ Updated: 2026-10-01 13:04:40
   <div class="card bg-dark text-white border-secondary shadow-sm">
     <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
       <span class="fw-semibold"><i class="bi bi-journal-text text-primary me-2"></i>Записи системного журнала (Event Viewer)</span>
-      <span class="badge bg-secondary" id="el-table-badge">0 событий</span>
+      <span class="badge bg-secondary font-monospace" id="el-table-badge">0 событий</span>
     </div>
     <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
       <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="el-table">
@@ -91,7 +132,7 @@ Updated: 2026-10-01 13:04:40
           </tr>
         </thead>
         <tbody id="el-tbody">
-          <tr><td colspan="5" class="text-center text-muted py-4">Чтение журнала событий через wevtutil...</td></tr>
+          <tr><td colspan="5" class="text-center text-muted py-4">Чтение журнала событий через WevtAPI...</td></tr>
         </tbody>
       </table>
     </div>

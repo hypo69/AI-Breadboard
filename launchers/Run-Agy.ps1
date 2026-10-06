@@ -1,26 +1,40 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Agy
+Process Name: AI-Breadboard Automation - Run Antigravity CLI (agy)
 =============================================================================
 Description:
-  Check, install and run Google Antigravity CLI (agy)
+  Проверка окружения, установка и управление Google Antigravity CLI (agy).
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Agy.ps1
+  Зачем нужен этот скрипт:
+    1. Автоматическая диагностика: проверка наличия CLI в PATH и соответствия версии.
+    2. Управление жизненным циклом agy: интерактивная установка, обновление и конфигурация API-ключей.
+    3. Запуск сессий: быстрый старт чат-сессий, проверка статуса и перечня доступных моделей.
 
 File: Run-Agy.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Check, install and run Google Antigravity CLI (agy)
+    Проверка наличия, установка и запуск Google Antigravity CLI (agy).
+
 .DESCRIPTION
-    Script for checking Antigravity CLI (agy) presence in system, offering
-    installation/update if missing, configuring API keys from
+    Управляет бинарным клиентом agy: проверяет доступность команды, предлагает
+    автоматическую установку при отсутствии, проверяет статус авторизации и запускает интерактивный чат.
+
+.PARAMETER Action
+    Выполняемое действие: check (по умолчанию), chat, models, update, version, status, install.
+
+.EXAMPLE
+    .\Run-Agy.ps1 -Action check
+    Проверка готовности и версии Antigravity CLI.
+
+.EXAMPLE
+    .\Run-Agy.ps1 -Action chat
+    Запуск интерактивного диалога через agy.
 #>
 
 [CmdletBinding()]

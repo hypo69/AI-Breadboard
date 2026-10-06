@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 08:46:00
+ * Updated: 2026-10-06 05:05:00
  * =============================================================================
  */
 
@@ -31,6 +31,9 @@
   let currentSensorCategory = 'all';
   let isLhmRunning = false;
   let cachedHardwareSensorsData = null;
+  let lastCpuCoresData = [];
+  let lastCpuSensorsData = [];
+  let lastCpuData = null;
 
   async function fetchLhmSensors() {
     const badgeCount = document.getElementById('sys-lhm-sensors-count');
@@ -263,6 +266,9 @@
 
     // Также обновляем блоки сенсоров в целевых панелях CPU, GPU и RAM
     updateAllComponentSensors();
+    if (lastCpuCoresData && lastCpuCoresData.length) {
+      renderCpuCores(lastCpuCoresData);
+    }
   }
 
   function getSensorSortPriority(s) {
@@ -281,11 +287,20 @@
     const container = document.getElementById(containerId);
     const countBadge = document.getElementById(countBadgeId);
     if (!container) return;
-    if (countBadge) {
-      countBadge.textContent = sensors && sensors.length ? `${sensors.length} параметров` : '0 параметров';
-    }
-    if (!sensors || sensors.length === 0) {
-      container.innerHTML = `<div class="text-muted small text-center py-2 col-12" style="font-size: 0.74rem;">Нет дополнительных данных сенсоров</div>`;
+
+    if (sensors && sensors.length > 0) {
+      if (countBadge) {
+        countBadge.textContent = `${sensors.length} параметров`;
+      }
+    } else {
+      // Если элементы уже отрендерены, не перетираем их заглушкой при временной задержке поллинга
+      if (container.children.length > 0 && !container.querySelector('.sys-no-sensors-msg')) {
+        return;
+      }
+      if (countBadge) {
+        countBadge.textContent = '0 параметров';
+      }
+      container.innerHTML = `<div class="sys-no-sensors-msg text-muted small text-center py-2 col-12" style="font-size: 0.74rem;">Нет дополнительных данных сенсоров</div>`;
       return;
     }
 
@@ -297,7 +312,8 @@
     });
 
     container.innerHTML = sorted.map(s => {
-      const name = escapeHtml(s.sensor_name);
+      const rawName = s.sensor_name || s.name || '';
+      const name = escapeHtml((!rawName || rawName.toLowerCase() === 'unknown') ? (s.id ? `Sensor #${s.id}` : 'Sensor') : rawName);
       const cat = (s.sensor_category || '').toLowerCase();
       const val = Number(s.value || 0);
       const unit = (s.unit || '').trim();
@@ -350,15 +366,39 @@
     }).join('');
   }
 
+  function toggleSysCpuDetails() {
+    const box = document.getElementById('sys-cpu-details-collapse');
+    const icon = document.getElementById('sys-cpu-details-toggle-icon');
+    if (!box) return;
+    const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
+    if (isHidden) {
+      box.style.display = 'flex';
+      if (icon) {
+        icon.className = 'bi bi-chevron-down text-info';
+      }
+    } else {
+      box.style.display = 'none';
+      if (icon) {
+        icon.className = 'bi bi-chevron-right text-info';
+      }
+    }
+  }
+  window.toggleSysCpuDetails = toggleSysCpuDetails;
+  window.toggleSysCpuSensors = toggleSysCpuDetails;
+
   function updateAllComponentSensors() {
     if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) return;
 
     // 1. CPU Sensors (электрические параметры, мощности, вольтажи, шины, TjMax)
     const cpuSensors = cachedSensors.filter(s => {
+      const sid = String(s.id || s.sensor_id || '').toLowerCase();
       const hwType = (s.hardware_type || '').toLowerCase();
       const hwName = (s.hardware_name || '').toLowerCase();
       const sName = (s.sensor_name || '').toLowerCase();
       const cat = (s.sensor_category || '').toLowerCase();
+
+      // Строго отсекаем дисковые метрики и не-CPU компоненты
+      if (sid.startsWith('disk_speed_') || hwType.includes('storage') || cat.includes('storage')) return false;
 
       const isCpu = hwType === 'cpu' || hwName.includes('cpu') || hwName.includes('intel') || hwName.includes('amd');
       if (!isCpu) return false;
@@ -370,7 +410,14 @@
 
       return true;
     });
-    renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', cpuSensors);
+    if (cpuSensors.length > 0) {
+      lastCpuSensorsData = cpuSensors;
+      renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', cpuSensors);
+    } else if (lastCpuSensorsData && lastCpuSensorsData.length > 0) {
+      renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', lastCpuSensorsData);
+    } else {
+      renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', []);
+    }
 
     // 2. GPU Sensors (мощности, вольтажи, частоты, вентиляторы, память GPU)
     const gpuSensors = cachedSensors.filter(s => {
@@ -786,13 +833,154 @@
     `;
   }
 
-  function renderCpuCores(cores) {
+  /**
+   * Извлечение и сопоставление параметров сенсоров конкретного ядра CPU.
+   * @param {number} coreIdx - Индекс ядра (0-based)
+   * @param {number} totalCores - Общее количество ядер/потоков
+   * @param {Array} sensors - Массив объектов сенсоров из telemetry.db / LHM
+   * @returns {Array<{icon: string, label: string, value: string, badgeClass: string}>}
+   */
+  function extractCoreParameters(coreIdx, totalCores, sensors) {
+    if (!Array.isArray(sensors) || sensors.length === 0) {
+      return [];
+    }
+
+    const cpuSensors = sensors.filter(s => {
+      const hwType = (s.hardware_type || '').toLowerCase();
+      const hwName = (s.hardware_name || '').toLowerCase();
+      return hwType === 'cpu' || hwName.includes('cpu') || hwName.includes('intel') || hwName.includes('amd');
+    });
+
+    if (cpuSensors.length === 0) return [];
+
+    const idx1 = coreIdx + 1;
+    const physIdx1 = Math.floor(coreIdx / 2) + 1;
+
+    const params = [];
+
+    // 1. Вольтаж ядра (Voltage)
+    const voltSensor = cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!cat.includes('volt') && unit !== 'v') return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`) || name.includes(`core #${coreIdx}`);
+    }) || cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      return (cat.includes('volt') || unit === 'v') && (name.includes('cpu core') || name.includes('vcore'));
+    });
+
+    if (voltSensor) {
+      params.push({
+        icon: 'bi bi-lightning-charge text-primary',
+        label: 'Вольтаж',
+        value: voltSensor.value_raw || `${Number(voltSensor.value || 0).toFixed(2)} V`,
+        badgeClass: 'text-primary'
+      });
+    }
+
+    // 2. Частота ядра (Clock / Frequency)
+    const clockSensor = cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!cat.includes('clock') && !unit.includes('hz')) return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`) || name.includes(`core #${coreIdx}`);
+    }) || cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      return (cat.includes('clock') || unit.includes('hz')) && (name.includes('core freq') || name.includes('cpu core'));
+    });
+
+    if (clockSensor) {
+      params.push({
+        icon: 'bi bi-speedometer2 text-info',
+        label: 'Частота',
+        value: clockSensor.value_raw || `${Number(clockSensor.value || 0).toFixed(0)} MHz`,
+        badgeClass: 'text-info'
+      });
+    }
+
+    // 3. Запас до TjMax (Distance to TjMax)
+    const tjmaxSensor = cpuSensors.find(s => {
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!name.includes('tjmax')) return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`) || name.includes(`core #${coreIdx}`);
+    }) || cpuSensors.find(s => (s.sensor_name || '').toLowerCase().includes('tjmax'));
+
+    if (tjmaxSensor) {
+      params.push({
+        icon: 'bi bi-shield-check text-success',
+        label: 'До TjMax',
+        value: tjmaxSensor.value_raw || `${Number(tjmaxSensor.value || 0).toFixed(0)} °C`,
+        badgeClass: 'text-success'
+      });
+    }
+
+    // 4. Мощность (Power / Cores Power)
+    const powerSensor = cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!cat.includes('power') && unit !== 'w') return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`);
+    }) || cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      return (cat.includes('power') || unit === 'w') && (name.includes('cpu cores') || name.includes('cpu core'));
+    });
+
+    if (powerSensor) {
+      params.push({
+        icon: 'bi bi-lightning text-warning',
+        label: 'Мощность',
+        value: powerSensor.value_raw || `${Number(powerSensor.value || 0).toFixed(1)} W`,
+        badgeClass: 'text-warning'
+      });
+    }
+
+    // 5. Пиковая загрузка / Core Max / Шина (Bus Speed)
+    const maxSensor = cpuSensors.find(s => {
+      const name = (s.sensor_name || '').toLowerCase();
+      return name.includes('core max') || name.includes('cpu core max');
+    }) || cpuSensors.find(s => {
+      const name = (s.sensor_name || '').toLowerCase();
+      return name.includes('bus speed');
+    });
+
+    if (maxSensor) {
+      const isBus = (maxSensor.sensor_name || '').toLowerCase().includes('bus');
+      params.push({
+        icon: isBus ? 'bi bi-hdd-network text-secondary' : 'bi bi-graph-up-arrow text-danger',
+        label: isBus ? 'Шина' : 'Пик Max',
+        value: maxSensor.value_raw || `${Number(maxSensor.value || 0).toFixed(1)} ${maxSensor.unit || ''}`.trim(),
+        badgeClass: isBus ? 'text-secondary' : 'text-danger'
+      });
+    }
+
+    return params;
+  }
+
+  function renderCpuCores(cores, totalThreadsCount) {
     const box = document.getElementById('sys-metric-cpu-cores');
     const badgeCount = document.getElementById('sys-cores-count-badge');
     if (!box) return;
 
+    if (Array.isArray(cores)) {
+      lastCpuCoresData = cores;
+    } else if (lastCpuCoresData && lastCpuCoresData.length) {
+      cores = lastCpuCoresData;
+    }
+
+    const cCount = cores ? cores.length : 0;
+    const thCount = totalThreadsCount || (cores ? cores.reduce((acc, c) => acc + (c.threads ? c.threads.length : 0), 0) : 0);
+
     if (badgeCount) {
-      badgeCount.textContent = cores && cores.length ? `${cores.length} ядер` : '0 ядер';
+      badgeCount.textContent = cCount ? `${cCount} ядер • ${thCount} потоков` : '0 ядер';
     }
 
     if (!Array.isArray(cores) || cores.length === 0) {
@@ -803,21 +991,76 @@
     box.innerHTML = cores.map(c => {
       const load = c.load_percent == null ? null : Number(c.load_percent);
       const temp = c.temperature_c == null ? null : Number(c.temperature_c);
+      const freqStr = c.frequency_str || (c.frequency_mhz ? (c.frequency_mhz >= 1000 ? (c.frequency_mhz / 1000).toFixed(2) + ' GHz' : c.frequency_mhz.toFixed(0) + ' MHz') : '--');
+      const powerStr = c.power_w != null ? `${Number(c.power_w).toFixed(1)} W` : (c.power_str || '--');
       const loadStr = load == null ? '--' : `${load.toFixed(0)}%`;
-      const gaugeSvg = createGaugeSvg(load, 100, 56);
+      const tempStr = temp != null ? `${temp.toFixed(0)} °C` : '-- °C';
+      const gaugeSvg = createGaugeSvg(load, 100, 54);
       const tempHtml = createTempSliderHtml(temp, 30, 95, false);
 
+      const threadsList = Array.isArray(c.threads) ? c.threads : [];
+      const threadsHtml = threadsList.map(th => {
+        const thLoad = Number(th.load_percent || 0);
+        const barClass = thLoad >= 80 ? 'bg-danger' : thLoad >= 60 ? 'bg-warning' : 'bg-info';
+        return `
+          <div class="d-flex align-items-center justify-content-between gap-1 mb-1" style="font-size: 0.72rem;">
+            <span class="text-truncate text-light" style="max-width: 65px;" title="${escapeHtml(th.name || 'Thread')}">
+              ${escapeHtml(th.name || 'Thread')}
+            </span>
+            <div class="progress flex-grow-1" style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+              <div class="progress-bar ${barClass}" style="width: ${Math.min(100, thLoad)}%; border-radius: 3px;"></div>
+            </div>
+            <span class="font-monospace text-light fw-bold" style="width: 32px; text-align: right; font-size: 0.69rem;">${thLoad.toFixed(0)}%</span>
+          </div>
+        `;
+      }).join('');
+
       return `
-        <div class="sys-core-card" title="Ядро #${c.index}: Нагрузка ${loadStr}, Температура ${temp != null ? temp.toFixed(0) + '°C' : 'N/A'}">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="sys-core-title">Core #${c.index}</span>
-            <span class="sys-core-load-badge">${loadStr}</span>
+        <div class="sys-core-card p-2 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border-color, rgba(255,255,255,0.08));" title="Ядро #${c.index}: Нагрузка ${loadStr}, Температура ${tempStr}">
+          <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: var(--border-subtle, rgba(255,255,255,0.06)) !important;">
+            <div class="d-flex align-items-center gap-1.5">
+              <i class="bi bi-cpu text-info"></i>
+              <span class="sys-core-title fw-bold" style="font-size: 0.82rem;">Core #${c.index}</span>
+            </div>
+            <span class="badge ${load != null && load >= 80 ? 'bg-danger' : 'bg-info-subtle text-info border border-info'}" style="font-size: 0.70rem;">${loadStr}</span>
           </div>
-          <div class="py-1">
-            ${gaugeSvg}
+          
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-flex flex-column align-items-center justify-content-center" style="width: 96px; flex-shrink: 0;">
+              <div style="width: 96px; height: 52px;">
+                ${gaugeSvg}
+              </div>
+              <div class="w-100 mt-1">
+                ${tempHtml}
+              </div>
+            </div>
+            <div class="flex-grow-1 ps-1" style="min-width: 0;">
+              <div class="sys-core-param-table">
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-activity text-info me-1"></i>Нагрузка</span>
+                  <span class="sys-core-param-val text-info">${loadStr}</span>
+                </div>
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-thermometer-half text-danger me-1"></i>Температура</span>
+                  <span class="sys-core-param-val ${temp != null && temp >= 75 ? 'text-danger' : 'text-warning'}">${tempStr}</span>
+                </div>
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-speedometer2 text-info me-1"></i>Частота</span>
+                  <span class="sys-core-param-val text-info">${escapeHtml(freqStr)}</span>
+                </div>
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-lightning text-warning me-1"></i>Мощность</span>
+                  <span class="sys-core-param-val text-warning">${escapeHtml(powerStr)}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            ${tempHtml}
+
+          <div class="pt-1 border-top" style="border-color: var(--border-subtle, rgba(255,255,255,0.06)) !important;">
+            <div class="text-muted small mb-1" style="font-size: 0.68rem; font-weight: 600;">Потоки:</div>
+            <div class="sys-core-threads-list">
+              ${threadsHtml || '<div class="text-muted small">1 поток</div>'}
+            </div>
           </div>
         </div>
       `;
@@ -845,31 +1088,245 @@
   const _cpuSparkHistory = [];
   const _gpuSparkHistory = [];
 
+  let currentCpuSparkScale = 'log';
+  let lastCpuSparkData = [];
+
+  function setCpuSparkScale(scale) {
+    currentCpuSparkScale = scale;
+    const btnLog = document.getElementById('btn-cpu-spark-log');
+    const btnLin = document.getElementById('btn-cpu-spark-lin');
+    if (btnLog && btnLin) {
+      if (scale === 'log') {
+        btnLog.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLin.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      } else {
+        btnLin.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLog.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      }
+    }
+    if (lastCpuSparkData && lastCpuSparkData.length) {
+      renderCpuSpark(lastCpuSparkData);
+    }
+  }
+  window.setCpuSparkScale = setCpuSparkScale;
+
+  function buildSmoothSvgPath(pts) {
+    if (!pts || pts.length === 0) return '';
+    if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = i > 0 ? pts[i - 1] : pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = i !== pts.length - 2 ? pts[i + 2] : p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+
   function renderCpuSpark(history) {
     const box = document.getElementById('sys-cpu-spark');
+    const container = document.getElementById('sys-cpu-spark-container');
+    const tooltip = document.getElementById('sys-cpu-spark-tooltip');
     if (!box) return;
+
+    if (Array.isArray(history) && history.length >= 2) {
+      lastCpuSparkData = history;
+    } else if (lastCpuSparkData && lastCpuSparkData.length >= 2) {
+      history = lastCpuSparkData;
+    } else {
+      return;
+    }
+
     box.replaceChildren();
-    if (!Array.isArray(history) || history.length < 2) return;
     const ns = 'http://www.w3.org/2000/svg';
-    const W = 200, H = 56;
+    const W = 600, H = 84;
+    const padTop = 6, padBottom = 6;
+    const innerH = H - padTop - padBottom;
+
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
-    svg.style.cssText = 'width:100%;height:100%;';
-    const line = (getY, color) => {
-      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
-      const pl = document.createElementNS(ns, 'polyline');
-      pl.setAttribute('points', pts.join(' '));
-      pl.setAttribute('fill', 'none');
-      pl.setAttribute('stroke', color);
-      pl.setAttribute('stroke-width', '1.4');
-      svg.appendChild(pl);
+    svg.style.cssText = 'width:100%;height:100%;display:block;cursor:crosshair;';
+
+    // 1. Defs с градиентами и фильтром свечения
+    const defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML = `
+      <linearGradient id="cpuGradLoad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#0dcaf0" stop-opacity="0.38"/>
+        <stop offset="60%" stop-color="#0dcaf0" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#0dcaf0" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="cpuGradTemp" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="cpuGradPower" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+      </linearGradient>
+    `;
+    svg.appendChild(defs);
+
+    // 2. Горизонтальная сетка (Grid Lines)
+    const gridG = document.createElementNS(ns, 'g');
+    gridG.setAttribute('opacity', '0.2');
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+      const y = H - padBottom - ratio * innerH;
+      const gl = document.createElementNS(ns, 'line');
+      gl.setAttribute('x1', '0');
+      gl.setAttribute('y1', y.toFixed(1));
+      gl.setAttribute('x2', String(W));
+      gl.setAttribute('y2', y.toFixed(1));
+      gl.setAttribute('stroke', '#ffffff');
+      gl.setAttribute('stroke-dasharray', ratio === 0.0 || ratio === 1.0 ? 'none' : '3,3');
+      gl.setAttribute('stroke-width', '1');
+      gridG.appendChild(gl);
+    });
+    svg.appendChild(gridG);
+
+    // 3. Расчет динамических диапазонов
+    const count = history.length;
+    const isLog = currentCpuSparkScale === 'log';
+
+    // Температурный диапазон
+    const rawTemps = history.map(h => Number(h.temperature_c != null ? h.temperature_c : (h.temp || 0))).filter(t => t > 0);
+    const minT = rawTemps.length ? Math.max(20, Math.min(...rawTemps) - 4) : 30;
+    const maxT = rawTemps.length ? Math.max(minT + 15, Math.max(...rawTemps) + 4) : 90;
+
+    // Диапазон мощности
+    const rawPowers = history.map(h => Number(h.power_w != null ? h.power_w : (h.power || 0))).filter(p => p > 0);
+    const minP = rawPowers.length ? Math.max(0, Math.min(...rawPowers) - 5) : 5;
+    const maxP = rawPowers.length ? Math.max(minP + 20, Math.max(...rawPowers) + 5) : 100;
+
+    // Функции преобразования нормализованного Y (0..1) с учетом логарифмической шкалы
+    const transformLoad = (v) => {
+      const cl = Math.min(100, Math.max(0, Number(v || 0)));
+      if (!isLog) return cl / 100;
+      return Math.log10(1 + 9 * (cl / 100)); // Log-10 mapping: 10% -> 0.28, 50% -> 0.74, 100% -> 1.0
     };
-    line(h => Math.min(100, Math.max(0, Number(h.load || 0))) / 100, '#0dcaf0');
-    line(h => {
-      const t = h.temp != null ? Number(h.temp) : 0;
-      return Math.min(1, Math.max(0, (t - 20) / 80));
-    }, '#ef4444');
+
+    const transformTemp = (v) => {
+      const ct = Number(v != null ? v : minT);
+      const frac = Math.min(1, Math.max(0, (ct - minT) / (maxT - minT)));
+      return isLog ? Math.pow(frac, 0.85) : frac;
+    };
+
+    const transformPower = (v) => {
+      const cp = Number(v != null ? v : minP);
+      const frac = Math.min(1, Math.max(0, (cp - minP) / (maxP - minP)));
+      return isLog ? Math.log10(1 + 9 * frac) : frac;
+    };
+
+    // Точки графиков
+    const loadPts = [];
+    const tempPts = [];
+    const powerPts = [];
+
+    history.forEach((h, i) => {
+      const x = (i / (count - 1)) * W;
+      
+      const lVal = Number(h.load_percent != null ? h.load_percent : (h.load || 0));
+      const tVal = h.temperature_c != null ? Number(h.temperature_c) : (h.temp != null ? Number(h.temp) : null);
+      const pVal = h.power_w != null ? Number(h.power_w) : (h.power != null ? Number(h.power) : null);
+
+      const yLoad = H - padBottom - transformLoad(lVal) * innerH;
+      const yTemp = H - padBottom - transformTemp(tVal) * innerH;
+      const yPower = H - padBottom - transformPower(pVal) * innerH;
+
+      loadPts.push({ x, y: yLoad, raw: lVal, time: h.time_label || h.timestamp });
+      tempPts.push({ x, y: yTemp, raw: tVal });
+      powerPts.push({ x, y: yPower, raw: pVal });
+    });
+
+    // 4. Отрисовка площадей и кривых (Area & Spline)
+    const drawSeries = (pts, strokeColor, fillColor, strokeWidth = 1.8) => {
+      if (pts.length < 2) return;
+      const linePath = buildSmoothSvgPath(pts);
+
+      // Заливка градиентом
+      if (fillColor) {
+        const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${H - padBottom} L ${pts[0].x.toFixed(1)} ${H - padBottom} Z`;
+        const aEl = document.createElementNS(ns, 'path');
+        aEl.setAttribute('d', areaPath);
+        aEl.setAttribute('fill', fillColor);
+        svg.appendChild(aEl);
+      }
+
+      // Линия кривой
+      const pEl = document.createElementNS(ns, 'path');
+      pEl.setAttribute('d', linePath);
+      pEl.setAttribute('fill', 'none');
+      pEl.setAttribute('stroke', strokeColor);
+      pEl.setAttribute('stroke-width', String(strokeWidth));
+      pEl.setAttribute('stroke-linejoin', 'round');
+      pEl.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(pEl);
+    };
+
+    // Рисуем снизу вверх: Мощность (желтый) -> Температура (красный) -> Загрузка (голубой)
+    drawSeries(powerPts, '#f59e0b', 'url(#cpuGradPower)', 1.4);
+    drawSeries(tempPts, '#ef4444', 'url(#cpuGradTemp)', 1.5);
+    drawSeries(loadPts, '#0dcaf0', 'url(#cpuGradLoad)', 2.0);
+
+    // 5. Интерактивный Hover-курсор и Тултип
+    const crosshair = document.createElementNS(ns, 'line');
+    crosshair.setAttribute('y1', '0');
+    crosshair.setAttribute('y2', String(H));
+    crosshair.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+    crosshair.setAttribute('stroke-dasharray', '2,2');
+    crosshair.setAttribute('stroke-width', '1');
+    crosshair.style.display = 'none';
+    svg.appendChild(crosshair);
+
+    svg.addEventListener('mousemove', (evt) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+      const ratio = mouseX / rect.width;
+      const idx = Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
+      const pt = loadPts[idx];
+      const hItem = history[idx];
+
+      if (pt && tooltip) {
+        crosshair.setAttribute('x1', pt.x.toFixed(1));
+        crosshair.setAttribute('x2', pt.x.toFixed(1));
+        crosshair.style.display = 'block';
+
+        const tStr = hItem.time_label || (hItem.timestamp ? new Date(hItem.timestamp).toLocaleTimeString() : (hItem.time ? new Date(hItem.time).toLocaleTimeString() : '--:--:--'));
+        const lStr = `${pt.raw.toFixed(1)}%`;
+        const tempVal = tempPts[idx] && tempPts[idx].raw != null ? `${tempPts[idx].raw.toFixed(0)} °C` : '--';
+        const powVal = powerPts[idx] && powerPts[idx].raw != null ? `${powerPts[idx].raw.toFixed(1)} W` : '--';
+
+        tooltip.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
+            <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
+            <span class="badge ${isLog ? 'bg-info-subtle text-info' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin'}</span>
+          </div>
+          <div class="d-flex gap-2 font-monospace">
+            <span class="text-info fw-bold"><i class="bi bi-activity me-0.5"></i>${lStr}</span>
+            <span class="text-danger fw-bold"><i class="bi bi-thermometer-half me-0.5"></i>${tempVal}</span>
+            <span class="text-warning fw-bold"><i class="bi bi-lightning me-0.5"></i>${powVal}</span>
+          </div>
+        `;
+        tooltip.style.display = 'block';
+
+        // Позиционирование тултипа
+        const tipX = Math.min(rect.width - 150, Math.max(10, mouseX - 60));
+        tooltip.style.left = `${tipX}px`;
+      }
+    });
+
+    svg.addEventListener('mouseleave', () => {
+      crosshair.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
     box.appendChild(svg);
   }
 
@@ -1321,6 +1778,7 @@
       const res = await fetch('/api/v1/panel/cpu-load');
       if (!res.ok) return;
       const data = await res.json();
+      lastCpuData = data;
       const cpuVal = document.getElementById('sys-metric-cpu-val');
       const cpuFill = document.getElementById('sys-metric-cpu-fill');
       const cpuSub = document.getElementById('sys-metric-cpu-sub');
@@ -1331,7 +1789,27 @@
 
       const pct = Number(data.total_percent || 0);
       const cores = Array.isArray(data.cores) ? data.cores : [];
-      if (cpuVal) cpuVal.innerText = `${pct.toFixed(1)}%`;
+      const threads = Array.isArray(data.threads) ? data.threads : [];
+      const sensors = Array.isArray(data.sensors) ? data.sensors : [];
+      const history = Array.isArray(data.history) ? data.history : [];
+
+      if (cpuVal) {
+        cpuVal.innerText = `${pct.toFixed(1)}%`;
+        // Динамический оттенок значения загрузки
+        if (pct >= 85) {
+          cpuVal.style.color = '#ef4444'; // Красный (критическая нагрузка)
+          cpuVal.style.textShadow = '0 0 14px rgba(239, 68, 68, 0.6)';
+        } else if (pct >= 70) {
+          cpuVal.style.color = '#f97316'; // Оранжевый (высокая нагрузка)
+          cpuVal.style.textShadow = '0 0 12px rgba(249, 115, 22, 0.45)';
+        } else if (pct >= 50) {
+          cpuVal.style.color = '#eab308'; // Желтый / янтарный (умеренная нагрузка)
+          cpuVal.style.textShadow = '0 0 10px rgba(234, 179, 8, 0.4)';
+        } else {
+          cpuVal.style.color = '#0dcaf0'; // Голубой (штатная нагрузка)
+          cpuVal.style.textShadow = '0 0 10px rgba(13, 202, 240, 0.35)';
+        }
+      }
       if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
 
       if (cpuModel && data.name) {
@@ -1340,34 +1818,130 @@
       }
 
       const pkgTemp = data.package_temperature_c != null ? Number(data.package_temperature_c) : null;
+      const pkgPower = data.package_power_w != null ? Number(data.package_power_w) : null;
       if (cpuSub) {
         const t = pkgTemp == null ? '' : ` · ${pkgTemp.toFixed(0)} °C`;
-        cpuSub.innerText = cores.length ? `${cores.length} Ядер${t}` : '-- Ядер';
+        const p = pkgPower == null ? '' : ` · ${pkgPower.toFixed(0)} W`;
+        const cCount = data.cores_count || cores.length;
+        const thCount = data.threads_count || threads.length;
+        cpuSub.innerText = cCount ? `${cCount} ядер • ${thCount} потоков${t}${p}` : '-- Ядер';
       }
       if (cpuPkgTemp) {
-        cpuPkgTemp.innerText = pkgTemp != null ? `Пакет: ${pkgTemp.toFixed(0)} °C` : 'Пакет: -- °C';
+        const pStr = pkgPower != null ? ` · ${pkgPower.toFixed(0)} W` : '';
+        cpuPkgTemp.innerText = pkgTemp != null ? `Пакет: ${pkgTemp.toFixed(0)} °C${pStr}` : 'Пакет: -- °C';
+        if (pkgTemp != null) {
+          if (pkgTemp >= 80) {
+            cpuPkgTemp.className = 'text-danger fw-bold font-monospace';
+          } else if (pkgTemp >= 65) {
+            cpuPkgTemp.className = 'text-warning fw-bold font-monospace';
+          } else {
+            cpuPkgTemp.className = 'text-info font-monospace';
+          }
+        }
       }
 
-      // Gauge полукруг со стрелкой для общего CPU (крупный 130x74)
+      // 1. Заполнение сводной таблицы характеристик CPU (Specs)
+      const specs = data.specs || {};
+      const setSpec = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      if (specs.socket || specs.physical_cores) {
+        setSpec('sys-cpu-spec-arch', specs.architecture || 'x86_64');
+        setSpec('sys-cpu-spec-socket', specs.socket || 'LGA1200');
+        setSpec('sys-cpu-spec-cores', `${specs.physical_cores || cores.length}C / ${specs.logical_cores || threads.length}T`);
+        setSpec('sys-cpu-spec-base-freq', specs.base_frequency_str || '--');
+        setSpec('sys-cpu-spec-max-freq', specs.max_frequency_str || '--');
+        setSpec('sys-cpu-spec-cache', specs.cache_combined_str || '--');
+        const vendorBadge = document.getElementById('sys-metric-cpu-vendor-badge');
+        if (vendorBadge) {
+          vendorBadge.innerText = `${specs.vendor || 'Intel'} Corporation · ${specs.architecture || '64-bit'}`;
+        }
+      }
+
+      // Gauge полукруг со стрелкой для общего CPU
       if (cpuGauge) {
-        cpuGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+        cpuGauge.innerHTML = createGaugeSvg(pct, 120, 68);
       }
 
-      // Слайдер температуры Package (крупный)
+      // Слайдер температуры Package (расположен прямо под спидометром)
       if (cpuPkgSlider) {
-        cpuPkgSlider.innerHTML = createTempSliderHtml(pkgTemp, 30, 95, true);
+        cpuPkgSlider.innerHTML = createTempSliderHtml(pkgTemp, 30, 95, false);
       }
 
-      renderCpuCores(cores);
+      // 2. Физические ядра со своими потоками
+      renderCpuCores(cores, data.threads_count || threads.length);
 
-      // Добавление точки в историю линейного графика CPU
-      _cpuSparkHistory.push({ load: pct, temp: pkgTemp, time: new Date() });
-      if (_cpuSparkHistory.length > 60) _cpuSparkHistory.shift();
-      renderCpuSpark(_cpuSparkHistory);
+      // 3. Общие показатели CPU
+      if (sensors && sensors.length > 0) {
+        lastCpuSensorsData = sensors;
+        renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', sensors);
+      }
+
+      // 4. График истории CPU (Загрузка %, Температура °C, Мощность W)
+      if (history && history.length > 0) {
+        renderCpuSpark(history);
+      } else {
+        _cpuSparkHistory.push({ load: pct, temp: pkgTemp, power: pkgPower, time: new Date() });
+        if (_cpuSparkHistory.length > 60) _cpuSparkHistory.shift();
+        renderCpuSpark(_cpuSparkHistory);
+      }
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения загрузки CPU из API:', e);
     }
   }
+
+  /**
+   * Запуск экспертного AI-аудита и анализа характеристик CPU через Universal AITableModal.
+   */
+  function inspectCpuSpecsWithAi() {
+    if (!lastCpuData) {
+      console.warn('[SystemInspectorTab] Нет загруженных данных CPU для AI-инспекции');
+      return;
+    }
+    const specs = lastCpuData.specs || {};
+    const title = lastCpuData.name || 'Центральный процессор (CPU)';
+    const subtitle = `${specs.vendor || 'Intel/AMD'} · ${specs.socket || 'Socket'} · ${specs.architecture || 'x86_64'}`;
+    const metadata = {
+      'Сокет': specs.socket || 'N/A',
+      'Ядра / Потоки': `${specs.physical_cores || lastCpuData.cores_count || '--'}C / ${specs.logical_cores || lastCpuData.threads_count || '--'}T`,
+      'Базовая частота': specs.base_frequency_str || '--',
+      'Макс. частота': specs.max_frequency_str || '--',
+      'Кэш L2 / L3': specs.cache_combined_str || '--',
+      'Архитектура': specs.architecture || 'x86_64',
+      'Текущая загрузка': `${(lastCpuData.total_percent || 0).toFixed(1)}%`,
+      'Температура пакета': lastCpuData.package_temperature_c != null ? `${lastCpuData.package_temperature_c.toFixed(0)} °C` : 'N/A',
+      'Энергопотребление': lastCpuData.package_power_w != null ? `${lastCpuData.package_power_w.toFixed(1)} W` : 'N/A'
+    };
+
+    if (window.AITableModal && typeof window.AITableModal.show === 'function') {
+      window.AITableModal.show({
+        icon: '💻',
+        title: title,
+        subtitle: subtitle,
+        badges: [
+          { text: specs.architecture || 'x86_64', class: 'bg-primary-subtle text-primary border border-primary' },
+          { text: specs.socket || 'Socket', class: 'bg-info-subtle text-info border border-info' },
+          { text: `${specs.physical_cores || lastCpuData.cores_count || '--'} Cores`, class: 'bg-success-subtle text-success border border-success' }
+        ],
+        metadata: metadata,
+        rawTitle: 'CPU Inventory Telemetry & Specs',
+        rawContent: JSON.stringify({
+          name: lastCpuData.name,
+          specs: specs,
+          metrics: {
+            total_percent: lastCpuData.total_percent,
+            package_temperature_c: lastCpuData.package_temperature_c,
+            package_power_w: lastCpuData.package_power_w
+          },
+          cores_count: (lastCpuData.cores || []).length,
+          threads_count: (lastCpuData.threads || []).length
+        }, null, 2),
+        tableType: 'cpu',
+        actions: []
+      });
+    } else {
+      console.warn('[SystemInspectorTab] Universal AITableModal недоступен в DOM');
+    }
+  }
+  window.inspectCpuSpecsWithAi = inspectCpuSpecsWithAi;
 
   function renderGpuEngines(engines) {
     const box = document.getElementById('sys-metric-gpu-engines');
@@ -2241,6 +2815,41 @@
     const btnAudit = document.getElementById('btn-sys-run-audit');
     if (btnAudit) {
       btnAudit.onclick = () => runAiDiagnostics();
+    }
+
+    const btnCompact = document.getElementById('btn-sys-toggle-compact');
+    const sysContainer = document.querySelector('.sys-container');
+    const compactText = document.getElementById('sys-compact-btn-text');
+
+    const updateCompactUI = (isCompact) => {
+      if (!sysContainer) return;
+      if (isCompact) {
+        sysContainer.classList.add('sys-compact-mode');
+        if (compactText) compactText.textContent = 'Развернуть';
+        if (btnCompact) {
+          btnCompact.classList.add('btn-info', 'text-dark');
+          btnCompact.classList.remove('btn-outline-light');
+        }
+      } else {
+        sysContainer.classList.remove('sys-compact-mode');
+        if (compactText) compactText.textContent = 'Компактно';
+        if (btnCompact) {
+          btnCompact.classList.remove('btn-info', 'text-dark');
+          btnCompact.classList.add('btn-outline-light');
+        }
+      }
+    };
+
+    if (btnCompact && sysContainer) {
+      const savedCompact = localStorage.getItem('sys_inspector_compact_mode') === 'true';
+      if (savedCompact) {
+        updateCompactUI(true);
+      }
+      btnCompact.onclick = () => {
+        const nextState = !sysContainer.classList.contains('sys-compact-mode');
+        updateCompactUI(nextState);
+        try { localStorage.setItem('sys_inspector_compact_mode', String(nextState)); } catch (e) {}
+      };
     }
 
     const btnConfig = document.getElementById('btn-sys-config');

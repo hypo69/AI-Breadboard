@@ -1,25 +1,40 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Telegrambot
+Process Name: AI-Breadboard Automation - Run Telegram Bot
 =============================================================================
 Description:
-  Standalone Telegram bot launcher for ai-breadboard
+  Автономный диспетчер запуска и управления Telegram-ботом платформы AI Breadboard.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-TelegramBot.ps1
+  Зачем нужен этот скрипт:
+    1. Интеграция с мессенджером: обеспечивает автономную работу бота (scripts/dev/bot_runner.py)
+       для удаленного управления, получения уведомлений и диалога с LLM-агентами.
+    2. Управление процессами: запуск в интерактивной консоли или фоновом режиме службы,
+       остановка, перезапуск и проверка статуса бота.
 
 File: Run-TelegramBot.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone Telegram bot launcher for ai-breadboard
+    Управление сервисом Telegram-бота платформы AI Breadboard.
+
 .DESCRIPTION
-    Launches scripts/dev/bot_runner
+    Запускает раннер Telegram-бота с проверкой токена в .env файле, поддерживает
+    фоновый режим работы и интерактивный вывод логов.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Interactive
+    Запуск бота в активной интерактивной консоли с выводом логов.
+
+.EXAMPLE
+    .\Run-TelegramBot.ps1 -Action start
+    Запуск Telegram-бота в фоновом режиме.
 #>
 
 [CmdletBinding()]

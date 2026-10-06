@@ -13,7 +13,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:28:00
+# Updated: 2026-10-06 00:20:00
 # =============================================================================
 
 """Exports core system metrics models, sensor probers, and telemetry collectors."""
@@ -57,7 +57,17 @@ from .models import (
     ETWTraceEvent,
 )
 from .sensors import get_hardware_sensors
-from .sqlite import TelemetryStorage
+from .sqlite import (
+    AggregationLevel,
+    TelemetryBuffer,
+    TelemetryConnectionManager,
+    TelemetryMaintenance,
+    TelemetryReader,
+    TelemetrySqlAggregator,
+    TelemetryStorage,
+    TelemetryWriter,
+    sensors_aggregate,
+)
 from .collector import SystemCollector
 from .service import TelemetryLoggerService
 from .telemetry_config import TelemetryConfigManager, get_default_telemetry_config_path
@@ -131,6 +141,9 @@ __all__ = [
     "HardwareAuditor",
     "HardwareHistoryManager",
     "TelemetryStorage",
+    "TelemetrySqlAggregator",
+    "AggregationLevel",
+    "sensors_aggregate",
     "SystemCollector",
     "TelemetryLoggerService",
     "TelemetryConfigManager",

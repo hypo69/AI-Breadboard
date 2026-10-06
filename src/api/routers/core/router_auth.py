@@ -16,7 +16,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 11:15:30
 # =============================================================================
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from logger import logger
 from src.user_manager import user_manager
 from src.api.constants import BASE_API_PREFIX
 load_dotenv()
-router = APIRouter(prefix=BASE_API_PREFIX + '/auth', tags=['auth'])
+router = APIRouter(prefix='/auth', tags=['auth'])
 
 class TokenData:
     """Данные токена авторизации."""
@@ -790,4 +790,7 @@ def init_router() -> APIRouter:
     Returns:
         APIRouter: Настроенный роутер FastAPI.
     """
-    return router
+    combined = APIRouter()
+    combined.include_router(router)
+    combined.include_router(router, prefix=BASE_API_PREFIX)
+    return combined

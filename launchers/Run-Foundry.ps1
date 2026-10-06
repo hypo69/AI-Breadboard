@@ -1,25 +1,36 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Foundry
+Process Name: AI-Breadboard Automation - Run Foundry Local
 =============================================================================
 Description:
-  Microsoft Foundry local server launcher and management
+  Диспетчер запуска и контроля локального сервера Microsoft AI Foundry Local.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Foundry.ps1
+  Зачем нужен этот скрипт:
+    1. Управление локальным LLM-бэкендом: запуск, остановка, перезапуск и опрос состояния.
+    2. Оптимизация локального инференса: интеграция с Windows AI runtime и локальными весами моделей.
+    3. Диагностика портов: предотвращение конфликтов и контроль времени отклика службы.
 
 File: Run-Foundry.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Microsoft Foundry local server launcher and management
+    Управление локальным сервером Microsoft AI Foundry Local.
+
 .DESCRIPTION
-    Script for checking, running and managing local Microsoft AI Foundry service
+    Контролирует процесс службы Foundry Local, считывает конфигурацию из config.json
+    и выполняет операции старта, остановки и мониторинга состояния сервиса.
+
+.PARAMETER Action
+    Действие над сервисом: start (по умолчанию), stop, restart, status.
+
+.EXAMPLE
+    .\Run-Foundry.ps1 -Action start
+    Запуск локального сервера Microsoft AI Foundry.
 #>
 
 [CmdletBinding()]

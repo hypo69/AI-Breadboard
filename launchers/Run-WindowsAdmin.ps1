@@ -1,25 +1,39 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Windowsadmin
+Process Name: AI-Breadboard Automation - Run Windows Admin
 =============================================================================
 Description:
-  Standalone launcher for Windows System Administrator microservice
+  Автономный лончер микросервиса Windows System Administration.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-WindowsAdmin.ps1
+  Зачем нужен этот скрипт:
+    1. Управление системным администрированием: запуск модуля apps/windows/windows_admin
+       для работы с Active Directory, локальными учетными записями и политиками безопасности.
+    2. Управление процессами: запуск в режиме сервера или веб-дашборда, проверка статуса и остановка.
 
 File: Run-WindowsAdmin.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone launcher for Windows System Administrator microservice
+    Управление сервисом Windows System Administrator.
+
 .DESCRIPTION
-    Launches apps
+    Запускает и администрирует подсистему системного администрирования Windows,
+    предоставляя API и графический интерфейс для управления учетными записями и сервисами.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Mode
+    Режим запуска: server (по умолчанию) или dashboard.
+
+.EXAMPLE
+    .\Run-WindowsAdmin.ps1 -Action start
+    Запуск сервиса Windows Admin.
 #>
 
 [CmdletBinding()]

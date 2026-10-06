@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
@@ -97,11 +97,11 @@
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
-              <div class="font-monospace text-light" title="Записано данных">
-                <i class="bi bi-arrow-up-circle text-warning me-1"></i>${formatBytesLocal(d.bytes_written)}
+              <div class="font-monospace text-light" style="white-space: nowrap;" title="Записано за сессию">
+                <i class="bi bi-arrow-up-circle text-warning me-1"></i>Записано: ${formatBytesLocal(d.bytes_written)}
               </div>
-              <div class="small font-monospace text-info mt-0.5" title="Прочитано данных">
-                <i class="bi bi-arrow-down-circle text-info me-1"></i>${formatBytesLocal(d.bytes_read)}
+              <div class="small font-monospace text-info mt-0.5" style="white-space: nowrap;" title="Прочитано за сессию">
+                <i class="bi bi-arrow-down-circle text-info me-1"></i>Прочитано: ${formatBytesLocal(d.bytes_read)}
               </div>
             `;
 
@@ -183,20 +183,75 @@
     }
   }
 
+  const POLL_ID = 'storage_wear';
+
+  function getFrequency() {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'manual';
+  }
+
+  function setFrequency(freq) {
+    try {
+      localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+    } catch (_) {}
+    applyPoller(freq, false);
+  }
+
+  function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(`tab-storage-wear_${POLL_ID}`);
+    }
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
+  function applyPoller(freq, runInitial = false) {
+    stopPolling();
+    if (freq === 'start' || freq === 'manual') {
+      if (runInitial) fetchStorageBatteryWear();
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-storage-wear_${POLL_ID}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-storage-wear', fetchStorageBatteryWear, intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) fetchStorageBatteryWear();
+      autoRefreshTimer = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-storage-wear') : true) {
+          fetchStorageBatteryWear();
+        }
+      }, intervalMs);
+    }
+  }
+
   function bindEvents() {
     const btnRefresh = document.getElementById('btn-diag-wear-refresh');
     if (btnRefresh) {
       btnRefresh.onclick = () => fetchStorageBatteryWear();
     }
 
-    const autoSwitch = document.getElementById('diag-wear-auto-refresh');
-    if (autoSwitch) {
-      autoSwitch.onchange = (e) => {
-        if (e.target.checked) {
-          autoRefreshTimer = setInterval(fetchStorageBatteryWear, 10000);
-        } else if (autoRefreshTimer) {
-          clearInterval(autoRefreshTimer);
-          autoRefreshTimer = null;
+    const select = document.getElementById('diag-wear-poll-freq');
+    if (select) {
+      select.onchange = (e) => {
+        const newFreq = e.target.value;
+        setFrequency(newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
+          fetchStorageBatteryWear();
+        }
+        if (window.showToast) {
+          const label = select.options[select.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса износа: ${label}`, 'info');
         }
       };
     }
@@ -204,7 +259,10 @@
 
   async function init() {
     bindEvents();
-    await fetchStorageBatteryWear();
+    const currentFreq = getFrequency();
+    const select = document.getElementById('diag-wear-poll-freq');
+    if (select) select.value = currentFreq;
+    applyPoller(currentFreq, true);
   }
 
   if (document.readyState === 'loading') {

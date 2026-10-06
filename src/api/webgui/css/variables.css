@@ -1,29 +1,30 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard Styles - Variables Stylesheet
+ * Process Name: Windows Web Styles - Variables Stylesheet
  * =============================================================================
  * Description:
- *   Таблица стилей оформления компонентов интерфейса (variables).
+ *   Таблица стилей стиля и оформления интерфейса (variables).
+ *   Включает высококонтрастные токены для светлых тем (Light, Brick) и тёмных тем (Dark, Terminal).
  *
  * Usage Examples:
  *   HTML Link Tag:
- *     <link rel="stylesheet" href="/src/api/webgui/css/variables.css?v=20261001_v1">
+ *     <link rel="stylesheet" href="/windows/api/webgui/css/variables.css?v=20261004_v17">
  *
  * File: variables.css
  * Project: ai-breadboard
- * Package: src/api/webgui/css
+ * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 04:05:00
+ * Updated: 2026-10-04 12:12:00
  * =============================================================================
  */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    THEME VARIABLES — AI Breadboard WebGUI
-   Переменные оформления и дизайн-токены
+   Дизайн-токены и CSS-переменные для всех тем оформления
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Светлая тема (по умолчанию) ──────────────────────────────────────────── */
+/* ── 1. Светлая классическая тема (по умолчанию) ──────────────────────────── */
 :root,
 [data-theme="light"] {
   /* Фоны (иерархия поверхностей) */
@@ -93,7 +94,7 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
 
-  /* Каскадные токены KPI-карточек по умолчанию */
+  /* Каскадные токены KPI-карточек */
   --kpi-bg:         var(--surface-1);
   --kpi-border:     var(--border-color);
   --kpi-accent:     var(--nav-active);
@@ -130,66 +131,66 @@
   --status-info-border:    #7dd3fc;
 }
 
-/* ── Тёмная тема ───────────────────────────────────────────────────────────── */
-[data-theme="dark"] {
-  /* Фоны (иерархия поверхностей) */
-  --bg-color:        #0d1117;   /* страница — GitHub dark */
-  --surface-1:       #161b22;   /* карточки */
-  --surface-2:       #1c2128;   /* хедеры карточек */
-  --card-bg:         #161b22;
-  --card-text:       #c9d1d9;
-  --nav-bg:          #161b22;
+/* ── 2. Светлая кирпичная тема (Brick / Terracotta) ────────────────────────── */
+[data-theme="brick"] {
+  /* Фоны (теплые клинкерные и терракотовые поверхности) */
+  --bg-color:        #f7f3ee;   /* теплый светлый фон клинкера */
+  --surface-1:       #ffffff;   /* чистые белые карточки */
+  --surface-2:       #faefe7;   /* мягкий терракотово-песочный хедер */
+  --card-bg:         #ffffff;
+  --card-text:       #2c221e;
+  --nav-bg:          #ffffff;
 
   /* Текст */
-  --text-color:      #c9d1d9;
-  --text-muted:      #8b949e;
-  --nav-text:        #8b949e;
-  --nav-active:      #58a6ff;
-  --nav-hover-bg:    #21262d;
+  --text-color:      #2c221e;   /* глубокий теплый антрацит */
+  --text-muted:      #7d6b63;   /* теплый приглушенный */
+  --nav-text:        #59473f;
+  --nav-active:      #b84228;   /* благородный терракотово-кирпичный */
+  --nav-hover-bg:    #f7e6dc;
 
   /* Линии и границы */
-  --border-color:    #3b434e;
-  --border-strong:   #546274;
-  --border-subtle:   #272d36;
-  --border-contrast: #4c5664;
-  --divider-color:   #3b434e;
-  --modal-border:    #3b434e;
+  --border-color:    #dfcebf;   /* кирпично-песочный контур */
+  --border-strong:   #bc9e8c;
+  --border-subtle:   #ede2d8;
+  --border-contrast: #8f5843;
+  --divider-color:   #dfcebf;
+  --modal-border:    #dfcebf;
 
-  /* Тени (глубже) */
-  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.35);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.45);
-  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.55);
+  /* Тени (теплые) */
+  --shadow-xs:  0 1px 2px rgba(130, 70, 50, 0.05);
+  --shadow-sm:  0 1px 4px rgba(130, 70, 50, 0.08);
+  --shadow-md:  0 4px 12px rgba(130, 70, 50, 0.11);
+  --shadow-lg:  0 8px 24px rgba(130, 70, 50, 0.14);
 
   /* Чат */
-  --chat-user-bg:    #1f6feb;
+  --chat-user-bg:    #b84228;   /* кирпичный акцент сообщений */
   --chat-user-text:  #ffffff;
-  --chat-bot-bg:     #21262d;
-  --chat-bot-text:   #c9d1d9;
+  --chat-bot-bg:     #f4ece6;
+  --chat-bot-text:   #2c221e;
 
   /* Скроллбар */
-  --scrollbar-track: #0d1117;
-  --scrollbar-thumb: #484f58;
+  --scrollbar-track: #f7f3ee;
+  --scrollbar-thumb: #d1b8a8;
 
   /* Модальные окна */
-  --modal-bg:        #161b22;
-  --modal-text:      #c9d1d9;
+  --modal-bg:        #ffffff;
+  --modal-text:      #2c221e;
 
-  /* Алерты — тёмная тема */
-  --alert-success-bg:     #132c1e;
-  --alert-success-border: #2ea043;
-  --alert-success-text:   #7ee787;
-  --alert-danger-bg:      #2d1218;
-  --alert-danger-border:  #da3633;
-  --alert-danger-text:    #ff7b72;
-  --alert-warning-bg:     #2d2008;
-  --alert-warning-border: #d29922;
-  --alert-warning-text:   #e3b341;
-  --alert-info-bg:        #0d1f38;
-  --alert-info-border:    #1f6feb;
-  --alert-info-text:      #79c0ff;
+  /* Алерты — кирпичная тема */
+  --alert-success-bg:     #f2f9f4;
+  --alert-success-border: #9ad5af;
+  --alert-success-text:   #1e6b37;
+  --alert-danger-bg:      #fdf1ee;
+  --alert-danger-border:  #f3b4a4;
+  --alert-danger-text:    #9e2b17;
+  --alert-warning-bg:     #fdf7ec;
+  --alert-warning-border: #f6d28b;
+  --alert-warning-text:   #8a520f;
+  --alert-info-bg:        #f0f5fa;
+  --alert-info-border:    #a6cbe7;
+  --alert-info-text:      #1c5480;
 
-  /* Геометрия и радиусы */
+  /* Геометрия */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -218,20 +219,232 @@
   --subnav-btn-padding: 0.35rem 0.75rem;
   --subnav-font-size:   0.82rem;
 
-  /* Статусные цвета (темная тема) */
-  --status-success-bg:     #14532d;
-  --status-success-text:   #86efac;
-  --status-success-border: #22c55e;
+  /* Статусные цвета */
+  --status-success-bg:     #e2f3e8;
+  --status-success-text:   #1b6835;
+  --status-success-border: #8ecb9e;
 
-  --status-danger-bg:      #7f1d1d;
-  --status-danger-text:    #fca5a5;
-  --status-danger-border:  #ef4444;
+  --status-danger-bg:      #fae4df;
+  --status-danger-text:    #a32f1a;
+  --status-danger-border:  #f1a999;
 
-  --status-warning-bg:     #78350f;
-  --status-warning-text:   #fde047;
-  --status-warning-border: #eab308;
+  --status-warning-bg:     #faeed4;
+  --status-warning-text:   #94580b;
+  --status-warning-border: #f4c871;
 
-  --status-info-bg:        #0c4a6e;
-  --status-info-text:      #7dd3fc;
-  --status-info-border:    #0284c7;
+  --status-info-bg:        #e2eef7;
+  --status-info-text:      #195886;
+  --status-info-border:    #9bc4e2;
+}
+
+/* ── 3. Тёмная высококонтрастная тема (Dark High-Contrast) ────────────────── */
+[data-theme="dark"] {
+  /* Фоны (глубокие контрастные поверхности) */
+  --bg-color:        #0b0f17;   /* глубокий темный фон страницы */
+  --surface-1:       #151b23;   /* контрастные карточки */
+  --surface-2:       #1e2633;   /* четкие хедеры карточек и тулбары */
+  --card-bg:         #151b23;
+  --card-text:       #f3f6fa;   /* яркий чистый читаемый текст */
+  --nav-bg:          #151b23;
+
+  /* Текст */
+  --text-color:      #f3f6fa;   /* яркий текст высокой контрастности */
+  --text-muted:      #a3b1c2;   /* легко различимый вторичный текст */
+  --nav-text:        #b0bdcc;
+  --nav-active:      #58a6ff;   /* яркий синий активный акцент */
+  --nav-hover-bg:    #222d3d;
+
+  /* Линии и границы (высокая четкость) */
+  --border-color:    #3b4758;   /* четко очерченные границы */
+  --border-strong:   #596b82;   /* выразительные активные границы */
+  --border-subtle:   #252d38;   /* мягкие внутренние разделители */
+  --border-contrast: #70849d;   /* акцентные контуры */
+  --divider-color:   #3b4758;
+  --modal-border:    #3b4758;
+
+  /* Тени (глубокие, отделяющие слои) */
+  --shadow-xs:  0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm:  0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow-md:  0 6px 16px rgba(0, 0, 0, 0.55);
+  --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.65);
+
+  /* Чат */
+  --chat-user-bg:    #1f6feb;
+  --chat-user-text:  #ffffff;
+  --chat-bot-bg:     #212836;
+  --chat-bot-text:   #f3f6fa;
+
+  /* Скроллбар */
+  --scrollbar-track: #0b0f17;
+  --scrollbar-thumb: #4e5b6e;
+
+  /* Модальные окна */
+  --modal-bg:        #151b23;
+  --modal-text:      #f3f6fa;
+
+  /* Алерты — тёмная контрастная тема */
+  --alert-success-bg:     #123321;
+  --alert-success-border: #3fb950;
+  --alert-success-text:   #8df397;
+  --alert-danger-bg:      #3b181d;
+  --alert-danger-border:  #f85149;
+  --alert-danger-text:    #ff9b94;
+  --alert-warning-bg:     #38290f;
+  --alert-warning-border: #d29922;
+  --alert-warning-text:   #f5cf6d;
+  --alert-info-bg:        #122744;
+  --alert-info-border:    #388bfd;
+  --alert-info-text:      #a5d6ff;
+
+  /* Геометрия */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Типографика */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+
+  /* Каскадные токены KPI-карточек */
+  --kpi-bg:         var(--surface-1);
+  --kpi-border:     var(--border-color);
+  --kpi-accent:     var(--nav-active);
+  --kpi-min-height: 72px;
+  --kpi-padding:    0.65rem 0.9rem;
+  --kpi-val-size:   1.25rem;
+  --kpi-label-size: 0.72rem;
+  --kpi-sub-size:   0.72rem;
+
+  /* Каскадные токены панелей */
+  --panel-bg:        var(--surface-1);
+  --panel-border:    var(--border-color);
+  --panel-header-bg: var(--surface-2);
+
+  /* Каскадные токены суб-навигации */
+  --subnav-btn-padding: 0.35rem 0.75rem;
+  --subnav-font-size:   0.82rem;
+
+  /* Статусные цвета */
+  --status-success-bg:     #174828;
+  --status-success-text:   #9df4a6;
+  --status-success-border: #2ea043;
+
+  --status-danger-bg:      #52171c;
+  --status-danger-text:    #ffb4ae;
+  --status-danger-border:  #da3633;
+
+  --status-warning-bg:     #4d370f;
+  --status-warning-text:   #fce49b;
+  --status-warning-border: #d29922;
+
+  --status-info-bg:        #13375c;
+  --status-info-text:      #a8d8ff;
+  --status-info-border:    #1f6feb;
+}
+
+/* ── 4. Тёмная тема «Терминал» (Terminal / Matrix / CRT Phosphor) ─────────── */
+[data-theme="terminal"] {
+  /* Фоны (глубокий смоляной черный с зеленым отливом) */
+  --bg-color:        #060a06;   /* фоновый CRT-черный */
+  --surface-1:       #0b120c;   /* карточки терминала */
+  --surface-2:       #101c12;   /* шапки с изумрудным свечением */
+  --card-bg:         #0b120c;
+  --card-text:       #d8ffd8;   /* люминесцентный терминальный текст */
+  --nav-bg:          #0b120c;
+
+  /* Текст */
+  --text-color:      #d8ffd8;   /* неоновый зеленый фосфорный текст */
+  --text-muted:      #599863;   /* приглушенный фосфор */
+  --nav-text:        #6cb878;
+  --nav-active:      #00ff66;   /* электрический неоново-зеленый */
+  --nav-hover-bg:    #152618;
+
+  /* Линии и границы (терминальный контур со свечением) */
+  --border-color:    #1a4223;   /* глубокий зеленый контур */
+  --border-strong:   #00ff66;   /* неоновая рамка активности */
+  --border-subtle:   #0f2b14;
+  --border-contrast: #39ff14;
+  --divider-color:   #1a4223;
+  --modal-border:    #00ff66;
+
+  /* Тени (неоновое свечение фосфора) */
+  --shadow-xs:  0 0 3px rgba(0, 255, 102, 0.15);
+  --shadow-sm:  0 0 6px rgba(0, 255, 102, 0.2);
+  --shadow-md:  0 0 14px rgba(0, 255, 102, 0.25);
+  --shadow-lg:  0 0 28px rgba(0, 255, 102, 0.35);
+
+  /* Чат */
+  --chat-user-bg:    #008033;   /* зеленый фосфорный пузырь */
+  --chat-user-text:  #ffffff;
+  --chat-bot-bg:     #101c12;
+  --chat-bot-text:   #d8ffd8;
+
+  /* Скроллбар */
+  --scrollbar-track: #060a06;
+  --scrollbar-thumb: #1b4b24;
+
+  /* Модальные окна */
+  --modal-bg:        #0b120c;
+  --modal-text:      #d8ffd8;
+
+  /* Алерты — терминальная тема */
+  --alert-success-bg:     #0c2412;
+  --alert-success-border: #00ff66;
+  --alert-success-text:   #4dff88;
+  --alert-danger-bg:      #2b0d11;
+  --alert-danger-border:  #ff3344;
+  --alert-danger-text:    #ff808b;
+  --alert-warning-bg:     #2b2207;
+  --alert-warning-border: #ffb000;
+  --alert-warning-text:   #ffd266;
+  --alert-info-bg:        #0a1d26;
+  --alert-info-border:    #00ddff;
+  --alert-info-text:      #66ecff;
+
+  /* Геометрия */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Типографика (с моноширинным терминальным акцентом) */
+  --font-sans: "Consolas", "Cascadia Code", "Courier New", ui-monospace, monospace;
+  --font-mono: "Consolas", "Cascadia Code", "Courier New", ui-monospace, monospace;
+
+  /* Каскадные токены KPI-карточек */
+  --kpi-bg:         var(--surface-1);
+  --kpi-border:     var(--border-color);
+  --kpi-accent:     var(--nav-active);
+  --kpi-min-height: 72px;
+  --kpi-padding:    0.65rem 0.9rem;
+  --kpi-val-size:   1.25rem;
+  --kpi-label-size: 0.72rem;
+  --kpi-sub-size:   0.72rem;
+
+  /* Каскадные токены панелей */
+  --panel-bg:        var(--surface-1);
+  --panel-border:    var(--border-color);
+  --panel-header-bg: var(--surface-2);
+
+  /* Каскадные токены суб-навигации */
+  --subnav-btn-padding: 0.35rem 0.75rem;
+  --subnav-font-size:   0.82rem;
+
+  /* Статусные цвета */
+  --status-success-bg:     #0c2914;
+  --status-success-text:   #39ff14;
+  --status-success-border: #00ff66;
+
+  --status-danger-bg:      #3b0f14;
+  --status-danger-text:    #ff6675;
+  --status-danger-border:  #ff3344;
+
+  --status-warning-bg:     #382c09;
+  --status-warning-text:   #ffc83b;
+  --status-warning-border: #ffb000;
+
+  --status-info-bg:        #0c2533;
+  --status-info-text:      #33e0ff;
+  --status-info-border:    #00ccff;
 }

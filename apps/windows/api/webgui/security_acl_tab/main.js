@@ -17,16 +17,16 @@
  * Package: windows/api/webgui/security_acl_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 11:15:30
  * =============================================================================
  */
 
 /**
  * security_acl_tab/main.js — Управление правами доступа и дескрипторами безопасности (icacls, takeown)
- * Updated: 2026-10-01 06:00:00
+ * Updated: 2026-10-04 11:15:30
  */
 
-import { registerTabPoller } from '/html/js/tab-core.js';
+const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
 

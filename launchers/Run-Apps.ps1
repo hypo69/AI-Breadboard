@@ -1,26 +1,39 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Apps
+Process Name: AI-Breadboard Automation - Run Apps Orchestrator
 =============================================================================
 Description:
-  Universal multi-app orchestrator launcher for all /apps microservices
+  Универсальный оркестратор для группового управления всеми микросервисами каталога /apps.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Apps.ps1
+  Зачем нужен этот скрипт:
+    1. Централизованный запуск микросервисов: старт, остановка, перезапуск и проверка
+       статуса всех или выбранных приложений (/apps) согласно config_tc.json.
+    2. Пакетные операции: возможность поднять весь стек сервисов одной командой.
 
 File: Run-Apps.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 07:05:00
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Universal multi-app orchestrator launcher for all /apps microservices
+    Универсальный оркестратор микросервисов AI Breadboard.
+
 .DESCRIPTION
-    Starts, stops, restarts, or queries the status of all standalone microservices in /apps
-    according to configuration in config_tc
+    Управляет жизненным циклом приложений каталога apps/ (chat, helpdesk, windows_admin,
+    network_terminal, system_control_center, telemetry_research и др.).
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER App
+    Имя конкретного приложения для управления (или all для всех).
+
+.EXAMPLE
+    .\Run-Apps.ps1 -Action start
+    Запуск всех зарегистрированных микросервисов.
 #>
 
 [CmdletBinding()]

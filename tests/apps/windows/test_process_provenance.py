@@ -14,7 +14,7 @@
 # Package: tests.apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 02:15:00
+# Updated: 2026-10-06 00:49:00
 # =============================================================================
 
 from __future__ import annotations
@@ -27,9 +27,6 @@ from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
-from apps.windows.api.routers.router_system import init_router
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.models import (
     ProcessLifecycleEvent,
@@ -46,7 +43,7 @@ from apps.windows.telemetry.sqlite import TelemetryStorage
 def test_storage(tmp_path: Path) -> TelemetryStorage:
     """Создает изолированное хранилище SQLite для тестов."""
     db_file = tmp_path / "test_provenance.db"
-    return TelemetryStorage(db_path=db_file)
+    return TelemetryStorage(db_path=db_file, buffer_mode="direct")
 
 
 @pytest.fixture
@@ -337,34 +334,3 @@ def test_system_collector_provenance_report(test_collector: SystemCollector) -> 
         assert p.process_guid is not None
 
 
-def test_router_system_provenance_api(test_collector: SystemCollector) -> None:
-    """Тестирование REST-эндпоинтов FastAPI для Process Provenance."""
-    from fastapi import FastAPI
-
-    app = FastAPI()
-    router = init_router()
-    app.include_router(router)
-
-    client = TestClient(app)
-
-    # 1. GET /api/v1/system/processes/provenance
-    resp = client.get("/api/v1/system/processes/provenance?limit=5")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "total_processes" in data
-    assert "active_provenance" in data
-    assert len(data["active_provenance"]) <= 5
-
-    # 2. GET /api/v1/system/processes/provenance/history
-    resp_hist = client.get("/api/v1/system/processes/provenance/history?limit=10")
-    assert resp_hist.status_code == 200
-    hist_data = resp_hist.json()
-    assert hist_data["status"] == "ok"
-    assert "events" in hist_data
-
-    # 3. GET /api/v1/system/processes/{pid}/lineage
-    resp_lin = client.get("/api/v1/system/processes/1/lineage")
-    assert resp_lin.status_code == 200
-    lin_data = resp_lin.json()
-    assert lin_data["status"] == "ok"
-    assert "lineage" in lin_data

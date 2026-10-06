@@ -16,14 +16,14 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-06 05:09:00
 # =============================================================================
 
 """Тесты универсального роутера AI-диагностики таблиц."""
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from src.api.routers.core.router_diagnostics import init_router
+from apps.windows.api.routers.router_diagnostics import init_router
 
 def get_test_client() -> TestClient:
     """Создание тестового клиента FastAPI с роутером диагностики."""
@@ -140,3 +140,26 @@ def test_get_and_update_prompt_template() -> None:
     reset_data = reset_res.json()
     assert reset_data['is_customized'] is False
     assert 'Аудит установленного ПО' in reset_data['name']
+
+def test_explain_cpu_item() -> None:
+    """Проверка AI-объяснения для спецификаций и телеметрии процессора (CPU Audit)."""
+    client = get_test_client()
+    payload = {
+        'table_type': 'cpu',
+        'title': 'Intel Core i5-10400',
+        'subtitle': 'Intel · LGA1200 · x86_64',
+        'metadata': {
+            'Сокет': 'LGA1200',
+            'Ядра / Потоки': '6C / 12T',
+            'Базовая частота': '2.90 GHz',
+            'Макс. частота': '4.30 GHz',
+            'Кэш L2 / L3': '1.5 MB / 12.0 MB'
+        },
+        'raw_data': '{"name": "Intel Core i5-10400", "physical_cores": 6, "logical_cores": 12}'
+    }
+    res = client.post('/api/v1/diagnostics/explain', json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert 'summary' in data
+    assert 'security_verdict' in data
+    assert len(data['action_steps']) > 0

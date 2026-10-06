@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 08:16:00
+# Updated: 2026-10-06 01:34:00
 # =============================================================================
 
 from __future__ import annotations
@@ -81,15 +81,29 @@ class DiskDetailedInfo(BaseModel):
     disk_id: int
     device_path: str = ''
     friendly_name: str = ''
+    vendor: str = ''
+    product: str = ''
+    revision: str = ''
     bus_type: str = 'UNKNOWN'
     media_type: str = 'UNKNOWN'
     serial_number: str = ''
     firmware_revision: str = ''
+    size_bytes: int = 0
+    size_gb: float = 0.0
+    sector_size: int = 512
+    is_removable: bool = False
+    is_writable: bool = True
     geometry: DiskGeometryInfo = Field(default_factory=DiskGeometryInfo)
     headers: Optional[DiskHeadersInfo] = None
     partitions: List[PartitionTableEntry] = Field(default_factory=list)
     smart_status: str = 'Healthy'
     smart_temperature_c: Optional[float] = None
+    smart_wear_pct: Optional[float] = None
+    tbw_written_tb: Optional[float] = None
+    tbw_read_tb: Optional[float] = None
+    power_on_hours: Optional[int] = None
+    unsafe_shutdowns: Optional[int] = None
+    media_errors: Optional[int] = None
     is_system: bool = False
     is_boot: bool = False
     is_read_only: bool = False
@@ -108,14 +122,50 @@ class PartitionInfo(BaseModel):
 
 class VolumeInfo(BaseModel):
     """Информация о логическом томе."""
-    volume_id: str
+    volume_id: str = ''
     drive_letter: Optional[str] = None
+    mount_point: str = ''
+    volume_guid: str = ''
     label: str = ''
     filesystem: str = 'NTFS'
+    filesystem_flags: int = 0
     total_gb: float = 0.0
     free_gb: float = 0.0
+    available_gb: float = 0.0
     percent_used: float = 0.0
+    cluster_size_bytes: int = 4096
+    sector_size_bytes: int = 512
     health_status: str = 'Healthy'
+
+
+class DiskIOEvent(BaseModel):
+    """Событие прямого ввода-вывода (ETW / Process I/O)."""
+    timestamp: str = ''
+    created_at: float = 0.0
+    pid: int = 0
+    process_name: str = ''
+    disk_id: int = 0
+    operation: str = 'READ'  # 'READ' или 'WRITE'
+    bytes_count: int = 0
+    duration_ms: Optional[float] = None
+    offset: Optional[int] = None
+    file_path: Optional[str] = None
+
+
+class DiskPerformanceMetrics(BaseModel):
+    """Счетчики производительности диска в реальном времени (Performance Counters)."""
+    disk_id: int = 0
+    disk_name: str = ''
+    read_bytes_sec: float = 0.0
+    write_bytes_sec: float = 0.0
+    read_iops: float = 0.0
+    write_iops: float = 0.0
+    avg_read_latency_ms: float = 0.0
+    avg_write_latency_ms: float = 0.0
+    disk_time_percent: float = 0.0
+    percent_disk_time: float = 0.0
+    queue_length: float = 0.0
+
 
 
 class FsFeaturesInfo(BaseModel):
@@ -390,4 +440,6 @@ __all__ = [
     'BenchmarkProfileResult',
     'BenchmarkSuiteResult',
     'BenchmarkHistoryItem',
+    'DiskIOEvent',
+    'DiskPerformanceMetrics',
 ]

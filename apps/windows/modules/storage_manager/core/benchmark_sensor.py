@@ -19,7 +19,7 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 08:35:00
+# Updated: 2026-10-06 02:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -46,28 +46,15 @@ class StorageBenchmarkSensor:
     def __init__(
         self,
         benchmark_service: Optional[StorageBenchmarkService] = None,
-        storage: Optional[Any] = None,
     ) -> None:
         """Инициализация сенсора бенчмарка дисков.
 
         Args:
             benchmark_service: Экземпляр сервиса DiskSpd.
-            storage: Экземпляр хранилища телеметрии TelemetryStorage.
         """
         self.benchmark_service = benchmark_service or StorageBenchmarkService()
-        self._storage = storage
         self._last_results: Dict[str, Any] = {}
         self._last_poll_time: Optional[str] = None
-
-    def _get_storage(self) -> Optional[Any]:
-        """Ленивая загрузка синглтона хранилища телеметрии."""
-        if self._storage is None:
-            try:
-                from apps.windows.telemetry.sqlite import TelemetryStorage
-                self._storage = TelemetryStorage.get_instance()
-            except Exception as exc:
-                logger.debug(f'[StorageBenchmarkSensor] TelemetryStorage недоступен: {exc}')
-        return self._storage
 
     def run_quick_benchmark(
         self,
@@ -160,32 +147,40 @@ class StorageBenchmarkSensor:
                 sensor_poll_items.extend([
                     {
                         'id': f'disk_speed_seq_read_{clean_letter}',
-                        'name': f'Скорость чтения {drive}',
-                        'category': 'storage_speed',
+                        'sensor_name': f'Скорость чтения {drive}',
+                        'sensor_category': 'Storage Speed',
+                        'hardware_name': f'Диск {clean_letter}:',
+                        'hardware_type': 'storage',
                         'value': read_mb_s,
                         'unit': 'MB/s',
                         '_provider': 'WINDOWS_STORAGE',
                     },
                     {
                         'id': f'disk_speed_seq_write_{clean_letter}',
-                        'name': f'Скорость записи {drive}',
-                        'category': 'storage_speed',
+                        'sensor_name': f'Скорость записи {drive}',
+                        'sensor_category': 'Storage Speed',
+                        'hardware_name': f'Диск {clean_letter}:',
+                        'hardware_type': 'storage',
                         'value': write_mb_s,
                         'unit': 'MB/s',
                         '_provider': 'WINDOWS_STORAGE',
                     },
                     {
                         'id': f'disk_speed_rnd_read_iops_{clean_letter}',
-                        'name': f'Случайное чтение IOPS {drive}',
-                        'category': 'storage_speed',
+                        'sensor_name': f'Случайное чтение IOPS {drive}',
+                        'sensor_category': 'Storage IOPS',
+                        'hardware_name': f'Диск {clean_letter}:',
+                        'hardware_type': 'storage',
                         'value': rnd_read_iops,
                         'unit': 'IOPS',
                         '_provider': 'WINDOWS_STORAGE',
                     },
                     {
                         'id': f'disk_speed_latency_{clean_letter}',
-                        'name': f'Латентность доступа {drive}',
-                        'category': 'storage_latency',
+                        'sensor_name': f'Латентность доступа {drive}',
+                        'sensor_category': 'Storage Latency',
+                        'hardware_name': f'Диск {clean_letter}:',
+                        'hardware_type': 'storage',
                         'value': latency_us,
                         'unit': 'µs',
                         '_provider': 'WINDOWS_STORAGE',
@@ -199,16 +194,6 @@ class StorageBenchmarkSensor:
                     'status': 'error',
                     'error': str(exc),
                 }
-
-        # 3. Сохранение метрик в хранилище телеметрии SQLite
-        if sensor_poll_items:
-            storage = self._get_storage()
-            if storage and hasattr(storage, 'save_sensor_polls_batch'):
-                try:
-                    storage.save_sensor_polls_batch(sensor_poll_items, timestamp=now_iso, deduplicate=True)
-                    logger.debug(f'[StorageBenchmarkSensor] {len(sensor_poll_items)} метрик сохранено в телеметрию')
-                except Exception as save_err:
-                    logger.warning(f'[StorageBenchmarkSensor] Не удалось сбросить метрики в БД: {save_err}')
 
         total_elapsed = round(time.perf_counter() - t0, 2)
         summary_lines = []
@@ -228,6 +213,7 @@ class StorageBenchmarkSensor:
             'drives_count': len(results_by_drive),
             'drives_tested': list(results_by_drive.keys()),
             'results': results_by_drive,
+            'metrics': sensor_poll_items,
             'summary': summary_text,
             'total_duration_sec': total_elapsed,
         }

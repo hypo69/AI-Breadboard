@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/telemetry_history_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
@@ -33,9 +33,64 @@
    */
   async function init() {
     bindEvents();
+    const currentFreq = getFrequency();
+    const selectFreq = document.getElementById('th-poll-freq');
+    if (selectFreq) selectFreq.value = currentFreq;
     await loadAvailableFiles();
-    await fetchReportAndRender();
+    applyPoller(currentFreq, true);
     await loadRecordsTable();
+  }
+
+  const POLL_ID = 'telemetry_history';
+
+  function getFrequency() {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'manual';
+  }
+
+  function setFrequency(freq) {
+    try {
+      localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+    } catch (_) {}
+    applyPoller(freq, false);
+  }
+
+  function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(`tab-telemetry-history_${POLL_ID}`);
+    }
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
+  function applyPoller(freq, runInitial = false) {
+    stopPolling();
+    if (freq === 'start' || freq === 'manual') {
+      if (runInitial) fetchReportAndRender(false);
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-telemetry-history_${POLL_ID}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-telemetry-history', () => fetchReportAndRender(false), intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) fetchReportAndRender(false);
+      autoRefreshTimer = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-telemetry-history') : true) {
+          fetchReportAndRender(false);
+        }
+      }, intervalMs);
+    }
   }
 
   /**
@@ -59,19 +114,17 @@
       });
     }
 
-    const switchAuto = document.getElementById('th-auto-refresh');
-    if (switchAuto) {
-      switchAuto.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-          autoRefreshTimer = setInterval(async () => {
-            await fetchReportAndRender(false);
-          }, 5000);
-        } else {
-          if (autoRefreshTimer) {
-            clearInterval(autoRefreshTimer);
-            autoRefreshTimer = null;
-          }
+    const selectFreq = document.getElementById('th-poll-freq');
+    if (selectFreq) {
+      selectFreq.addEventListener('change', (e) => {
+        const newFreq = e.target.value;
+        setFrequency(newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
+          fetchReportAndRender(false);
+        }
+        if (window.showToast) {
+          const label = selectFreq.options[selectFreq.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса истории: ${label}`, 'info');
         }
       });
     }

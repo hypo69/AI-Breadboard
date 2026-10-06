@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:45:00
+# Updated: 2026-10-06 03:07:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,7 +26,136 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class CpuInventoryInfo(BaseModel):
+    """Паспорт физического процессора (CPU Inventory)."""
+    processor_id: int = 0
+    name: str = ''
+    vendor: str = ''
+    architecture: str = 'x86_64'
+    physical_cores: int = 1
+    logical_cores: int = 1
+    base_frequency_mhz: float = 0.0
+    max_frequency_mhz: float = 0.0
+    l2_cache_kb: Optional[int] = None
+    l3_cache_kb: Optional[int] = None
+    socket: str = ''
+    features: List[str] = Field(default_factory=list)
+
+
+class CpuTelemetrySample(BaseModel):
+    """Срез телеметрии нагрузки и температур процессора."""
+    timestamp: str = ''
+    created_at: float = 0.0
+    processor_id: int = 0
+    total_percent: float = 0.0
+    user_percent: float = 0.0
+    kernel_percent: float = 0.0
+    frequency_mhz: float = 0.0
+    temperature_c: Optional[float] = None
+    package_power_w: Optional[float] = None
+    core_utilization: List[float] = Field(default_factory=list)
+    core_temperatures: List[float] = Field(default_factory=list)
+
+
+class RamModuleInventoryInfo(BaseModel):
+    """Паспорт физического модуля (планки) оперативной памяти (SPD)."""
+    slot_id: int = 0
+    bank_label: str = 'DIMM'
+    device_locator: str = ''
+    serial_number: str = ''
+    part_number: str = ''
+    manufacturer: str = ''
+    capacity_bytes: int = 0
+    capacity_gb: float = 0.0
+    speed_mhz: int = 0
+    memory_type: str = 'DDR4'
+    form_factor: str = 'DIMM'
+    configured_voltage: Optional[float] = None
+
+
+class RamTelemetrySample(BaseModel):
+    """Срез телеметрии использования физической и виртуальной памяти."""
+    timestamp: str = ''
+    created_at: float = 0.0
+    total_bytes: int = 0
+    total_gb: float = 0.0
+    used_bytes: int = 0
+    used_gb: float = 0.0
+    available_bytes: int = 0
+    available_gb: float = 0.0
+    percent_used: float = 0.0
+    swap_total_gb: float = 0.0
+    swap_used_gb: float = 0.0
+    swap_percent: float = 0.0
+    pool_paged_mb: Optional[float] = None
+    pool_nonpaged_mb: Optional[float] = None
+
+
+class GpuInventoryInfo(BaseModel):
+    """Паспорт графического ускорителя (GPU Inventory)."""
+    gpu_id: int = 0
+    pci_device_id: str = ''
+    name: str = ''
+    vendor: str = ''
+    driver_version: str = ''
+    driver_date: str = ''
+    vram_bytes: int = 0
+    vram_gb: float = 0.0
+    pci_bus_id: str = ''
+    bios_version: str = ''
+    cuda_cores: Optional[int] = None
+    directml_supported: bool = True
+
+
+class GpuTelemetrySample(BaseModel):
+    """Срез телеметрии нагрузки, памяти и температур GPU."""
+    timestamp: str = ''
+    created_at: float = 0.0
+    gpu_id: int = 0
+    name: str = ''
+    load_percent: Optional[float] = None
+    memory_used_mb: Optional[float] = None
+    memory_total_mb: Optional[float] = None
+    memory_percent: Optional[float] = None
+    temperature_gpu_c: Optional[float] = None
+    temperature_memory_c: Optional[float] = None
+    fan_speed_pct: Optional[float] = None
+    power_draw_w: Optional[float] = None
+    clock_graphics_mhz: Optional[float] = None
+    clock_memory_mhz: Optional[float] = None
+
+
+class NetworkAdapterInventoryInfo(BaseModel):
+    """Паспорт сетевого адаптера / интерфейса (Network Adapter Inventory)."""
+    adapter_id: int = 0
+    adapter_guid: str = ''
+    name: str = ''
+    interface_name: str = ''
+    mac_address: str = ''
+    adapter_type: str = 'Ethernet'
+    is_physical: bool = True
+    is_wireless: bool = False
+    max_speed_mbps: int = 0
+    driver_name: str = ''
+    driver_version: str = ''
+
+
+class NetworkAdapterSample(BaseModel):
+    """Срез показателей сетевой активности и ошибок адаптера."""
+    timestamp: str = ''
+    created_at: float = 0.0
+    adapter_name: str = ''
+    bytes_recv_sec: float = 0.0
+    bytes_sent_sec: float = 0.0
+    packets_recv_sec: float = 0.0
+    packets_sent_sec: float = 0.0
+    errors_in_sec: float = 0.0
+    errors_out_sec: float = 0.0
+    link_speed_mbps: int = 0
+    is_connected: bool = True
 
 class TelemetryProvider(ABC):
     """Абстрактный базовый класс для всех компонентов системы, предоставляющих телеметрию."""
@@ -339,6 +468,8 @@ class SystemHealthAlerts(BaseModel):
 
 class HardwareSensor(BaseModel):
     """Hardware sensor reading (AIDA64 style) with provider tracking for deduplication."""
+    model_config = ConfigDict(extra='allow')
+
     sensor_id: str = Field(..., description='Unique sensor identifier')
     name: str = Field(..., description='Human readable sensor name')
     category: str = Field(default='temperature', description='Category: temperature, fan, voltage, power')
@@ -347,10 +478,6 @@ class HardwareSensor(BaseModel):
     min_value: Optional[float] = Field(default=None, description='Recorded minimum')
     max_value: Optional[float] = Field(default=None, description='Recorded maximum')
     provider: Optional[Any] = Field(default=None, description='Provider name or ID for deduplication (SensorProvider enum or int/str)')
-    
-    class Config:
-        """Allow extra fields for provider."""
-        extra = 'allow'
 
 class HardwareNode(BaseModel):
     """AIDA64-like hardware component tree item."""
@@ -404,6 +531,7 @@ class SystemSnapshot(BaseModel):
     os_name: str = Field(default='Windows', description='Operating system name and version')
     os_build: str = Field(default='', description='Operating system build number')
     system_language: str = Field(default='', description='System UI language')
+    os_install_language: str = Field(default='', description='Original OS install language')
     user_locale: str = Field(default='', description='User locale')
     system_locale: str = Field(default='', description='System locale')
     timezone: str = Field(default='', description='System timezone')

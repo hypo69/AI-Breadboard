@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 08:46:00
+ * Updated: 2026-10-06 01:26:00
  * =============================================================================
  */
 
@@ -31,6 +31,7 @@
   let currentSensorCategory = 'all';
   let isLhmRunning = false;
   let cachedHardwareSensorsData = null;
+  let lastCpuCoresData = [];
 
   async function fetchLhmSensors() {
     const badgeCount = document.getElementById('sys-lhm-sensors-count');
@@ -263,6 +264,9 @@
 
     // Также обновляем блоки сенсоров в целевых панелях CPU, GPU и RAM
     updateAllComponentSensors();
+    if (lastCpuCoresData && lastCpuCoresData.length) {
+      renderCpuCores(lastCpuCoresData);
+    }
   }
 
   function getSensorSortPriority(s) {
@@ -786,10 +790,148 @@
     `;
   }
 
+  /**
+   * Извлечение и сопоставление параметров сенсоров конкретного ядра CPU.
+   * @param {number} coreIdx - Индекс ядра (0-based)
+   * @param {number} totalCores - Общее количество ядер/потоков
+   * @param {Array} sensors - Массив объектов сенсоров из telemetry.db / LHM
+   * @returns {Array<{icon: string, label: string, value: string, badgeClass: string}>}
+   */
+  function extractCoreParameters(coreIdx, totalCores, sensors) {
+    if (!Array.isArray(sensors) || sensors.length === 0) {
+      return [];
+    }
+
+    const cpuSensors = sensors.filter(s => {
+      const hwType = (s.hardware_type || '').toLowerCase();
+      const hwName = (s.hardware_name || '').toLowerCase();
+      return hwType === 'cpu' || hwName.includes('cpu') || hwName.includes('intel') || hwName.includes('amd');
+    });
+
+    if (cpuSensors.length === 0) return [];
+
+    const idx1 = coreIdx + 1;
+    const physIdx1 = Math.floor(coreIdx / 2) + 1;
+
+    const params = [];
+
+    // 1. Вольтаж ядра (Voltage)
+    const voltSensor = cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!cat.includes('volt') && unit !== 'v') return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`) || name.includes(`core #${coreIdx}`);
+    }) || cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      return (cat.includes('volt') || unit === 'v') && (name.includes('cpu core') || name.includes('vcore'));
+    });
+
+    if (voltSensor) {
+      params.push({
+        icon: 'bi bi-lightning-charge text-primary',
+        label: 'Вольтаж',
+        value: voltSensor.value_raw || `${Number(voltSensor.value || 0).toFixed(2)} V`,
+        badgeClass: 'text-primary'
+      });
+    }
+
+    // 2. Частота ядра (Clock / Frequency)
+    const clockSensor = cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!cat.includes('clock') && !unit.includes('hz')) return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`) || name.includes(`core #${coreIdx}`);
+    }) || cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      return (cat.includes('clock') || unit.includes('hz')) && (name.includes('core freq') || name.includes('cpu core'));
+    });
+
+    if (clockSensor) {
+      params.push({
+        icon: 'bi bi-speedometer2 text-info',
+        label: 'Частота',
+        value: clockSensor.value_raw || `${Number(clockSensor.value || 0).toFixed(0)} MHz`,
+        badgeClass: 'text-info'
+      });
+    }
+
+    // 3. Запас до TjMax (Distance to TjMax)
+    const tjmaxSensor = cpuSensors.find(s => {
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!name.includes('tjmax')) return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`) || name.includes(`core #${coreIdx}`);
+    }) || cpuSensors.find(s => (s.sensor_name || '').toLowerCase().includes('tjmax'));
+
+    if (tjmaxSensor) {
+      params.push({
+        icon: 'bi bi-shield-check text-success',
+        label: 'До TjMax',
+        value: tjmaxSensor.value_raw || `${Number(tjmaxSensor.value || 0).toFixed(0)} °C`,
+        badgeClass: 'text-success'
+      });
+    }
+
+    // 4. Мощность (Power / Cores Power)
+    const powerSensor = cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      if (!cat.includes('power') && unit !== 'w') return false;
+      return name.includes(`core #${idx1}`) || name.includes(`core #${physIdx1}`);
+    }) || cpuSensors.find(s => {
+      const cat = (s.sensor_category || '').toLowerCase();
+      const unit = (s.unit || '').toLowerCase();
+      const name = (s.sensor_name || '').toLowerCase();
+      return (cat.includes('power') || unit === 'w') && (name.includes('cpu cores') || name.includes('cpu core'));
+    });
+
+    if (powerSensor) {
+      params.push({
+        icon: 'bi bi-lightning text-warning',
+        label: 'Мощность',
+        value: powerSensor.value_raw || `${Number(powerSensor.value || 0).toFixed(1)} W`,
+        badgeClass: 'text-warning'
+      });
+    }
+
+    // 5. Пиковая загрузка / Core Max / Шина (Bus Speed)
+    const maxSensor = cpuSensors.find(s => {
+      const name = (s.sensor_name || '').toLowerCase();
+      return name.includes('core max') || name.includes('cpu core max');
+    }) || cpuSensors.find(s => {
+      const name = (s.sensor_name || '').toLowerCase();
+      return name.includes('bus speed');
+    });
+
+    if (maxSensor) {
+      const isBus = (maxSensor.sensor_name || '').toLowerCase().includes('bus');
+      params.push({
+        icon: isBus ? 'bi bi-hdd-network text-secondary' : 'bi bi-graph-up-arrow text-danger',
+        label: isBus ? 'Шина' : 'Пик Max',
+        value: maxSensor.value_raw || `${Number(maxSensor.value || 0).toFixed(1)} ${maxSensor.unit || ''}`.trim(),
+        badgeClass: isBus ? 'text-secondary' : 'text-danger'
+      });
+    }
+
+    return params;
+  }
+
   function renderCpuCores(cores) {
     const box = document.getElementById('sys-metric-cpu-cores');
     const badgeCount = document.getElementById('sys-cores-count-badge');
     if (!box) return;
+
+    if (Array.isArray(cores)) {
+      lastCpuCoresData = cores;
+    } else if (lastCpuCoresData && lastCpuCoresData.length) {
+      cores = lastCpuCoresData;
+    }
 
     if (badgeCount) {
       badgeCount.textContent = cores && cores.length ? `${cores.length} ядер` : '0 ядер';
@@ -804,20 +946,61 @@
       const load = c.load_percent == null ? null : Number(c.load_percent);
       const temp = c.temperature_c == null ? null : Number(c.temperature_c);
       const loadStr = load == null ? '--' : `${load.toFixed(0)}%`;
-      const gaugeSvg = createGaugeSvg(load, 100, 56);
+      const gaugeSvg = createGaugeSvg(load, 100, 54);
       const tempHtml = createTempSliderHtml(temp, 30, 95, false);
+
+      const params = extractCoreParameters(c.index, cores.length, cachedSensors);
+
+      let paramsRowsHtml = '';
+      if (params.length > 0) {
+        paramsRowsHtml = params.map(p => `
+          <div class="sys-core-param-row">
+            <span class="sys-core-param-key text-truncate" title="${escapeHtml(p.label)}">
+              <i class="${p.icon} me-1"></i>${escapeHtml(p.label)}
+            </span>
+            <span class="sys-core-param-val ${p.badgeClass}">${escapeHtml(p.value)}</span>
+          </div>
+        `).join('');
+      } else {
+        paramsRowsHtml = `
+          <div class="sys-core-param-row">
+            <span class="sys-core-param-key"><i class="bi bi-activity text-info me-1"></i>Нагрузка</span>
+            <span class="sys-core-param-val text-info">${loadStr}</span>
+          </div>
+          <div class="sys-core-param-row">
+            <span class="sys-core-param-key"><i class="bi bi-thermometer-half text-danger me-1"></i>Температура</span>
+            <span class="sys-core-param-val ${temp != null && temp >= 75 ? 'text-danger' : 'text-warning'}">${temp != null ? temp.toFixed(0) + ' °C' : '-- °C'}</span>
+          </div>
+          <div class="sys-core-param-row">
+            <span class="sys-core-param-key"><i class="bi bi-cpu text-secondary me-1"></i>Поток</span>
+            <span class="sys-core-param-val text-secondary">#${c.index}</span>
+          </div>
+        `;
+      }
 
       return `
         <div class="sys-core-card" title="Ядро #${c.index}: Нагрузка ${loadStr}, Температура ${temp != null ? temp.toFixed(0) + '°C' : 'N/A'}">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="sys-core-title">Core #${c.index}</span>
+          <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: var(--border-subtle, rgba(255,255,255,0.06)) !important;">
+            <div class="d-flex align-items-center gap-1.5">
+              <i class="bi bi-cpu text-info"></i>
+              <span class="sys-core-title fw-bold" style="font-size: 0.82rem;">Core #${c.index}</span>
+            </div>
             <span class="sys-core-load-badge">${loadStr}</span>
           </div>
-          <div class="py-1">
-            ${gaugeSvg}
-          </div>
-          <div>
-            ${tempHtml}
+          <div class="d-flex align-items-center gap-2 flex-grow-1">
+            <div class="d-flex flex-column align-items-center justify-content-center" style="width: 102px; flex-shrink: 0;">
+              <div style="width: 100px; height: 54px;">
+                ${gaugeSvg}
+              </div>
+              <div class="w-100 mt-1">
+                ${tempHtml}
+              </div>
+            </div>
+            <div class="flex-grow-1 ps-1" style="min-width: 0;">
+              <div class="sys-core-param-table">
+                ${paramsRowsHtml}
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -2241,6 +2424,41 @@
     const btnAudit = document.getElementById('btn-sys-run-audit');
     if (btnAudit) {
       btnAudit.onclick = () => runAiDiagnostics();
+    }
+
+    const btnCompact = document.getElementById('btn-sys-toggle-compact');
+    const sysContainer = document.querySelector('.sys-container');
+    const compactText = document.getElementById('sys-compact-btn-text');
+
+    const updateCompactUI = (isCompact) => {
+      if (!sysContainer) return;
+      if (isCompact) {
+        sysContainer.classList.add('sys-compact-mode');
+        if (compactText) compactText.textContent = 'Развернуть';
+        if (btnCompact) {
+          btnCompact.classList.add('btn-info', 'text-dark');
+          btnCompact.classList.remove('btn-outline-light');
+        }
+      } else {
+        sysContainer.classList.remove('sys-compact-mode');
+        if (compactText) compactText.textContent = 'Компактно';
+        if (btnCompact) {
+          btnCompact.classList.remove('btn-info', 'text-dark');
+          btnCompact.classList.add('btn-outline-light');
+        }
+      }
+    };
+
+    if (btnCompact && sysContainer) {
+      const savedCompact = localStorage.getItem('sys_inspector_compact_mode') === 'true';
+      if (savedCompact) {
+        updateCompactUI(true);
+      }
+      btnCompact.onclick = () => {
+        const nextState = !sysContainer.classList.contains('sys-compact-mode');
+        updateCompactUI(nextState);
+        try { localStorage.setItem('sys_inspector_compact_mode', String(nextState)); } catch (e) {}
+      };
     }
 
     const btnConfig = document.getElementById('btn-sys-config');

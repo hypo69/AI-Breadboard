@@ -16,10 +16,10 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 03:07:00
 # =============================================================================
 
-"""Main WinAPI wrapper with capability levels"""
+"""Основная обертка WinAPI с определением уровней возможностей."""
 
 import ctypes
 import os
@@ -27,11 +27,10 @@ import sys
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 from enum import IntEnum
-import logging
-logger = logging.getLogger(__name__)
+from logger import logger
 
 class CapabilityLevel(IntEnum):
-    """API capability levels"""
+    """Уровни возможностей WinAPI."""
     LEVEL_1_DOCUMENTED = 1
     LEVEL_2_WMI_PERF = 2
     LEVEL_3_ETW = 3
@@ -41,7 +40,7 @@ class CapabilityLevel(IntEnum):
 
 @dataclass
 class WinAPICapabilities:
-    """Detected WinAPI capabilities"""
+    """Обнаруженные возможности WinAPI."""
     level: CapabilityLevel
     os_version: str
     is_admin: bool
@@ -51,14 +50,14 @@ class WinAPICapabilities:
 
 class WinAPI:
     """
-    Main Windows API interface with multi-level capability detection
+    Главный интерфейс Windows API с многоуровневым обнаружением возможностей.
     
-    Automatically detects available APIs and falls back gracefully
+    Автоматически определяет доступные системные API и обеспечивает fallback.
     """
 
     def __init__(self):
-        """Initialize WinAPI with capability detection"""
-        self.logger = logging.getLogger(__name__)
+        """Инициализирует WinAPI с детекцией возможностей."""
+        self.logger = logger
         self.capabilities = self._detect_capabilities()
         self._init_dlls()
         self._init_functions()

@@ -20,7 +20,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:28:00
+# Updated: 2026-10-06 04:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -32,6 +32,11 @@ import re
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+try:
+    from logger import logger
+except ImportError:
+    import logging
+    logger = logging.getLogger(__name__)
 
 
 def get_default_telemetry_config_path() -> Path:
@@ -41,7 +46,7 @@ def get_default_telemetry_config_path() -> Path:
     выполняется попытка скопировать шаблон из пакета модуля.
 
     Returns:
-        Path: Путь к файлу конфигурации.
+        Path: Путь к файлу конфигурации в %APPDATA%.
     """
     appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
     if appdata and os.path.exists(appdata):
@@ -135,7 +140,12 @@ class TelemetryConfigManager:
         self._heavy_mode_max_duration_days = 5.0
         self._heavy_mode_auto_switch_enabled = True
         self._mode = 'hybrid'
-        self._max_db_size_mb = 50.0
+        self._telemetry_mode = 'telemetry'
+        self._standard_flush_interval_seconds = 30.0
+        self._tc_flush_interval_seconds = 5.0
+        self._tc_mode_timeout_seconds = 300.0
+        self._tc_mode_activated_at: Optional[float] = None
+        self._max_db_size_mb = 100.0
         self._retention_days = 7
         self._db_cleanup_interval_seconds = 300.0
         self._flush_interval_seconds = 30.0
@@ -150,69 +160,94 @@ class TelemetryConfigManager:
             if cfg_path.is_file():
                 self._last_mtime_ns = cfg_path.stat().st_mtime_ns
             with open(self._config_path, 'r', encoding='utf-8') as f:
-                self._config = json.load(f)
-                if 'sensors' in self._config:
-                    self._sensors_config = self._config.get('sensors', {})
-                elif 'telemetry' in self._config and 'sensors' in self._config['telemetry']:
-                    self._sensors_config = self._config['telemetry'].get('sensors', {})
-                else:
-                    self._sensors_config = {}
+                new_config = json.load(f)
+                
+            self._config = new_config
+            if 'sensors' in self._config:
+                self._sensors_config = self._config.get('sensors', {})
+            elif 'telemetry' in self._config and 'sensors' in self._config['telemetry']:
+                self._sensors_config = self._config['telemetry'].get('sensors', {})
+            else:
+                self._sensors_config = {}
 
-                self._loggers_config = self._config.get('loggers', {})
+            self._loggers_config = self._config.get('loggers', {})
 
-                raw_interval = self._config.get('interval_seconds', self._config.get('interval', self._config.get('telemetry', {}).get('interval_seconds', 5.0)))
-                self._default_interval = parse_interval_to_seconds(raw_interval, 5.0)
+            raw_interval = self._config.get('interval_seconds', self._config.get('interval', self._config.get('telemetry', {}).get('interval_seconds', 5.0)))
+            self._default_interval = parse_interval_to_seconds(raw_interval, 5.0)
 
-                raw_heavy = self._config.get('heavy_interval_seconds', self._config.get('heavy_interval', self._config.get('telemetry', {}).get('heavy_interval_seconds', 60.0)))
-                self._heavy_interval = parse_interval_to_seconds(raw_heavy, 60.0)
+            raw_heavy = self._config.get('heavy_interval_seconds', self._config.get('heavy_interval', self._config.get('telemetry', {}).get('heavy_interval_seconds', 60.0)))
+            self._heavy_interval = parse_interval_to_seconds(raw_heavy, 60.0)
 
-                raw_disk_interval = self._config.get('heavy_disk_scan_interval_seconds')
-                self._heavy_disk_scan_interval = parse_interval_to_seconds(raw_disk_interval, 43200.0)
+            raw_disk_interval = self._config.get('heavy_disk_scan_interval_seconds')
+            self._heavy_disk_scan_interval = parse_interval_to_seconds(raw_disk_interval, 43200.0)
 
-                raw_fast_interval = self._config.get('fast_interval_seconds')
-                self._fast_interval = parse_interval_to_seconds(raw_fast_interval, 30.0)
+            raw_fast_interval = self._config.get('fast_interval_seconds')
+            self._fast_interval = parse_interval_to_seconds(raw_fast_interval, 30.0)
 
-                self._fast_duration_days = int(self._config.get('fast_duration_days', 2))
+            self._fast_duration_days = int(self._config.get('fast_duration_days', 2))
 
-                raw_agg = self._config.get('aggregation_interval_seconds', self._config.get('rollup_interval_seconds'))
-                self._aggregation_interval = parse_interval_to_seconds(raw_agg, 3600.0)
+            raw_agg = self._config.get('aggregation_interval_seconds', self._config.get('rollup_interval_seconds'))
+            self._aggregation_interval = parse_interval_to_seconds(raw_agg, 3600.0)
 
-                raw_max_days = self._config.get('heavy_mode_max_duration_days')
-                self._heavy_mode_max_duration_days = float(raw_max_days) if raw_max_days is not None else 5.0
+            raw_max_days = self._config.get('heavy_mode_max_duration_days')
+            self._heavy_mode_max_duration_days = float(raw_max_days) if raw_max_days is not None else 5.0
 
-                self._heavy_mode_auto_switch_enabled = bool(self._config.get('heavy_mode_auto_switch_enabled', True))
-                self._mode = str(self._config.get('mode', self._config.get('telemetry', {}).get('mode', 'hybrid'))).lower()
+            self._heavy_mode_auto_switch_enabled = bool(self._config.get('heavy_mode_auto_switch_enabled', True))
+            self._mode = str(self._config.get('mode', self._config.get('telemetry', {}).get('mode', 'hybrid'))).lower()
 
-                raw_max_db = self._config.get('max_db_size_mb', self._config.get('max_file_size_mb', 50.0))
-                self._max_db_size_mb = float(raw_max_db) if raw_max_db is not None else 50.0
+            raw_tel_mode = str(self._config.get('telemetry_mode', self._config.get('profile', 'telemetry'))).lower()
+            self._telemetry_mode = raw_tel_mode if raw_tel_mode in ('telemetry', 'tc') else 'telemetry'
 
-                raw_retention = self._config.get('retention_days', 7)
-                self._retention_days = int(raw_retention) if raw_retention is not None else 7
+            raw_std_flush = self._config.get('standard_flush_interval_seconds', self._config.get('flush_interval_seconds', 30.0))
+            self._standard_flush_interval_seconds = parse_interval_to_seconds(raw_std_flush, 30.0)
 
-                raw_cleanup_interval = self._config.get('db_cleanup_interval_seconds')
-                self._db_cleanup_interval_seconds = parse_interval_to_seconds(raw_cleanup_interval, 300.0)
+            raw_tc_flush = self._config.get('tc_flush_interval_seconds', 5.0)
+            self._tc_flush_interval_seconds = parse_interval_to_seconds(raw_tc_flush, 5.0)
 
-                raw_flush_interval = self._config.get('flush_interval_seconds')
-                self._flush_interval_seconds = parse_interval_to_seconds(raw_flush_interval, 30.0)
+            raw_tc_timeout = self._config.get('tc_mode_timeout_seconds', self._config.get('tc_timeout_seconds', 300.0))
+            self._tc_mode_timeout_seconds = parse_interval_to_seconds(raw_tc_timeout, 300.0)
 
-                self._auto_vacuum_enabled = bool(self._config.get('auto_vacuum_enabled', True))
+            raw_tc_act = self._config.get('tc_mode_activated_at')
+            try:
+                self._tc_mode_activated_at = float(raw_tc_act) if raw_tc_act is not None else None
+            except (ValueError, TypeError):
+                self._tc_mode_activated_at = None
+
+            raw_max_db = self._config.get('max_db_size_mb', self._config.get('max_file_size_mb', 100.0))
+            self._max_db_size_mb = float(raw_max_db) if raw_max_db is not None else 100.0
+
+            raw_retention = self._config.get('retention_days', 7)
+            self._retention_days = int(raw_retention) if raw_retention is not None else 7
+
+            raw_cleanup_interval = self._config.get('db_cleanup_interval_seconds')
+            self._db_cleanup_interval_seconds = parse_interval_to_seconds(raw_cleanup_interval, 300.0)
+
+            if self._telemetry_mode == 'tc':
+                self._flush_interval_seconds = self._tc_flush_interval_seconds
+            else:
+                self._flush_interval_seconds = self._standard_flush_interval_seconds
+
+            self._auto_vacuum_enabled = bool(self._config.get('auto_vacuum_enabled', True))
         except FileNotFoundError:
-            self._config = {}
-            self._sensors_config = {}
-            self._loggers_config = {}
-            self._default_interval = 5.0
-            self._heavy_interval = 60.0
-            self._heavy_disk_scan_interval = 43200.0
-            self._heavy_mode_max_duration_days = 5.0
-            self._heavy_mode_auto_switch_enabled = True
-            self._mode = 'hybrid'
-            self._max_db_size_mb = 50.0
-            self._retention_days = 7
-            self._db_cleanup_interval_seconds = 300.0
-            self._flush_interval_seconds = 30.0
-            self._auto_vacuum_enabled = True
-        except json.JSONDecodeError as e:
-            raise ValueError(f'Ошибка парсинга {self._config_path}: {e}')
+            if not self._config:
+                self._config = {}
+                self._sensors_config = {}
+                self._loggers_config = {}
+                self._default_interval = 5.0
+                self._heavy_interval = 60.0
+                self._heavy_disk_scan_interval = 43200.0
+                self._heavy_mode_max_duration_days = 5.0
+                self._heavy_mode_auto_switch_enabled = True
+                self._mode = 'hybrid'
+                self._max_db_size_mb = 50.0
+                self._retention_days = 7
+                self._db_cleanup_interval_seconds = 300.0
+                self._flush_interval_seconds = 30.0
+                self._auto_vacuum_enabled = True
+        except (json.JSONDecodeError, OSError, PermissionError) as e:
+            if not self._config:
+                raise ValueError(f'Ошибка парсинга {self._config_path}: {e}')
+            logger.warning(f'Временная ошибка считывания {self._config_path} на лету: {e}')
 
     @property
     def config_path(self) -> str:
@@ -233,8 +268,8 @@ class TelemetryConfigManager:
             if current_mtime_ns != self._last_mtime_ns:
                 self._load_config()
                 return True
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'Проверка модификации config.json: {e}')
         return False
 
     def reload(self) -> None:
@@ -277,6 +312,19 @@ class TelemetryConfigManager:
         """Возвращает флаг разрешения автопереключения тяжелого режима в легкий."""
         return getattr(self, '_heavy_mode_auto_switch_enabled', True)
 
+    def get_heavy_collectors(self) -> Dict[str, bool]:
+        """Возвращает словарь флагов включения тяжелых коллекторов."""
+        default_heavy = {
+            'hardware_sensors': True,
+            'deep_disk_smart': True,
+            'system_snapshot': True,
+            'hardware_tree': True,
+        }
+        custom = self._config.get('heavy_collectors', {})
+        if isinstance(custom, dict):
+            default_heavy.update(custom)
+        return default_heavy
+
     def get_top_processes(self) -> int:
         """Возвращает число сохраняемых процессов с наибольшей нагрузкой."""
         return int(self._config.get('top_processes', 25))
@@ -294,44 +342,102 @@ class TelemetryConfigManager:
         except (ValueError, TypeError):
             return 50
 
+    def get_telemetry_mode(self) -> str:
+        """Возвращает режим телеметрии: 'telemetry' (стандартный) или 'tc' (реальное время)."""
+        self.check_tc_mode_auto_switch()
+        return getattr(self, '_telemetry_mode', 'telemetry')
+
+    def check_tc_mode_auto_switch(self) -> bool:
+        """Проверяет таймаут активного режима 'tc' (реальное время) и переключает в 'telemetry'.
+
+        Returns:
+            bool: True если произошло автопереключение в 'telemetry', иначе False.
+        """
+        if getattr(self, '_telemetry_mode', 'telemetry') == 'tc' and getattr(self, '_tc_mode_activated_at', None):
+            import time
+            elapsed = time.time() - self._tc_mode_activated_at
+            timeout = getattr(self, '_tc_mode_timeout_seconds', 300.0)
+            if elapsed >= timeout:
+                self._telemetry_mode = 'telemetry'
+                self._tc_mode_activated_at = None
+                self._flush_interval_seconds = getattr(self, '_standard_flush_interval_seconds', 30.0)
+                self.save_config({
+                    'telemetry_mode': 'telemetry',
+                    'tc_mode_activated_at': None
+                })
+                logger.info(
+                    f"⏱️ [Телеметрия] Режим реального времени 'tc' завершен по таймауту ({int(timeout)}с). "
+                    f"Автоматически переключен в стандартный режим 'telemetry' (flush: {self._flush_interval_seconds}с, max_db: {self.get_max_db_size_mb()}МБ)"
+                )
+                return True
+        return False
+
+    def activate_tc_mode(self, duration_seconds: Optional[float] = None, flush_interval_seconds: Optional[float] = None) -> bool:
+        """Активирует режим отображения телеметрии реального времени ('tc') с задержкой сброса в N сек.
+
+        Args:
+            duration_seconds: Длительность режима TC в секундах до автопереключения в telemetry (по умолчанию 300с = 5 мин).
+            flush_interval_seconds: Интервал сброса в БД в секундах (по умолчанию 5.0с).
+
+        Returns:
+            bool: True при успешной активации.
+        """
+        import time
+        self._telemetry_mode = 'tc'
+        self._tc_mode_activated_at = time.time()
+        if flush_interval_seconds is not None:
+            self._tc_flush_interval_seconds = max(0.1, float(flush_interval_seconds))
+        if duration_seconds is not None:
+            self._tc_mode_timeout_seconds = max(1.0, float(duration_seconds))
+        self._flush_interval_seconds = self._tc_flush_interval_seconds
+
+        updates: Dict[str, Any] = {
+            'telemetry_mode': 'tc',
+            'tc_mode_activated_at': self._tc_mode_activated_at,
+            'tc_flush_interval_seconds': self._tc_flush_interval_seconds,
+            'tc_mode_timeout_seconds': self._tc_mode_timeout_seconds,
+        }
+        logger.info(f"⚡ [Телеметрия] Активирован режим реального времени 'tc' (flush: {self._tc_flush_interval_seconds}с, таймаут: {self._tc_mode_timeout_seconds}с)")
+        return self.save_config(updates)
+
+    def deactivate_tc_mode(self) -> bool:
+        """Деактивирует режим 'tc' и возвращает телеметрию в стандартный режим 'telemetry'."""
+        self._telemetry_mode = 'telemetry'
+        self._tc_mode_activated_at = None
+        self._flush_interval_seconds = getattr(self, '_standard_flush_interval_seconds', 30.0)
+        updates = {
+            'telemetry_mode': 'telemetry',
+            'tc_mode_activated_at': None,
+        }
+        logger.info(f"🔄 [Телеметрия] Переключено в стандартный режим 'telemetry' (flush: {self._flush_interval_seconds}с)")
+        return self.save_config(updates)
+
+    def get_standard_flush_interval_seconds(self) -> float:
+        """Возвращает стандартный интервал сброса буфера в БД (по умолчанию 30с)."""
+        return getattr(self, '_standard_flush_interval_seconds', 30.0)
+
+    def get_tc_flush_interval_seconds(self) -> float:
+        """Возвращает интервал сброса в режиме реального времени TC (по умолчанию 5с)."""
+        return getattr(self, '_tc_flush_interval_seconds', 5.0)
+
+    def get_tc_mode_timeout_seconds(self) -> float:
+        """Возвращает таймаут действия режима TC до автопереключения в стандартный (в секундах, по умолчанию 300с)."""
+        return getattr(self, '_tc_mode_timeout_seconds', 300.0)
+
     def get_flush_interval_seconds(self) -> float:
-        """Возвращает периодический интервал сброса буфера в БД (в секундах)."""
-        return getattr(self, '_flush_interval_seconds', 30.0)
-
-    def get_buffer_file(self) -> str:
-        """Возвращает имя файла для буферизации в аварийном режиме сбоев."""
-        return str(self._config.get('buffer_file', 'telemetry_buffer.jsonl'))
-
-    def get_process_mode(self) -> str:
-        """Возвращает режим фильтрации процессов: 'top_n' или 'all'."""
-        mode = str(self._config.get('process_mode', 'top_n')).lower()
-        return mode if mode in ('top_n', 'all') else 'top_n'
-
-    def get_effective_process_limit(self) -> int:
-        """Возвращает эффективное ограничение процессов (0 для Всех процессов)."""
-        if self.get_process_mode() == 'all':
-            return 0
-        limit = self.get_top_processes()
-        return limit if limit > 0 else 0
-
-    def is_low_priority(self) -> bool:
-        """Возвращает флаг понижения приоритета процесса CPU."""
-        return bool(self._config.get('low_priority', True))
-
-    def get_heavy_collectors(self) -> Dict[str, bool]:
-        """Возвращает словарь активности тяжелых коллекторов."""
-        default_collectors = {'hardware_sensors': True, 'storage_smart': True, 'network_ping': True, 'inventory_wmi': False}
-        custom = self._config.get('heavy_collectors', {})
-        default_collectors.update(custom)
-        return default_collectors
+        """Возвращает периодический интервал сброса буфера в БД с учетом активного режима."""
+        self.check_tc_mode_auto_switch()
+        if getattr(self, '_telemetry_mode', 'telemetry') == 'tc':
+            return getattr(self, '_tc_flush_interval_seconds', 5.0)
+        return getattr(self, '_standard_flush_interval_seconds', 30.0)
 
     def get_max_db_size_mb(self) -> float:
-        """Возвращает максимальный разрешенный размер SQLite базы данных (в МБ)."""
+        """Возвращает максимальный разрешенный размер SQLite базы данных (в МБ, по умолчанию 100.0)."""
         try:
-            val = float(self._config.get('max_db_size_mb', self._config.get('max_file_size_mb', 50.0)))
+            val = float(self._config.get('max_db_size_mb', self._config.get('max_file_size_mb', 100.0)))
             return max(1.0, val)
         except (ValueError, TypeError):
-            return 50.0
+            return 100.0
 
     def get_retention_days(self) -> int:
         """Возвращает срок хранения сырых записей телеметрии (в днях)."""
@@ -348,6 +454,25 @@ class TelemetryConfigManager:
     def is_auto_vacuum_enabled(self) -> bool:
         """Возвращает флаг разрешения авто-вакуума (VACUUM) SQLite при усечении."""
         return bool(self._config.get('auto_vacuum_enabled', True))
+
+    def get_process_mode(self) -> str:
+        """Возвращает режим фильтрации процессов ('top_n' или 'all')."""
+        return str(self._config.get('process_mode', 'top_n')).lower()
+
+    def get_top_processes_limit(self) -> int:
+        """Возвращает настроенный лимит количества Top-процессов (по умолчанию 10)."""
+        try:
+            val = int(self._config.get('top_processes', 10))
+            return max(1, val)
+        except (ValueError, TypeError):
+            return 10
+
+    def get_effective_process_limit(self) -> int:
+        """Возвращает эффективный лимит процессов для сохранения в БД телеметрии."""
+        pm = self.get_process_mode()
+        if pm == 'all':
+            return 500
+        return self.get_top_processes_limit()
 
     def get_sensor_config(self, sensor_name: str) -> Dict[str, Any]:
         """Возвращает конфигурацию конкретного сенсора."""
@@ -395,6 +520,7 @@ class TelemetryConfigManager:
     def get_all_intervals(self) -> Dict[str, Any]:
         """Возвращает сводный словарь всех настроенных интервалов системы."""
         return {
+            'telemetry_mode': self.get_telemetry_mode(),
             'default_interval_seconds': self.get_interval_seconds(),
             'heavy_interval_seconds': self.get_heavy_interval_seconds(),
             'fast_interval_seconds': self.get_fast_interval(),
@@ -402,6 +528,9 @@ class TelemetryConfigManager:
             'heavy_disk_scan_interval_seconds': self.get_heavy_disk_scan_interval(),
             'db_cleanup_interval_seconds': self.get_db_cleanup_interval_seconds(),
             'flush_interval_seconds': self.get_flush_interval_seconds(),
+            'standard_flush_interval_seconds': self.get_standard_flush_interval_seconds(),
+            'tc_flush_interval_seconds': self.get_tc_flush_interval_seconds(),
+            'tc_mode_timeout_seconds': self.get_tc_mode_timeout_seconds(),
             'sensors': {
                 name: self.get_sensor_interval(name)
                 for name in self.get_all_sensor_names()
@@ -456,6 +585,16 @@ class TelemetryConfigManager:
                 self._heavy_mode_auto_switch_enabled = bool(new_config['heavy_mode_auto_switch_enabled'])
             if 'mode' in new_config:
                 self._mode = str(new_config['mode']).lower()
+            if 'telemetry_mode' in new_config:
+                self._telemetry_mode = str(new_config['telemetry_mode']).lower()
+            if 'standard_flush_interval_seconds' in new_config:
+                self._standard_flush_interval_seconds = parse_interval_to_seconds(new_config['standard_flush_interval_seconds'], 30.0)
+            if 'tc_flush_interval_seconds' in new_config:
+                self._tc_flush_interval_seconds = parse_interval_to_seconds(new_config['tc_flush_interval_seconds'], 5.0)
+            if 'tc_mode_timeout_seconds' in new_config:
+                self._tc_mode_timeout_seconds = parse_interval_to_seconds(new_config['tc_mode_timeout_seconds'], 300.0)
+            if 'tc_mode_activated_at' in new_config:
+                self._tc_mode_activated_at = float(new_config['tc_mode_activated_at']) if new_config['tc_mode_activated_at'] is not None else None
             if 'max_db_size_mb' in new_config:
                 self._max_db_size_mb = float(new_config['max_db_size_mb'])
             if 'retention_days' in new_config:
@@ -472,7 +611,7 @@ class TelemetryConfigManager:
             with open(target_path, 'w', encoding='utf-8') as f:
                 json.dump(self._config, f, indent=2, ensure_ascii=False)
             if target_path.is_file():
-                self._last_mtime = target_path.stat().st_mtime
+                self._last_mtime_ns = target_path.stat().st_mtime_ns
             return True
         except Exception:
             return False

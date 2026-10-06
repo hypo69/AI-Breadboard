@@ -1,25 +1,38 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Networkterminal
+Process Name: AI-Breadboard Automation - Run Network Terminal
 =============================================================================
 Description:
-  Standalone launcher for Network Analyzer Terminal microservice
+  Автономный лончер микросервиса сетевой аналитики Network Analyzer Terminal.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-NetworkTerminal.ps1
+  Зачем нужен этот скрипт:
+    1. Анализ сетевого трафика: запуск подсистемы apps/windows/network_terminal для
+       инспекции пакетов, открытых сокетов и сетевых адаптеров.
+    2. Управление процессами: запуск в режиме сервера или веб-дашборда, проверка статуса и остановка.
 
 File: Run-NetworkTerminal.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone launcher for Network Analyzer Terminal microservice
+    Управление сервисом Network Analyzer Terminal.
+
 .DESCRIPTION
-    Launches apps
+    Запускает и контролирует микросервис анализа сетевого трафика и соединений.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Mode
+    Режим запуска: server (по умолчанию) или dashboard.
+
+.EXAMPLE
+    .\Run-NetworkTerminal.ps1 -Action start
+    Запуск сервиса сетевого анализатора.
 #>
 
 [CmdletBinding()]

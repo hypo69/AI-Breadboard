@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/hardware_monitor_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/hardware_monitor_tab
-Author: hypo69
-Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/hardware_monitor_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:20:00
+ * =============================================================================
 -->
 
 <!-- Hardware & Sensors Monitor Tab -->
@@ -133,10 +133,16 @@ Updated: 2026-10-01 13:04:40
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <div class="form-check form-switch mb-0 small text-muted">
-        <input class="form-check-input" type="checkbox" id="hw-auto-refresh" checked>
-        <label class="form-check-label small" for="hw-auto-refresh">Автообновление (3с)</label>
-      </div>
+      <select class="form-select form-select-sm poll-freq-select" id="hw-poll-freq" data-poll-id="hw_monitor" title="Частота опроса: Оборудование и сенсоры">
+        <option value="start">Только при старте</option>
+        <option value="manual" selected>По запросу</option>
+        <option value="3">Каждые 3 сек</option>
+        <option value="5">Каждые 5 сек</option>
+        <option value="10">Каждые 10 сек</option>
+        <option value="30">Каждые 30 сек</option>
+        <option value="60">Каждые 60 сек</option>
+        <option value="120">Каждые 120 сек</option>
+      </select>
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="hw-btn-refresh">
         <i class="bi bi-arrow-clockwise"></i>
         <span>Обновить</span>

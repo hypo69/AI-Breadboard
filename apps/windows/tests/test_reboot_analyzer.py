@@ -16,7 +16,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 00:45:00
 # =============================================================================
 
 """Тесты для модуля анализа и корреляции причин перезагрузок Windows (Reboot Analyzer)."""
@@ -34,7 +34,7 @@ from apps.windows.telemetry.models import (
     RebootSession,
     ShutdownType,
 )
-from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
 from apps.windows.telemetry.sqlite import TelemetryStorage
 
 

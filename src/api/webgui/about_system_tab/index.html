@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/about_system_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/about_system_tab
-Author: hypo69
-Copyright: © 2026 hypo69
-Updated: 2026-10-04 00:43:00
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/about_system_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:20:00
+ * =============================================================================
 -->
 
 <!-- About System Application Tab -->
@@ -92,18 +92,18 @@ Updated: 2026-10-04 00:43:00
     border-top: 1px solid var(--border-color, #334155);
     background: rgba(15, 23, 42, 0.45);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 4px 20px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 4px 16px;
   }
   .about-sys-prop-row {
-    display: grid;
-    grid-template-columns: minmax(180px, 240px) 1fr;
+    display: flex;
     align-items: baseline;
-    gap: 14px;
-    padding: 6px 10px;
+    gap: 6px;
+    padding: 4px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 4px;
     transition: background 0.12s ease;
+    min-width: 0;
   }
   .about-sys-prop-row:hover {
     background: rgba(56, 189, 248, 0.05);
@@ -116,6 +116,13 @@ Updated: 2026-10-04 00:43:00
     font-weight: 500;
     font-size: 0.80rem;
     user-select: text;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .about-sys-prop-key::after {
+    content: ":";
+    margin-inline-start: 1px;
+    color: var(--text-muted, #64748b);
   }
   .about-sys-prop-val {
     color: var(--text-color, #f8fafc);
@@ -124,6 +131,7 @@ Updated: 2026-10-04 00:43:00
     word-break: break-word;
     user-select: text;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    min-width: 0;
   }
   .about-sys-spec-table {
     width: 100%;
@@ -637,9 +645,9 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-1">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_os" title="Частота опроса: Платформа & ОС">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
-              <option value="5" selected>Каждые 5 сек</option>
+              <option value="5">Каждые 5 сек</option>
               <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
@@ -655,6 +663,11 @@ Updated: 2026-10-04 00:43:00
           <span id="about-kpi-os-host">Host: DELL-VOSTRO</span>
           <span class="badge bg-dark border border-secondary text-info py-0 px-1" id="about-spec-uptime">Uptime: --</span>
         </div>
+        <div class="about-sys-sub text-truncate text-muted d-flex align-items-center gap-1 mt-1" style="font-size: 0.72rem;">
+          <i class="bi bi-calendar-check text-info"></i>
+          <span>Установка:</span>
+          <span class="text-white-50" id="about-kpi-os-install">--</span>
+        </div>
       </div>
     </div>
 
@@ -669,9 +682,9 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-1">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_sec" title="Частота опроса: Безопасность">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
-              <option value="5" selected>Каждые 5 сек</option>
+              <option value="5">Каждые 5 сек</option>
               <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
@@ -698,9 +711,9 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-1">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_prot" title="Частота опроса: Точки восстановления">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
-              <option value="5" selected>Каждые 5 сек</option>
+              <option value="5">Каждые 5 сек</option>
               <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
@@ -727,9 +740,9 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-1">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_stor" title="Частота опроса: Системный накопитель C:">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
-              <option value="5" selected>Каждые 5 сек</option>
+              <option value="5">Каждые 5 сек</option>
               <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
@@ -745,6 +758,7 @@ Updated: 2026-10-04 00:43:00
       </div>
     </div>
   </div>
+
 
 
   <!-- Reorganized Dual Master Panels: Hardware & Platform Specs vs User Environment & Security -->
@@ -813,9 +827,9 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-2">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_user_env" title="Частота опроса: Окружение пользователя">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
-              <option value="5" selected>Каждые 5 сек</option>
+              <option value="5">Каждые 5 сек</option>
               <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
@@ -861,17 +875,17 @@ Updated: 2026-10-04 00:43:00
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-shield-shaded me-1.5 text-success"></i>Брандмауэр Windows</td>
               <td class="about-sys-spec-val">
-                Domain: <span id="about-sec-fw-domain" class="text-success fw-bold">Active</span> |
-                Private: <span id="about-sec-fw-private" class="text-success fw-bold">Active</span> |
-                Public: <span id="about-sec-fw-public" class="text-success fw-bold">Active</span>
+                Domain: <span id="about-sec-fw-domain" class="fw-bold text-secondary">--</span> |
+                Private: <span id="about-sec-fw-private" class="fw-bold text-secondary">--</span> |
+                Public: <span id="about-sec-fw-public" class="fw-bold text-secondary">--</span>
               </td>
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-shield-lock me-1.5 text-success"></i>Защитник и UAC</td>
               <td class="about-sys-spec-val">
-                Defender: <span id="about-sec-defender" class="text-success fw-bold">Enabled</span> |
-                Realtime: <span id="about-sec-realtime" class="text-success fw-bold">Enabled</span> |
-                UAC: <span id="about-sec-uac" class="text-success fw-bold">Enabled</span>
+                Defender: <span id="about-sec-defender" class="fw-bold text-secondary">--</span> |
+                Realtime: <span id="about-sec-realtime" class="fw-bold text-secondary">--</span> |
+                UAC: <span id="about-sec-uac" class="fw-bold text-secondary">--</span>
               </td>
             </tr>
           </tbody>
@@ -892,10 +906,10 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-2">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_disks" title="Частота опроса: Разделы накопителей">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
               <option value="5">Каждые 5 сек</option>
-              <option value="10" selected>Каждые 10 сек</option>
+              <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
               <option value="120">Каждые 120 сек</option>
@@ -960,10 +974,10 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-2">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_wear" title="Частота опроса: Износ накопителей">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
               <option value="5">Каждые 5 сек</option>
-              <option value="10" selected>Каждые 10 сек</option>
+              <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
               <option value="120">Каждые 120 сек</option>
@@ -981,7 +995,7 @@ Updated: 2026-10-04 00:43:00
                 <th style="text-align: right;">Объем</th>
                 <th style="text-align: right;">Свободно</th>
                 <th>Наработка / Старт</th>
-                <th style="text-align: right;">Запись / Чтение</th>
+                <th style="text-align: right;">Ввод / Вывод (I/O)</th>
                 <th style="width: 130px;">Здоровье / Износ</th>
                 <th>Статус</th>
               </tr>
@@ -1005,10 +1019,10 @@ Updated: 2026-10-04 00:43:00
           <div class="d-flex align-items-center gap-2">
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_battery" title="Частота опроса: Состояние батареи">
               <option value="start">Только при старте</option>
-              <option value="manual">По запросу</option>
+              <option value="manual" selected>По запросу</option>
               <option value="3">Каждые 3 сек</option>
               <option value="5">Каждые 5 сек</option>
-              <option value="10" selected>Каждые 10 сек</option>
+              <option value="10">Каждые 10 сек</option>
               <option value="30">Каждые 30 сек</option>
               <option value="60">Каждые 60 сек</option>
               <option value="120">Каждые 120 сек</option>

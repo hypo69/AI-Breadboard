@@ -17,29 +17,29 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 08:36:00
+ * Updated: 2026-10-06 03:35:00
  * =============================================================================
  */
 
 /**
  * apps/modules/tabs-config.js — Реестр определений вкладок для интерфейса /apps
- * Updated: 2026-10-04 08:36:00
+ * Updated: 2026-10-06 03:35:00
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v16', js: '/html/about_system_tab/main.js?v=20261004_v16' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261005_v1', js: '/html/about_system_tab/main.js?v=20261005_v1' },
   { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-  { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261004_v20', js: '/html/system_inspector_tab/main.js?v=20261004_v20' },
+  { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v2', js: '/html/system_inspector_tab/main.js?v=20261006_v2' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
   { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20260925_v1', js: '/html/system_control_tab/main.js?v=20260925_v1' },
-  { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
+  { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html?v=20261006_v1', js: '/html/system_logs_tab/main.js?v=20261006_v1' },
   { id: 'software_audit', tab: 'software-audit', tabId: 'tab-software-audit', html: '/html/software_audit_tab/index.html', js: '/html/software_audit_tab/main.js' },
   { id: 'registry_viewer', tab: 'registry-viewer', tabId: 'tab-registry-viewer', html: '/html/registry_viewer_tab/index.html', js: '/html/registry_viewer_tab/main.js' },
-  { id: 'windows_defender', tab: 'defender', tabId: 'tab-defender', html: '/html/defender_tab/index.html', js: '/html/defender_tab/main.js' },
+  { id: 'windows_defender', tab: 'defender', tabId: 'tab-defender', html: '/html/defender_tab/index.html?v=20261004_v1', js: '/html/defender_tab/main.js?v=20261004_v1' },
   { id: 'windows_startup_auditor', tab: 'startup-auditor', tabId: 'tab-startup-auditor', html: '/html/startup_auditor_tab/index.html', js: '/html/startup_auditor_tab/main.js' },
-  { id: 'windows_backup_manager', tab: 'windows-backup', tabId: 'tab-windows-backup', html: '/html/windows_backup_tab/index.html?v=20260924_v2', js: '/html/windows_backup_tab/main.js?v=20260924_v2' },
+  { id: 'windows_backup_manager', tab: 'windows-backup', tabId: 'tab-windows-backup', html: '/html/windows_backup_tab/index.html?v=20261004_v1', js: '/html/windows_backup_tab/main.js?v=20261004_v1' },
   { id: 'hardware_monitor', tab: 'hardware-monitor', tabId: 'tab-hardware-monitor', html: '/html/hardware_monitor_tab/index.html', js: '/html/hardware_monitor_tab/main.js' },
   { id: 'cloudflared_monitor', tab: 'cloudflared', tabId: 'tab-cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
   { id: 'google_user_desktop', tab: 'google-desktop', tabId: 'tab-google-desktop', html: '/html/google_desktop_tab/index.html', js: '/html/google_desktop_tab/main.js' },
@@ -56,6 +56,7 @@ export const APP_TAB_DEFS = [
   { id: 'file_history_ai_search', tab: 'file-history-search', tabId: 'tab-file-history-search', html: '/html/file_history_ai_search_tab/index.html?v=20260928_v1', js: '/html/file_history_ai_search_tab/main.js?v=20260928_v1' },
   { id: 'telemetry_history', tab: 'telemetry-history', tabId: 'tab-telemetry-history', html: '/html/telemetry_history_tab/index.html?v=20260924_v1', js: '/html/telemetry_history_tab/main.js?v=20260924_v1' },
   { id: 'telemetry_research', tab: 'telemetry-research', tabId: 'tab-telemetry-research', html: '/html/telemetry_research_tab/index.html?v=20260924_v1', js: '/html/telemetry_research_tab/main.js?v=20260924_v1' },
+  { id: 'telemetry_config', tab: 'telemetry-config', tabId: 'tab-telemetry-config', html: '/html/telemetry_config_tab/index.html?v=20261006_v1', js: '/html/telemetry_config_tab/main.js?v=20261006_v1' },
   { id: 'process_leaks', tab: 'process-leaks', tabId: 'tab-process-leaks', html: '/html/process_leaks_tab/index.html?v=20260924_v1', js: '/html/process_leaks_tab/main.js?v=20260924_v1' },
   { id: 'forensics', tab: 'forensics', tabId: 'tab-forensics', html: '/html/forensics_tab/index.html?v=20260924_v1', js: '/html/forensics_tab/main.js?v=20260924_v1' },
   { id: 'throttling', tab: 'throttling', tabId: 'tab-throttling', html: '/html/throttling_tab/index.html?v=20260924_v1', js: '/html/throttling_tab/main.js?v=20260924_v1' },
@@ -76,12 +77,12 @@ export const APP_TAB_DEFS = [
   { id: 'servicing_integrity', tab: 'servicing-integrity', tabId: 'tab-servicing-integrity', html: '/html/servicing_integrity_tab/index.html?v=20261001_v1', js: '/html/servicing_integrity_tab/main.js?v=20261001_v1' },
   { id: 'services_manager', tab: 'services-manager', tabId: 'tab-services-manager', html: '/html/services_manager_tab/index.html?v=20261001_v1', js: '/html/services_manager_tab/main.js?v=20261001_v1' },
   { id: 'task_scheduler', tab: 'task-scheduler', tabId: 'tab-task-scheduler', html: '/html/task_scheduler_tab/index.html?v=20261001_v1', js: '/html/task_scheduler_tab/main.js?v=20261001_v1' },
-  { id: 'process_manager', tab: 'process-manager', tabId: 'tab-process-manager', html: '/html/process_manager_tab/index.html?v=20261001_v1', js: '/html/process_manager_tab/main.js?v=20261001_v1' },
+  { id: 'process_manager', tab: 'process-manager', tabId: 'tab-process-manager', html: '/html/process_manager_tab/index.html?v=20261004_v2', js: '/html/process_manager_tab/main.js?v=20261004_v2' },
   { id: 'firewall_manager', tab: 'firewall-manager', tabId: 'tab-firewall-manager', html: '/html/firewall_manager_tab/index.html?v=20261001_v1', js: '/html/firewall_manager_tab/main.js?v=20261001_v1' },
   { id: 'security_acl', tab: 'security-acl', tabId: 'tab-security-acl', html: '/html/security_acl_tab/index.html?v=20261001_v1', js: '/html/security_acl_tab/main.js?v=20261001_v1' },
   { id: 'performance_tracing', tab: 'performance-tracing', tabId: 'tab-performance-tracing', html: '/html/performance_tracing_tab/index.html?v=20261001_v1', js: '/html/performance_tracing_tab/main.js?v=20261001_v1' },
-  { id: 'event_logs', tab: 'event-logs', tabId: 'tab-event-logs', html: '/html/event_logs_tab/index.html?v=20261001_v1', js: '/html/event_logs_tab/main.js?v=20261001_v1' },
-  { id: 'software_manager', tab: 'software-manager', tabId: 'tab-software-manager', html: '/html/software_manager_tab/index.html?v=20261001_v1', js: '/html/software_manager_tab/main.js?v=20261001_v1' },
+  { id: 'event_logs', tab: 'event-logs', tabId: 'tab-event-logs', html: '/html/event_logs_tab/index.html?v=20261006_v1', js: '/html/event_logs_tab/main.js?v=20261006_v1' },
+  { id: 'software_manager', tab: 'software-manager', tabId: 'tab-software-manager', html: '/html/software_manager_tab/index.html?v=20261004_v2', js: '/html/software_manager_tab/main.js?v=20261004_v2' },
 ];
 
 export const TC_EXCLUDES = new Set([

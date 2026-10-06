@@ -16,27 +16,29 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:10:00
+# Updated: 2026-10-04 11:15:30
 # =============================================================================
 
-"""Минимальный роутер для чата с необходимыми эндпоинтами, используемый в тестах.
-
-Updated: 2026-10-01 04:06:00"""
+"""Минимальный роутер для чата с необходимыми эндпоинтами, используемый в тестах."""
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from typing import Optional, Any, Dict
 import asyncio
 
-router = APIRouter(prefix='/api/v1/chat', tags=['chat'])
+router = APIRouter(prefix='/chat', tags=['chat'])
 
 # Глобальные переменные, задаваемые в init_router
 _chat_model: Optional[Any] = None
 _narrator_model: Optional[Any] = None
 _plugins: Optional[Dict[str, Any]] = None
 
-
 from src.config import ai_cfg
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., description="Текст сообщения")
+    history: list[dict] = Field(default_factory=list, description="История диалога")
+    generation_config: dict = Field(default_factory=dict, description="Конфигурация генерации")
 
 class TestModelRequest(BaseModel):
     """Запрос для проверки модели чата."""
@@ -196,10 +198,35 @@ async def save_rag_instant(payload: dict, request: Request) -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post('')
+@router.post('/')
+async def chat(chat_req: ChatRequest, request: Request) -> dict:
+    """Обработка чат-запроса."""
+    is_rag_active = bool(chat_req.generation_config.get('rag_enabled', False))
+    if is_rag_active:
+        from src.rag import get_rag_engine
+        rag_engine = get_rag_engine()
+        top_k = int(chat_req.generation_config.get('top_k', 3))
+        threshold = float(chat_req.generation_config.get('min_score', chat_req.generation_config.get('threshold', 0.45)))
+        api_key = getattr(_chat_model, 'api_key', '') or 'fake_key_123'
+        await rag_engine.evaluate(
+            query=chat_req.message,
+            user_identifier='1',
+            api_key=api_key,
+            threshold=threshold,
+            top_k=top_k
+        )
+    return {"status": "ok", "response": "Test response from AI."}
+
+
 def init_router(chat_model: Optional[Any] = None, narrator_model: Optional[Any] = None, plugins: Optional[Dict[str, Any]] = None) -> APIRouter:
     """Инициализировать роутер, передав зависимости."""
     global _chat_model, _narrator_model, _plugins
     _chat_model = chat_model
     _narrator_model = narrator_model
     _plugins = plugins
-    return router
+
+    combined = APIRouter()
+    combined.include_router(router, prefix='/api')
+    combined.include_router(router, prefix='/api/v1')
+    return combined

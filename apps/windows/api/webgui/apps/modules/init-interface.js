@@ -7,7 +7,7 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/apps/modules/init-interface.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/apps/modules/init-interface.js?v=20261004_v17" type="module"></script>
  *
  *   JavaScript Import:
  *     import { setupGlobalApi } from '/windows/api/webgui/apps/modules/init-interface.js';
@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 12:12:00
  * =============================================================================
  */
 
@@ -26,7 +26,7 @@
  */
 
 import { initI18n, switchLang, applyTranslations } from '../../js/i18n.js';
-import { initTheme, setTheme, getThemeMode, getResolvedTheme } from '../../js/theme.js';
+import { initTheme, setTheme, getThemeMode, getResolvedTheme, themeEngine, ThemeEngine } from '../../js/theme.js';
 
 export function setupGlobalApi() {
   window.switchLang = switchLang;
@@ -34,6 +34,8 @@ export function setupGlobalApi() {
   window.setTheme = setTheme;
   window.getThemeMode = getThemeMode;
   window.getResolvedTheme = getResolvedTheme;
+  window.themeEngine = themeEngine;
+  window.ThemeEngine = ThemeEngine;
 
   window.api = window.api || {
     async fetch(url, options = {}) {

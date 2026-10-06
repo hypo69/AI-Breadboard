@@ -17,16 +17,16 @@
  * Package: src/api/webgui/boot_recovery_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 11:15:30
  * =============================================================================
  */
 
 /**
  * boot_recovery_tab/main.js — Управление BCD, загрузчиком и средой WinRE
- * Updated: 2026-10-01 06:00:00
+ * Updated: 2026-10-04 11:15:30
  */
 
-import { registerTabPoller } from '/html/js/tab-core.js';
+const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
 

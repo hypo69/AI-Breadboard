@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/peripherals_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/peripherals_tab
-Author: hypo69
-Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/peripherals_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:20:00
+ * =============================================================================
 -->
 
 <style>
@@ -76,10 +76,16 @@ Updated: 2026-10-01 13:04:40
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
-            <input class="form-check-input" type="checkbox" id="diag-peripherals-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="diag-peripherals-auto-refresh">Авто (5с)</label>
-          </div>
+          <select class="form-select form-select-sm poll-freq-select" id="diag-peripherals-poll-freq" data-poll-id="peripherals" title="Частота опроса: Сеть и периферия">
+            <option value="start">Только при старте</option>
+            <option value="manual" selected>По запросу</option>
+            <option value="3">Каждые 3 сек</option>
+            <option value="5">Каждые 5 сек</option>
+            <option value="10">Каждые 10 сек</option>
+            <option value="30">Каждые 30 сек</option>
+            <option value="60">Каждые 60 сек</option>
+            <option value="120">Каждые 120 сек</option>
+          </select>
           <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-peripherals-refresh">
             <i class="bi bi-arrow-clockwise"></i> Обновить
           </button>

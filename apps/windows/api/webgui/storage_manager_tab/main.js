@@ -17,16 +17,16 @@
  * Package: windows/api/webgui/storage_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
 /**
  * storage_manager_tab/main.js — Управление накопителями, разделами и томами
- * Updated: 2026-10-01 06:00:00
+ * Updated: 2026-10-04 11:15:30
  */
 
-import { registerTabPoller } from '/html/js/tab-core.js';
+const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
 
@@ -112,6 +112,59 @@ async function executeStorageAction() {
   }
 }
 
+const POLL_ID = 'storage_manager';
+let timerId = null;
+
+function getFrequency() {
+  try {
+    const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+    if (saved) return saved;
+  } catch (_) {}
+  return 'manual';
+}
+
+function setFrequency(freq) {
+  try {
+    localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+  } catch (_) {}
+  applyPoller(freq, false);
+}
+
+function stopPolling() {
+  if (window.unregisterTabPoller) {
+    window.unregisterTabPoller(`tab-storage-manager_${POLL_ID}`);
+  }
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+}
+
+function applyPoller(freq, runInitial = false) {
+  stopPolling();
+  if (freq === 'start' || freq === 'manual') {
+    if (runInitial) fetchStorageSummary();
+    return;
+  }
+
+  const intervalSec = parseInt(freq, 10);
+  if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+  const intervalMs = intervalSec * 1000;
+  const pollerId = `tab-storage-manager_${POLL_ID}`;
+
+  if (window.registerTabPoller) {
+    window.registerTabPoller('tab-storage-manager', fetchStorageSummary, intervalMs, { pollerId, immediate: runInitial });
+  } else {
+    if (runInitial) fetchStorageSummary();
+    timerId = setInterval(() => {
+      if (window.isTabActive ? window.isTabActive('tab-storage-manager') : true) {
+        fetchStorageSummary();
+      }
+    }, intervalMs);
+  }
+}
+
 export function initStorageManagerTab() {
   if (isInitialized) return;
   isInitialized = true;
@@ -128,7 +181,25 @@ export function initStorageManagerTab() {
     if (out) out.textContent = 'Журнал очищен.';
   });
 
-  registerTabPoller('tab-storage-manager', fetchStorageSummary, 10000, { immediate: true });
+  const select = document.getElementById('sm-poll-freq');
+  if (select) {
+    const currentFreq = getFrequency();
+    select.value = currentFreq;
+    select.onchange = (e) => {
+      const newFreq = e.target.value;
+      setFrequency(newFreq);
+      if (newFreq !== 'manual' && newFreq !== 'start') {
+        fetchStorageSummary();
+      }
+      if (window.showToast) {
+        const label = select.options[select.selectedIndex]?.text || newFreq;
+        window.showToast(`Частота опроса хранилища: ${label}`, 'info');
+      }
+    };
+    applyPoller(currentFreq, true);
+  } else {
+    applyPoller(getFrequency(), true);
+  }
 }
 
 window.initStorageManagerTab = initStorageManagerTab;

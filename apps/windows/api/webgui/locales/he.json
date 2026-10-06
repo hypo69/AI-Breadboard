@@ -208,7 +208,9 @@
   "theme": {
     "title": "ערכת נושא",
     "light": "בהיר",
+    "brick": "לבנים (בריק)",
     "dark": "כהה",
+    "terminal": "טרמינל",
     "system": "מערכת"
   },
   "userSettings": {
@@ -217,7 +219,9 @@
     "language": "שפת ממשק",
     "theme": "ערכת נושא",
     "themeLight": "☀️ בהיר",
+    "themeBrick": "🧱 לבנים (בריק)",
     "themeDark": "🌙 כהה",
+    "themeTerminal": "📟 טרמינל",
     "themeSystem": "🌓 מערכת",
     "close": "סגור"
   },

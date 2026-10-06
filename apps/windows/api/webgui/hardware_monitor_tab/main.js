@@ -14,20 +14,73 @@
  * Package: windows/api/webgui/hardware_monitor_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
 // Hardware & Sensors Monitor Frontend Logic
 (function () {
   let timerId = null;
+  const POLL_ID = 'hw_monitor';
+
+  function getFrequency() {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'manual';
+  }
+
+  function setFrequency(freq) {
+    try {
+      localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+    } catch (_) {}
+    applyPoller(freq, false);
+  }
+
+  function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(`tab-hardware-monitor_${POLL_ID}`);
+    }
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function applyPoller(freq, runInitial = false) {
+    stopPolling();
+    if (freq === 'start' || freq === 'manual') {
+      if (runInitial) loadHardwareData();
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-hardware-monitor_${POLL_ID}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-hardware-monitor', loadHardwareData, intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) loadHardwareData();
+      timerId = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : true) {
+          loadHardwareData();
+        }
+      }, intervalMs);
+    }
+  }
 
   async function initHardwareMonitorTab() {
     console.log('[HardwareMonitor] Initializing tab...');
     bindEvents();
     loadUtilitiesStatus();
-    loadHardwareData();
-    startPolling();
+    const currentFreq = getFrequency();
+    const select = document.getElementById('hw-poll-freq');
+    if (select) select.value = currentFreq;
+    applyPoller(currentFreq, true);
   }
   window.initHardwareMonitorTab = initHardwareMonitorTab;
 
@@ -40,44 +93,19 @@
       };
     }
 
-    const autoSwitch = document.getElementById('hw-auto-refresh');
-    if (autoSwitch) {
-      autoSwitch.onchange = () => {
-        if (window.setTabPollerEnabled) {
-          window.setTabPollerEnabled('tab-hardware-monitor_default', autoSwitch.checked);
-        } else {
-          if (autoSwitch.checked) {
-            startPolling();
-          } else {
-            stopPolling();
-          }
-        }
-      };
-    }
-  }
-
-  function startPolling() {
-    if (window.registerTabPoller) {
-      const autoSwitch = document.getElementById('hw-auto-refresh');
-      const isEnabled = autoSwitch ? autoSwitch.checked : true;
-      window.registerTabPoller('tab-hardware-monitor', loadHardwareData, 3000, { immediate: false, enabled: isEnabled });
-    } else {
-      stopPolling();
-      timerId = setInterval(() => {
-        if (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : true) {
+    const select = document.getElementById('hw-poll-freq');
+    if (select) {
+      select.onchange = (e) => {
+        const newFreq = e.target.value;
+        setFrequency(newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
           loadHardwareData();
         }
-      }, 3000);
-    }
-  }
-
-  function stopPolling() {
-    if (window.unregisterTabPoller) {
-      window.unregisterTabPoller('tab-hardware-monitor_default');
-    }
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
+        if (window.showToast) {
+          const label = select.options[select.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса сенсоров: ${label}`, 'info');
+        }
+      };
     }
   }
 

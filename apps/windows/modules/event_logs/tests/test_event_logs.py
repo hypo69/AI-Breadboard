@@ -3,24 +3,22 @@
 # Process Name: AI-Breadboard Apps Windows Modules Event_Logs Tests - Test Event Logs
 # =============================================================================
 # Description:
-#   # Description:
+#   Тестирование модуля управления журналами событий Windows и Log Intelligence API.
 #
 # Usage Examples:
 #   Python API:
-#     from apps.windows.modules.event_logs.tests.test_event_logs import manager
-#
-#     res = manager()
+#     pytest apps/windows/modules/event_logs/tests/test_event_logs.py
 #
 # File: test_event_logs.py
 # Project: ai-breadboard
 # Package: apps.windows.modules.event_logs.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 02:28:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""Тестирование модуля управления журналами событий Windows и Log Intelligence API."""
 
 import pytest
 from fastapi import FastAPI
@@ -76,3 +74,33 @@ def test_event_logs_endpoints(client: TestClient):
 
     resp_errors = client.get('/api/event-logs/errors')
     assert resp_errors.status_code == 200
+
+    resp_events = client.get('/api/event-logs/events?channel=System&limit=10')
+    assert resp_events.status_code == 200
+    assert isinstance(resp_events.json(), list)
+
+
+def test_event_logs_intelligence_pipeline(client: TestClient, manager: EventLogsManager):
+    """Проверка интеграции Log Intelligence через API event_logs."""
+    # 1. Profile / Process
+    resp = client.get('/api/event-logs/intelligence/profile?channel=System&hours=24&limit=20')
+    assert resp.status_code == 200
+    data = resp.json()
+    assert 'channel' in data
+    assert 'profile' in data
+    assert 'decision' in data
+    assert 'health_score' in data['profile']
+    assert 'strategy' in data['decision']
+
+    # 2. Audit
+    resp_audit = client.get('/api/event-logs/intelligence/audit?channel=System&hours=24&limit=20')
+    assert resp_audit.status_code == 200
+    audit_data = resp_audit.json()
+    assert 'health_score' in audit_data
+    assert 'redundancy_pct' in audit_data
+    assert 'strategy' in audit_data
+
+    # 3. RAG Search
+    resp_search = client.get('/api/event-logs/intelligence/search?query=system&top_k=3')
+    assert resp_search.status_code == 200
+    assert isinstance(resp_search.json(), list)

@@ -3,22 +3,22 @@
  * Process Name: Windows Windows Backup Tab - Main Script
  * =============================================================================
  * Description:
- *   Клиентский скрипт управления интерфейсом модуля main.
+ *   Клиентский скрипт управления интерфейсом модуля резервного копирования и данных Windows.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/windows_backup_tab/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/windows_backup_tab/main.js?v=20261004_v1" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/windows_backup_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 11:22:00
  * =============================================================================
  */
 
-// Windows Backup & Libraries Manager Frontend Logic
+// Windows Backup & Storage Manager Frontend Logic
 (function () {
   let _userFoldersData = null;
   let _librariesData = [];
@@ -31,6 +31,27 @@
   window.initWindowsBackupTab = initWindowsBackupTab;
 
   function bindEvents() {
+    // Поддержка переключения подвкладок
+    const subTabButtons = document.querySelectorAll('#wbSubTabs button[data-bs-toggle="tab"]');
+    subTabButtons.forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const targetSelector = btn.getAttribute('data-bs-target');
+        if (!targetSelector) return;
+
+        subTabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const panes = document.querySelectorAll('#wbTabContent .tab-pane');
+        panes.forEach(p => p.classList.remove('show', 'active'));
+
+        const targetPane = document.querySelector(targetSelector);
+        if (targetPane) {
+          targetPane.classList.add('show', 'active');
+        }
+      };
+    });
+
     const btnRefresh = document.getElementById('wb-btn-refresh');
     if (btnRefresh) {
       btnRefresh.onclick = () => loadBackupData();

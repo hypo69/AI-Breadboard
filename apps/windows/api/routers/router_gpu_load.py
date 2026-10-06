@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 03:20:00
+# Updated: 2026-10-05 23:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -270,9 +270,9 @@ def init_router(storage: Optional[TelemetryStorage] = None, lhm_service: Optiona
                 logger.warning(f"[router_gpu_load] Ошибка опроса живого LHM: {exc}")
 
         # 2. Fallback: Опрос из telemetry.db
-        st = storage or TelemetryStorage()
+        st = storage or TelemetryStorage.get_instance(read_only=True)
         try:
-            db_sensors = st.get_latest_sensors(limit=300)
+            db_sensors = st.get_latest_sensors()
             if db_sensors:
                 gpu_sensors = [
                     s for s in db_sensors

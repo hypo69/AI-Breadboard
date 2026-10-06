@@ -13,12 +13,7 @@
 #
 #     res = load_tc_config()
 #
-# File: main.py
-# Project: ai-breadboard
-# Package: apps.windows
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-04 08:39:00
+# Updated: 2026-10-06 04:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -311,31 +306,26 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
 
     # 2. Windows Sysadmin (AD, аудит файлов и безопасности)
     try:
-        from apps.windows.sysadmin.router import init_router as init_sysadmin_router
+        from apps.windows.modules.sysadmin.router import init_router as init_sysadmin_router
         app.include_router(init_sysadmin_router())
     except Exception as exc:
         logger.debug(f'Роутер sysadmin не зарегистрирован: {exc}')
 
     # 3. Сетевой терминал
     try:
-        from apps.windows.network.router import init_router as init_network_router
+        from apps.windows.modules.network.router import init_router as init_network_router
         app.include_router(init_network_router())
     except Exception as exc:
         logger.debug(f'Роутер network не зарегистрирован: {exc}')
 
     # 4. Центр управления системой
     try:
-        from apps.windows.system_control_center.router import init_router as init_scc_router
+        from apps.windows.modules.system_control_center.router import init_router as init_scc_router
         app.include_router(init_scc_router())
     except Exception as exc:
         logger.debug(f'Роутер system_control_center не зарегистрирован: {exc}')
 
-    # 5. Системный инспектор и панели оборудования (/api/v1/system, /api/v1/panel/*, /api/v1/about-system)
-    try:
-        from apps.windows.api.routers.router_system import init_router as init_system_inspector_router
-        app.include_router(init_system_inspector_router(chat_model=state.chat_model))
-    except Exception as exc:
-        logger.debug(f'Роутер router_system не зарегистрирован: {exc}')
+    # 5. Панели оборудования (/api/v1/panel/*, /api/v1/about-system)
 
     try:
         from apps.windows.api.routers.router_hardware_sensors import init_router as init_hardware_sensors_router
@@ -374,10 +364,22 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         logger.debug(f'Роутер router_network_load не зарегистрирован: {exc}')
 
     try:
+        from apps.windows.api.routers.router_telemetry_config import init_router as init_telemetry_config_router
+        app.include_router(init_telemetry_config_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_telemetry_config не зарегистрирован: {exc}')
+
+    try:
         from apps.windows.api.routers.router_about_system import init_router as init_about_system_router
         app.include_router(init_about_system_router())
     except Exception as exc:
         logger.debug(f'Роутер router_about_system не зарегистрирован: {exc}')
+
+    try:
+        from src.api.routers.core.router_system import init_router as init_system_diagnostics_router
+        app.include_router(init_system_diagnostics_router(chat_model=state.chat_model))
+    except Exception as exc:
+        logger.debug(f'Роутер router_system не зарегистрирован: {exc}')
 
     try:
         from apps.windows.api.routers.router_windows_admin import init_router as init_win_admin_router
@@ -408,7 +410,7 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
 
     # 6. Аудитор автозагрузки
     try:
-        from apps.windows.startup.router import init_router as init_startup_router
+        from apps.windows.modules.startup.router import init_router as init_startup_router
         app.include_router(init_startup_router())
     except Exception as exc:
         logger.debug(f'Роутер startup не зарегистрирован: {exc}')
@@ -422,7 +424,7 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
 
     # 8. Защитник Windows
     try:
-        from apps.windows.defender.router import init_router as init_defender_router
+        from apps.windows.modules.defender.router import init_router as init_defender_router
         app.include_router(init_defender_router())
     except Exception as exc:
         logger.debug(f'Роутер defender не зарегистрирован: {exc}')
@@ -562,13 +564,24 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     except Exception:
         pass
 
+    @app.get('/favicon.ico', include_in_schema=False)
+    async def favicon() -> Response:
+        """Отдача иконки favicon.ico."""
+        fav = _WEBGUI_DIR / 'favicon.ico'
+        if not fav.exists():
+            fav = _WEBGUI_DIR / 'assets' / 'favicon.ico'
+        if fav.exists():
+            return FileResponse(fav)
+        return Response(status_code=204)
+
     # -------------------------------------------------------------------------
     # Эндпоинты статусов приложений и настроек ИИ по стандарту /api/v1/*
     # -------------------------------------------------------------------------
     @app.get('/api/v1/apps/status')
-    async def get_apps_status() -> Dict[str, Any]:
+    @app.get('/api/apps/status')
+    async def get_apps_status(profile: Optional[str] = None) -> Dict[str, Any]:
         """Возвращает статус доступности приложений для формирования меню."""
-        cfg = load_tc_config()
+        cfg = load_tc_config(profile)
         apps_sec = cfg.get('apps', {})
         enabled_list = apps_sec.get('enabled', []) if isinstance(apps_sec, dict) else []
         disabled_list = apps_sec.get('disabled', []) if isinstance(apps_sec, dict) else []
@@ -586,15 +599,17 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         }
 
     @app.get('/auth/settings')
+    @app.get('/api/v1/auth/settings')
     async def get_user_settings() -> Dict[str, Any]:
         """Чтение активных настроек пользователя и модели."""
         cfg = load_tc_config()
         ai_sec = cfg.get('ai', {})
         prov = ai_sec.get('provider', 'gemini')
         model = ai_sec.get(prov, {}).get('model', '')
-        return {'status': 'ok', 'model': f'{prov}:{model}' if model else prov}
+        return {'status': 'ok', 'model': f'{prov}:{model}' if model else prov, 'favorite_models': {}}
 
     @app.post('/auth/settings')
+    @app.post('/api/v1/auth/settings')
     async def update_user_settings(request: Request) -> Dict[str, Any]:
         """Сохранение активной модели пользователя."""
         try:

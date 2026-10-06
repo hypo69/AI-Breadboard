@@ -17,107 +17,183 @@ Project: ai-breadboard
 Package: windows/api/webgui/system_inspector_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 08:32:00
-=============================================================================
+ * Updated: 2026-10-06 05:05:00
+ =============================================================================
 -->
 
 <!-- System & Hardware Inspector Application Tab -->
 <style>
   /* Все цвета через переменные main.css — адаптируется к обеим темам */
   .sys-container {
-    padding: 0.5rem 0.75rem;
+    padding: 1rem 1.25rem;
+    max-width: 100%;
   }
+
+  /* Стильные градиентные разделители между основными панелями */
+  .sys-section-divider {
+    height: 1px;
+    margin: 1.75rem 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 15%, rgba(56, 189, 248, 0.4) 50%, rgba(255, 255, 255, 0.15) 85%, transparent 100%);
+    position: relative;
+  }
+  .sys-section-divider::after {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #0dcaf0, #818cf8);
+    border-radius: 4px;
+    box-shadow: 0 0 12px rgba(13, 202, 240, 0.6);
+  }
+
+  /* Карточки основных разделов (CPU, GPU, RAM, Net, Storage) */
+  .sys-card, .sys-panel {
+    background: linear-gradient(180deg, #141c2e 0%, #0d1424 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    overflow: hidden;
+  }
+  .sys-card:hover {
+    border-color: rgba(255, 255, 255, 0.24);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+  .sys-card-cpu { border-top: 4px solid #0dcaf0; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(13, 202, 240, 0.2); }
+  .sys-card-gpu { border-top: 4px solid #f59e0b; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(245, 158, 11, 0.2); }
+  .sys-card-ram { border-top: 4px solid #10b981; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(16, 185, 129, 0.2); }
+  .sys-card-net { border-top: 4px solid #6366f1; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(99, 102, 241, 0.2); }
+  .sys-card-storage { border-top: 4px solid #06b6d4; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(6, 182, 212, 0.2); }
+
+  /* Заголовки секций с повышенной контрастностью и интерактивностью */
+  .sys-core-section-title {
+    font-size: 0.85rem !important;
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.12);
+    margin-top: 14px;
+    margin-bottom: 12px !important;
+    letter-spacing: 0.3px;
+  }
+
+  /* Шапка карточек панелей для четкого разделения и иерархии */
+  .sys-card-header-bar {
+    padding: 0.6rem 0.85rem;
+    margin: -1rem -1rem 1rem -1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
+  }
+
+  /* Компактный режим: скрытие второстепенных списков и сенсоров для разгрузки */
+  .sys-compact-mode .sys-detailed-sensors {
+    display: none !important;
+  }
+  .sys-compact-mode .sys-card {
+    padding: 0.75rem !important;
+  }
+  .sys-compact-mode .sys-card-header-bar {
+    margin: -0.75rem -0.75rem 0.6rem -0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
+
   /* Сенсоры LHM */
   .sys-sensor-group {
-    margin-bottom: 6px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
+    margin-bottom: 8px;
+    background: var(--surface-2, #111827);
+    border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    border-radius: 6px;
     overflow: hidden;
   }
   .sys-sensor-group-title {
-    padding: 4px 8px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    background: transparent;
+    padding: 6px 10px;
+    font-size: 0.80rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.35);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: var(--nav-active);
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+    color: #38bdf8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   }
   .sys-sensor-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 3px 8px;
-    font-size: 0.76rem;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.04));
-    background: var(--bg-color);
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg-color, #0b0f19);
   }
   .sys-sensor-row:last-child {
     border-bottom: none;
   }
   .sys-sensor-name {
-    color: var(--text-color);
+    color: #f1f5f9;
+    font-weight: 600;
     max-width: 55%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   .sys-sensor-value {
-    font-weight: 600;
+    font-weight: 700;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.78rem;
+    font-size: 0.80rem;
     text-align: right;
+    color: #ffffff;
   }
   /* Таблица процессов */
   .sys-proc-table {
     width: 100%;
-    font-size: 0.78rem;
+    font-size: 0.80rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     border-collapse: collapse;
   }
   .sys-proc-table th {
-    background: var(--surface-2);
-    padding: 4px 8px;
-    color: var(--text-muted);
-    font-weight: 600;
-    border-bottom: 1px solid var(--border-color);
+    background: #0f172a;
+    padding: 6px 10px;
+    color: #cbd5e1;
+    font-weight: 700;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.2);
     position: sticky;
     top: 0;
     z-index: 5;
   }
   .sys-proc-table td {
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--border-subtle);
-    color: var(--text-color);
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
   }
   /* Статусы загрузки */
-  .badge-cpu-high { color: #ef4444; font-weight: 700; }
-  .badge-cpu-med  { color: #f59e0b; font-weight: 600; }
+  .badge-cpu-high { color: #f87171; font-weight: 800; }
+  .badge-cpu-med  { color: #fbbf24; font-weight: 700; }
   /* Аномалии */
   .anomaly-tag {
     display: inline-block;
-    font-size: 0.72rem;
-    padding: 1px 6px;
+    font-size: 0.74rem;
+    padding: 2px 7px;
     border-radius: 4px;
-    background: rgba(239, 68, 68, 0.12);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+    border: 1.5px solid rgba(239, 68, 68, 0.6);
     margin-right: 4px;
     margin-top: 2px;
+    font-weight: 700;
   }
-  [data-theme="dark"] .anomaly-tag {
-    background: rgba(239, 68, 68, 0.18);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, 0.35);
-  }
-  /* Интерактивный ресайзер для таблицыИзменения файлов в реальном времени */
+  /* Интерактивный ресайзер для таблицы */
   .sys-table-resizer {
     height: 10px;
-    background: var(--surface-2);
-    border-top: 1px solid var(--border-color);
+    background: var(--surface-2, #111827);
+    border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
     cursor: ns-resize;
     display: flex;
     align-items: center;
@@ -129,60 +205,61 @@ Updated: 2026-10-04 08:32:00
   }
   .sys-table-resizer:hover,
   .sys-table-resizer.resizing {
-    background: rgba(13, 202, 240, 0.25);
+    background: rgba(13, 202, 240, 0.35);
   }
   .sys-table-resizer-grip {
     width: 42px;
     height: 3px;
-    background: var(--border-color, rgba(255, 255, 255, 0.2));
+    background: rgba(255, 255, 255, 0.35);
     border-radius: 3px;
     pointer-events: none;
     transition: background-color 0.15s ease, width 0.15s ease;
   }
   .sys-table-resizer:hover .sys-table-resizer-grip,
   .sys-table-resizer.resizing .sys-table-resizer-grip {
-    background: var(--bs-info, #0dcaf0);
+    background: #0dcaf0;
     width: 56px;
   }
   /* Карточки ядер CPU и блоков GPU, полукруги и термо-слайдеры */
   .sys-core-card {
-    background: var(--surface-2, rgba(255, 255, 255, 0.03));
-    border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.18));
+    background: #0f172a;
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
     border-radius: 8px;
     padding: 10px 12px;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 142px;
+    min-height: 148px;
   }
   .sys-core-card:hover {
-    border-color: var(--bs-info, #0dcaf0);
+    border-color: #38bdf8;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(13, 202, 240, 0.25);
+    box-shadow: 0 6px 18px rgba(13, 202, 240, 0.35);
   }
   .sys-core-title {
     font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--text-color, #e2e8f0);
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.3px;
   }
   .sys-core-load-badge {
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 800;
     padding: 2px 7px;
     border-radius: 5px;
-    background: rgba(13, 202, 240, 0.18);
-    color: #0dcaf0;
-    border: 1px solid rgba(13, 202, 240, 0.35);
+    background: rgba(13, 202, 240, 0.25);
+    color: #38bdf8;
+    border: 1.5px solid #0ea5e9;
   }
   .sys-temp-slider-wrap {
-    margin-top: 6px;
+    margin-top: 5px;
   }
   .sys-temp-slider-track {
     position: relative;
     height: 8px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.22);
     border-radius: 4px;
     overflow: visible;
   }
@@ -200,12 +277,48 @@ Updated: 2026-10-04 08:32:00
     border: 2px solid #fff;
     transform: translate(-50%, -50%);
     transition: left 0.4s ease, background-color 0.4s ease;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  }
+  /* Таблица параметров ядра CPU внутри карточки */
+  .sys-core-param-table {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+  }
+  .sys-core-param-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+    font-size: 0.74rem;
+    line-height: 1.25;
+  }
+  .sys-core-param-row:last-child {
+    border-bottom: none;
+  }
+  .sys-core-param-key {
+    color: #cbd5e1;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 58%;
+  }
+  .sys-core-param-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 800;
+    font-size: 0.76rem;
+    text-align: right;
+    white-space: nowrap;
   }
   /* Крупные слайдеры для главного заголовка */
   .sys-temp-slider-lg .sys-temp-slider-track {
     height: 12px;
     border-radius: 6px;
+    background: rgba(255, 255, 255, 0.25);
   }
   .sys-temp-slider-lg .sys-temp-slider-bar {
     border-radius: 6px;
@@ -214,142 +327,237 @@ Updated: 2026-10-04 08:32:00
     width: 20px;
     height: 20px;
     border: 2.5px solid #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.8);
   }
   .sys-temp-slider-empty {
-    font-size: 0.78rem;
-    color: var(--text-muted);
+    font-size: 0.80rem;
+    color: #94a3b8;
     text-align: center;
+    font-weight: 600;
+  }
+  /* Спецификации CPU: интерактивная карточка */
+  .sys-cpu-specs-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+  }
+  .sys-cpu-specs-card:hover {
+    border-color: #38bdf8 !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: 0 4px 16px rgba(13, 202, 240, 0.3) !important;
+    transform: translateY(-1px);
+  }
+  /* Сенсорные виджеты */
+  .sys-sensor-widget-item {
+    background: #0f172a !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
 </style>
 
 <div class="sys-container theme-inspector">
   <!-- Header Alert & Status (Compact Strip) -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1 px-3 rounded-2"
-       style="background: var(--surface-2); border: 1px solid var(--border-color);">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3.5 py-2 px-3 rounded-3"
+       style="background: linear-gradient(180deg, #182238 0%, #0f172a 100%); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 4px 16px rgba(0,0,0,0.45);">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="fs-5">📡</span>
-      <span class="fw-bold small" style="font-size: 0.92rem; color: var(--text-color);">Телеметрия хоста и оборудования</span>
-      <span class="badge bg-secondary fw-normal" style="font-size: 0.7rem;">Live Telemetry</span>
-      <span class="d-none d-lg-inline" style="font-size: 0.76rem; color: var(--text-muted);">| Комплексный мониторинг CPU, RAM, GPU, дисков, питания и процессов</span>
+      <span class="fw-bold" style="font-size: 0.95rem; color: #ffffff;">Телеметрия хоста и оборудования</span>
+      <span class="badge bg-secondary fw-bold" style="font-size: 0.72rem;">Live Telemetry</span>
+      <span class="d-none d-lg-inline" style="font-size: 0.78rem; color: #cbd5e1;">| Комплексный мониторинг CPU, RAM, GPU, дисков, питания и процессов</span>
     </div>
-    <div class="d-flex align-items-center gap-1 flex-wrap">
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="sys-conn-status">
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="badge rounded-pill bg-success text-white border border-light px-2.5 py-1" style="font-size: 0.74rem; font-weight: 700;" id="sys-conn-status">
         ● Активна
       </span>
-      <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-refresh-sensors">
+      <button class="btn btn-xs btn-outline-light rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-toggle-compact" title="Переключить компактный режим (скрыть второстепенные сенсоры)">
+        <i class="bi bi-arrows-collapse me-1"></i> <span id="sys-compact-btn-text">Компактно</span>
+      </button>
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-refresh-sensors">
         <i class="bi bi-arrow-clockwise me-1"></i> Сенсоры
       </button>
-      <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-intervals" title="Настройка интервалов опроса сенсоров и логгеров в config.json">
+      <button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-intervals" title="Настройка интервалов опроса сенсоров и логгеров в config.json">
         <i class="bi bi-stopwatch me-1"></i> Интервалы
       </button>
-      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-config">
+      <button class="btn btn-xs btn-outline-warning rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-config">
         <i class="bi bi-gear-fill me-1"></i> Настройки
       </button>
-      <button class="btn btn-xs btn-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.75rem; background: linear-gradient(135deg, #a855f7, #6366f1); border: none;" id="btn-sys-run-audit">
+      <button class="btn btn-xs btn-primary rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem; background: linear-gradient(135deg, #a855f7, #6366f1); border: none;" id="btn-sys-run-audit">
         🤖 AI Аудит
       </button>
     </div>
   </div>
 
-  <!-- Top Metrics Bar (Significantly Enlarged Density Grid) -->
-  <div class="row g-2 mb-2">
+  <!-- 1. Панель Загрузка CPU -->
+  <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card h-100 p-2.5">
-        <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+      <div class="sys-card sys-card-cpu h-100 p-3">
+        <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
-            <span class="sys-label text-info" style="font-size: 0.95rem; font-weight: 700;"><i class="bi bi-cpu text-info me-1.5"></i>Загрузка CPU</span>
+            <span class="sys-label text-info" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-cpu text-info me-1.5"></i>Загрузка CPU</span>
           </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-info" style="font-size: 1.18rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 12px rgba(13, 202, 240, 0.25);" id="sys-metric-cpu-model">--</span>
-          </div>
-          <span class="small badge bg-dark border border-secondary text-info font-monospace" style="font-size: 0.80rem;" id="sys-metric-cpu-sub">-- Ядер</span>
+          <span class="small badge bg-dark border border-secondary text-info font-monospace" style="font-size: 0.84rem;" id="sys-metric-cpu-sub">-- Ядер</span>
         </div>
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2.5 p-2.5 rounded-3" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1.5px solid var(--border-color, rgba(255,255,255,0.15));">
-          <div class="d-flex align-items-center gap-3">
-            <div id="sys-metric-cpu-gauge" style="width: 130px; height: 74px;"></div>
-            <div>
-              <div class="sys-value" id="sys-metric-cpu-val" style="font-size: 2.1rem; line-height: 1; font-weight: 800;">0.0%</div>
-              <div class="text-muted mt-1" style="font-size: 0.85rem; font-weight: 600;" id="sys-metric-cpu-package-temp">Пакет: -- °C</div>
+        <!-- Верхний баннер: Спидометр и датчик температуры слева, Модель в центре, Сводная таблица CPU справа -->
+        <div class="d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+          <!-- Левая колонка: Спидометр загрузки, справа от него значение с динамическим оттенком, а СНИЗУ — датчик температуры -->
+          <div class="d-flex flex-column justify-content-between gap-1.5" style="min-width: 250px; max-width: 300px;">
+            <div class="d-flex align-items-center gap-2.5">
+              <div id="sys-metric-cpu-gauge" style="width: 120px; height: 68px; flex-shrink: 0;"></div>
+              <div>
+                <div class="sys-value text-info" id="sys-metric-cpu-val" style="font-size: 2.1rem; line-height: 1; font-weight: 800; transition: color 0.3s ease, text-shadow 0.3s ease;">0.0%</div>
+                <div class="text-light mt-1 font-monospace" style="font-size: 0.82rem; font-weight: 700;" id="sys-metric-cpu-package-temp">Пакет: -- °C</div>
+              </div>
             </div>
-          </div>
-          <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 260px;">
-            <span class="text-muted mb-1" style="font-size: 0.78rem; font-weight: 600;">Температура Package (LHM)</span>
+            <!-- Датчик температуры Package расположен ПОД спидометром загрузки -->
             <div id="sys-metric-cpu-package-slider" style="width: 100%;"></div>
           </div>
-        </div>
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
-          <span><i class="bi bi-grid-3x3-gap-fill text-info me-1.5"></i>Нагрузка и температура по ядрам</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-cores-count-badge">0 ядер</span>
-        </div>
-        <div id="sys-metric-cpu-cores" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; font-size: 0.78rem;"></div>
 
-        <!-- Энергопотребление, напряжение, частоты и сенсоры CPU -->
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5 mt-2" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
-          <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Энергопотребление, напряжение и частоты CPU</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-cpu-sensors-count-badge">0 параметров</span>
-        </div>
-        <div id="sys-metric-cpu-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
-          <div class="text-muted small text-center py-2 col-12">Опрос сенсоров CPU...</div>
-        </div>
+          <!-- Центральная колонка: Модель процессора -->
+          <div class="text-center flex-grow-1 px-2 d-flex flex-column align-items-center justify-content-center">
+            <span class="fw-bold text-info" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-cpu-model">--</span>
+            <span class="text-muted small mt-1" id="sys-metric-cpu-vendor-badge" style="font-size: 0.76rem;">Intel Corporation · 64-bit</span>
+          </div>
 
-        <!-- График истории CPU (Загрузка % · Температура Package °C) -->
-        <div class="p-2 mt-2 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1px solid var(--border-color, rgba(255,255,255,0.06));">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-muted" style="font-size: 0.75rem; font-weight: 600;"><i class="bi bi-graph-up text-info me-1"></i>История CPU (Загрузка % · Температура Package °C)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.70rem;">
-              <span class="text-info">● Нагрузка %</span>
-              <span class="text-danger">● Температура °C</span>
+          <!-- Правая колонка: Сводная таблица о процессоре (кликабельна для запуска AI-аудита) -->
+          <div class="sys-cpu-specs-card p-2 rounded-2 d-flex flex-column justify-content-between" 
+               id="sys-cpu-specs-card"
+               style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.12); min-width: 290px; max-width: 360px;"
+               onclick="window.inspectCpuSpecsWithAi && window.inspectCpuSpecsWithAi()"
+               title="Нажмите для вызова AI-аудита и экспертного анализа архитектуры процессора">
+            <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+              <span class="text-light fw-bold d-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                <i class="bi bi-info-circle text-info"></i>Характеристики CPU
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1" style="font-size: 0.62rem;"><i class="bi bi-stars me-0.5"></i>AI</span>
+              </span>
+              <span class="badge bg-dark border border-secondary text-info font-monospace" style="font-size: 0.68rem;" id="sys-cpu-spec-arch">x86_64</span>
+            </div>
+            <div class="sys-cpu-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 0.74rem;">
+              <div class="d-flex justify-content-between"><span class="text-muted">Сокет:</span><span class="text-light font-monospace fw-semibold" id="sys-cpu-spec-socket">--</span></div>
+              <div class="d-flex justify-content-between"><span class="text-muted">Ядра/Потоки:</span><span class="text-light font-monospace fw-semibold" id="sys-cpu-spec-cores">--</span></div>
+              <div class="d-flex justify-content-between"><span class="text-muted">Базовая част.:</span><span class="text-info font-monospace fw-semibold" id="sys-cpu-spec-base-freq">--</span></div>
+              <div class="d-flex justify-content-between"><span class="text-muted">Макс. част.:</span><span class="text-info font-monospace fw-semibold" id="sys-cpu-spec-max-freq">--</span></div>
+              <div class="d-flex justify-content-between" style="grid-column: span 2;"><span class="text-muted">Кэш L2 / L3:</span><span class="text-warning font-monospace fw-semibold" id="sys-cpu-spec-cache">--</span></div>
             </div>
           </div>
-          <div id="sys-cpu-spark" style="height: 60px;"></div>
+        </div>
+        <!-- Сворачиваемый блок детализации CPU: Ядра, потоки и датчики системы (скрыт по умолчанию) -->
+        <div class="sys-detailed-sensors mt-2">
+          <div class="sys-core-section-title d-flex justify-content-between align-items-center" 
+               id="sys-cpu-details-toggle-btn"
+               style="cursor: pointer; user-select: none; padding: 6px 10px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);"
+               title="Нажмите, чтобы развернуть или скрыть детализацию по ядрам, потокам и сенсорам CPU"
+               onclick="window.toggleSysCpuDetails && window.toggleSysCpuDetails()">
+            <div class="d-flex align-items-center gap-1.5">
+              <i class="bi bi-chevron-right text-info" id="sys-cpu-details-toggle-icon" style="transition: transform 0.2s ease;"></i>
+              <span class="fw-bold"><i class="bi bi-grid-3x3-gap-fill text-info me-1.5"></i>Показатели по ядрам, потокам и сенсорам CPU</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-cores-count-badge">0 ядер</span>
+              <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-cpu-sensors-count-badge">0 параметров</span>
+            </div>
+          </div>
+
+          <!-- Скрытый по умолчанию общий контейнер деталей CPU -->
+          <div id="sys-cpu-details-collapse" style="display: none; flex-direction: column; gap: 14px; margin-top: 10px;">
+            <!-- 1. Нагрузка и температура по ядрам и потокам -->
+            <div>
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+                <span><i class="bi bi-cpu text-info me-1"></i>Нагрузка и температура по ядрам и потокам</span>
+              </div>
+              <div id="sys-metric-cpu-cores" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; font-size: 0.78rem;"></div>
+            </div>
+
+            <!-- 2. Общие показатели CPU (датчики системы) -->
+            <div>
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+                <span><i class="bi bi-lightning-charge text-warning me-1"></i>Общие показатели CPU (датчики системы)</span>
+              </div>
+              <div id="sys-metric-cpu-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
+                <div class="text-muted small text-center py-2 col-12">Опрос сенсоров CPU...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- График истории CPU (Загрузка %, Температура °C, Мощность W) с логарифмической шкалой -->
+        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
+          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История CPU</span>
+              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
+                <button type="button" class="btn btn-xs btn-outline-info active py-0 px-2 fw-bold" id="btn-cpu-spark-log" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('log')">Лог. шкала (Log)</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-cpu-spark-lin" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('linear')">Линейная (Lin)</button>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
+              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);">● Нагрузка %</span>
+              <span class="text-danger" style="text-shadow: 0 0 8px rgba(239,68,68,0.5);">● Температура °C</span>
+              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);">● Мощность W</span>
+              <span class="text-muted font-monospace ms-2" id="sys-cpu-spark-live-cursor" style="font-size: 0.70rem;">Live</span>
+            </div>
+          </div>
+          <!-- Контейнер графика и интерактивного тултипа -->
+          <div style="position: relative; width: 100%; height: 90px;" id="sys-cpu-spark-container">
+            <div id="sys-cpu-spark" style="width: 100%; height: 100%;"></div>
+            <div id="sys-cpu-spark-tooltip" style="display: none; position: absolute; top: 6px; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 4px 8px; font-size: 0.70rem; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.6); white-space: nowrap;"></div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
+
+  <!-- 2. Панель Загрузка GPU -->
+  <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card h-100 p-2.5">
-        <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+      <div class="sys-card sys-card-gpu h-100 p-3">
+        <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
-            <span class="sys-label text-warning" style="font-size: 0.95rem; font-weight: 700;"><i class="bi bi-gpu-card text-warning me-1.5"></i>Загрузка GPU</span>
+            <span class="sys-label text-warning" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-gpu-card text-warning me-1.5"></i>Загрузка GPU</span>
           </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-warning" style="font-size: 1.18rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 12px rgba(245, 158, 11, 0.25);" id="sys-metric-gpu-model">NVIDIA GeForce GT 710</span>
-          </div>
-          <span class="small text-truncate font-monospace badge bg-dark border border-secondary text-warning" style="font-size: 0.80rem; max-width: 260px;" id="sys-metric-gpu-sub">--</span>
+          <span class="small text-truncate font-monospace badge bg-dark border border-secondary text-warning" style="font-size: 0.84rem; max-width: 260px;" id="sys-metric-gpu-sub">--</span>
         </div>
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2.5 p-2.5 rounded-3" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1.5px solid var(--border-color, rgba(255,255,255,0.15));">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-gpu-gauge" style="width: 130px; height: 74px;"></div>
             <div>
-              <div class="sys-value text-warning" id="sys-metric-gpu-val" style="font-size: 2.1rem; line-height: 1; font-weight: 800;">0.0%</div>
-              <div class="text-muted mt-1" style="font-size: 0.85rem; font-weight: 600;" id="sys-metric-gpu-core-temp">GPU: -- °C</div>
+              <div class="sys-value text-warning" id="sys-metric-gpu-val" style="font-size: 2.2rem; line-height: 1; font-weight: 800;">0.0%</div>
+              <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-metric-gpu-core-temp">GPU: -- °C</div>
             </div>
           </div>
+          <div class="text-center flex-grow-1 px-2">
+            <span class="fw-bold text-warning" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model">NVIDIA GeForce GT 710</span>
+          </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 260px;">
-            <span class="text-muted mb-1" style="font-size: 0.78rem; font-weight: 600;" id="sys-metric-gpu-vram-label">Температура GPU (LHM)</span>
+            <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-metric-gpu-vram-label">Температура GPU (LHM)</span>
             <div id="sys-metric-gpu-temp-slider" style="width: 100%;"></div>
           </div>
         </div>
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
+        <div class="sys-core-section-title d-flex justify-content-between align-items-center">
           <span><i class="bi bi-grid-3x3-gap-fill text-warning me-1.5"></i>Блоки и подсистемы GPU</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-gpu-engines-count-badge">0 блоков</span>
+          <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-gpu-engines-count-badge">0 блоков</span>
         </div>
-        <div id="sys-metric-gpu-engines" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; font-size: 0.78rem;"></div>
+        <div id="sys-metric-gpu-engines" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; font-size: 0.78rem;"></div>
 
-        <!-- Энергопотребление, напряжение, частоты и сенсоры GPU -->
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5 mt-2" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
-          <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Энергопотребление, напряжение и частоты GPU</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-gpu-sensors-count-badge">0 параметров</span>
-        </div>
-        <div id="sys-metric-gpu-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
-          <div class="text-muted small text-center py-2 col-12">Опрос сенсоров GPU...</div>
+        <!-- Энергопотребление, напряжение, частоты и сенсоры GPU (Скрывается в компактном режиме) -->
+        <div class="sys-detailed-sensors">
+          <div class="sys-core-section-title d-flex justify-content-between align-items-center mt-3">
+            <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Энергопотребление, напряжение и частоты GPU</span>
+            <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-gpu-sensors-count-badge">0 параметров</span>
+          </div>
+          <div id="sys-metric-gpu-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
+            <div class="text-muted small text-center py-2 col-12">Опрос сенсоров GPU...</div>
+          </div>
         </div>
 
         <!-- График истории GPU (Загрузка ядра % · Температура GPU Core °C) -->
-        <div class="p-2 mt-2 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1px solid var(--border-color, rgba(255,255,255,0.06));">
+        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-muted" style="font-size: 0.75rem; font-weight: 600;"><i class="bi bi-graph-up text-warning me-1"></i>История GPU (Загрузка % · Температура Core °C)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.70rem;">
+            <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-warning me-1"></i>История GPU (Загрузка % · Температура Core °C)</span>
+            <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
               <span class="text-warning">● Нагрузка Core %</span>
               <span class="text-danger">● Температура °C</span>
             </div>
@@ -360,31 +568,34 @@ Updated: 2026-10-04 08:32:00
     </div>
   </div>
 
-  <!-- Память и дисковый ввод-вывод (GET /api/v1/panel/memory-io, telemetry.db) -->
-  <div class="row g-2 mb-2">
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
+
+  <!-- 3. Панель Память (RAM) и Дисковый ввод-вывод -->
+  <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card p-2.5">
-        <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+      <div class="sys-card sys-card-ram p-3">
+        <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
-            <span class="sys-label text-success" style="font-size: 0.95rem; font-weight: 700;"><i class="bi bi-memory text-success me-1.5"></i>Память (RAM) и Дисковый ввод-вывод</span>
+            <span class="sys-label text-success" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-memory text-success me-1.5"></i>Память (RAM) и Дисковый ввод-вывод</span>
           </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-success" style="font-size: 1.18rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 12px rgba(16, 185, 129, 0.25);" id="sys-metric-ram-model">--</span>
-          </div>
-          <span class="small badge bg-dark border border-secondary text-light font-monospace" style="font-size: 0.80rem;" id="sys-memio-ts">--</span>
+          <span class="small badge bg-dark border border-secondary text-light font-monospace" style="font-size: 0.84rem;" id="sys-memio-ts">--</span>
         </div>
 
         <!-- Верхний баннер: Большой Gauge RAM и Большой Слайдер -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2.5 p-2.5 rounded-3" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1.5px solid var(--border-color, rgba(255,255,255,0.15));">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-ram-gauge" style="width: 130px; height: 74px;"></div>
             <div>
-              <div class="sys-value text-success" id="sys-memio-pct" style="font-size: 2.1rem; line-height: 1; font-weight: 800;">0.0%</div>
-              <div class="text-muted mt-1" style="font-size: 0.85rem; font-weight: 600;" id="sys-memio-used">0.0 / 0.0 GB</div>
+              <div class="sys-value text-success" id="sys-memio-pct" style="font-size: 2.2rem; line-height: 1; font-weight: 800;">0.0%</div>
+              <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-memio-used">0.0 / 0.0 GB</div>
             </div>
           </div>
+          <div class="text-center flex-grow-1 px-2">
+            <span class="fw-bold text-success" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);" id="sys-metric-ram-model">--</span>
+          </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 280px;">
-            <span class="text-muted mb-1" style="font-size: 0.78rem; font-weight: 600;" id="sys-memio-swap">Файл подкачки: 0%</span>
+            <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-memio-swap">Файл подкачки: 0%</span>
             <div id="sys-metric-ram-slider" style="width: 100%;"></div>
           </div>
         </div>
@@ -422,7 +633,7 @@ Updated: 2026-10-04 08:32:00
               <div class="py-1" id="sys-read-sub-gauge"></div>
               <div class="sys-temp-slider-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.78rem;">
-                  <span class="text-muted"><i class="bi bi-arrow-down-circle me-1 text-info"></i>Чтение</span>
+                  <span class="text-light fw-semibold"><i class="bi bi-arrow-down-circle me-1 text-info"></i>Чтение</span>
                   <span class="font-monospace text-info fw-bold" id="sys-memio-read">0 B/s</span>
                 </div>
                 <div class="sys-temp-slider-track">
@@ -442,7 +653,7 @@ Updated: 2026-10-04 08:32:00
               <div class="py-1" id="sys-write-sub-gauge"></div>
               <div class="sys-temp-slider-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.78rem;">
-                  <span class="text-muted"><i class="bi bi-arrow-up-circle me-1 text-warning"></i>Запись</span>
+                  <span class="text-light fw-semibold"><i class="bi bi-arrow-up-circle me-1 text-warning"></i>Запись</span>
                   <span class="font-monospace text-warning fw-bold" id="sys-memio-write">0 B/s</span>
                 </div>
                 <div class="sys-temp-slider-track">
@@ -454,20 +665,22 @@ Updated: 2026-10-04 08:32:00
           </div>
         </div>
 
-        <!-- Параметры, тайминги и сенсоры RAM -->
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5 mt-2" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
-          <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Параметры, тайминги и сенсоры RAM</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-ram-sensors-count-badge">0 параметров</span>
-        </div>
-        <div id="sys-metric-ram-sensors" class="mb-2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
-          <div class="text-muted small text-center py-2 col-12">Опрос параметров RAM...</div>
+        <!-- Параметры, тайминги и сенсоры RAM (Скрывается в компактном режиме) -->
+        <div class="sys-detailed-sensors">
+          <div class="sys-core-section-title d-flex justify-content-between align-items-center mt-3">
+            <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Параметры, тайминги и сенсоры RAM</span>
+            <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-ram-sensors-count-badge">0 параметров</span>
+          </div>
+          <div id="sys-metric-ram-sensors" class="mb-2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
+            <div class="text-muted small text-center py-2 col-12">Опрос параметров RAM...</div>
+          </div>
         </div>
 
-        <!-- График истории -->
-        <div class="p-2 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1px solid var(--border-color, rgba(255,255,255,0.06));">
+        <!-- График истории RAM -->
+        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-muted" style="font-size: 0.75rem; font-weight: 600;"><i class="bi bi-graph-up text-primary me-1"></i>История загрузки (RAM % · Чтение · Запись)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.70rem;">
+            <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-primary me-1"></i>История загрузки (RAM % · Чтение · Запись)</span>
+            <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
               <span class="text-success">● RAM</span>
               <span class="text-info">● Read</span>
               <span class="text-warning">● Write</span>
@@ -479,31 +692,34 @@ Updated: 2026-10-04 08:32:00
     </div>
   </div>
 
-  <!-- Сетевые адаптеры и беспроводная связь (Ethernet / Wi-Fi / Bluetooth) (GET /api/v1/panel/network-load) -->
-  <div class="row g-2 mb-2">
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
+
+  <!-- 4. Панель Сетевые адаптеры и беспроводная связь (Ethernet / Wi-Fi / Bluetooth) -->
+  <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card p-2.5">
-        <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+      <div class="sys-card sys-card-net p-3">
+        <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
-            <span class="sys-label text-info" style="font-size: 0.95rem; font-weight: 700;"><i class="bi bi-hdd-network text-info me-1.5"></i>Сетевые адаптеры и беспроводная связь</span>
+            <span class="sys-label text-info" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-hdd-network text-info me-1.5"></i>Сетевые адаптеры и беспроводная связь</span>
           </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-info" style="font-size: 1.18rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 12px rgba(13, 202, 240, 0.25);" id="sys-metric-net-model">Ethernet (1000 Mbps) · Wi-Fi / BT</span>
-          </div>
-          <span class="small badge bg-dark border border-secondary text-light font-monospace" style="font-size: 0.80rem;" id="sys-net-ts">--</span>
+          <span class="small badge bg-dark border border-secondary text-light font-monospace" style="font-size: 0.84rem;" id="sys-net-ts">--</span>
         </div>
 
         <!-- Верхний баннер: Большой Gauge трафика + Слайдер линка -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2.5 p-2.5 rounded-3" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1.5px solid var(--border-color, rgba(255,255,255,0.15));">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-net-gauge" style="width: 130px; height: 74px;"></div>
             <div>
-              <div class="sys-value text-info" id="sys-net-speed-val" style="font-size: 2.1rem; line-height: 1; font-weight: 800;">0 B/s</div>
-              <div class="text-muted mt-1" style="font-size: 0.85rem; font-weight: 600;" id="sys-net-sub-details">⬇ 0 B/s · ⬆ 0 B/s (Всего: 0 B)</div>
+              <div class="sys-value text-info" id="sys-net-speed-val" style="font-size: 2.2rem; line-height: 1; font-weight: 800;">0 B/s</div>
+              <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-net-sub-details">⬇ 0 B/s · ⬆ 0 B/s (Всего: 0 B)</div>
             </div>
           </div>
+          <div class="text-center flex-grow-1 px-2">
+            <span class="fw-bold text-info" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-net-model">Ethernet (1000 Mbps) · Wi-Fi / BT</span>
+          </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 280px;">
-            <span class="text-muted mb-1" style="font-size: 0.78rem; font-weight: 600;" id="sys-net-util-label">Загрузка канала: 0%</span>
+            <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-net-util-label">Загрузка канала: 0%</span>
             <div id="sys-metric-net-slider" style="width: 100%;"></div>
           </div>
         </div>
@@ -519,7 +735,7 @@ Updated: 2026-10-04 08:32:00
               <div class="py-1" id="sys-rx-sub-gauge"></div>
               <div class="sys-temp-slider-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.78rem;">
-                  <span class="text-muted"><i class="bi bi-arrow-down-circle me-1 text-info"></i>Скачивание</span>
+                  <span class="text-light fw-semibold"><i class="bi bi-arrow-down-circle me-1 text-info"></i>Скачивание</span>
                   <span class="font-monospace text-info fw-bold text-truncate" style="max-width: 110px;" id="sys-rx-total-text">0 B</span>
                 </div>
                 <div class="sys-temp-slider-track">
@@ -539,7 +755,7 @@ Updated: 2026-10-04 08:32:00
               <div class="py-1" id="sys-tx-sub-gauge"></div>
               <div class="sys-temp-slider-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.78rem;">
-                  <span class="text-muted"><i class="bi bi-arrow-up-circle me-1 text-warning"></i>Отдача</span>
+                  <span class="text-light fw-semibold"><i class="bi bi-arrow-up-circle me-1 text-warning"></i>Отдача</span>
                   <span class="font-monospace text-warning fw-bold text-truncate" style="max-width: 110px;" id="sys-tx-total-text">0 B</span>
                 </div>
                 <div class="sys-temp-slider-track">
@@ -559,7 +775,7 @@ Updated: 2026-10-04 08:32:00
               <div class="py-1" id="sys-wifi-sub-gauge"></div>
               <div class="sys-temp-slider-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.78rem;">
-                  <span class="text-muted"><i class="bi bi-wifi me-1 text-primary"></i>Статус</span>
+                  <span class="text-light fw-semibold"><i class="bi bi-wifi me-1 text-primary"></i>Статус</span>
                   <span class="font-monospace text-primary fw-bold text-truncate" style="max-width: 110px;" id="sys-wifi-status-text">Disconnected</span>
                 </div>
                 <div class="sys-temp-slider-track">
@@ -579,7 +795,7 @@ Updated: 2026-10-04 08:32:00
               <div class="py-1" id="sys-bt-sub-gauge"></div>
               <div class="sys-temp-slider-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.78rem;">
-                  <span class="text-muted"><i class="bi bi-bluetooth me-1 text-success"></i>Устройства</span>
+                  <span class="text-light fw-semibold"><i class="bi bi-bluetooth me-1 text-success"></i>Устройства</span>
                   <span class="font-monospace text-success fw-bold text-truncate" style="max-width: 110px;" id="sys-bt-devices-text">0 устр.</span>
                 </div>
                 <div class="sys-temp-slider-track">
@@ -591,20 +807,22 @@ Updated: 2026-10-04 08:32:00
           </div>
         </div>
 
-        <!-- Параметры, адаптеры и сенсоры сети -->
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5 mt-2" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
-          <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Параметры, адаптеры и сенсоры сети / Wi-Fi / BT</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-net-sensors-count-badge">0 параметров</span>
-        </div>
-        <div id="sys-metric-net-sensors" class="mb-2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
-          <div class="text-muted small text-center py-2 col-12">Опрос сетевых интерфейсов...</div>
+        <!-- Параметры, адаптеры и сенсоры сети (Скрывается в компактном режиме) -->
+        <div class="sys-detailed-sensors">
+          <div class="sys-core-section-title d-flex justify-content-between align-items-center mt-3">
+            <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Параметры, адаптеры и сенсоры сети / Wi-Fi / BT</span>
+            <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-net-sensors-count-badge">0 параметров</span>
+          </div>
+          <div id="sys-metric-net-sensors" class="mb-2" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
+            <div class="text-muted small text-center py-2 col-12">Опрос сетевых интерфейсов...</div>
+          </div>
         </div>
 
         <!-- График истории сети -->
-        <div class="p-2 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1px solid var(--border-color, rgba(255,255,255,0.06));">
+        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-muted" style="font-size: 0.75rem; font-weight: 600;"><i class="bi bi-graph-up text-info me-1"></i>История сети (⬇ Download · ⬆ Upload)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.70rem;">
+            <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История сети (⬇ Download · ⬆ Upload)</span>
+            <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
               <span class="text-info">● Download</span>
               <span class="text-warning">● Upload</span>
             </div>
@@ -615,45 +833,51 @@ Updated: 2026-10-04 08:32:00
     </div>
   </div>
 
-  <!-- Параметры накопителей (Диски SSD / HDD / NVMe) (GET /api/v1/panel/storage-load) -->
-  <div class="row g-2 mb-2">
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
+
+  <!-- 5. Панель Параметры накопителей (Диски SSD / HDD / NVMe) -->
+  <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card p-2.5">
-        <div class="d-flex justify-content-between align-items-center mb-1.5">
+      <div class="sys-card sys-card-storage p-3">
+        <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
-            <span class="sys-label" style="font-size: 0.95rem; font-weight: 700;"><i class="bi bi-hdd-fill text-info me-1.5"></i>Параметры накопителей (Диски SSD / HDD / NVMe)</span>
-            <span class="badge bg-info-subtle text-info border border-info" style="font-size: 0.72rem;" id="sys-storage-drives-badge">0 дисков</span>
-            <span class="badge bg-dark border border-secondary text-light" style="font-size: 0.72rem;" id="sys-storage-parts-badge">0 разделов</span>
+            <span class="sys-label text-info" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-hdd-fill text-info me-1.5"></i>Параметры накопителей (Диски SSD / HDD / NVMe)</span>
+            <span class="badge bg-info-subtle text-info border border-info" style="font-size: 0.74rem;" id="sys-storage-drives-badge">0 дисков</span>
+            <span class="badge bg-dark border border-secondary text-light" style="font-size: 0.74rem;" id="sys-storage-parts-badge">0 разделов</span>
           </div>
-          <span class="small badge bg-dark border border-secondary text-light font-monospace" style="font-size: 0.80rem;" id="sys-storage-ts">Live</span>
+          <span class="small badge bg-dark border border-secondary text-light font-monospace" style="font-size: 0.84rem;" id="sys-storage-ts">Live</span>
         </div>
 
         <!-- Верхний баннер: Большой Gauge общего объема + Слайдер максимальной t° -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2.5 p-2.5 rounded-3" style="background: var(--surface-2, rgba(255,255,255,0.02)); border: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-storage-gauge" style="width: 130px; height: 74px;"></div>
             <div>
-              <div class="sys-value text-info" id="sys-storage-pct" style="font-size: 2.1rem; line-height: 1; font-weight: 800;">0.0%</div>
-              <div class="text-muted mt-1" style="font-size: 0.85rem; font-weight: 600;" id="sys-storage-used">0.0 / 0.0 GB</div>
+              <div class="sys-value text-info" id="sys-storage-pct" style="font-size: 2.2rem; line-height: 1; font-weight: 800;">0.0%</div>
+              <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-storage-used">0.0 / 0.0 GB</div>
             </div>
           </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 280px;">
-            <span class="text-muted mb-1" style="font-size: 0.78rem; font-weight: 600;" id="sys-storage-temp-label">Макс. температура: -- °C</span>
+            <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-storage-temp-label">Макс. температура: -- °C</span>
             <div id="sys-metric-storage-temp-slider" style="width: 100%;"></div>
           </div>
         </div>
 
         <!-- Сетка карточек накопителей и разделов -->
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-1.5" style="font-size: 0.80rem; color: var(--text-muted); font-weight: 600;">
+        <div class="sys-core-section-title d-flex justify-content-between align-items-center">
           <span><i class="bi bi-hdd-network text-info me-1.5"></i>Физические накопители и разделы</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.75rem;" id="sys-storage-summary-badge">Автоматический опрос</span>
+          <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-storage-summary-badge">Автоматический опрос</span>
         </div>
-        <div id="sys-metric-storage-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; font-size: 0.78rem;">
+        <div id="sys-metric-storage-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; font-size: 0.78rem;">
           <div class="text-muted small text-center py-3 col-12">Опрос накопителей выполняется...</div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
 
   <!-- Extended Hardware & Health Status Strip -->
   <div class="row g-2 mb-2">
@@ -709,6 +933,9 @@ Updated: 2026-10-04 08:32:00
       </div>
     </div>
   </div>
+
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
 
   <!-- Workspace Layout: LHM Sensors (Left) + Process Stream & AI Copilot (Right) -->
   <div class="row g-2">
@@ -813,6 +1040,9 @@ Updated: 2026-10-04 08:32:00
       </div>
     </div>
   </div>
+
+  <!-- Четкий стильный разделитель панелей -->
+  <div class="sys-section-divider"></div>
 
   <!-- Сетевая активность программ (Интернет, Отправка и Прием) -->
   <div class="row g-2 mt-1">

@@ -1,24 +1,29 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard UI - Main Script
+ * Process Name: AI-Breadboard UI - Admin Dashboard Main Script
  * =============================================================================
  * Description:
- *   Клиентский веб-скрипт модуля main.
+ *   Главный клиентский скрипт панели администрирования AI-Breadboard.
+ *
+ *   Зачем нужен этот модуль:
+ *     1. Оркестрация вкладок и компонентов: регистрация динамических вкладок через TabRegistry,
+ *        управление жизненным циклом (монтирование, фоновый поллинг, очистка при демонтировании).
+ *     2. Шина событий (EventBus): координация взаимодействия между вкладками без жесткой связности.
+ *     3. Глобальные сервисы: инициализация i18n, переключение тем оформления, профиль пользователя.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/src/api/webgui/admin/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/src/api/webgui/admin/main.js?v=20261006_v1" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: src/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 07:05:00
+ * Updated: 2026-10-06 00:55:00
  * =============================================================================
  */
 
-// Admin Interface Main JS
 import { initI18n, switchLang, applyTranslations } from '../js/i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme } from '../js/theme.js';
 import { initUserSettings, refreshUserProfile } from '../js/userSettings.js';

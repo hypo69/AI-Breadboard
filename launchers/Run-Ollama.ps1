@@ -3,23 +3,38 @@
 Process Name: AI-Breadboard Automation - Run Ollama
 =============================================================================
 Description:
-  Ollama local service launcher and management
+  Диспетчер запуска и управления локальной службой Ollama.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Ollama.ps1
+  Зачем нужен этот скрипт:
+    1. Интеграция с локальными LLM: обеспечение фонового сервиса Ollama (порт 11434)
+       для взаимодействия со встроенными локальными моделями.
+    2. Управление жизненным циклом: автоматический поиск бинарного файла ollama.exe,
+       старт службы (ollama serve), остановка и мониторинг доступности API.
 
 File: Run-Ollama.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Ollama local service launcher and management
+    Управление локальным сервером и службой Ollama.
+
 .DESCRIPTION
-    Script for checking, running and managing local Ollama service
+    Проверяет наличие исполняемого файла Ollama, запускает службу в фоновом режиме,
+    проверяет доступность эндпоинта http://127.0.0.1:11434/api/tags и выполняет остановку.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER OllamaExe
+    Пользовательский путь к исполняемому файлу ollama.exe.
+
+.EXAMPLE
+    .\Run-Ollama.ps1 -Action start
+    Запуск локального сервера Ollama.
 #>
 
 [CmdletBinding()]

@@ -89,7 +89,7 @@ def test_w64_models() -> None:
 def test_w64_storage_integration(tmp_path: Path) -> None:
     """Тестирование сохранения и извлечения W64 событий через TelemetryStorage."""
     db_file = tmp_path / "telemetry_test.db"
-    storage = TelemetryStorage(db_path=db_file)
+    storage = TelemetryStorage(db_path=db_file, buffer_mode="direct")
 
     event_data = {
         "event_id": "test_evt_1",
@@ -128,7 +128,7 @@ def test_w64_collector_lifecycle_and_callback(tmp_path: Path) -> None:
     """Тестирование жизненного цикла сборщика AIW64Collector, JSONL логов и callback."""
     log_dir = tmp_path / "w64_logs"
     db_file = tmp_path / "telemetry.db"
-    storage = TelemetryStorage(db_path=db_file)
+    storage = TelemetryStorage(db_path=db_file, buffer_mode="direct")
 
     collected_events = []
 
@@ -171,7 +171,7 @@ def test_w64_etw_collector_lifecycle(tmp_path: Path) -> None:
     """Тестирование жизненного цикла AIW64ETWCollector."""
     log_dir = tmp_path / "etw_logs"
     db_file = tmp_path / "telemetry.db"
-    storage = TelemetryStorage(db_path=db_file)
+    storage = TelemetryStorage(db_path=db_file, buffer_mode="direct")
 
     emitted = []
     etw = AIW64ETWCollector(

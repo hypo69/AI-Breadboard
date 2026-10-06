@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 04:46:00
+# Updated: 2026-10-06 03:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -242,6 +242,7 @@ class TelemetryLoggerService:
         Returns:
             bool: True если конфигурация изменилась и была применена, иначе False.
         """
+        self.config_manager.check_tc_mode_auto_switch()
         if self.config_manager.check_and_reload():
             if not self._custom_interval_set:
                 self.interval_sec = max(0.1, self.config_manager.get_interval_seconds())
@@ -252,7 +253,7 @@ class TelemetryLoggerService:
             logger.info(
                 f"🔄 [Сервис телеметрии] Конфигурация config.json обновлена 'на лету': "
                 f"базовый={self.interval_sec}с, аудит железа={self.hardware_audit_interval_sec}с, "
-                f"очистка БД={self.db_cleanup_interval_sec}с, топ процессов={self.top_processes}"
+                f"очистка БД={self.db_cleanup_interval_sec}с, топ процессов={self.top_processes}, mode={self.config_manager.get_telemetry_mode()}"
             )
             return True
         return False

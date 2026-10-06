@@ -20,7 +20,7 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:35:00
+# Updated: 2026-10-06 03:08:00
 # =============================================================================
 
 from __future__ import annotations
@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import logging
 import os
 import platform
 import subprocess
@@ -44,13 +43,17 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[5]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-try:
-    from logger import logger
-except ImportError:
-    logger = logging.getLogger('windows_storage_sensor')
+from logger import logger
 
 POWERSHELL_STORAGE_SCRIPT = """
 $ErrorActionPreference = 'SilentlyContinue'
+$sw = [System.Diagnostics.Stopwatch]::StartNew()
+
+function Trace-Step {
+    param([string]$StepName)
+    $elapsed = $sw.Elapsed.TotalSeconds
+    [System.Console]::Error.WriteLine(("[STORAGE-DIAG] [{0:N2}s] {1}" -f $elapsed, $StepName))
+}
 
 function Get-SafeCimInstances {
     param([string]$ClassName, [string]$Namespace = 'root/cimv2')
@@ -110,24 +113,55 @@ function Get-SafeEventLog {
     return $result
 }
 
+Trace-Step "1. Инициализация и опрос базовых системных классов Win32 (Win32_ComputerSystem, Win32_OperatingSystem)"
+$computer_system = @(Get-SafeCimInstances -ClassName 'Win32_ComputerSystem')
+$operating_system = @(Get-SafeCimInstances -ClassName 'Win32_OperatingSystem')
+
+Trace-Step "2. Опрос Win32 дисков, разделов и томов (Win32_DiskDrive, Win32_DiskPartition, Win32_LogicalDisk, Win32_Volume)"
+$physical_disks = @(Get-SafeCimInstances -ClassName 'Win32_DiskDrive')
+$disk_partitions = @(Get-SafeCimInstances -ClassName 'Win32_DiskPartition')
+$logical_disks = @(Get-SafeCimInstances -ClassName 'Win32_LogicalDisk')
+$volumes = @(Get-SafeCimInstances -ClassName 'Win32_Volume')
+
+Trace-Step "3. Опрос MSFT Storage CIM (MSFT_PhysicalDisk, MSFT_VirtualDisk, MSFT_StoragePool, MSFT_Disk, MSFT_Partition)"
+$physical_storage = @(Get-SafeCimInstances -ClassName 'MSFT_PhysicalDisk' -Namespace 'root/Microsoft/Windows/Storage')
+$virtual_disks = @(Get-SafeCimInstances -ClassName 'MSFT_VirtualDisk' -Namespace 'root/Microsoft/Windows/Storage')
+$storage_pools = @(Get-SafeCimInstances -ClassName 'MSFT_StoragePool' -Namespace 'root/Microsoft/Windows/Storage')
+$disk_drives = @(Get-SafeCimInstances -ClassName 'MSFT_Disk' -Namespace 'root/Microsoft/Windows/Storage')
+$partitions = @(Get-SafeCimInstances -ClassName 'MSFT_Partition' -Namespace 'root/Microsoft/Windows/Storage')
+
+Trace-Step "4. Опрос SMART и счетчиков надежности (Get-PhysicalDisk | Get-StorageReliabilityCounter)"
+$storage_reliability = @(Get-SafeStorageReliability)
+
+Trace-Step "5. Опрос счетчиков производительности дисков (Get-Counter PhysicalDisk)"
+$performance_counters = @(Get-SafePerformanceCounters)
+
+Trace-Step "6. Опрос журналов событий Windows Storage (Get-WinEvent System/Storport/Partition/Ntfs)"
+$event_log = @(Get-SafeEventLog)
+
+Trace-Step "7. Формирование структуры результата"
 $result = [ordered]@{
-    computer_system = @(Get-SafeCimInstances -ClassName 'Win32_ComputerSystem')
-    operating_system = @(Get-SafeCimInstances -ClassName 'Win32_OperatingSystem')
-    physical_disks = @(Get-SafeCimInstances -ClassName 'Win32_DiskDrive')
-    disk_partitions = @(Get-SafeCimInstances -ClassName 'Win32_DiskPartition')
-    logical_disks = @(Get-SafeCimInstances -ClassName 'Win32_LogicalDisk')
-    volumes = @(Get-SafeCimInstances -ClassName 'Win32_Volume')
-    physical_storage = @(Get-SafeCimInstances -ClassName 'MSFT_PhysicalDisk' -Namespace 'root/Microsoft/Windows/Storage')
-    virtual_disks = @(Get-SafeCimInstances -ClassName 'MSFT_VirtualDisk' -Namespace 'root/Microsoft/Windows/Storage')
-    storage_pools = @(Get-SafeCimInstances -ClassName 'MSFT_StoragePool' -Namespace 'root/Microsoft/Windows/Storage')
-    disk_drives = @(Get-SafeCimInstances -ClassName 'MSFT_Disk' -Namespace 'root/Microsoft/Windows/Storage')
-    partitions = @(Get-SafeCimInstances -ClassName 'MSFT_Partition' -Namespace 'root/Microsoft/Windows/Storage')
-    storage_reliability = @(Get-SafeStorageReliability)
-    performance_counters = @(Get-SafePerformanceCounters)
-    event_log = @(Get-SafeEventLog)
+    computer_system = $computer_system
+    operating_system = $operating_system
+    physical_disks = $physical_disks
+    disk_partitions = $disk_partitions
+    logical_disks = $logical_disks
+    volumes = $volumes
+    physical_storage = $physical_storage
+    virtual_disks = $virtual_disks
+    storage_pools = $storage_pools
+    disk_drives = $disk_drives
+    partitions = $partitions
+    storage_reliability = $storage_reliability
+    performance_counters = $performance_counters
+    event_log = $event_log
 }
 
-$result | ConvertTo-Json -Depth 8 -Compress
+Trace-Step "8. Сериализация в JSON (ConvertTo-Json -Depth 8)"
+$json = $result | ConvertTo-Json -Depth 8 -Compress
+
+Trace-Step "9. Завершено успешно"
+$json
 """
 
 
@@ -185,6 +219,65 @@ class WindowsStorageSensor:
         """Проверка, выполняется ли код на платформе Windows."""
         return platform.system().lower() == 'windows' or os.name == 'nt'
 
+    def _render_storage_diagnostics(
+        self,
+        stderr_output: str,
+        duration: float,
+        is_timeout: bool = False,
+        timeout_limit: int = 0,
+        return_code: Optional[int] = 0
+    ) -> None:
+        """Отрисовывает выделенный блок диагностики выполнения PowerShell-скрипта в консоль/лог.
+
+        Args:
+            stderr_output: Текст стандартного потока ошибок от PowerShell.
+            duration: Общая продолжительность выполнения в секундах.
+            is_timeout: Флаг прерывания по таймауту.
+            timeout_limit: Установленный лимит времени в секундах.
+            return_code: Код возврата процесса PowerShell.
+        """
+        lines = [line.strip() for line in (stderr_output or '').splitlines() if line.strip()]
+        diag_lines = [line for line in lines if '[STORAGE-DIAG]' in line]
+
+        border = "=" * 80
+        inner_div = "-" * 80
+        title = "❌ [POWERSHELL STORAGE DIAGNOSTICS] ПРЕВЫШЕН ТАЙМАУТ" if is_timeout else "📊 [POWERSHELL STORAGE DIAGNOSTICS] ЭТАПЫ СБОРА ХРАНИЛИЩА"
+
+        out: List[str] = [
+            "",
+            border,
+            f"  {title}",
+            border,
+        ]
+
+        if diag_lines:
+            for d in diag_lines:
+                clean_d = d.replace('[STORAGE-DIAG]', '').strip()
+                out.append(f"  ▶ {clean_d}")
+        elif lines:
+            for line in lines:
+                out.append(f"  ℹ {line}")
+        else:
+            out.append("  (нет вывода промежуточных шагов)")
+
+        out.append(inner_div)
+        if is_timeout:
+            last_step = diag_lines[-1].replace('[STORAGE-DIAG]', '').strip() if diag_lines else 'Инициализация PowerShell'
+            out.append(f"  ❌ СТАТУС: Превышен лимит {timeout_limit} сек. (прервано через {duration:.2f} сек.)")
+            out.append(f"  ⚠️  ПОСЛЕДНИЙ ВЫПОЛНЯВШИЙСЯ ЭТАП: {last_step}")
+        elif return_code != 0:
+            out.append(f"  ⚠️ СТАТУС: Ошибка выполнения (код {return_code}) за {duration:.2f} сек.")
+        else:
+            out.append(f"  ✅ СТАТУС: Успешно завершено за {duration:.2f} сек.")
+        out.append(border)
+        out.append("")
+
+        rendered_block = "\n".join(out)
+        if is_timeout:
+            logger.warning(rendered_block)
+        else:
+            logger.info(rendered_block)
+
     def run_powershell(self, script: str, timeout: Optional[int] = 0) -> Dict[str, Any]:
         """Выполняет PowerShell-скрипт и разбирает JSON-результат.
 
@@ -197,6 +290,7 @@ class WindowsStorageSensor:
         """
         effective_timeout = timeout if timeout and timeout > 0 else self.timeout_sec
         creationflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+        t_start = time.perf_counter()
         try:
             result = subprocess.run(
                 ['powershell.exe', '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
@@ -208,7 +302,12 @@ class WindowsStorageSensor:
                 creationflags=creationflags,
                 check=False
             )
-        except subprocess.TimeoutExpired:
+            duration = time.perf_counter() - t_start
+            self._render_storage_diagnostics(result.stderr, duration, is_timeout=False, return_code=result.returncode)
+        except subprocess.TimeoutExpired as exc:
+            duration = time.perf_counter() - t_start
+            stderr_captured = (exc.stderr or '') if isinstance(exc.stderr, str) else ''
+            self._render_storage_diagnostics(stderr_captured, duration, is_timeout=True, timeout_limit=effective_timeout)
             logger.warning(f'PowerShell скрипт сбора хранилища превысил таймаут {effective_timeout} сек.')
             return {}
 

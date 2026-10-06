@@ -10,7 +10,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 03:21:00
+# Updated: 2026-10-05 03:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -75,3 +75,45 @@ def test_empty_gpu_load(tmp_path, mocker):
     assert data["core_load_percent"] == 0.0
     assert data["engines"] == []
     assert data["meta"]["source"] == "none"
+
+
+def test_gpu_load_fallback_from_db(tmp_path, mocker):
+    """При неработающем LHM данные берутся из SQLite хранилища телеметрии."""
+    storage = TelemetryStorage(db_path=tmp_path / "t_gpu_fallback.db", buffer_mode="direct")
+    storage.save_sensor_polls_batch([
+        {
+            "id": "/gpu/0/load/0",
+            "hardware_name": "NVIDIA GeForce GTX 1660",
+            "hardware_type": "GpuNvidia",
+            "sensor_category": "Load",
+            "sensor_name": "GPU Core",
+            "unit": "%",
+            "value": 42.5,
+        },
+        {
+            "id": "/gpu/0/temperature/0",
+            "hardware_name": "NVIDIA GeForce GTX 1660",
+            "hardware_type": "GpuNvidia",
+            "sensor_category": "Temperatures",
+            "sensor_name": "GPU Core",
+            "unit": "°C",
+            "value": 55.0,
+        },
+    ])
+
+    mock_lhm = mocker.MagicMock()
+    mock_lhm.is_running.return_value = False
+
+    app = FastAPI()
+    app.include_router(init_router(storage=storage, lhm_service=mock_lhm))
+    client = TestClient(app)
+
+    res = client.get("/api/v1/panel/gpu-load")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "ok"
+    assert data["name"] == "NVIDIA GeForce GTX 1660"
+    assert data["core_load_percent"] == 42.5
+    assert data["core_temperature_c"] == 55.0
+    assert data["meta"]["source"] == "telemetry_db"
+

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/throttling_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
@@ -121,20 +121,75 @@
     }
   }
 
+  const POLL_ID = 'throttling';
+
+  function getFrequency() {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'manual';
+  }
+
+  function setFrequency(freq) {
+    try {
+      localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+    } catch (_) {}
+    applyPoller(freq, false);
+  }
+
+  function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(`tab-throttling_${POLL_ID}`);
+    }
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
+  function applyPoller(freq, runInitial = false) {
+    stopPolling();
+    if (freq === 'start' || freq === 'manual') {
+      if (runInitial) fetchKernelThrottling();
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-throttling_${POLL_ID}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-throttling', fetchKernelThrottling, intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) fetchKernelThrottling();
+      autoRefreshTimer = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-throttling') : true) {
+          fetchKernelThrottling();
+        }
+      }, intervalMs);
+    }
+  }
+
   function bindEvents() {
     const btnRefresh = document.getElementById('btn-diag-throttling-refresh');
     if (btnRefresh) {
       btnRefresh.onclick = () => fetchKernelThrottling();
     }
 
-    const autoSwitch = document.getElementById('diag-throttling-auto-refresh');
-    if (autoSwitch) {
-      autoSwitch.onchange = (e) => {
-        if (e.target.checked) {
-          autoRefreshTimer = setInterval(fetchKernelThrottling, 5000);
-        } else if (autoRefreshTimer) {
-          clearInterval(autoRefreshTimer);
-          autoRefreshTimer = null;
+    const select = document.getElementById('diag-throttling-poll-freq');
+    if (select) {
+      select.onchange = (e) => {
+        const newFreq = e.target.value;
+        setFrequency(newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
+          fetchKernelThrottling();
+        }
+        if (window.showToast) {
+          const label = select.options[select.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса троттлинга: ${label}`, 'info');
         }
       };
     }
@@ -142,7 +197,10 @@
 
   async function init() {
     bindEvents();
-    await fetchKernelThrottling();
+    const currentFreq = getFrequency();
+    const select = document.getElementById('diag-throttling-poll-freq');
+    if (select) select.value = currentFreq;
+    applyPoller(currentFreq, true);
   }
 
   if (document.readyState === 'loading') {

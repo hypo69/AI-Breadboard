@@ -16,21 +16,20 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 03:07:00
 # =============================================================================
 
-"""Correlation Engine for analyzing relationships between system components"""
+"""Движок корреляции для анализа взаимосвязей между системными компонентами."""
 
 from typing import List, Dict, Set, Tuple, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
+from logger import logger
 from .data_model import ProcessInfo, ServiceInfo, DriverInfo, SystemState
-logger = logging.getLogger(__name__)
 
 @dataclass
 class Correlation:
-    """Represents a relationship between system components"""
+    """Представляет взаимосвязь между компонентами системы."""
     source_type: str
     source_id: Any
     source_name: str
@@ -47,12 +46,12 @@ class Correlation:
 
 class CorrelationEngine:
     """
-    Analyzes correlations between processes, services, drivers, and files
+    Анализирует корреляции между процессами, службами, драйверами и файлами.
     """
 
     def __init__(self):
         self.correlations: List[Correlation] = []
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
 
     def analyze_system_state(self, state: SystemState) -> List[Correlation]:
         """Analyze correlations in system state"""

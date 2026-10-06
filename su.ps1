@@ -3,23 +3,52 @@
 Process Name: AI-Breadboard Automation - Su
 =============================================================================
 Description:
-  Standalone applications launcher for AI Breadboard SU console (su
+  Автономный диспетчер запуска консоли суперпользователя и сервисов (su).
 
-Usage Examples:
-  PowerShell Execution:
-    .\su.ps1
+  Зачем нужен этот скрипт:
+    1. Управление жизненным циклом сервисов: запуск (start), остановка (stop),
+       перезапуск (restart) и проверка статуса (status) фоновых модулей.
+    2. Гибкие режимы отображения: работа в отдельном окне (-w), тихий фоновый режим (-bg),
+       сворачивание в системный трей Windows (-Tray) с защитой от случайного закрытия.
+    3. Автономная конфигурация: считывание списка приложений из su.json.
 
 File: su.ps1
 Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:05:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone applications launcher for AI Breadboard SU console (su
+    Диспетчер запуска и управления приложениями консоли суперпользователя (SU).
+
 .DESCRIPTION
-    Launches only the SU console applications block configured in su
+    Запускает и контролирует процессы, объявленные в su.json, поддерживает
+    управление треем, блокировку кнопки закрытия и переключение сетевых портов.
+
+.PARAMETER Action
+    Действие над сервисом: start (по умолчанию), stop, restart, status.
+
+.PARAMETER NewWindow
+    Запуск процессов в отдельном видимом окне консоли.
+
+.PARAMETER Background
+    Фоновый запуск без создания окна терминала.
+
+.PARAMETER Port
+    Сетевой порт для привязки веб-интерфейса сервиса.
+
+.PARAMETER EnableTray
+    Включение иконки в системном трее Windows для быстрого управления.
+
+.EXAMPLE
+    .\su.ps1 start
+    Запуск базового набора приложений SU.
+
+.EXAMPLE
+    .\su.ps1 -Tray $true -ProtectClose
+    Запуск в трее с защитой окна от случайного закрытия.
 #>
 
 [CmdletBinding()]

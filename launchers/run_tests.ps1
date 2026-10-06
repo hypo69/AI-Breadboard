@@ -3,24 +3,54 @@
 Process Name: AI-Breadboard Automation - Run Tests
 =============================================================================
 Description:
-  PowerShell script for running ai-breadboard / AI Breadboard tests
+  Сценарий запуска полного набора модульных и интеграционных тестов платформы (pytest).
 
-Usage Examples:
-  PowerShell Execution:
-    .\run_tests.ps1
+  Зачем нужен этот скрипт:
+    1. Автоматизация TDD-контроля: единая команда для прогона всех тестов в каталоге tests/.
+    2. Расчет и визуализация покрытия кода: генерация отчетов покрытия (--cov) и HTML-отчетов.
+    3. Фильтрация и селективный запуск: поддержка запуска отдельных тестов, маркеров (-m)
+       и режима остановки на первой ошибке (-x).
 
 File: run_tests.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:05:00
 =============================================================================
+
 .SYNOPSIS
-    PowerShell script for running ai-breadboard / AI Breadboard tests
+    Тестовый раннер для запуска pytest с расчетом покрытия кода и генерацией отчетов.
+
 .DESCRIPTION
-    Test runner script for executing pytest with optional coverage reporting,
-    verbose output, marker filtering, and automatic HTML coverage report opening
+    Инициализирует тестовую среду Python, передает pytest аргументы фильтрации,
+    собирает метрики coverage и опционально открывает HTML-отчет в браузере.
+
+.PARAMETER TestPath
+    Путь к конкретному тестовому файлу или директории (по умолчанию: tests/).
+
+.PARAMETER Coverage
+    Флаг включения сбора покрытия кода с отчетом в терминале.
+
+.PARAMETER HtmlCoverage
+    Генерация подробного HTML-отчета покрытия в папке htmlcov/ с открытием в браузере.
+
+.PARAMETER Verbose
+    Включение подробного вывода pytest (-v).
+
+.PARAMETER FailFast
+    Остановка выполнения тестов при первом упавшем тесте (-x).
+
+.PARAMETER Marker
+    Выполнение тестов только с указанным pytest-маркером (например: unit, integration).
+
+.EXAMPLE
+    .\run_tests.ps1
+    Запуск всех тестов в стандартном режиме.
+
+.EXAMPLE
+    .\run_tests.ps1 -Coverage -HtmlCoverage
+    Запуск всех тестов с расчетом покрытия и открытием HTML-отчета.
 #>
 
 param(

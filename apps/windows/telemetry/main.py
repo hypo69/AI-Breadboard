@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:35:00
+# Updated: 2026-10-06 03:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -38,18 +38,6 @@ if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 if __package__ in (None, ''):
     __package__ = 'apps.windows.telemetry'
-if sys.stdout is None or sys.stderr is None:
-    _early_log_dir = Path(os.environ.get('APPDATA', os.path.expanduser('~\\AppData\\Roaming'))) / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs'
-    _early_log_dir.mkdir(parents=True, exist_ok=True)
-    _stdout_file = _early_log_dir / 'telemetry_stdout.log'
-    try:
-        _stream = open(_stdout_file, 'a', encoding='utf-8', buffering=1)
-        if sys.stdout is None:
-            sys.stdout = _stream
-        if sys.stderr is None:
-            sys.stderr = _stream
-    except Exception:
-        pass
 try:
     from logger import logger
 except ImportError:
@@ -125,26 +113,6 @@ def run_telemetry_service(
     _set_low_priority()
     resolved_log_dir = log_dir or os.path.join(os.environ.get('APPDATA', os.path.expanduser('~\\AppData\\Roaming')), 'AI-Breadboard', 'apps', 'windows', 'telemetry', 'logs')
     os.makedirs(resolved_log_dir, exist_ok=True)
-    out_log_path = Path(resolved_log_dir) / 'telemetry_stdout.log'
-    if sys.stdout is None:
-        try:
-            sys.stdout = open(out_log_path, 'a', encoding='utf-8', buffering=1)
-        except Exception:
-            pass
-    if sys.stderr is None:
-        try:
-            sys.stderr = sys.stdout if sys.stdout else open(out_log_path, 'a', encoding='utf-8', buffering=1)
-        except Exception:
-            pass
-    try:
-        import logging
-        log_file = Path(resolved_log_dir) / 'telemetry_service.log'
-        file_handler = logging.FileHandler(str(log_file), encoding='utf-8')
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s'))
-        logging.getLogger().addHandler(file_handler)
-    except Exception:
-        pass
     db_path = os.path.join(resolved_log_dir, 'telemetry.db')
     storage = TelemetryStorage(db_path=db_path)
     gpu_prober = GpuProber()
@@ -279,6 +247,8 @@ def run_telemetry_service(
     heavy_poll_lock = threading.Lock()
     db_cleanup_interval_sec = cfg_mgr.get_db_cleanup_interval_seconds()
     last_db_cleanup_time = time.time()
+    aggregation_interval_sec = getattr(cfg_mgr, 'get_aggregation_interval', lambda: 300.0)() if cfg_mgr else 300.0
+    last_aggregation_time = time.time()
     known_pids: Dict[int, str] = {}
     flashing_log_path = Path(resolved_log_dir) / 'flashing_processes.log'
 
@@ -287,6 +257,7 @@ def run_telemetry_service(
             loop_start = time.time()
 
             # Динамическая перезагрузка параметров из config.json 'на лету'
+            cfg_mgr.check_tc_mode_auto_switch()
             if cfg_mgr.check_and_reload():
                 if not custom_interval_set:
                     interval = cfg_mgr.get_interval_seconds()
@@ -303,7 +274,7 @@ def run_telemetry_service(
                 h_collectors = cfg_mgr.get_heavy_collectors()
                 logger.info(
                     f"🔄 [Телеметрия CLI] Конфигурация config.json обновлена 'на лету': "
-                    f"интервал={interval}с, тяжелый={heavy_interval}с, топ={top_processes}, режим={mode}"
+                    f"интервал={interval}с, тяжелый={heavy_interval}с, топ={top_processes}, режим={mode}, tel_mode={cfg_mgr.get_telemetry_mode()}"
                 )
 
             now_dt = datetime.now(timezone.utc)
@@ -317,14 +288,29 @@ def run_telemetry_service(
                 cpu_model = os.environ.get('PROCESSOR_IDENTIFIER', '')
             except Exception:
                 pass
-            cpu_metrics = CpuMetrics(load_percent=cpu_pct, load_user=0.0, load_system=0.0, frequency_mhz=freq_mhz, temperature_celsius=None, voltage_volts=None, model_name=cpu_model, cores_physical=psutil.cpu_count(logical=False) or 1, cores_logical=psutil.cpu_count(logical=True) or 1)
+            cpu_metrics = CpuMetrics(
+                model=cpu_model,
+                physical_cores=psutil.cpu_count(logical=False) or 1,
+                logical_cores=psutil.cpu_count(logical=True) or 1,
+                total_percent=cpu_pct,
+                frequency_mhz=freq_mhz,
+                temperature_celsius=None,
+            )
             mem = psutil.virtual_memory()
             mem_metrics = MemoryMetrics(total_gb=round(mem.total / (1024 ** 3), 2), used_gb=round(mem.used / (1024 ** 3), 2), available_gb=round(mem.available / (1024 ** 3), 2), percent=mem.percent)
             now_sec = time.time()
             if last_gpu_probe_time is None or now_sec - last_gpu_probe_time >= 10.0:
                 try:
                     gpu_data = gpu_prober.probe()
-                    cached_gpu_metrics = [GpuMetrics(name=g.name, load_percent=g.load_percent, memory_total_mb=g.memory_total_mb, memory_used_mb=g.memory_used_mb, temperature_celsius=g.temperature_celsius, power_watts=g.power_watts) for g in gpu_data]
+                    cached_gpu_metrics = [
+                        GpuMetrics(
+                            name=getattr(g, 'name', 'GPU'),
+                            load_percent=getattr(g, 'load_percent', None) or getattr(g, 'utilization_gpu_pct', None),
+                            memory_total_gb=round((getattr(g, 'memory_total_mb', 0.0) or 0.0) / 1024.0, 2),
+                            memory_used_gb=round((getattr(g, 'memory_used_mb', 0.0) or 0.0) / 1024.0, 2),
+                            temperature_celsius=getattr(g, 'temperature_celsius', None) or getattr(g, 'temperature_gpu_c', None),
+                        ) for g in gpu_data
+                    ]
                 except Exception:
                     cached_gpu_metrics = []
                 last_gpu_probe_time = now_sec
@@ -347,7 +333,7 @@ def run_telemetry_service(
             for part in cached_part_list:
                 try:
                     usage = psutil.disk_usage(part.mountpoint)
-                    disk_partitions.append(DiskPartitionMetrics(device=part.device, mountpoint=part.mountpoint, fstype=part.fstype, total_gb=round(usage.total / 1024 ** 3, 2), used_gb=round(usage.used / 1024 ** 3, 2), free_gb=round(usage.free / 1024 ** 3, 2), load_percent=usage.percent, io=DiskIoMetrics(read_kb_s=disk_read_kb, write_kb_s=disk_write_kb)))
+                    disk_partitions.append(DiskPartitionMetrics(device=part.device, mountpoint=part.mountpoint, fstype=part.fstype, total_gb=round(usage.total / 1024 ** 3, 2), used_gb=round(usage.used / 1024 ** 3, 2), free_gb=round(usage.free / 1024 ** 3, 2), percent=usage.percent))
                 except (PermissionError, OSError):
                     continue
             cur_net_io = psutil.net_io_counters()
@@ -430,13 +416,31 @@ def run_telemetry_service(
                 storage.save_snapshot(snapshot, top_n=top_processes)
             except Exception as db_err:
                 logger.warning(f'Ошибка сохранения снимка в SQLite: {db_err}')
-            sensor_items = [{'id': 'cpu_util_total', 'hardware_name': 'CPU', 'hardware_type': 'cpu', 'sensor_category': 'Load', 'sensor_name': 'CPU Total', 'unit': '%', 'value': cpu_pct}, {'id': 'ram_util_pct', 'hardware_name': 'RAM', 'hardware_type': 'memory', 'sensor_category': 'Load', 'sensor_name': 'Memory Used', 'unit': '%', 'value': mem.percent}]
+
+            # Формирование информативного пошагового лога тика
+            active_win_str = "N/A (Фоновый режим)"
+            if deep_diag:
+                try:
+                    forensics = deep_diag.collect_forensics_activity()
+                    win_info = forensics.foreground_window
+                    if win_info and win_info.get('title'):
+                        active_win_str = f"\"{win_info.get('title')}\" ({win_info.get('process_name') or 'N/A'}, PID:{win_info.get('pid', 0)}) | Простой: {forensics.user_idle_seconds:.1f}с"
+                except Exception:
+                    pass
+
+            disk_vol_str = ", ".join([f"{d.mountpoint} {d.used_gb:.0f}/{d.total_gb:.0f}GB ({d.percent}%)" for d in disk_partitions[:3]]) or "N/A"
+            top_procs_summary = ", ".join([f"{p.name} ({p.memory_mb:.0f}MB, {p.cpu_percent:.1f}% CPU)" for p in top_procs[:4]])
+
+            logger.info(f"📊 [ТЕЛЕМЕТРИЯ #{tick}] Режим: {mode.upper()} | {datetime.now().strftime('%H:%M:%S')}")
+            logger.info(f"   ├─ 🖥️ CPU: {cpu_pct:.1f}% @ {freq_mhz:.0f}MHz ({cpu_metrics.physical_cores}P/{cpu_metrics.logical_cores}L) | RAM: {mem_metrics.used_gb:.1f}/{mem_metrics.total_gb:.1f}GB ({mem_metrics.percent}%)")
             if gpu_metrics_list:
                 g0 = gpu_metrics_list[0]
-                if g0.temperature_celsius is not None:
-                    sensor_items.append({'id': 'gpu_0_temp', 'hardware_name': g0.name, 'hardware_type': 'gpu', 'sensor_category': 'Temperatures', 'sensor_name': 'GPU Core Temp', 'unit': '°C', 'value': g0.temperature_celsius})
-                if g0.load_percent is not None:
-                    sensor_items.append({'id': 'gpu_0_load', 'hardware_name': g0.name, 'hardware_type': 'gpu', 'sensor_category': 'Load', 'sensor_name': 'GPU Load', 'unit': '%', 'value': g0.load_percent})
+                logger.info(f"   ├─ 🎮 GPU: {g0.name} | Нагрузка: {g0.load_percent or 0.0}% | Температура: {g0.temperature_celsius or 0.0}°C")
+            logger.info(f"   ├─ 💾 Диски: Чтение {disk_read_kb:.1f} KB/s | Запись {disk_write_kb:.1f} KB/s | Занято: {disk_vol_str}")
+            logger.info(f"   ├─ 📡 Сеть: ↓{net_recv_kb:.1f} KB/s | ↑{net_sent_kb:.1f} KB/s | Активность: {active_win_str}")
+            logger.info(f"   ├─ ⚡ Топ процессов: {top_procs_summary}")
+            logger.info(f"   └─ 📥 Буфер БД: снимок #{tick} добавлен (в буфере: {storage.get_buffered_count()} записей, БД: {Path(db_path).name})")
+
             # Автоматическое переключение из тяжелого режима в легкий при непрерывной работе 5 дней (432 000с)
             if auto_switch_enabled and heavy_mode_start_time is not None and mode.lower() in ('full', 'heavy'):
                 if now_sec - heavy_mode_start_time >= max_heavy_duration_sec:
@@ -456,6 +460,7 @@ def run_telemetry_service(
                     nonlocal last_heavy_disk_scan_time, heavy_poll_running
                     heavy_start = time.time()
                     try:
+                        logger.info(f"🔥 [ТЯЖЕЛЫЙ ОПРОС] Запуск периодического опроса сенсоров LHM, SMART, портов и утечек...")
                         heavy_readings_total = []
                         if sensor_collector and h_collectors.get('hardware_sensors', True):
                             heavy_readings = sensor_collector.collect_all_sensors()
@@ -472,7 +477,7 @@ def run_telemetry_service(
                                 lhm_fans = [f"{s.get('sensor_name')}: {s.get('value')}{s.get('unit')}" for s in heavy_readings if s.get('sensor_category') in ('Fans', 'Fan')]
                                 lhm_clocks = [f"{s.get('sensor_name')}: {s.get('value')}{s.get('unit')}" for s in heavy_readings if s.get('sensor_category') in ('Clocks', 'Clock')]
 
-                                logger.info(f"🌡️ [LHM WEB API http://127.0.0.1:8085/data.json] Собрано {len(heavy_readings)} сенсоров:")
+                                logger.info(f"🌡️ [LHM СЕНСОРЫ] Опрошено {len(heavy_readings)} аппаратных датчиков:")
                                 if lhm_temps:
                                     logger.info(f"   ├─ Температуры ({len(lhm_temps)}): {', '.join(lhm_temps[:8])}")
                                 if lhm_powers:
@@ -515,15 +520,15 @@ def run_telemetry_service(
                                 heavy_disks = system_collector.get_physical_disks_health(force=True)
                                 if heavy_disks:
                                     d_summary = ", ".join([f"{d.model} ({d.media_type}, {d.size_gb}GB, SMART:{d.health_status})" for d in heavy_disks])
-                                    logger.info(f"💾 [ТЯЖЕЛЫЙ ОПРОС (2 раза в день)] Накопители SMART: {d_summary}")
+                                    logger.info(f"💾 [ТЯЖЕЛЫЙ ОПРОС (SMART)] Накопители SMART: {d_summary}")
                                 last_heavy_disk_scan_time = h_now
                             except Exception as d_err:
                                 logger.debug(f"Ошибка тяжелого сканирования накопителей: {d_err}")
 
                         heavy_dur = time.time() - heavy_start
-                        logger.info(f'[{mode.upper()}] Периодический тяжелый опрос завершен за {heavy_dur:.2f}с (Всего сенсоров: {len(heavy_readings_total)})')
+                        logger.info(f'✅ [{mode.upper()}] Периодический тяжелый опрос завершен за {heavy_dur:.2f}с (Всего сенсоров: {len(heavy_readings_total)})')
                     except Exception as h_err:
-                        logger.debug(f'Ошибка периодического тяжелого опроса: {h_err}')
+                        logger.error(f'Ошибка периодического тяжелого опроса: {h_err}')
                     finally:
                         with heavy_poll_lock:
                             heavy_poll_running = False
@@ -555,26 +560,25 @@ def run_telemetry_service(
                 except Exception as db_clean_err:
                     logger.debug(f"Ошибка периодического контроля размера БД: {db_clean_err}")
 
-            active_win_str = ""
-            if deep_diag:
+            # Фоновая периодическая многоуровневая SQL-агрегация (hourly -> daily -> weekly -> monthly -> yearly)
+            if now_sec - last_aggregation_time >= aggregation_interval_sec:
                 try:
-                    forensics = deep_diag.collect_forensics_activity()
-                    win_info = forensics.foreground_window
-                    if win_info and win_info.get('title'):
-                        active_win_str = f"Активное окно: \"{win_info.get('title')}\" ({win_info.get('process_name') or 'N/A'}, PID:{win_info.get('pid', 0)}) | Idle: {forensics.user_idle_seconds:.1f}с"
-                except Exception:
-                    pass
-
-            elapsed = time.time() - loop_start
-            sleep_time = max(0.05, interval - elapsed)
-
-            used_mb = round(mem.used / (1024 * 1024), 0)
-            total_mb = round(mem.total / (1024 * 1024), 0)
-
-            logger.info(f"📊 ТЕЛЕМЕТРИЯ #{tick} [{mode.upper()}] | {datetime.now().strftime('%H:%M:%S')}")
+                    storage.flush()
+                    agg_res = storage.run_aggregation_pipeline()
+                    h_cnt = agg_res.get('hourly', {}).get('buckets_aggregated', 0)
+                    sp_cnt = agg_res.get('hourly', {}).get('spikes_recorded', 0)
+                    if h_cnt > 0 or sp_cnt > 0:
+                        logger.info(f"📈 [SQL АГРЕГАЦИЯ] Обновлены бакеты: hourly={h_cnt}, зафиксировано всплесков={sp_cnt}")
+                    last_aggregation_time = now_sec
+                except Exception as agg_err:
+                    logger.debug(f"Ошибка периодической SQL-агрегации: {agg_err}")
 
             if once:
                 storage.flush()
+                try:
+                    storage.run_aggregation_pipeline()
+                except Exception:
+                    pass
                 logger.info('⚡ Однократный опрос системной телеметрии успешно выполнен (--once)')
                 break
 

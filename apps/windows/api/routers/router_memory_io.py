@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 08:05:30
+# Updated: 2026-10-05 23:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -138,13 +138,13 @@ def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
     """Создаёт роутер /api/v1/panel/memory-io.
 
     Args:
-        storage: Хранилище телеметрии (по умолчанию — синглтон TelemetryStorage).
+        storage: Хранилище телеметрии (по умолчанию — синглтон TelemetryStorage в режиме read_only).
 
     Returns:
         APIRouter: Роутер с эндпоинтом GET /api/v1/panel/memory-io.
     """
     router = APIRouter(tags=["Memory IO Panel"])
-    store = storage or TelemetryStorage.get_instance()
+    store = storage or TelemetryStorage.get_instance(read_only=True)
 
     @router.get("/api/v1/panel/memory-io", response_model=MemoryIoResponse)
     async def get_panel_memory_io(
@@ -152,7 +152,6 @@ def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
     ) -> MemoryIoResponse:
         """Возвращает последние метрики памяти и дискового ввода-вывода исключительно из базы данных telemetry.db."""
         try:
-            store.flush()
             with store._lock, store._get_connection() as conn:
                 rows = [dict(r) for r in conn.execute(_SQL_HISTORY, (limit,)).fetchall()]
             return build_memory_io(rows)

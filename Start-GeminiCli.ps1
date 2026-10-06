@@ -1,27 +1,32 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Start Geminicli
+Process Name: AI-Breadboard Automation - Start Gemini CLI
 =============================================================================
 Description:
-  PowerShell-сценарий автоматизации и системного обслуживания (Start-GeminiCli).
+  Быстрый запуск сессии Google Gemini CLI в контексте проекта AI Breadboard.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Start-GeminiCli.ps1
+  Зачем нужен этот скрипт:
+    1. Автоматическая изоляция среды: активирует виртуальное окружение venv перед запуском.
+    2. Вызов интерактивной консоли: стартует утилиту gemini с предустановленной быстрой моделью gemini-3.1-flash-lite.
 
 File: Start-GeminiCli.ps1
 Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:05:00
 =============================================================================
-#>
 
-# -----------------------------------------------------------------------------
-# Файл: Start-GeminiCli.ps1
-# Назначение: Активация виртуального окружения и запуск Gemini CLI.
-# -----------------------------------------------------------------------------
+.SYNOPSIS
+    Активация venv и запуск Gemini CLI.
+
+.DESCRIPTION
+    Выполняет проверку и активацию окружения Python, после чего передает управление
+    интерактивному CLI-интерфейсу модели Gemini.
+
+.EXAMPLE
+    .\Start-GeminiCli.ps1
+#>
 
 # Активация виртуального окружения Python
 $venvPath = Join-Path -Path $PSScriptRoot -ChildPath "venv\Scripts\Activate.ps1"

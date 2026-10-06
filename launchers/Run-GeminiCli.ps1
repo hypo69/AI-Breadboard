@@ -1,26 +1,40 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Geminicli
+Process Name: AI-Breadboard Automation - Run Gemini CLI
 =============================================================================
 Description:
-  Check, install and run Google Gemini CLI (@google/gemini-cli)
+  Проверка, установка и управление официальным Google Gemini CLI (@google/gemini-cli).
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-GeminiCli.ps1
+  Зачем нужен этот скрипт:
+    1. Автоматизация развертывания: проверка наличия Node.js/npm и глобальная установка пакета при необходимости.
+    2. Управление ключами: подтягивание GEMINI_API_KEY из .env файла платформы.
+    3. Запуск и диагностика: просмотр версии, статуса и интерактивный чат с моделью.
 
 File: Run-GeminiCli.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Check, install and run Google Gemini CLI (@google/gemini-cli)
+    Проверка наличия, установка и запуск официального Google Gemini CLI.
+
 .DESCRIPTION
-    Script for checking Gemini CLI presence in system, automatic offer to install
-    via npm if missing, configuring API keys from
+    Осуществляет диагностику наличия утилиты gemini в окружении, выполняет
+    установку через npm при отсутствии и конфигурирует переменные окружения для работы.
+
+.PARAMETER Action
+    Действие: check (по умолчанию), install, chat, version, status.
+
+.EXAMPLE
+    .\Run-GeminiCli.ps1 -Action check
+    Проверка готовности среды и CLI.
+
+.EXAMPLE
+    .\Run-GeminiCli.ps1 -Action chat
+    Запуск интерактивного чата с моделью Gemini.
 #>
 
 [CmdletBinding()]

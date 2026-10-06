@@ -1,25 +1,41 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Chat
+Process Name: AI-Breadboard Automation - Run AI Chat
 =============================================================================
 Description:
-  AI Chat Application Launcher for AI-Breadboard
+  Автономный лончер микросервиса интерактивного веб-чата (AI Chat).
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Chat.ps1
+  Зачем нужен этот скрипт:
+    1. Автономный запуск веб-чата: разворачивает микросервис apps/chat/main.py на порту 8128
+       для прямого взаимодействия с LLM-провайдерами (Gemini, Ollama, Foundry).
+    2. Управление процессами: поддержка команд start, stop, restart, status и автозапуск браузера.
 
 File: Run-Chat.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    AI Chat Application Launcher for AI-Breadboard
+    Управление сервисом веб-чата AI Chat.
+
 .DESCRIPTION
-    Launches the standalone AI Chat application microservice on port 8128
+    Запускает и администрирует микросервис AI Chat, предоставляя веб-интерфейс диалогов.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Port
+    Сетевой порт веб-сервера чата (по умолчанию: 8128).
+
+.PARAMETER NoBrowser
+    Запуск сервиса без автоматического открытия вкладки браузера.
+
+.EXAMPLE
+    .\Run-Chat.ps1 -Action start
+    Запуск веб-чата на порту 8128.
 #>
 
 [CmdletBinding()]

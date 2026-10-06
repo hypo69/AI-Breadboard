@@ -1,25 +1,39 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Enterpriseknowledge
+Process Name: AI-Breadboard Automation - Run Enterprise Knowledge
 =============================================================================
 Description:
-  Standalone launcher for Enterprise Knowledge Platform microservice
+  Автономный лончер корпоративной платформы базы знаний (Enterprise Knowledge).
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-EnterpriseKnowledge.ps1
+  Зачем нужен этот скрипт:
+    1. Управление базой знаний: запуск сервиса apps/windows/enterprise_knowledge для
+       RAG-поиска по документам, корпоративным регламентам и базам данных.
+    2. Управление процессами: поддержка серверного режима (API) и терминального интерфейса (TUI).
 
 File: Run-EnterpriseKnowledge.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone launcher for Enterprise Knowledge Platform microservice
+    Управление сервисом корпоративной базы знаний Enterprise Knowledge.
+
 .DESCRIPTION
-    Launches apps
+    Запускает и контролирует микросервис Enterprise Knowledge Platform,
+    обеспечивая поиск по векторным и текстовым индексам платформы.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Mode
+    Режим запуска: server (по умолчанию) или tui.
+
+.EXAMPLE
+    .\Run-EnterpriseKnowledge.ps1 -Action start
+    Запуск сервера базы знаний.
 #>
 
 [CmdletBinding()]

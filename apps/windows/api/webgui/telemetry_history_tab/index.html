@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/telemetry_history_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/telemetry_history_tab
-Author: hypo69
-Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/telemetry_history_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:20:00
+ * =============================================================================
 -->
 
 <div class="container-fluid p-2" id="telemetry-history-tab-container">
@@ -43,10 +43,16 @@ Updated: 2026-10-01 13:04:40
             </select>
           </div>
 
-          <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
-            <input class="form-check-input" type="checkbox" id="th-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="th-auto-refresh">Авто (5с)</label>
-          </div>
+          <select class="form-select form-select-sm poll-freq-select" id="th-poll-freq" data-poll-id="telemetry_history" title="Частота опроса: История телеметрии">
+            <option value="start">Только при старте</option>
+            <option value="manual" selected>По запросу</option>
+            <option value="3">Каждые 3 сек</option>
+            <option value="5">Каждые 5 сек</option>
+            <option value="10">Каждые 10 сек</option>
+            <option value="30">Каждые 30 сек</option>
+            <option value="60">Каждые 60 сек</option>
+            <option value="120">Каждые 120 сек</option>
+          </select>
 
           <button id="th-btn-refresh" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Пересчитать аналитику и обновить графики">
             <i class="bi bi-arrow-clockwise"></i>

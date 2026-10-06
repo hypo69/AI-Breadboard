@@ -1,28 +1,41 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Root - Manage Tools
+# Process Name: AI-Breadboard Root - Manage Tools CLI
 # =============================================================================
 # Description:
-#   Скрипт/модуль системы AI-Breadboard (`manage_tools`).
+#   Универсальный диспетчер командной строки (CLI) для администрирования AI Breadboard.
+#
+#   Зачем нужен этот модуль:
+#     1. Единый CLI-интерфейс: консолидация управления навыками (skills), базой знаний (rag),
+#        агентами, базой данных (db), документацией (docs), плагинами и телеметрией.
+#     2. Автоматизация DevOps и обслуживания: запуск миграций, валидация целостности БД,
+#        генерация документации и проверка сетевой инфраструктуры.
+#     3. UTF-8 нормализация: обеспечивает корректный вывод кириллицы в консоли Windows.
+#
+#   Поддерживаемые группы команд:
+#     - skills: Управление и аудит агентурных навыков.
+#     - rag: Построение, валидация и очистка поисковых индексов.
+#     - db: Проверка целостности и миграции SQLite/Vector хранилищ.
+#     - docs: Автоматическая генерация документации.
+#     - telemetry: Диагностика и сбор метрик системы.
+#     - plugins / sys-param / network: Управление подсистемами.
 #
 # Usage Examples:
 #   CLI:
-#     python manage_tools.py
-#   Python API:
-#     from manage_tools import main
-#
-#     res = main()
+#     py manage_tools.py skills list
+#     py manage_tools.py rag build
+#     py manage_tools.py db check-integrity
+#     py manage_tools.py docs generate
 #
 # File: manage_tools.py
 # Project: ai-breadboard
 # Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
+# Updated: 2026-10-06 00:05:00
 # =============================================================================
 
 from __future__ import annotations
-"""Скрипт/модуль системы AI-Breadboard (`manage_tools`)."""
 
 import argparse
 import sys

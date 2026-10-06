@@ -3,23 +3,65 @@
 Process Name: AI-Breadboard Automation - Run Unicorn
 =============================================================================
 Description:
-  Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project
+  Основной лончер запуска FastAPI веб-сервера через Uvicorn.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Unicorn.ps1
+  Зачем нужен этот скрипт:
+    1. Инициализация и проверка среды: активация виртуального окружения Python (venv)
+       и валидация наличия всех зависимостей перед запуском.
+    2. Разрешение сетевых конфликтов: сканирование и принудительное освобождение порта
+       при обнаружении зависших процессов.
+    3. Гибкая конфигурация запуска: поддержка режима разработки с hot-reload (-Reload),
+       многопроцессного режима (-Workers), фонового запуска и автоматического открытия в браузере.
 
 File: Run-Unicorn.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:05:00
 =============================================================================
+
 .SYNOPSIS
-    Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project
+    Запуск FastAPI-сервера платформы AI Breadboard через Uvicorn.
+
 .DESCRIPTION
-    Activates virtual environment, loads parameters from config
+    Считывает конфигурацию из dashboard.json или переданных параметров командной строки,
+    подготавливает окружение и запускает веб-сервер uvicorn.
+
+.PARAMETER HostAddress
+    Сетевой IP-адрес для прослушивания (по умолчанию: 127.0.0.1).
+
+.PARAMETER Port
+    Сетевой порт для веб-сервера (по умолчанию: 8000).
+
+.PARAMETER EnableOAuth
+    Включение проверки OAuth аутентификации.
+
+.PARAMETER EnableTelegramBot
+    Активация встроенного фонового Telegram-бота.
+
+.PARAMETER Workers
+    Количество рабочих процессов Uvicorn.
+
+.PARAMETER Reload
+    Режим автоматической перезагрузки сервера при изменении исходного кода.
+
+.PARAMETER OpenUrl
+    URL-адрес для автоматического открытия в браузере после старта.
+
+.PARAMETER ConfigFile
+    Путь к пользовательскому конфигурационному файлу JSON.
+
+.PARAMETER AppModule
+    Импортируемый модуль приложения (по умолчанию: 'main:app').
+
+.EXAMPLE
+    .\Run-Unicorn.ps1
+    Стандартный запуск сервера на 127.0.0.1:8000.
+
+.EXAMPLE
+    .\Run-Unicorn.ps1 -Port 8000 -Reload
+    Запуск в режиме горячей перезагрузки для разработки.
 #>
 
 [CmdletBinding()]

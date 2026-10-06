@@ -16,7 +16,7 @@ Project: ai-breadboard
 Package: apps/windows/telemetry/launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 04:28:00
+Updated: 2026-10-06 01:26:00
 =============================================================================
 .SYNOPSIS
     Лончер для запуска и управления службой системной телеметрии AI-Breadboard
@@ -27,7 +27,7 @@ Updated: 2026-10-04 04:28:00
 
 [CmdletBinding()]
 param (
-    [ValidateSet('start', 'stop', 'restart', 'status', 'init-db', 'start-log', 'show-log', 'install-task', 'uninstall-task', 'status-task', 'get-errors', 'get-stdout', 'tui', 'once')]
+    [ValidateSet('start', 'stop', 'restart', 'status', 'init-db', 'start-log', 'show-log', 'install-task', 'uninstall-task', 'status-task', 'get-errors', 'get-stdout', 'tui', 'once', 'lhm')]
     [string]$Action = 'start',
 
     [Alias('OneShot', 'SingleRun', 'OnceOnly')]
@@ -148,7 +148,13 @@ $outLogFile = Join-Path $logDir "telemetry_stdout.log"
 $errLogFile = Join-Path $logDir "telemetry_stderr.log"
 $pidFile = Join-Path $logDir "telemetry.pid"
 $taskInstaller = Join-Path $PSScriptRoot "Install-TelemetryTask.ps1"
-$lhmLauncher = Join-Path $projectRoot "launchers\Run-LHM.ps1"
+$lhmLauncher = Join-Path $scriptDir "Run-LHM.ps1"
+if (-not (Test-Path $lhmLauncher)) {
+    $lhmLauncher = Join-Path $PSScriptRoot "Run-LHM.ps1"
+}
+if (-not (Test-Path $lhmLauncher)) {
+    $lhmLauncher = Join-Path $projectRoot "launchers\Run-LHM.ps1"
+}
 
 if ($Help) {
     Write-Host ""
@@ -210,6 +216,15 @@ if ($Action -eq 'status-task') {
         & $taskInstaller -Status
     } else {
         Write-Host "❌ Файл не найден: $taskInstaller" -ForegroundColor Red
+    }
+    exit $LASTEXITCODE
+}
+
+if ($Action -eq 'lhm') {
+    if (Test-Path $lhmLauncher) {
+        & $lhmLauncher @args
+    } else {
+        Write-Host "❌ Лончер LHM не найден: $lhmLauncher" -ForegroundColor Red
     }
     exit $LASTEXITCODE
 }
@@ -340,6 +355,28 @@ function Get-TelemetryProcesses {
     return $procs
 }
 
+# Функция тихого обеспечения работы службы LibreHardwareMonitor
+function Ensure-LhmService {
+    $lhm = Get-Process -Name "LibreHardwareMonitor" -ErrorAction SilentlyContinue
+    if (-not $lhm) {
+        if ($lhmLauncher -and (Test-Path $lhmLauncher)) {
+            & $lhmLauncher -Action start -Background -Quiet
+        } else {
+            $candidate = Join-Path $projectRoot "bin\LibreHardwareMonitor\LibreHardwareMonitor.exe"
+            if (Test-Path $candidate) {
+                $psi = New-Object System.Diagnostics.ProcessStartInfo
+                $psi.FileName = $candidate
+                $psi.WorkingDirectory = Split-Path -Parent $candidate
+                $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+                $psi.CreateNoWindow = $true
+                try {
+                    [System.Diagnostics.Process]::Start($psi) | Out-Null
+                } catch {}
+            }
+        }
+    }
+}
+
 # -------------------------------------------------------------
 # ИНТЕРАКТИВНЫЙ ТЕРМИНАЛЬНЫЙ ИНТЕРФЕЙС (TUI CONTROL CENTER)
 # -------------------------------------------------------------
@@ -387,11 +424,12 @@ function Invoke-TelemetryTUI {
             Write-Host "   [9] 🗄️  Инициализировать / проверить базу данных (init-db)" -ForegroundColor Green
             Write-Host "   [10] 📅 Статус планировщика задач (Task Scheduler)" -ForegroundColor DarkCyan
             Write-Host "   [11] ⚡ Однократный опрос системной телеметрии (once)" -ForegroundColor Green
+            Write-Host "   [12] 🌡️  LibreHardwareMonitor (LHM) — статус и веб-сервер" -ForegroundColor Magenta
             Write-Host "   [q] ❌ Выход из TUI (служба продолжит работать в фоне)" -ForegroundColor DarkGray
             Write-Host ""
             Write-Host " Подсказка: Ctrl+C в любой момент НЕ останавливает фоновую службу, а возвращает в TUI!" -ForegroundColor DarkGray
             Write-Host ""
-            Write-Host "Выберите опцию [0-11, q]: " -NoNewline -ForegroundColor Yellow
+            Write-Host "Выберите опцию [0-12, q]: " -NoNewline -ForegroundColor Yellow
 
             $key = $null
             try {
@@ -502,6 +540,18 @@ function Invoke-TelemetryTUI {
                     Write-Host "`n⚡ Запуск однократного опроса системной телеметрии..." -ForegroundColor Green
                     try {
                         & $selfScript -Action once -Mode $Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
+                    } catch {}
+                    Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
+                    try { [Console]::ReadKey($true) | Out-Null } catch {}
+                }
+                '12' {
+                    Write-Host "`n🌡️ LibreHardwareMonitor (LHM)..." -ForegroundColor Magenta
+                    try {
+                        if (Test-Path $lhmLauncher) {
+                            & $lhmLauncher -Action status
+                        } else {
+                            Write-Host "❌ Лончер LHM не найден: $lhmLauncher" -ForegroundColor Red
+                        }
                     } catch {}
                     Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
                     try { [Console]::ReadKey($true) | Out-Null } catch {}
@@ -701,6 +751,9 @@ if ($Action -in @('start', 'restart', 'once')) {
 
     # Проверка и создание БД перед запуском процесса
     Ensure-TelemetryDb -PyExe $pythonExe
+
+    # Фоновое тихое обеспечение работы LibreHardwareMonitor
+    Ensure-LhmService
 
     $isVerbose = $PSBoundParameters.ContainsKey('Verbose') -or $VerboseLog
     $appArgs = "-u `"$telemetryScript`" --mode $Mode --interval $Interval --heavy-interval $HeavyInterval --top-processes $TopProcesses"

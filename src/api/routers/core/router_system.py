@@ -3,25 +3,32 @@
 # Process Name: AI-Breadboard API - Router System Module
 # =============================================================================
 # Description:
-#   Системный роутер и диагностические эндпоинты API.
+#   Системный роутер FastAPI для предоставления диагностических и телеметрических эндпоинтов.
+#
+#   Зачем нужен этот модуль:
+#     1. Предоставление системной телеметрии: эндпоинты для получения текущих снимков системы
+#        (CPU, память, процессы, сенсоры) через интеграцию с SystemCollector.
+#     2. Интеллектуальная диагностика: интеграция с SystemDiagnosticEngine и GroupedTelemetryBuilder
+#        для выявления аномалий, группировки метрик и генерации рекомендаций.
+#     3. Единый фасад для UI и агентов: прозрачный доступ фронтенда и LLM к данным о состоянии хоста.
 #
 # Usage Examples:
 #   Python API:
-#     from src.api.routers.core.router_system import get_collector
+#     from fastapi import FastAPI
+#     from src.api.routers.core.router_system import router as system_router
 #
-#     res = get_collector()
-#     print(res)
+#     app = FastAPI()
+#     app.include_router(system_router, prefix="/api/system")
 #
 # File: router_system.py
 # Project: ai-breadboard
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 16:31:00
+# Updated: 2026-10-06 00:25:00
 # =============================================================================
 
 from __future__ import annotations
-"""Системный роутер и диагностические эндпоинты API."""
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter

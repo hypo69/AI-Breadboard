@@ -3,25 +3,31 @@
 # Process Name: AI-Breadboard Root - Main
 # =============================================================================
 # Description:
-#   Скрипт/модуль системы AI-Breadboard (`main`).
+#   Главная точка входа и оркестратор FastAPI веб-сервера платформы AI-Breadboard.
+#
+#   Зачем нужен этот модуль:
+#     1. Инициализация и сборка приложения: создание экземпляра FastAPI, регистрация роутеров
+#        всех подсистем (/apps, /api, /ws, статика UI), настройка CORS и промежуточного ПО.
+#     2. Управление жизненным циклом (Lifecycle): загрузка глобальной конфигурации,
+#        фоновая проверка обновлений (SemVer), инициализация WebSocket-хаба (WSHub) и метрик.
+#     3. Windows Proactor Fix: патчинг низкоуровневых ошибок закрытия сокетов (WinError 10054).
 #
 # Usage Examples:
 #   CLI:
 #     python main.py
+#     python main.py --port 8000 --host 0.0.0.0
 #   Python API:
-#     from main import load_app_config
+#     from main import app, load_app_config
 #
-#     res = load_app_config()
+#     config = load_app_config()
 #
 # File: main.py
 # Project: ai-breadboard
 # Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 03:35:00
+# Updated: 2026-10-06 00:05:00
 # =============================================================================
-
-"""Скрипт/модуль системы AI-Breadboard (`main`)."""
 
 import os
 import sys

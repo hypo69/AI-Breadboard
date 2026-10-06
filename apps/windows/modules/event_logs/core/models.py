@@ -3,24 +3,24 @@
 # Process Name: AI-Breadboard Apps Windows Modules Event_Logs Core - Models
 # =============================================================================
 # Description:
-#   # Description:
+#   Модели данных для модуля управления журналами событий Windows и Log Intelligence.
 #
 # Usage Examples:
 #   Python API:
-#     from apps.windows.modules.event_logs.core.models import EventLogChannel
+#     from apps.windows.modules.event_logs.core.models import EventLogChannel, IntelligenceSearchRequest
 #
-#     service = EventLogChannel()
+#     service = EventLogChannel(name='System')
 #
 # File: models.py
 # Project: ai-breadboard
 # Package: apps.windows.modules.event_logs.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 02:28:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""Модели данных для модуля управления журналами событий Windows и Log Intelligence."""
 
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
@@ -65,9 +65,51 @@ class EventLogActionRequest(BaseModel):
     confirmed_by_user: bool = False
 
 
+class IntelligenceSearchRequest(BaseModel):
+    """Запрос семантического/гибридного поиска по адаптивному RAG-индексу логов."""
+    query: str = Field(..., description='Поисковый запрос на русском или английском языке')
+    top_k: int = Field(5, ge=1, le=50, description='Максимальное количество результатов')
+    channel: str = Field('', description='Фильтр по имени канала (опционально)')
+
+
+class IntelligenceProfileSummary(BaseModel):
+    """Сводный профиль EDA анализа массива логов."""
+    channel: str
+    total_events: int
+    unique_templates: int
+    redundancy_ratio_pct: float
+    health_score: float
+    critical_count: int
+    error_count: int
+    warning_count: int
+    bursts_count: int
+    novel_signatures_count: int
+
+
+class IntelligenceDecisionSummary(BaseModel):
+    """Решение Decision Gate о стратегии обработки."""
+    strategy: str
+    rationale: str
+    chunks_generated: int
+    recommended_llm_action: str
+
+
+class IntelligenceProcessResponse(BaseModel):
+    """Ответ полного цикла Log Intelligence (EDA -> Gate -> RAG)."""
+    channel: str
+    profile: IntelligenceProfileSummary
+    decision: IntelligenceDecisionSummary
+    rag_storage_dir: str
+    generated_at: str
+
+
 __all__ = [
     'EventLogChannel',
     'EventLogEntry',
     'EventLogReport',
     'EventLogActionRequest',
+    'IntelligenceSearchRequest',
+    'IntelligenceProfileSummary',
+    'IntelligenceDecisionSummary',
+    'IntelligenceProcessResponse',
 ]

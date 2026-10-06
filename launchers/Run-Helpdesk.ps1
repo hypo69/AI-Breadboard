@@ -3,23 +3,37 @@
 Process Name: AI-Breadboard Automation - Run Helpdesk
 =============================================================================
 Description:
-  Standalone launcher for Helpdesk Support Desk microservice
+  Автономный лончер микросервиса службы технической поддержки (Helpdesk).
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Helpdesk.ps1
+  Зачем нужен этот скрипт:
+    1. Поддержка пользователей: запуск микросервиса apps/windows/helpdesk для регистрации
+       инцидентов, диагностики тикетов и взаимодействия с ассистентом техподдержки.
+    2. Управление процессами: поддержка серверного режима (API/Web) и терминального интерфейса (TUI).
 
 File: Run-Helpdesk.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone launcher for Helpdesk Support Desk microservice
+    Управление сервисом Helpdesk Support Desk.
+
 .DESCRIPTION
-    Launches apps
+    Запускает и администрирует микросервис Helpdesk, предоставляя REST API,
+    WebSocket-оповещения и консольный интерфейс оператора поддержки.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Mode
+    Режим запуска: server (по умолчанию) или tui.
+
+.EXAMPLE
+    .\Run-Helpdesk.ps1 -Action start
+    Запуск сервиса службы техподдержки.
 #>
 
 [CmdletBinding()]

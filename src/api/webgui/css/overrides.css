@@ -1,30 +1,32 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard Styles - Overrides Stylesheet
+ * Process Name: Windows Web Styles - Overrides Stylesheet
  * =============================================================================
  * Description:
- *   Таблица стилей оформления компонентов интерфейса (overrides).
+ *   Таблица стилей стиля и оформления интерфейса (overrides).
+ *   Адаптивные переопределения Bootstrap и специфичных компонентов для тем оформления.
  *
  * Usage Examples:
  *   HTML Link Tag:
- *     <link rel="stylesheet" href="/src/api/webgui/css/overrides.css?v=20261001_v1">
+ *     <link rel="stylesheet" href="/windows/api/webgui/css/overrides.css?v=20261004_v17">
  *
  * File: overrides.css
  * Project: ai-breadboard
- * Package: src/api/webgui/css
+ * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 12:12:00
  * =============================================================================
  */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    THEME OVERRIDES & COMPATIBILITY — AI Breadboard WebGUI
-   Адаптивные переопределения Bootstrap и специфичных компонентов для тем оформления
+   Адаптивные переопределения Bootstrap и компонентов для светлых и тёмных тем
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Light Theme — Переопределения Bootstrap и общих утилит ────────────────── */
-[data-theme="light"] {
+/* ── Light & Brick Themes — Переопределения Bootstrap и утилит ─────────────── */
+[data-theme="light"],
+[data-theme="brick"] {
   /* Инпуты, к которым JS или Bootstrap добавил bg-dark */
   input.bg-dark,
   textarea.bg-dark,
@@ -77,17 +79,17 @@
     color: var(--text-color) !important;
   }
 
-  /* pre/code без явного светлого фона (кроме prompt-dump) */
+  /* pre/code без явного светлого фона */
   pre:not(.prompt-dump-details pre) {
     background-color: var(--surface-2) !important;
-    color: #1e2328 !important;
+    color: var(--text-color) !important;
     border: 1px solid var(--border-color);
     border-radius: 5px;
   }
 
   code.bg-dark {
     background-color: var(--surface-2) !important;
-    color: #1e2328 !important;
+    color: var(--text-color) !important;
     border: 1px solid var(--border-color);
   }
 
@@ -152,12 +154,12 @@
     border-color: var(--border-color) !important;
   }
 
-  /* ── Логи (textarea/div с моноширинным шрифтом) ── */
+  /* ── Логи ── */
   #media-log,
   [id$="-log"]:not(canvas),
   .log-output {
-    background-color: #f1f3f5 !important;
-    color: #1e2328 !important;
+    background-color: var(--surface-2) !important;
+    color: var(--text-color) !important;
     border-color: var(--border-color) !important;
   }
 
@@ -172,13 +174,79 @@
   }
 }
 
-/* ── Dark Theme — Повышенный контраст и доминантность описания процессов ──── */
-[data-theme="dark"] .def-desc-text,
-[data-theme="dark"] .process-desc,
-[data-theme="dark"] .table-dark td.text-secondary,
-[data-theme="dark"] .table td.text-secondary,
-.theme-defender td.text-secondary,
-.theme-defender .text-secondary {
-  color: #cbd5e1 !important; /* Высококонтрастный доминантный оттенок (Slate 300) для идеальной читаемости */
+/* ── Dark & Terminal Themes — Высококонтрастные переопределения ─────────────── */
+[data-theme="dark"],
+[data-theme="terminal"] {
+  .card-header.bg-light,
+  .card-footer.bg-light,
+  .modal-header.bg-light,
+  .modal-footer.bg-light {
+    background-color: var(--surface-2) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .bg-light:not(.btn):not(.badge) {
+    background-color: var(--surface-1) !important;
+    color: var(--text-color) !important;
+  }
+
+  .text-dark {
+    color: var(--text-color) !important;
+  }
+
+  .border-light {
+    border-color: var(--border-color) !important;
+  }
+
+  /* Логи */
+  #media-log,
+  [id$="-log"]:not(canvas),
+  .log-output {
+    background-color: var(--surface-1) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+  }
 }
 
+/* ── Специфика темы «Терминал» (Terminal / CRT Glow) ────────────────────────── */
+[data-theme="terminal"] {
+  .card,
+  .modal-content,
+  .offcanvas {
+    border-color: var(--border-color);
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.12);
+  }
+
+  .card-header,
+  .modal-header {
+    border-bottom: 1px solid var(--border-strong);
+    color: var(--nav-active);
+  }
+
+  pre, code, kbd, samp {
+    color: #39ff14 !important;
+    background-color: #060a06 !important;
+    border: 1px solid #1a4223;
+  }
+
+  .form-control,
+  .form-select {
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background-color: #0b120c;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #00ff66;
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+    background-color: #0b120c;
+    color: #ffffff;
+  }
+
+  .table th {
+    color: #39ff14 !important;
+    border-bottom: 2px solid #00ff66 !important;
+  }
+}

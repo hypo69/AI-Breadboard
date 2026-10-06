@@ -18,7 +18,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:16:00
+# Updated: 2026-10-06 00:49:00
 # =============================================================================
 
 """Unit tests for TC System Inspector FastAPI router endpoints."""
@@ -27,7 +27,6 @@ import unittest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from apps.windows.api.routers.router_tc import init_router
-from apps.windows.api.routers.router_system import init_router as init_system_router
 
 
 class TestSystemInspectorRouter(unittest.TestCase):
@@ -75,17 +74,6 @@ class TestSystemInspectorRouter(unittest.TestCase):
         self.assertIn('history', data)
         self.assertIsInstance(data['history'], list)
 
-    def test_get_system_cpu(self):
-        """Тест эндпоинта /api/v1/system/cpu."""
-        app = FastAPI()
-        app.include_router(init_system_router())
-        test_client = TestClient(app)
-        response = test_client.get('/api/v1/system/cpu')
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertIn('total_percent', data)
-        self.assertIn('display_val', data)
-        self.assertIn('display_cores', data)
 
     def test_get_processes(self):
         """Тест эндпоинта /api/v1/tc/processes."""

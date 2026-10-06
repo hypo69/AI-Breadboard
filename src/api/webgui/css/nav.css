@@ -1,20 +1,20 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard Styles - Nav Stylesheet
+ * Process Name: Windows Web Styles - Nav Stylesheet
  * =============================================================================
  * Description:
- *   Таблица стилей оформления компонентов интерфейса (nav).
+ *   Таблица стилей стиля и оформления интерфейса (nav).
  *
  * Usage Examples:
  *   HTML Link Tag:
- *     <link rel="stylesheet" href="/src/api/webgui/css/nav.css?v=20261001_v1">
+ *     <link rel="stylesheet" href="/windows/api/webgui/css/nav.css?v=20261001_v1">
  *
  * File: nav.css
  * Project: ai-breadboard
- * Package: src/api/webgui/css
+ * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 12:12:00
  * =============================================================================
  */
 
@@ -156,50 +156,39 @@
 }
 
 /* ── Выпадающие меню Bootstrap (глобально) ─────────────────────────────────── */
-[data-theme="light"] .dropdown-menu {
+.dropdown-menu {
   background-color: var(--surface-1);
   border-color: var(--border-color);
   box-shadow: var(--shadow-md);
 }
 
-[data-theme="light"] .dropdown-item {
+.dropdown-item {
   color: var(--text-color);
   border-radius: 4px;
   font-size: 0.82rem;
 }
 
-[data-theme="light"] .dropdown-item:hover,
-[data-theme="light"] .dropdown-item:focus {
+.dropdown-item:hover,
+.dropdown-item:focus {
   background-color: var(--nav-hover-bg);
   color: var(--nav-active);
 }
 
-[data-theme="light"] .dropdown-item.active {
-  background-color: #2563eb;
+.dropdown-item.active {
+  background-color: var(--nav-active);
   color: #ffffff;
 }
 
-[data-theme="dark"] .dropdown-menu {
-  background-color: var(--surface-1);
-  border-color: var(--border-color);
-  box-shadow: var(--shadow-md);
+[data-theme="terminal"] .dropdown-menu {
+  background-color: #0b120c;
+  border: 1px solid #1a4223;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.25);
 }
 
-[data-theme="dark"] .dropdown-item {
-  color: var(--text-color);
-  border-radius: 4px;
-  font-size: 0.82rem;
-}
-
-[data-theme="dark"] .dropdown-item:hover,
-[data-theme="dark"] .dropdown-item:focus {
-  background-color: var(--nav-hover-bg);
-  color: var(--nav-active);
-}
-
-[data-theme="dark"] .dropdown-item.active {
-  background-color: #1f6feb;
-  color: #ffffff;
+[data-theme="terminal"] .dropdown-item.active {
+  background-color: #0c3316;
+  color: #39ff14;
+  border-left: 3px solid #00ff66;
 }
 
 /* ── Кнопки и контролы навбара ───────────────────────────────────────────── */
@@ -373,10 +362,20 @@
 }
 
 .left-drawer-nav .list-group-item.active {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--nav-active);
+  border-color: var(--nav-active);
   color: #ffffff;
   font-weight: 600;
+}
+
+[data-theme="brick"] .left-drawer-nav .list-group-item.active {
+  background-color: #b84228;
+  border-color: #b84228;
+  color: #ffffff;
+}
+
+[data-theme="brick"] .left-drawer-nav .list-group-item.active:hover {
+  background-color: #9e341d;
 }
 
 [data-theme="dark"] .left-drawer-nav .list-group-item.active {
@@ -385,12 +384,22 @@
   color: #ffffff;
 }
 
-.left-drawer-nav .list-group-item.active:hover {
-  background-color: #1d4ed8;
-}
-
 [data-theme="dark"] .left-drawer-nav .list-group-item.active:hover {
   background-color: #388bfd;
+}
+
+[data-theme="terminal"] .left-drawer-nav .list-group-item.active {
+  background-color: #0c3316;
+  border-color: #00ff66;
+  color: #39ff14;
+  box-shadow: 0 0 8px rgba(0, 255, 102, 0.35);
+  text-shadow: 0 0 3px rgba(0, 255, 102, 0.5);
+}
+
+[data-theme="terminal"] .left-drawer-nav .list-group-item.active:hover {
+  background-color: #154c22;
+  border-color: #39ff14;
+  color: #ffffff;
 }
 
 

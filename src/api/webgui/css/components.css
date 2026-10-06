@@ -1,19 +1,19 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard Styles - Components Stylesheet
+ * Process Name: Windows Web Styles - Components Stylesheet
  * =============================================================================
  * Description:
- *   Таблица стилей оформления компонентов интерфейса (components).
+ *   Таблица стилей стиля и оформления интерфейса (components).
  *
  * Usage Examples:
  *   HTML Link Tag:
- *     <link rel="stylesheet" href="/src/api/webgui/css/components.css?v=20261001_v1">
+ *     <link rel="stylesheet" href="/windows/api/webgui/css/components.css?v=20261001_v1">
  *
  * File: components.css
  * Project: ai-breadboard
- * Package: src/api/webgui/css
+ * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-04 04:05:00
+ * Updated: 2026-10-04 12:12:00
  * =============================================================================
  */
 
@@ -122,7 +122,17 @@
 
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-select:focus {
-  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+}
+
+[data-theme="brick"] .form-control:focus,
+[data-theme="brick"] .form-select:focus {
+  box-shadow: 0 0 0 2px rgba(184, 66, 40, 0.25);
+}
+
+[data-theme="terminal"] .form-control:focus,
+[data-theme="terminal"] .form-select:focus {
+  box-shadow: 0 0 0 2px rgba(0, 255, 102, 0.35);
 }
 
 .form-control::placeholder {
@@ -182,14 +192,42 @@
   color: #ffffff;
 }
 
+[data-theme="brick"] .btn-primary {
+  background-color: #b84228;
+  border-color: #b84228;
+  color: #ffffff;
+}
+
+[data-theme="brick"] .btn-primary:hover {
+  background-color: #9e341d;
+  border-color: #9e341d;
+  color: #ffffff;
+}
+
 [data-theme="dark"] .btn-primary {
   background-color: #1f6feb;
   border-color: #1f6feb;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .btn-primary:hover {
   background-color: #388bfd;
   border-color: #388bfd;
+  color: #ffffff;
+}
+
+[data-theme="terminal"] .btn-primary {
+  background-color: #0c3316;
+  border: 1px solid #00ff66;
+  color: #00ff66;
+  text-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
+}
+
+[data-theme="terminal"] .btn-primary:hover {
+  background-color: #00ff66;
+  border-color: #00ff66;
+  color: #060a06;
+  text-shadow: none;
 }
 
 .btn-outline-secondary {
@@ -1002,108 +1040,16 @@
   line-height: 1.2;
 }
 
-.ui-badge-success,
-.status-active,
-.status-enabled,
-.status-on,
-.status-running,
-.status-online,
-.status-connected,
-.status-true,
-.badge-status-on,
-.badge-status-active,
-.badge-status-enabled,
-.badge-status-running,
-.badge-status-online,
-.badge-status-true,
-.is-status-positive,
-[data-status="active"],
-[data-status="enabled"],
-[data-status="on"],
-[data-status="running"],
-[data-status="online"],
-[data-status="true"],
-[data-status="включен"],
-[data-status="включена"],
-[data-status="включено"],
-[data-status="активен"],
-[data-status="активна"],
-[data-status="активно"],
-[data-status="работает"],
-[data-status="подключен"],
-[data-state="active"],
-[data-state="enabled"],
-[data-state="on"],
-[data-state="running"],
-[data-state="online"],
-[data-state="true"],
-[data-state="включен"],
-[data-state="включена"],
-[data-state="включено"],
-[data-state="активен"],
-[data-state="активна"],
-[data-state="активно"],
-[data-state="работает"],
-[data-state="подключен"] {
-  background-color: var(--status-success-bg) !important;
-  color: var(--status-success-text) !important;
-  border: 1px solid var(--status-success-border) !important;
+.ui-badge-success {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
 }
 
-.ui-badge-danger,
-.status-inactive,
-.status-disabled,
-.status-off,
-.status-stopped,
-.status-offline,
-.status-danger,
-.status-error,
-.status-disconnected,
-.status-false,
-.badge-status-off,
-.badge-status-inactive,
-.badge-status-disabled,
-.badge-status-stopped,
-.badge-status-offline,
-.badge-status-false,
-.is-status-negative,
-[data-status="inactive"],
-[data-status="disabled"],
-[data-status="off"],
-[data-status="stopped"],
-[data-status="offline"],
-[data-status="false"],
-[data-status="error"],
-[data-status="выключен"],
-[data-status="выключена"],
-[data-status="выключено"],
-[data-status="неактивен"],
-[data-status="неактивна"],
-[data-status="неактивно"],
-[data-status="остановлен"],
-[data-status="остановлена"],
-[data-status="отключен"],
-[data-status="ошибка"],
-[data-state="inactive"],
-[data-state="disabled"],
-[data-state="off"],
-[data-state="stopped"],
-[data-state="offline"],
-[data-state="false"],
-[data-state="error"],
-[data-state="выключен"],
-[data-state="выключена"],
-[data-state="выключено"],
-[data-state="неактивен"],
-[data-state="неактивна"],
-[data-state="неактивно"],
-[data-state="остановлен"],
-[data-state="остановлена"],
-[data-state="отключен"],
-[data-state="ошибка"] {
-  background-color: var(--status-danger-bg) !important;
-  color: var(--status-danger-text) !important;
-  border: 1px solid var(--status-danger-border) !important;
+.ui-badge-danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
 }
 
 .ui-badge-warning {
@@ -1123,50 +1069,6 @@
   color: var(--text-muted);
   border: 1px solid var(--border-color);
 }
-
-/* Точечный индикатор состояния (Status Dot) */
-.status-dot,
-.status-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  vertical-align: middle;
-  margin-right: 4px;
-}
-
-.status-dot.active,
-.status-dot.enabled,
-.status-dot.on,
-.status-dot.running,
-.status-dot.online,
-.status-dot.positive,
-.status-indicator.active,
-.status-indicator.enabled,
-.status-indicator.on,
-.status-indicator.running,
-.status-indicator.online,
-.status-indicator.positive {
-  background-color: #22c55e !important;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-}
-
-.status-dot.inactive,
-.status-dot.disabled,
-.status-dot.off,
-.status-dot.stopped,
-.status-dot.offline,
-.status-dot.negative,
-.status-indicator.inactive,
-.status-indicator.disabled,
-.status-indicator.off,
-.status-indicator.stopped,
-.status-indicator.offline,
-.status-indicator.negative {
-  background-color: #ef4444 !important;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
-}
-
 
 /* ── 6. Унифицированная таблица спецификаций (Ключ - Значение) ────────────── */
 .ui-spec-table,
@@ -1405,6 +1307,7 @@
   background-color: #0f172a !important;
   color: #e2e8f0 !important;
 }
+
 
 
 

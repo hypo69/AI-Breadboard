@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 07:09:00
+ * Updated: 2026-10-06 00:20:00
  * =============================================================================
  */
 
@@ -241,24 +241,14 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-about-system', async () => {
         updateLocalClock();
-        if (isLiveActive && !isUpdating) {
-          if (activeSubtab !== 'subtab-overview') {
-            await refreshActiveSubtab();
-          }
-        }
         await updateCacheStatus();
-      }, 3000, { pollerId: 'tab-about-system_clock', immediate: true });
+      }, 5000, { pollerId: 'tab-about-system_clock', immediate: true });
     } else {
       if (liveIntervalId) clearInterval(liveIntervalId);
       liveIntervalId = setInterval(async () => {
         updateLocalClock();
-        if (isLiveActive && !isUpdating) {
-          if (activeSubtab !== 'subtab-overview') {
-            await refreshActiveSubtab();
-          }
-        }
         await updateCacheStatus();
-      }, 3000);
+      }, 5000);
     }
   }
 
@@ -555,11 +545,11 @@
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
-              <div class="font-monospace text-light" title="Записано данных">
-                <i class="bi bi-arrow-up-circle text-warning me-1"></i>${formatBytesLocal(d.bytes_written)}
+              <div class="font-monospace text-light" style="white-space: nowrap;" title="Записано за сессию">
+                <i class="bi bi-arrow-up-circle text-warning me-1"></i>Записано: ${formatBytesLocal(d.bytes_written)}
               </div>
-              <div class="small font-monospace text-info mt-0.5" title="Прочитано данных">
-                <i class="bi bi-arrow-down-circle text-info me-1"></i>${formatBytesLocal(d.bytes_read)}
+              <div class="small font-monospace text-info mt-0.5" style="white-space: nowrap;" title="Прочитано за сессию">
+                <i class="bi bi-arrow-down-circle text-info me-1"></i>Прочитано: ${formatBytesLocal(d.bytes_read)}
               </div>
             `;
 
@@ -755,15 +745,15 @@
    * Реестр панелей и частоты их опроса
    */
   const panelPollingRegistry = {
-    'about_kpi_os': { fn: fetchKpiOs, defaultFreq: '5' },
-    'about_kpi_sec': { fn: fetchKpiSecurity, defaultFreq: '5' },
-    'about_kpi_prot': { fn: fetchKpiCheckpoints, defaultFreq: '5' },
-    'about_kpi_stor': { fn: fetchKpiStorage, defaultFreq: '5' },
+    'about_kpi_os': { fn: fetchKpiOs, defaultFreq: 'manual' },
+    'about_kpi_sec': { fn: fetchKpiSecurity, defaultFreq: 'manual' },
+    'about_kpi_prot': { fn: fetchKpiCheckpoints, defaultFreq: 'manual' },
+    'about_kpi_stor': { fn: fetchKpiStorage, defaultFreq: 'manual' },
     'about_hw_specs': { fn: fetchHardwareSpecs, defaultFreq: 'start' },
-    'about_user_env': { fn: fetchUserEnvSecurity, defaultFreq: '5' },
-    'about_disks': { fn: fetchDisksVolumes, defaultFreq: '10' },
-    'about_wear': { fn: fetchWearPanel, defaultFreq: '10' },
-    'about_battery': { fn: fetchBatteryPanel, defaultFreq: '10' },
+    'about_user_env': { fn: fetchUserEnvSecurity, defaultFreq: 'manual' },
+    'about_disks': { fn: fetchDisksVolumes, defaultFreq: 'manual' },
+    'about_wear': { fn: fetchWearPanel, defaultFreq: 'manual' },
+    'about_battery': { fn: fetchBatteryPanel, defaultFreq: 'manual' },
     'about_hw_tree': { fn: fetchHwTreePanel, defaultFreq: 'start' }
   };
 
@@ -887,6 +877,7 @@
       const lang = snap.system_language || 'Русский (Россия) [ru-RU]';
       const userLoc = snap.user_locale || 'ru-RU';
       const sysLoc = snap.system_locale || 'ru-RU';
+      const instLang = snap.os_install_language || snap.install_language || '';
       const tz = snap.timezone || 'UTC+03:00';
       const cp = snap.codepage || 'UTF-8 (ACP: 65001)';
       const inputs = Array.isArray(snap.input_languages) && snap.input_languages.length > 0
@@ -898,7 +889,10 @@
       setText('about-ident-domain', `Workgroup / Host: ${host}`);
       setText('about-ident-username', user);
       setText('about-ident-language', lang);
-      setText('about-ident-locales', `Локали: User: ${userLoc} | Sys: ${sysLoc}`);
+      const localesText = instLang
+        ? `Локали: User: ${userLoc} | Sys: ${sysLoc} | Оригинал: ${instLang}`
+        : `Локали: User: ${userLoc} | Sys: ${sysLoc}`;
+      setText('about-ident-locales', localesText);
       setText('about-ident-timezone', tz);
       setText('about-ident-codepage', `Кодировка: ${cp}`);
       setText('about-ident-inputs', inputs);
@@ -1839,12 +1833,36 @@
     container.innerHTML = filtered.map((node, idx) => {
       const propsEntries = Object.entries(node.properties || {});
       const propsHtml = propsEntries.length > 0
-        ? propsEntries.map(([k, v]) => `
+        ? propsEntries.map(([k, v]) => {
+            const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
+            const valStr = String(v ?? '');
+            let valHtml = escapeHtml(valStr);
+
+            // Специфичное выделение частот и статусов совместимости памяти RAM
+            if (cleanKey.includes('Номинальная частота')) {
+              valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
+            } else if (cleanKey.includes('Текущая рабочая частота')) {
+              const isWarning = valStr.includes('⚠️') || valStr.includes('занижена');
+              if (isWarning) {
+                valHtml = `<span class="badge border border-warning-subtle fw-bold px-2 py-0.5" style="color: #facc15; background: rgba(234, 179, 8, 0.18);"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr)}</span>`;
+              } else if (valStr && valStr !== 'N/A') {
+                valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);">${escapeHtml(valStr)}</span>`;
+              }
+            } else if (valStr.includes('⚠️') || valStr.includes('Потенциал не раскрыт') || valStr.includes('Узкое место')) {
+              valHtml = `<span class="badge border border-warning-subtle fw-semibold px-2 py-0.5 text-wrap" style="color: #facc15; background: rgba(234, 179, 8, 0.18); text-align: start;"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr.replace(/^⚠️\s*/, ''))}</span>`;
+            } else if (valStr.includes('✅') || valStr.includes('Оптимально')) {
+              valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);"><i class="bi bi-check-circle-fill me-1"></i>${escapeHtml(valStr.replace(/^✅\s*/, ''))}</span>`;
+            } else if (cleanKey.includes('Эффективность планки')) {
+              valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
+            }
+
+            return `
             <div class="about-sys-prop-row">
-              <span class="about-sys-prop-key">${escapeHtml(k)}</span>
-              <span class="about-sys-prop-val">${escapeHtml(String(v))}</span>
+              <span class="about-sys-prop-key">${cleanKey}</span>
+              <span class="about-sys-prop-val">${valHtml}</span>
             </div>
-          `).join('')
+          `;
+          }).join('')
         : '<div class="text-muted small py-1">Свойства не указаны</div>';
 
       const iconClass = getNodeIcon(node.category);

@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-05 23:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -339,7 +339,7 @@ def init_router(
             # 1. Попытка прочитать актуальные данные дисков из SQLite телеметрии
             try:
                 from apps.windows.telemetry.sqlite import TelemetryStorage
-                storage = TelemetryStorage.get_instance()
+                storage = TelemetryStorage.get_instance(read_only=True)
                 storage_data = storage.get_latest_storage_data()
                 if storage_data.get("physical_disks"):
                     physical_disks = storage_data["physical_disks"]

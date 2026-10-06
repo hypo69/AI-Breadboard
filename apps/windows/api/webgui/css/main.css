@@ -7,14 +7,14 @@
  *
  * Usage Examples:
  *   HTML Link Tag:
- *     <link rel="stylesheet" href="/windows/api/webgui/css/main.css?v=20261001_v1">
+ *     <link rel="stylesheet" href="/windows/api/webgui/css/main.css?v=20261004_v17">
  *
  * File: main.css
  * Project: ai-breadboard
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 04:05:00
+ * Updated: 2026-10-04 12:12:00
  * =============================================================================
  */
 
@@ -23,17 +23,17 @@
    Модульная точка входа стилей веб-интерфейса
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Дизайн-токены и переменные тем (светлая/тёмная) */
-@import "variables.css?v=20261004_v1";
+/* 1. Дизайн-токены и переменные тем (светлая/кирпичная/тёмная/терминал) */
+@import "variables.css?v=20261004_v17";
 
 /* 2. Базовые стили страницы, скроллбары и контейнеры вкладок */
-@import "base.css?v=20261004_v1";
+@import "base.css?v=20261004_v17";
 
 /* 3. Навигационная панель, вкладки, выпадающие меню и переключатели */
-@import "nav.css?v=20261004_v1";
+@import "nav.css?v=20261004_v17";
 
 /* 4. Общие UI-компоненты (карточки, формы, кнопки, модалки, таблицы, бейджи, чипы) */
-@import "components.css?v=20261004_v1";
+@import "components.css?v=20261004_v17";
 
 /* 5. Чат, сообщения, сайдбар истории диалогов и дебаггер */
 @import "chat.css";
@@ -42,4 +42,4 @@
 @import "torrents.css";
 
 /* 7. Адаптивные переопределения и совместимость тем с Bootstrap */
-@import "overrides.css";
+@import "overrides.css?v=20261004_v17";

@@ -16,7 +16,7 @@
 # Package: apps.windows.core.audits
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 01:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -73,13 +73,14 @@ class PerformanceCollector(TelemetryProvider):
             uptime_hours = 0.0
         startup_items = self._get_registry_startup()
         if cpu_pct >= 90.0:
-            findings.append(AuditFinding(id='perf_cpu_high', domain='performance', title=f'Критическая загрузка процессора: {cpu_pct:.1f}%', description='Процессор загружен более чем на 90%, возможны зависания и задержки отклика.', severity=RiskLevel.CRITICAL, remediation=RemediationAction(action_type=ActionType.KILL_PROCESS, command='', description='Завершите процессы, утилизирующие большую часть ресурсов процессора.', risk=RiskLevel.CAUTION)))
+            action = RemediationAction(action_id='perf_cpu_high', action_type=ActionType.KILL_PROCESS, title='Завершение ресурсоемких процессов', description='Завершите процессы, утилизирующие большую часть ресурсов процессора.', target='CPU', risk=RiskLevel.CAUTION)
+            findings.append(AuditFinding(domain='performance', category='cpu', title=f'Критическая загрузка процессора: {cpu_pct:.1f}%', description='Процессор загружен более чем на 90%, возможны зависания и задержки отклика.', severity=RiskLevel.CRITICAL, actions=[action]))
         elif cpu_pct >= 75.0:
-            findings.append(AuditFinding(id='perf_cpu_elevated', domain='performance', title=f'Повышенная нагрузка CPU: {cpu_pct:.1f}%', description='Процессор загружен выше нормального рабочего диапазона.', severity=RiskLevel.CAUTION))
+            findings.append(AuditFinding(domain='performance', category='cpu', title=f'Повышенная нагрузка CPU: {cpu_pct:.1f}%', description='Процессор загружен выше нормального рабочего диапазона.', severity=RiskLevel.CAUTION))
         if mem_pct >= 90.0:
-            findings.append(AuditFinding(id='perf_ram_high', domain='performance', title=f'Критическое заполнение оперативной памяти: {mem_pct:.1f}% ({mem_used} GB / {mem_total} GB)', description='Оперативная память почти исчерпана, система может активно использовать файл подкачки.', severity=RiskLevel.CRITICAL))
+            findings.append(AuditFinding(domain='performance', category='memory', title=f'Критическое заполнение оперативной памяти: {mem_pct:.1f}% ({mem_used} GB / {mem_total} GB)', description='Оперативная память почти исчерпана, система может активно использовать файл подкачки.', severity=RiskLevel.CRITICAL))
         if len(startup_items) > 15:
-            findings.append(AuditFinding(id='perf_startup_crowded', domain='performance', title=f'Большое количество программ в автозагрузке ({len(startup_items)})', description='Множество программ в реестре автозапуска замедляют старт Windows.', severity=RiskLevel.CAUTION))
+            findings.append(AuditFinding(domain='performance', category='startup', title=f'Большое количество программ в автозагрузке ({len(startup_items)})', description='Множество программ в реестре автозапуска замедляют старт Windows.', severity=RiskLevel.CAUTION))
         metrics: Dict[str, Any] = {'cpu_percent': cpu_pct, 'memory_percent': mem_pct, 'memory_used_gb': mem_used, 'memory_total_gb': mem_total, 'swap_percent': swap_pct, 'uptime_hours': uptime_hours, 'startup_items_count': len(startup_items)}
         duration_ms = (time.perf_counter() - start_t) * 1000
         status = 'ok'

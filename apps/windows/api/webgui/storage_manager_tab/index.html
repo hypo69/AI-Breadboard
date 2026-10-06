@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/storage_manager_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/storage_manager_tab
-Author: hypo69
-Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/storage_manager_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:20:00
+ * =============================================================================
 -->
 
 <!-- Storage & Disk Volumes Management Tab -->
@@ -58,6 +58,16 @@ Updated: 2026-10-01 13:04:40
   <!-- Action Bar -->
   <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
+      <select class="form-select form-select-sm poll-freq-select" id="sm-poll-freq" data-poll-id="storage_manager" title="Частота опроса: Хранилище">
+        <option value="start">Только при старте</option>
+        <option value="manual" selected>По запросу</option>
+        <option value="3">Каждые 3 сек</option>
+        <option value="5">Каждые 5 сек</option>
+        <option value="10">Каждые 10 сек</option>
+        <option value="30">Каждые 30 сек</option>
+        <option value="60">Каждые 60 сек</option>
+        <option value="120">Каждые 120 сек</option>
+      </select>
       <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="sm-refresh-btn">
         <i class="bi bi-arrow-clockwise"></i>
         <span>Обновить состояние</span>

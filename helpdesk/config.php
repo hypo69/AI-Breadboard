@@ -1,7 +1,23 @@
 <?php
 /**
- * Helpdesk Configuration
- * Autonoums PHP module for support ticket management
+ * =============================================================================
+ * Process Name: Helpdesk Standalone - Configuration
+ * =============================================================================
+ * Description:
+ *   Centralized configuration module for the standalone PHP Helpdesk service.
+ *
+ *   Purpose and Architectural Goals:
+ *     1. Database Connection Management: Defines credentials and charset for MySQL.
+ *     2. Security and Authentication: Configures JWT secrets, signing algorithms, and token TTL.
+ *     3. Environment and Path Mapping: Resolves filesystem directories and runtime debug flags.
+ *
+ * File: config.php
+ * Project: ai-breadboard
+ * Package: helpdesk
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:55:00
+ * =============================================================================
  */
 
 // Database configuration

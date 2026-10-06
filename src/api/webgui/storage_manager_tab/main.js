@@ -17,16 +17,16 @@
  * Package: src/api/webgui/storage_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 11:15:30
  * =============================================================================
  */
 
 /**
  * storage_manager_tab/main.js — Управление накопителями, разделами и томами
- * Updated: 2026-10-01 06:00:00
+ * Updated: 2026-10-04 11:15:30
  */
 
-import { registerTabPoller } from '/html/js/tab-core.js';
+const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
 

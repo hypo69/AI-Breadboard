@@ -1,60 +1,37 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard APP -   Init   Module
+# Process Name: AI-Breadboard App - Application Factory and Router Assembly
 # =============================================================================
 # Description:
-#   Модуль основной системы (`__init__`).
+#   Фабрика сборки и инициализации главного FastAPI приложения AI-Breadboard.
+#
+#   Зачем нужен этот модуль:
+#     1. Централизованная сборка приложения (Application Factory): создание экземпляра FastAPI,
+#        подключение базовых middleware (CORS, обработка ошибок, контекст запросов).
+#     2. Динамическая регистрация роутеров и страниц: автоматическое подключение всех модулей API
+#        (core, tc, apps, helpdesk, memory_io), статических ассетов и HTML-страниц интерфейса.
+#     3. Управление общим состоянием (AppState): создание и внедрение разделяемых сервисов,
+#        хранилищ сессий и конфигураций в контекст `app.state`.
 #
 # Usage Examples:
 #   Python API:
-#     from src.app.__init__ import create_app
+#     from src.app import create_app, register_routers, register_pages, AppState
 #
-#     res = create_app()
-#     print(res)
+#     app = create_app()
+#     state = AppState()
+#     app.state.app_state = state
+#     register_routers(app, state)
+#     register_pages(app)
 #
 # File: __init__.py
 # Project: ai-breadboard
 # Package: src.app
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-06 00:55:00
 # =============================================================================
 
 from __future__ import annotations
-"""Application builder for AI-Breadboard FastAPI application.
-
-This module provides the main application factory pattern that:
-- Initializes FastAPI app with middleware and configuration
-- Registers all routers with automatic discovery
-- Mounts static files and UI pages
-- Configures OpenAPI/Swagger documentation
-
-Usage:
-    from src.app import create_app, register_routers
-    
-    app = create_app()
-    state = AppState()
-    app.state.app_state = state
-    register_routers(app, state)
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-Architecture:
-    src/app/
-    ├── __init__.py          # Application factory
-    ├── state.py             # AppState dataclass
-    ├── middleware.py        # HTTP middleware
-    ├── cors.py              # CORS configuration
-    ├── metrics.py           # Metrics collector
-    ├── ws_hub.py            # WebSocket hub
-    ├── routers/             # API routers (auto-discovered)
-    │   ├── __init__.py
-    │   └── *.py            # Individual routers
-    ├── pages/               # UI page handlers
-    │   ├── __init__.py
-    │   └── *.py            # Individual page handlers
-    ├── config_api.py        # AI provider configuration endpoints
-    ├── versioning.py        # Version check and update logic
-    └── tests/               # Application tests"""
 
 import os
 import sys

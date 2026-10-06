@@ -1,25 +1,39 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Systemcontrolcenter
+Process Name: AI-Breadboard Automation - Run System Control Center
 =============================================================================
 Description:
-  Standalone launcher for Windows System Control Center microservice
+  Автономный лончер микросервиса Windows System Control Center.
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-SystemControlCenter.ps1
+  Зачем нужен этот скрипт:
+    1. Управление системным контроллером: запуск микросервиса управления параметрами Windows
+       (apps/windows/system_control_center) в режиме API-сервера или дашборда.
+    2. Управление процессами: безопасный старт, остановка, перезапуск и проверка статуса PID.
 
 File: Run-SystemControlCenter.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Standalone launcher for Windows System Control Center microservice
+    Управление сервисом Windows System Control Center.
+
 .DESCRIPTION
-    Launches apps
+    Запускает и администрирует подсистему System Control Center, обеспечивая
+    доступ к управлению системными службами и мониторингом Windows.
+
+.PARAMETER Action
+    Действие: start (по умолчанию), stop, restart, status.
+
+.PARAMETER Mode
+    Режим запуска: server (по умолчанию) или dashboard.
+
+.EXAMPLE
+    .\Run-SystemControlCenter.ps1 -Action start
+    Запуск сервиса System Control Center.
 #>
 
 [CmdletBinding()]

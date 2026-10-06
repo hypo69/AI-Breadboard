@@ -198,7 +198,9 @@
   "theme": {
     "title": "Тема оформления",
     "light": "Светлая",
-    "dark": "Темная",
+    "brick": "Кирпичная",
+    "dark": "Тёмная",
+    "terminal": "Терминал",
     "system": "Системная"
   },
   "userSettings": {
@@ -207,7 +209,9 @@
     "language": "Язык интерфейса",
     "theme": "Тема оформления",
     "themeLight": "☀️ Светлая",
+    "themeBrick": "🧱 Кирпичная",
     "themeDark": "🌙 Тёмная",
+    "themeTerminal": "📟 Терминал",
     "themeSystem": "🌓 Системная",
     "close": "Закрыть"
   },

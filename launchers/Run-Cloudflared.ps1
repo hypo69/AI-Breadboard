@@ -1,26 +1,37 @@
 <#
 =============================================================================
-Process Name: AI-Breadboard Automation - Run Cloudflared
+Process Name: AI-Breadboard Automation - Run Cloudflare Tunnel
 =============================================================================
 Description:
-  Перезапускает туннель Cloudflare Tunnel (cloudflared)
+  Управление и перезапуск защищенного сетевого туннеля Cloudflare Tunnel (cloudflared).
 
-Usage Examples:
-  PowerShell Execution:
-    .\Run-Cloudflared.ps1
+  Зачем нужен этот скрипт:
+    1. Безопасный внешний доступ: предоставление внешнего защищенного HTTPS-доступа
+       к локальному веб-интерфейсу AI Breadboard без открытия портов на роутере.
+    2. Автоматический поиск бинарников: сканирование стандартных путей (%LOCALAPPDATA%\bin, PATH).
+    3. Контроль процессов: остановка старых экземпляров перед запуском новой туннельной сессии.
 
 File: Run-Cloudflared.ps1
 Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-06 00:25:00
 =============================================================================
+
 .SYNOPSIS
-    Перезапускает туннель Cloudflare Tunnel (cloudflared)
+    Перезапуск и управление Cloudflare Tunnel (cloudflared).
+
 .DESCRIPTION
-    Завершает существующие процессы cloudflared, находит исполняемый файл
-    (включая C:\Users\onela\AppData\Local\bin\cloudflared
+    Завершает активные процессы cloudflared, находит исполняемый файл и перезапускает
+    туннель с использованием локальной конфигурации.
+
+.PARAMETER CloudflaredExe
+    Пользовательский путь к исполняемому файлу cloudflared.exe.
+
+.EXAMPLE
+    .\Run-Cloudflared.ps1
+    Перезапуск туннеля с автопоиском пути к бинарнику.
 #>
 
 [CmdletBinding()]

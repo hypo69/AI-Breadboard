@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:26:00
+# Updated: 2026-10-04 13:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -147,18 +147,63 @@ class SystemCollector:
             timezone_str = f'{tz_name} (UTC{tz_offset[:3]}:{tz_offset[3:]})'
         except Exception:
             timezone_str = 'UTC+03:00'
-        loc_lang = user_locale.lower()
-        if 'ru' in loc_lang:
-            sys_lang_display = 'Русский (Россия) [ru-RU]'
-        elif 'he' in loc_lang:
-            sys_lang_display = 'עברית (ישראל) [he-IL]'
-        elif 'en' in loc_lang:
-            sys_lang_display = 'English (United States) [en-US]'
-        else:
-            sys_lang_display = f'{user_locale}'
+        def _format_lang_display(locale_tag: str) -> str:
+            if not locale_tag:
+                return ''
+            tag_clean = locale_tag.strip()
+            tag_lower = tag_clean.lower()
+            if 'ru' in tag_lower:
+                return f'Русский (Россия) [{tag_clean}]'
+            elif 'he' in tag_lower:
+                return f'עברית (ישראל) [{tag_clean}]'
+            elif 'en' in tag_lower:
+                return f'English (United States) [{tag_clean}]'
+            elif 'uk' in tag_lower:
+                return f'Українська (Україна) [{tag_clean}]'
+            elif 'de' in tag_lower:
+                return f'Deutsch (Deutschland) [{tag_clean}]'
+            elif 'fr' in tag_lower:
+                return f'Français (France) [{tag_clean}]'
+            elif 'es' in tag_lower:
+                return f'Español (España) [{tag_clean}]'
+            elif 'zh' in tag_lower:
+                return f'中文 (China) [{tag_clean}]'
+            elif 'ja' in tag_lower:
+                return f'日本語 (Japan) [{tag_clean}]'
+            return tag_clean
+
+        sys_lang_display = _format_lang_display(user_locale)
         os_build = platform.version() or '10.0.26200'
         os_install_date = ''
+        os_install_language = ''
         if os.name == 'nt':
+            try:
+                import winreg
+                # Попытка получить оригинальный язык установки из реестра (InstallLanguage)
+                for access in (winreg.KEY_READ | winreg.KEY_WOW64_64KEY, winreg.KEY_READ):
+                    try:
+                        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Control\Nls\Language', 0, access) as key:
+                            val, _ = winreg.QueryValueEx(key, 'InstallLanguage')
+                            if val:
+                                lcid = int(str(val), 16)
+                                buf_lcid = ctypes.create_unicode_buffer(100)
+                                if ctypes.windll.kernel32.LCIDToLocaleName(lcid, buf_lcid, 100, 0):
+                                    tag = buf_lcid.value
+                                    if tag:
+                                        os_install_language = _format_lang_display(tag)
+                                        break
+                    except Exception:
+                        pass
+                if not os_install_language:
+                    sys_ui_lang = ctypes.windll.kernel32.GetSystemDefaultUILanguage()
+                    buf_lcid = ctypes.create_unicode_buffer(100)
+                    if ctypes.windll.kernel32.LCIDToLocaleName(sys_ui_lang, buf_lcid, 100, 0):
+                        tag = buf_lcid.value
+                        if tag:
+                            os_install_language = _format_lang_display(tag)
+            except Exception as ex:
+                logger.debug(f'Failed to query Windows InstallLanguage: {ex}')
+
             try:
                 import winreg
                 for access in (winreg.KEY_READ | winreg.KEY_WOW64_64KEY, winreg.KEY_READ):
@@ -184,7 +229,19 @@ class SystemCollector:
                         continue
             except Exception as ex:
                 logger.debug(f'Failed to query Windows InstallDate from registry: {ex}')
-        self._identity_cached = {'hostname': hostname, 'username': full_username, 'os_build': os_build, 'os_install_date': os_install_date, 'system_language': sys_lang_display, 'user_locale': user_locale, 'system_locale': system_locale, 'timezone': timezone_str, 'codepage': codepage, 'input_languages': input_languages}
+        self._identity_cached = {
+            'hostname': hostname,
+            'username': full_username,
+            'os_build': os_build,
+            'os_install_date': os_install_date,
+            'system_language': sys_lang_display,
+            'os_install_language': os_install_language,
+            'user_locale': user_locale,
+            'system_locale': system_locale,
+            'timezone': timezone_str,
+            'codepage': codepage,
+            'input_languages': input_languages
+        }
         return self._identity_cached
 
     async def _resolve_cpu_model(self) -> str:
@@ -1233,7 +1290,40 @@ class SystemCollector:
                     hardware_audit_dict = latest_audit
             except Exception:
                 pass
-        return SystemSnapshot(hostname=ident.get('hostname') or socket.gethostname(), username=ident.get('username') or '', os_name=f'{platform.system()} {platform.release()}', os_build=ident.get('os_build') or platform.version(), system_language=ident.get('system_language') or '', user_locale=ident.get('user_locale') or '', system_locale=ident.get('system_locale') or '', timezone=ident.get('timezone') or '', codepage=ident.get('codepage') or '', input_languages=ident.get('input_languages') or [], os_install_date=ident.get('os_install_date') or '', uptime_seconds=sync_data['uptime'], cpu=cpu_metrics, memory=sync_data['memory'], ram_sticks=ram_sticks, gpus=sync_data['gpus'], monitors=sync_data['monitors'], updates=sync_data['updates'], office=sync_data['office'], onedrive=sync_data['onedrive'], disks=sync_data['partitions'], physical_disks=sync_data['physical_disks'], disk_io=sync_data['disk_io'], network=sync_data['net_metrics'], listening_ports=sync_data['listening_ports'], network_activity=sync_data['net_activity'], battery=sync_data['battery'], alerts=sync_data['alerts'], sensors=sync_data['sensors'], top_processes=sync_data['top_procs'], hardware_audit=hardware_audit_dict)
+        return SystemSnapshot(
+            hostname=ident.get('hostname') or socket.gethostname(),
+            username=ident.get('username') or '',
+            os_name=f'{platform.system()} {platform.release()}',
+            os_build=ident.get('os_build') or platform.version(),
+            system_language=ident.get('system_language') or '',
+            os_install_language=ident.get('os_install_language') or '',
+            user_locale=ident.get('user_locale') or '',
+            system_locale=ident.get('system_locale') or '',
+            timezone=ident.get('timezone') or '',
+            codepage=ident.get('codepage') or '',
+            input_languages=ident.get('input_languages') or [],
+            os_install_date=ident.get('os_install_date') or '',
+            uptime_seconds=sync_data['uptime'],
+            cpu=cpu_metrics,
+            memory=sync_data['memory'],
+            ram_sticks=ram_sticks,
+            gpus=sync_data['gpus'],
+            monitors=sync_data['monitors'],
+            updates=sync_data['updates'],
+            office=sync_data['office'],
+            onedrive=sync_data['onedrive'],
+            disks=sync_data['partitions'],
+            physical_disks=sync_data['physical_disks'],
+            disk_io=sync_data['disk_io'],
+            network=sync_data['net_metrics'],
+            listening_ports=sync_data['listening_ports'],
+            network_activity=sync_data['net_activity'],
+            battery=sync_data['battery'],
+            alerts=sync_data['alerts'],
+            sensors=sync_data['sensors'],
+            top_processes=sync_data['top_procs'],
+            hardware_audit=hardware_audit_dict
+        )
 
     def get_hardware_sensors(self) -> List[HardwareSensor]:
         """Collect real-time hardware sensors readings.
@@ -1264,7 +1354,22 @@ class SystemCollector:
                 logger.debug(f'[HardwareTree] CoInitialize warning: {e}')
         nodes: List[HardwareNode] = []
         ident = self.get_system_identity()
-        nodes.append(HardwareNode(category='System', name=f"{ident.get('hostname')} ({platform.system()} {platform.release()})", properties={'Компьютер (Host)': ident.get('hostname', ''), 'Пользователь': ident.get('username', ''), 'Версия Windows': platform.version(), 'Номер сборки': ident.get('os_build', ''), 'Дата установки ОС': ident.get('os_install_date', ''), 'Язык системы': ident.get('system_language', ''), 'Локали': f"User: {ident.get('user_locale', '')} | Sys: {ident.get('system_locale', '')}", 'Часовой пояс': ident.get('timezone', ''), 'Кодировки': ident.get('codepage', ''), 'Языки ввода': ', '.join(ident.get('input_languages', [])), 'Архитектура': platform.machine(), 'Среда Python': platform.python_version()}))
+        system_props = {
+            'Компьютер (Host)': ident.get('hostname', ''),
+            'Пользователь': ident.get('username', ''),
+            'Версия Windows': platform.version(),
+            'Номер сборки': ident.get('os_build', ''),
+            'Дата установки ОС': ident.get('os_install_date', ''),
+            'Язык системы': ident.get('system_language', ''),
+            'Язык установки (Оригинал)': ident.get('os_install_language', ''),
+            'Локали': f"User: {ident.get('user_locale', '')} | Sys: {ident.get('system_locale', '')}",
+            'Часовой пояс': ident.get('timezone', ''),
+            'Кодировки': ident.get('codepage', ''),
+            'Языки ввода': ', '.join(ident.get('input_languages', [])),
+            'Архитектура': platform.machine(),
+            'Среда Python': platform.python_version()
+        }
+        nodes.append(HardwareNode(category='System', name=f"{ident.get('hostname')} ({platform.system()} {platform.release()})", properties=system_props))
         cpu = await self.get_cpu_metrics()
         cpu_props: Dict[str, Any] = {'Модель процессора': cpu.model, 'Физические ядра': cpu.physical_cores, 'Логические потоки': cpu.logical_cores, 'Базовая частота': f'{cpu.frequency_mhz} MHz', 'Архитектура': cpu.architecture}
         if os.name == 'nt':
@@ -1342,17 +1447,28 @@ class SystemCollector:
             try:
                 import win32com.client
                 wmi_obj = win32com.client.GetObject('winmgmts:')
+                total_slots = 0
+                max_capacity_str = ''
                 for arr in wmi_obj.InstancesOf('Win32_PhysicalMemoryArray'):
                     if getattr(arr, 'MemoryDevices', None):
-                        mem_overview_props['Слотов памяти на плате'] = arr.MemoryDevices
+                        total_slots = int(arr.MemoryDevices)
+                        mem_overview_props['Слотов памяти на плате'] = total_slots
                     if getattr(arr, 'MaxCapacity', None):
                         max_gb = round(int(arr.MaxCapacity) / 1024 ** 2, 1)
-                        mem_overview_props['Макс. поддерживаемый объем'] = f'{max_gb} GB'
+                        max_capacity_str = f'{max_gb} GB'
+                        mem_overview_props['Макс. поддерживаемый объем'] = max_capacity_str
                     break
                 type_map = {20: 'DDR', 21: 'DDR2', 22: 'DDR2 FB-DIMM', 24: 'DDR3', 26: 'DDR4', 27: 'LPDDR', 28: 'LPDDR2', 29: 'LPDDR3', 30: 'LPDDR4', 34: 'DDR5', 35: 'LPDDR5'}
                 form_map = {8: 'DIMM (Desktop)', 12: 'SODIMM (Laptop)', 9: 'TSOP', 10: 'PGA', 11: 'RIMM'}
-                for idx, m in enumerate(wmi_obj.InstancesOf('Win32_PhysicalMemory')):
-                    ram_modules_found += 1
+
+                raw_modules = list(wmi_obj.InstancesOf('Win32_PhysicalMemory'))
+                ram_modules_found = len(raw_modules)
+                module_speeds = [int(getattr(m, 'Speed', 0) or 0) for m in raw_modules if getattr(m, 'Speed', 0)]
+                module_clocks = [int(getattr(m, 'ConfiguredClockSpeed', 0) or getattr(m, 'Speed', 0) or 0) for m in raw_modules if (getattr(m, 'ConfiguredClockSpeed', 0) or getattr(m, 'Speed', 0))]
+                max_module_speed = max(module_speeds) if module_speeds else 0
+                min_module_speed = min(module_speeds) if module_speeds else 0
+
+                for idx, m in enumerate(raw_modules):
                     cap_bytes = int(getattr(m, 'Capacity', 0) or 0)
                     cap_gb = round(cap_bytes / 1024 ** 3, 1)
                     smbios_type = int(getattr(m, 'SMBIOSMemoryType', 0) or 0)
@@ -1372,7 +1488,34 @@ class SystemCollector:
                     clock = getattr(m, 'ConfiguredClockSpeed', 0) or speed
                     locator = (getattr(m, 'DeviceLocator', '') or f'DIMM {idx + 1}').strip()
                     bank = (getattr(m, 'BankLabel', '') or '').strip()
-                    module_props: Dict[str, Any] = {'Слот / Разъем (Locator)': locator, 'Объем планки': f'{cap_gb} GB ({cap_bytes:,} байт)', 'Производитель': mfg_display, 'Серийный номер (S/N)': sn, 'Парт-номер (P/N)': pn, 'Номинальная частота': f'{speed} MHz' if speed else 'N/A', 'Текущая рабочая частота': f'{clock} MHz' if clock else 'N/A', 'Тип памяти': f'{mem_type} (SMBIOS {smbios_type})', 'Форм-фактор': form_name}
+
+                    # Определение статуса согласования частот и выявление узких мест
+                    if speed and clock and clock < speed:
+                        compat_status = f'⚠️ Потенциал не раскрыт: планка рассчитана на {speed} MHz, но контроллер/BIOS ограничил до {clock} MHz (потеря {speed - clock} MHz)'
+                        freq_warning = f' (⚠️ занижена на {speed - clock} MHz)'
+                        eff_percent = f'{round((clock / speed) * 100, 1)}% от номинала планки'
+                    elif max_module_speed and speed and speed < max_module_speed:
+                        compat_status = f'⚠️ Узкое место: планка {speed} MHz медленнее других модулей ({max_module_speed} MHz), снижает общую частоту'
+                        freq_warning = ''
+                        eff_percent = '100% (номинал)'
+                    else:
+                        compat_status = f'✅ Оптимально: планка работает на паспортной частоте ({clock} MHz)'
+                        freq_warning = ''
+                        eff_percent = '100% (номинал)'
+
+                    module_props: Dict[str, Any] = {
+                        'Слот / Разъем (Locator)': locator,
+                        'Объем планки': f'{cap_gb} GB ({cap_bytes:,} байт)',
+                        'Номинальная частота': f'{speed} MHz' if speed else 'N/A',
+                        'Текущая рабочая частота': f'{clock} MHz{freq_warning}' if clock else 'N/A',
+                        'Эффективность планки': eff_percent,
+                        'Состояние согласования частоты': compat_status,
+                        'Тип памяти': f'{mem_type} (SMBIOS {smbios_type})',
+                        'Форм-фактор': form_name,
+                        'Производитель': mfg_display,
+                        'Серийный номер (S/N)': sn,
+                        'Парт-номер (P/N)': pn,
+                    }
                     if bank:
                         module_props['Банк памяти (Bank)'] = bank
                     nodes.append(HardwareNode(category='Memory Module (RAM)', name=f'Планка {idx + 1} ({locator}): {cap_gb} GB {mem_type}-{speed or clock}', properties=module_props))
@@ -1380,6 +1523,16 @@ class SystemCollector:
                 logger.debug(f'[HardwareTree] WMI PhysicalMemory query warning: {e}')
         if ram_modules_found > 0:
             mem_overview_props['Установлено модулей'] = f'{ram_modules_found} шт.'
+            if total_slots > 0:
+                free_slots = max(0, total_slots - ram_modules_found)
+                mem_overview_props['Конфигурация слотов'] = f'Занято {ram_modules_found} из {total_slots} (свободно: {free_slots})'
+            if module_clocks and module_speeds:
+                min_c = min(module_clocks)
+                max_s = max(module_speeds)
+                if min_c < max_s:
+                    mem_overview_props['Статус частоты памяти'] = f'⚠️ Частота шины занижена до {min_c} MHz (потенциал планок: {max_s} MHz, проверьте XMP/BIOS)'
+                else:
+                    mem_overview_props['Статус частоты памяти'] = f'✅ Оптимальный ({min_c} MHz, 100% номинала)'
         nodes.append(HardwareNode(category='System Memory', name=f'{mem.total_gb} GB Physical RAM', properties=mem_overview_props))
         wmi_video_map: Dict[str, Dict[str, Any]] = {}
         if os.name == 'nt':

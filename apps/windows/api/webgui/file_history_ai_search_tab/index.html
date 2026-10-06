@@ -1,0 +1,263 @@
+<!--
+=============================================================================
+Process Name: AI-Breadboard Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон веб-интерфейса системного модуля (index).
+
+Usage Examples:
+    Web Route:
+      /src/api/webgui/file_history_ai_search_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/file_history_ai_search_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:13:56
+=============================================================================
+-->
+
+<!-- File History AI Search Tab -->
+<style>
+  .fh-container {
+    padding: 0.75rem 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .fh-card {
+    background: var(--bs-body-bg, #1e293b);
+    border: 1px solid var(--bs-border-color, #334155);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  .fh-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: #f8fafc;
+  }
+  .fh-stat-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid var(--bs-border-color, #334155);
+    border-radius: 10px;
+    padding: 0.85rem 1.1rem;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .fh-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #3b82f6;
+  }
+  .fh-stat-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .fh-search-box {
+    background: var(--bs-dark, #0f172a);
+    border: 1px solid #3b82f6;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+  }
+  .fh-result-card {
+    border-left: 4px solid #3b82f6;
+    background: var(--bs-body-bg, #1e293b);
+    border-top: 1px solid var(--bs-border-color, #334155);
+    border-right: 1px solid var(--bs-border-color, #334155);
+    border-bottom: 1px solid var(--bs-border-color, #334155);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: background-color 0.15s ease;
+  }
+  .fh-result-card:hover {
+    background: rgba(59, 130, 246, 0.05);
+  }
+  .fh-score-badge {
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: monospace;
+  }
+  .fh-snippet-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--bs-body-color, #cbd5e1);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+</style>
+
+<div class="fh-container">
+  <!-- <span data-i18n="auto___0105ee"></span> -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 fh-header">
+    <div class="d-flex align-items-center gap-3">
+      <div class="bg-primary bg-opacity-25 p-2.5 rounded-3 text-primary border border-primary border-opacity-25">
+        <i class="bi bi-clock-history fs-3"></i>
+      </div>
+      <div>
+        <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+          <span data-i18n="auto___b3724e"></span> Windows (File History AI Search)
+          <span class="badge bg-primary bg-opacity-75 fs-7">RAG v1.0</span>
+        </h5>
+        <span class="text-secondary small"><span data-i18n="auto__windows_file_history_recent_lnk_activity_db__07a692"></span></span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-outline-light rounded-pill px-3" id="btn-fh-refresh-status" type="button">
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___6cc5dc"></span>
+      </button>
+      <button class="btn btn-sm btn-success rounded-pill px-3" id="btn-fh-reindex" type="button">
+        <i class="bi bi-cpu me-1"></i> <span data-i18n="auto___5ec953"></span> RAG
+      </button>
+    </div>
+  </div>
+
+  <!-- <span data-i18n="auto___1983d2"></span> -->
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1"><span data-i18n="auto__rag__1a3eea"></span></div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="fh-stat-val text-primary" id="fh-stat-docs-count">0</div>
+          <i class="bi bi-database-check fs-4 text-primary opacity-50"></i>
+        </div>
+        <div class="small text-muted mt-1" id="fh-stat-last-index"><span data-i18n="auto___16deed"></span></div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1"><span data-i18n="auto___8205bf"></span></div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="fh-stat-val" id="fh-stat-scheduler-status"><span data-i18n="auto___aa0d25"></span></div>
+          <i class="bi bi-arrow-repeat fs-4 text-warning opacity-50" id="fh-scheduler-icon"></i>
+        </div>
+        <div class="small text-muted mt-1" id="fh-stat-scheduler-interval"><span data-i18n="auto__15__d40d33"></span></div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1"><span data-i18n="auto__faiss__1cdc9e"></span></div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="fh-stat-val fs-6 text-truncate" id="fh-stat-faiss-file" style="max-width: 180px;">file_history.faiss</div>
+          <i class="bi bi-file-earmark-binary fs-4 text-info opacity-50"></i>
+        </div>
+        <div class="small text-muted mt-1"><span data-i18n="auto___18f0e9"></span> Gemini Embeddings</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1"><span data-i18n="auto___ec3fc1"></span></div>
+        <div class="d-flex align-items-center gap-2 mt-1">
+          <button class="btn btn-sm btn-outline-success w-50 py-1" id="btn-fh-start-scheduler">
+            <i class="bi bi-play-fill me-1"></i><span data-i18n="auto___c70ec8"></span>
+          </button>
+          <button class="btn btn-sm btn-outline-danger w-50 py-1" id="btn-fh-stop-scheduler">
+            <i class="bi bi-stop-fill me-1"></i><span data-i18n="auto___6d714e"></span>
+          </button>
+        </div>
+        <div class="small text-muted mt-1 text-center"><span data-i18n="auto__15__eecb38"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- <span data-i18n="auto___8dc75e"></span> -->
+  <div class="fh-card mb-4">
+    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+      <i class="bi bi-search text-primary"></i>
+      <span data-i18n="auto___2517ec"></span>
+    </h6>
+
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-7">
+        <div class="input-group">
+          <span class="input-group-text bg-body-tertiary border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input type="text" class="form-control border-start-0" id="fh-search-input" placeholder="<span data-i18n="auto___97d6b0"></span> Word')...">
+          <button class="btn btn-primary px-4 fw-semibold" id="btn-fh-search" type="button">
+            <i class="bi bi-arrow-right-circle me-1"></i> <span data-i18n="auto___ed6e1d"></span>
+          </button>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <select class="form-select" id="fh-filter-source">
+          <option value=""><span data-i18n="auto___5f3a3d"></span> (All Sources)</option>
+          <option value="file_history_xml">Windows File History (XML)</option>
+          <option value="recent_lnk">Recent Files (LNK)</option>
+          <option value="activity_db">Activity History (DB)</option>
+          <option value="fs_scan"><span data-i18n="auto___8be3b9"></span></option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <select class="form-select" id="fh-filter-topk">
+          <option value="5" selected><span data-i18n="auto___00f8ee"></span> 5</option>
+          <option value="10"><span data-i18n="auto___00f8ee"></span> 10</option>
+          <option value="20"><span data-i18n="auto___00f8ee"></span> 20</option>
+          <option value="50"><span data-i18n="auto___00f8ee"></span> 50</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- <span data-i18n="auto___4be2be"></span> -->
+    <div class="text-center py-4 d-none" id="fh-search-spinner">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden"><span data-i18n="auto__rag__662d74"></span>...</span>
+      </div>
+      <div class="small text-muted mt-2"><span data-i18n="auto___93b6bf"></span> FAISS...</div>
+    </div>
+
+    <!-- <span data-i18n="auto___637b2c"></span> -->
+    <div id="fh-search-results-container">
+      <div class="text-center text-muted py-4 border rounded-3 bg-body-tertiary bg-opacity-50">
+        <i class="bi bi-search fs-2 d-block mb-1 text-secondary opacity-50"></i>
+        <span><span data-i18n="auto___3df1ff"></span>.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- <span data-i18n="auto___f2f2be"></span>) -->
+  <div class="fh-card">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-list-stars text-info"></i>
+        <span data-i18n="auto__windows__8738e2"></span>)
+      </h6>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-fh-scan-now">
+        <i class="bi bi-arrow-repeat me-1"></i> <span data-i18n="auto___4748be"></span>
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="fh-items-table">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" style="width: 40px;">#</th>
+            <th scope="col"><span data-i18n="auto___94b8df"></span></th>
+            <th scope="col"><span data-i18n="auto___8290a3"></span></th>
+            <th scope="col"><span data-i18n="auto___bb9263"></span></th>
+            <th scope="col"><span data-i18n="auto___c80d7e"></span></th>
+            <th scope="col"><span data-i18n="auto___98713e"></span></th>
+            <th scope="col" class="text-end"><span data-i18n="auto___9978ac"></span></th>
+          </tr>
+        </thead>
+        <tbody id="fh-items-tbody">
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">
+              <span data-i18n="auto___cb63af"></span> Windows.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

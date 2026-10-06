@@ -7,7 +7,7 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/software_manager_tab/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/software_manager_tab/main.js?v=20261004_v1" type="module"></script>
  *
  *   JavaScript Import:
  *     import { initSoftwareManagerTab } from '/windows/api/webgui/software_manager_tab/main.js';
@@ -17,16 +17,16 @@
  * Package: windows/api/webgui/software_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 12:40:00
  * =============================================================================
  */
 
 /**
  * software_manager_tab/main.js — Управление пакетами и программами (winget, msiexec)
- * Updated: 2026-10-01 06:00:00
+ * Updated: 2026-10-04 12:40:00
  */
 
-import { registerTabPoller } from '/html/js/tab-core.js';
+const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
 let packagesList = [];
@@ -39,6 +39,10 @@ export async function fetchSoftwareSummary() {
     renderSoftware(data);
   } catch (err) {
     console.warn('[SoftwareManager] Ошибка получения списка ПО:', err);
+    const tbody = document.getElementById('sw-tbody');
+    if (tbody && packagesList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Ошибка загрузки данных: ${err.message}</td></tr>`;
+    }
   }
 }
 
@@ -49,9 +53,9 @@ function renderSoftware(data) {
   const upgradesEl = document.getElementById('sw-upgrades-count');
   const sourcesEl = document.getElementById('sw-sources-count');
 
-  if (installedEl) installedEl.textContent = packagesList.length;
-  if (upgradesEl) upgradesEl.textContent = data.upgrades_count ?? 0;
-  if (sourcesEl) sourcesEl.textContent = data.sources_count ?? '2';
+  if (installedEl) installedEl.textContent = data.total_packages ?? packagesList.length;
+  if (upgradesEl) upgradesEl.textContent = data.updates_available_count ?? data.upgrades_count ?? 0;
+  if (sourcesEl) sourcesEl.textContent = data.sources_count ?? (data.winget_available ? 'winget' : 'MSI');
 
   applySoftwareFilters();
 }
@@ -68,7 +72,7 @@ function applySoftwareFilters() {
   const filtered = packagesList.filter(p => {
     if (!query) return true;
     const nameMatch = (p.name || '').toLowerCase().includes(query);
-    const idMatch = (p.id || '').toLowerCase().includes(query);
+    const idMatch = (p.package_id || p.id || '').toLowerCase().includes(query);
     return nameMatch || idMatch;
   });
 
@@ -81,7 +85,7 @@ function applySoftwareFilters() {
 
   tbody.innerHTML = filtered.slice(0, 150).map(p => {
     const name = p.name || 'Application';
-    const id = p.id || '-';
+    const id = p.package_id || p.id || '-';
     const ver = p.version || '-';
     const avail = p.available_version || p.latest_version || '-';
     const source = p.source || 'winget';
@@ -100,11 +104,11 @@ function applySoftwareFilters() {
         <td class="small text-muted">${source}</td>
         <td class="text-end">
           ${hasUpgrade ? `
-            <button class="btn btn-xs btn-outline-warning py-0 px-2 sw-action-btn" data-id="${id}" data-action="winget_upgrade" title="Обновить пакет">
+            <button class="btn btn-xs btn-outline-warning py-0 px-2 sw-action-btn" data-id="${id}" data-action="upgrade" title="Обновить пакет">
               <i class="bi bi-arrow-up-circle"></i> Обновить
             </button>
           ` : `
-            <button class="btn btn-xs btn-outline-danger py-0 px-2 sw-action-btn" data-id="${id}" data-action="winget_uninstall" title="Удалить пакет">
+            <button class="btn btn-xs btn-outline-danger py-0 px-2 sw-action-btn" data-id="${id}" data-action="uninstall" title="Удалить пакет">
               <i class="bi bi-trash"></i>
             </button>
           `}
@@ -128,14 +132,14 @@ async function executeSoftwareAction(packageId, action) {
     const res = await fetch('/api/software-manager/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package_id: packageId, action: action, dry_run: false })
+      body: JSON.stringify({ package_id: packageId, action: action, dry_run: false, confirmed_by_user: true })
     });
     const result = await res.json();
     if (res.ok) {
       if (window.toast) window.toast.success('Успех', `${packageId}: выполнено`);
       fetchSoftwareSummary();
     } else {
-      if (window.toast) window.toast.error('Ошибка', result.detail || 'Сбой операции');
+      if (window.toast) window.toast.error('Ошибка', result.detail || result.message || 'Сбой операции');
     }
   } catch (err) {
     if (window.toast) window.toast.error('Ошибка сети', err.message);
@@ -143,7 +147,10 @@ async function executeSoftwareAction(packageId, action) {
 }
 
 export function initSoftwareManagerTab() {
-  if (isInitialized) return;
+  if (isInitialized) {
+    fetchSoftwareSummary();
+    return;
+  }
   isInitialized = true;
 
   const refreshBtn = document.getElementById('sw-refresh-btn');
@@ -159,6 +166,12 @@ export function initSoftwareManagerTab() {
   if (searchInput) searchInput.addEventListener('input', applySoftwareFilters);
 
   registerTabPoller('tab-software-manager', fetchSoftwareSummary, 30000, { immediate: true });
+  fetchSoftwareSummary();
 }
 
 window.initSoftwareManagerTab = initSoftwareManagerTab;
+window.fetchSoftwareSummary = fetchSoftwareSummary;
+
+if (document.getElementById('tab-software-manager') && document.getElementById('sw-tbody')) {
+  initSoftwareManagerTab();
+}

@@ -18,7 +18,7 @@
 # Package: src.db
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 10:22:10
 # =============================================================================
 
 """Модуль управления миграциями SQLite баз данных."""
@@ -218,5 +218,5 @@ def get_migration_manager(repo_root: Path | None = None) -> MigrationManager:
     """Возвращает инициализированный экземпляр MigrationManager с зарегистрированными БД."""
     mgr = MigrationManager(repo_root=repo_root)
     root = mgr.repo_root
-    mgr.register_db('users', root / 'src' / 'user_manager' / 'users.db')
+    mgr.register_db('telemetry', root / 'apps' / 'windows' / 'telemetry' / 'logs' / 'telemetry.db')
     return mgr

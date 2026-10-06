@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/storage_wear_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/storage_wear_tab
-Author: hypo69
-Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/storage_wear_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-06 00:20:00
+ * =============================================================================
 -->
 
 <style>
@@ -88,10 +88,16 @@ Updated: 2026-10-01 13:04:40
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
-            <input class="form-check-input" type="checkbox" id="diag-wear-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="diag-wear-auto-refresh">Авто (10с)</label>
-          </div>
+          <select class="form-select form-select-sm poll-freq-select" id="diag-wear-poll-freq" data-poll-id="storage_wear" title="Частота опроса: Износ накопителей">
+            <option value="start">Только при старте</option>
+            <option value="manual" selected>По запросу</option>
+            <option value="3">Каждые 3 сек</option>
+            <option value="5">Каждые 5 сек</option>
+            <option value="10">Каждые 10 сек</option>
+            <option value="30">Каждые 30 сек</option>
+            <option value="60">Каждые 60 сек</option>
+            <option value="120">Каждые 120 сек</option>
+          </select>
           <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-wear-refresh">
             <i class="bi bi-arrow-clockwise"></i> Обновить
           </button>
@@ -121,7 +127,7 @@ Updated: 2026-10-01 13:04:40
                 <th style="text-align: right;">Объем</th>
                 <th style="text-align: right;">Свободно</th>
                 <th>Наработка / Старт</th>
-                <th style="text-align: right;">Запись / Чтение</th>
+                <th style="text-align: right;">Ввод / Вывод (I/O)</th>
                 <th style="width: 130px;">Здоровье / Износ</th>
                 <th>Статус</th>
               </tr>

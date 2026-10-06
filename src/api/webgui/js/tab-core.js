@@ -1,23 +1,23 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard UI - Tab-Core Script
+ * Process Name: Windows Js - Tab-Core Script
  * =============================================================================
  * Description:
- *   Клиентский веб-скрипт модуля tab-core.
+ *   Клиентский скрипт управления интерфейсом модуля tab-core.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/src/api/webgui/js/tab-core.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/js/tab-core.js?v=20261001_v1" type="module"></script>
  *
  *   JavaScript Import:
- *     import { normalizeTabId, setupTabClicks } from '/src/api/webgui/js/tab-core.js';
+ *     import { normalizeTabId, isTabActive, registerTabPoller } from '/windows/api/webgui/js/tab-core.js';
  *
  * File: tab-core.js
  * Project: ai-breadboard
- * Package: src/api/webgui/js
+ * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:26:00
+ * Updated: 2026-10-06 02:30:00
  * =============================================================================
  */
 
@@ -283,8 +283,18 @@ export function switchTab(tabId) {
  * @param {string} jsUrl 
  */
 export async function loadTab(tabName, htmlUrl, jsUrl) {
-  const container = document.getElementById(`tab-${tabName}`);
-  if (!container) return;
+  let container = document.getElementById(`tab-${tabName}`);
+  if (!container) {
+    const mainContent = document.getElementById('mainTabContent');
+    if (mainContent) {
+      container = document.createElement('div');
+      container.id = `tab-${tabName}`;
+      container.className = 'tab-pane fade';
+      mainContent.appendChild(container);
+    } else {
+      return;
+    }
+  }
   
   // Показываем мгновенный скелетон/спиннер, если контейнер еще пуст
   if (!container.innerHTML.trim()) {
@@ -300,14 +310,24 @@ export async function loadTab(tabName, htmlUrl, jsUrl) {
     const r = await fetch(htmlUrl);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     container.innerHTML = await r.text();
-    await new Promise(resolve => {
-      const s = document.createElement('script');
-      s.src = jsUrl;
-      s.onload = s.onerror = resolve;
-      document.body.appendChild(s);
-    });
+    if (jsUrl) {
+      await new Promise(resolve => {
+        const s = document.createElement('script');
+        s.type = 'module';
+        s.src = jsUrl;
+        s.onload = s.onerror = resolve;
+        document.body.appendChild(s);
+      });
+    }
     const name = tabName.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-    window[`init${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+    const initName = `init${name[0].toUpperCase() + name.slice(1)}Tab`;
+    if (typeof window[initName] === 'function') {
+      try {
+        window[initName]();
+      } catch (err) {
+        console.debug(`[TabCore] Ошибка вызова ${initName}:`, err);
+      }
+    }
   } catch (e) {
     container.innerHTML = `<div class="alert alert-danger m-3">Ошибка загрузки ${tabName}: ${e.message}</div>`;
   }

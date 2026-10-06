@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.hardware
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-06 01:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional
 import psutil
 from logger import logger
 from apps.windows.hardware.gpu_prober import GpuDeviceTelemetry, GpuProber
-from apps.windows.telemetry.sensors import get_hardware_sensors
+
 
 @dataclass
 class CpuMetrics:
@@ -182,7 +182,14 @@ class HardwareMonitor:
         model_name = 'Windows Processor'
         try:
             if os.name == 'nt':
-                model_name = os.environ.get('PROCESSOR_IDENTIFIER', 'x86/x64 Processor')
+                import winreg
+                try:
+                    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'HARDWARE\DESCRIPTION\System\CentralProcessor\0') as key:
+                        val = winreg.QueryValueEx(key, 'ProcessorNameString')[0].strip()
+                        if val:
+                            model_name = val
+                except Exception:
+                    model_name = os.environ.get('PROCESSOR_IDENTIFIER', 'x86/x64 Processor')
         except Exception:
             pass
         phys_cores = psutil.cpu_count(logical=False) or 1
@@ -191,6 +198,8 @@ class HardwareMonitor:
         overall_pct = 0.0
         try:
             per_core = psutil.cpu_percent(interval=None, percpu=True)
+            if not any(per_core):
+                per_core = psutil.cpu_percent(interval=0.05, percpu=True)
             overall_pct = sum(per_core) / len(per_core) if per_core else psutil.cpu_percent(interval=None)
         except Exception as e:
             logger.debug(f'Ошибка получения загрузки CPU: {e}')
@@ -267,6 +276,7 @@ class HardwareMonitor:
         """Сбор температур, частот кулеров и напряжений."""
         sensors: List[SensorMetrics] = []
         try:
+            from apps.windows.telemetry.sensors import get_hardware_sensors
             raw_sensors = get_hardware_sensors()
             for s in raw_sensors:
                 sensors.append(SensorMetrics(sensor_id=s.sensor_id, name=s.name, category=s.category, value=s.value, unit=s.unit, min_value=s.min_value, max_value=s.max_value))

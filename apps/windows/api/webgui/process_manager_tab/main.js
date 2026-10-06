@@ -17,16 +17,16 @@
  * Package: windows/api/webgui/process_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 11:15:30
  * =============================================================================
  */
 
 /**
  * process_manager_tab/main.js — Управление процессами Windows (tasklist, taskkill)
- * Updated: 2026-10-01 06:00:00
+ * Updated: 2026-10-04 11:15:30
  */
 
-import { registerTabPoller } from '/html/js/tab-core.js';
+const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
 let processList = [];
@@ -50,9 +50,9 @@ function renderProcesses(data) {
   const ramEl = document.getElementById('pm-ram-usage');
   const handlesEl = document.getElementById('pm-handles-count');
 
-  if (totalEl) totalEl.textContent = processList.length;
+  if (totalEl) totalEl.textContent = data.total_processes || processList.length;
   if (threadsEl) threadsEl.textContent = data.total_threads || '--';
-  if (ramEl) ramEl.textContent = data.total_memory || '--';
+  if (ramEl) ramEl.textContent = (data.total_memory_used_mb !== undefined) ? `${data.total_memory_used_mb} MB` : (data.total_memory || '--');
   if (handlesEl) handlesEl.textContent = data.total_handles || '--';
 
   applyProcessFilters();
@@ -84,8 +84,8 @@ function applyProcessFilters() {
   tbody.innerHTML = filtered.slice(0, 150).map(p => {
     const pid = p.pid || '-';
     const name = p.name || p.image_name || 'process.exe';
-    const mem = p.mem_usage || p.memory || '-';
-    const session = p.session_name || 'Console';
+    const mem = (p.memory_mb !== undefined && p.memory_mb !== null) ? `${p.memory_mb} MB` : (p.mem_usage || p.memory || '-');
+    const session = p.username || p.session_name || 'Console';
     const status = p.status || 'Running';
 
     return `
@@ -120,7 +120,7 @@ async function killProcess(pid, name) {
     const res = await fetch('/api/process-manager/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pid: parseInt(pid, 10), action: 'taskkill', force: true, dry_run: false })
+      body: JSON.stringify({ pid: parseInt(pid, 10), kill_tree: false, dry_run: false, confirmed_by_user: true })
     });
     const result = await res.json();
     if (res.ok) {

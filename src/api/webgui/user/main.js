@@ -14,7 +14,7 @@
  * Package: src/api/webgui/user
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 11:15:30
  * =============================================================================
  */
 
@@ -162,9 +162,10 @@ async function ensureTabLoaded(tabName) {
   if (!def) return false;
 
   const cb = Date.now();
+  const appendCb = (u, cb) => u ? (u.includes('?') ? `${u}&_t=${cb}` : `${u}?v=${cb}`) : '';
   const promise = (async () => {
     try {
-      await loadTabContent(tabName, `${def.html}?v=${cb}`, `${def.js}?v=${cb}`);
+      await loadTabContent(tabName, appendCb(def.html, cb), appendCb(def.js, cb));
       loadedUserTabs.add(tabName);
       return true;
     } finally {

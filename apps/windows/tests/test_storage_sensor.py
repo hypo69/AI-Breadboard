@@ -18,7 +18,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-06 01:36:00
 # =============================================================================
 
 """Модульные тесты сенсора накопителей Windows."""
@@ -102,5 +102,48 @@ class TestWindowsStorageSensor(unittest.TestCase):
             audit = collector.collect()
             self.assertIn(audit.status, ('critical', 'warning'))
             self.assertTrue(any(('Отказ' in f.title or 'отказ' in f.title or 'здоровь' in f.title for f in audit.findings)))
+
+    def test_disk_collectors_four_layers(self) -> None:
+        """Проверка работы 4-уровневого стека коллекторов накопителей."""
+        from apps.windows.telemetry.storage_usage import (
+            DiskInventoryCollector,
+            DiskHealthCollector,
+            DiskPerformanceCollector,
+            DiskProcessIOCollector,
+            WindowsStorageUsageCollector,
+        )
+        from apps.windows.modules.storage_manager.core.raw_disk_io import WindowsRawDiskIO
+
+        raw_io = WindowsRawDiskIO()
+        vols = raw_io.get_logical_volumes()
+        self.assertIsInstance(vols, list)
+        if vols:
+            self.assertIn('drive_letter', vols[0])
+            self.assertIn('total_gb', vols[0])
+
+        inv_collector = DiskInventoryCollector(raw_io)
+        inv_data = inv_collector.collect()
+        self.assertIn('disks', inv_data)
+        self.assertIn('volumes', inv_data)
+
+        health_collector = DiskHealthCollector(raw_io)
+        health_data = health_collector.collect()
+        self.assertIsInstance(health_data, list)
+
+        perf_collector = DiskPerformanceCollector()
+        perf_data = perf_collector.collect()
+        self.assertIn('total_read_bytes_sec', perf_data)
+        self.assertIn('total_write_bytes_sec', perf_data)
+
+        proc_collector = DiskProcessIOCollector()
+        proc_data = proc_collector.collect()
+        self.assertIsInstance(proc_data, dict)
+
+        usage_mgr = WindowsStorageUsageCollector(raw_io=raw_io)
+        report = usage_mgr.get_disk_usage_period_report(period_minutes=60)
+        self.assertIsNotNone(report)
+        self.assertTrue(len(report.summary_text) > 0)
+
+
 if __name__ == '__main__':
     unittest.main()

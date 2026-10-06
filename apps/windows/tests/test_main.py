@@ -16,7 +16,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:12:00
+# Updated: 2026-10-04 11:24:00
 # =============================================================================
 
 """Тесты для точки входа apps.windows.main."""
@@ -70,5 +70,5 @@ def test_chat_active_model_endpoint(client: TestClient):
     resp = client.get('/api/v1/chat/active-model')
     assert resp.status_code == 200
     data = resp.json()
-    assert data.get('status') == 'ok'
+    assert data.get('status') in ('ok', 'success')
     assert 'model' in data

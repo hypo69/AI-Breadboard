@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 05:27:00
+# Updated: 2026-10-05 23:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -260,54 +260,19 @@ def init_router(
     """Создаёт роутер /api/v1/panel/hardware-sensors.
 
     Args:
-        storage: Хранилище телеметрии (по умолчанию — синглтон).
+        storage: Хранилище телеметрии (по умолчанию — синглтон в режиме read_only).
         lhm_service: Сервис LibreHardwareMonitor.
 
     Returns:
         APIRouter: Роутер с эндпоинтом GET /api/v1/panel/hardware-sensors.
     """
     router = APIRouter(tags=["Hardware Sensors Panel"])
-    store = storage or TelemetryStorage.get_instance()
-    lhm = lhm_service or LhmService()
+    store = storage or TelemetryStorage.get_instance(read_only=True)
 
     @router.get("/api/v1/panel/hardware-sensors", response_model=HardwareSensorsResponse)
     async def get_panel_hardware_sensors() -> HardwareSensorsResponse:
         """Возвращает актуальное табло сенсоров оборудования из базы данных telemetry.db."""
         try:
-            # Если LHM запущен, подливаем свежие сенсоры в БД
-            if lhm.is_running():
-                lhm_sensors = lhm.get_flattened_sensors()
-                if lhm_sensors:
-                    for s in lhm_sensors:
-                        sid = f"{s.get('hardware_name', '')}_{s.get('sensor_name', '')}".lower().replace(" ", "_").replace("#", "")
-                        val_num = s.get("value_num") if s.get("value_num") is not None else s.get("value_numeric")
-                        if val_num is not None:
-                            unit = ""
-                            vraw = str(s.get("value_raw") or "")
-                            if "°c" in vraw.lower():
-                                unit = "°C"
-                            elif "%" in vraw:
-                                unit = "%"
-                            elif "rpm" in vraw.lower():
-                                unit = "RPM"
-                            elif "v" in vraw.lower():
-                                unit = "V"
-                            elif "w" in vraw.lower():
-                                unit = "W"
-                            elif "mhz" in vraw.lower():
-                                unit = "MHz"
-
-                            store.save_sensor_poll({
-                                "id": sid,
-                                "hardware_name": s.get("hardware_name") or "Hardware",
-                                "hardware_type": s.get("hardware_type") or "system",
-                                "sensor_category": s.get("sensor_category") or "General",
-                                "sensor_name": s.get("sensor_name") or "Sensor",
-                                "unit": unit,
-                                "value": float(val_num),
-                            })
-
-            store.flush()
             with store._lock, store._get_connection() as conn:
                 rows = [dict(r) for r in conn.execute(_SQL_LATEST_SENSORS).fetchall()]
 

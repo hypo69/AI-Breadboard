@@ -16,7 +16,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-06 02:30:00
 # =============================================================================
 
 """# Description:"""
@@ -414,7 +414,7 @@ async def get_process_telemetry_file_activity(limit: int=50) -> List[Dict[str, A
 @router.get('/reboots')
 async def get_reboots_report(limit: int = 20, hours: int = 720) -> Dict[str, Any]:
     """Сводный отчет анализа и корреляции причин перезагрузок и выключений ОС."""
-    from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+    from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
     analyzer = WindowsRebootAnalyzer()
     report = analyzer.collect_reboot_history(limit=limit, hours=hours, persist_to_storage=True)
     return report.model_dump()
@@ -422,7 +422,7 @@ async def get_reboots_report(limit: int = 20, hours: int = 720) -> Dict[str, Any
 @router.get('/reboots/latest')
 async def get_latest_reboot_info() -> Dict[str, Any]:
     """Детальная информация о последней перезагрузке текущей сессии."""
-    from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+    from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
     analyzer = WindowsRebootAnalyzer()
     session = analyzer.analyze_current_boot()
     if not session:
@@ -433,7 +433,7 @@ async def get_latest_reboot_info() -> Dict[str, Any]:
 async def get_reboots_stored_history(limit: int = 50) -> List[Dict[str, Any]]:
     """Получение персистентной истории всех перезагрузок из базы данных телеметрии."""
     from apps.windows.telemetry.sqlite import TelemetryStorage
-    storage = TelemetryStorage.get_instance()
+    storage = TelemetryStorage.get_instance(read_only=True)
     return storage.get_reboot_history(limit=limit)
 
 def init_router(app: Optional[Any]=None, state: Optional[Any]=None) -> APIRouter:
@@ -445,6 +445,11 @@ def init_router(app: Optional[Any]=None, state: Optional[Any]=None) -> APIRouter
     router.include_router(init_capabilities_router())
     router.include_router(init_wikillm_router())
     router.include_router(prog_history_router)
+    try:
+        from apps.windows.modules.storage_manager.router import init_router as init_storage_router
+        router.include_router(init_storage_router())
+    except Exception as exc:
+        logger.debug(f'Storage manager router not registered: {exc}')
     chat_prov = state.chat_model if state and hasattr(state, 'chat_model') else None
     router.include_router(init_software_transparency_router(chat_provider=chat_prov))
     return router

@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:31:00
+# Updated: 2026-10-06 00:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ def client(test_storage, monkeypatch):
     """Инициализирует тестовый клиент FastAPI с внедренным тестовым TelemetryStorage."""
     monkeypatch.setattr(
         "apps.windows.api.routers.router_about_system.TelemetryStorage.get_instance",
-        lambda: test_storage,
+        lambda *args, **kwargs: test_storage,
     )
     app = FastAPI()
     router = init_router()

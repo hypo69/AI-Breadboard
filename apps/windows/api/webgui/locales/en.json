@@ -198,7 +198,9 @@
   "theme": {
     "title": "Color theme",
     "light": "Light",
+    "brick": "Brick",
     "dark": "Dark",
+    "terminal": "Terminal",
     "system": "System"
   },
   "userSettings": {
@@ -207,7 +209,9 @@
     "language": "Interface Language",
     "theme": "Appearance Theme",
     "themeLight": "☀️ Light",
+    "themeBrick": "🧱 Brick",
     "themeDark": "🌙 Dark",
+    "themeTerminal": "📟 Terminal",
     "themeSystem": "🌓 System",
     "close": "Close"
   },

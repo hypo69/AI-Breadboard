@@ -57,6 +57,43 @@ AI WINDOWS DIAGNOSTIC & ADMINISTRATION CENTER
 
 ---
 
+## 📂 Разделение подсистем: `apps/windows/core` vs `apps/windows/modules`
+
+Архитектура `apps/windows` строго разделена по уровню ответственности:
+
+### 1. `apps/windows/core` — Ядро, инфраструктура и сквозная оркестрация
+Содержит **общие фундаментальные механизмы, движки анализа и сквозные аудиты**, используемые всей системой и AI-агентами:
+* **Движки анализа и диагностики:** `root_cause_engine.py`, `correlation_engine.py`, `diagnostics.py`.
+* **Сквозной контур безопасности и выполнения:** `safe_executor.py`, `agent_loop.py`, `atomic_capabilities.py`.
+* **Динамический реестр инструментов для AI-агентов:** `apps/windows/core/tools` (`dynamic_factory.py`, `registry.py`, `system_tools.py`).
+* **Стандартизированные коллекторы аудита:** `apps/windows/core/audits` (14 унифицированных коллекторов: `CleanCollector`, `DriverCollector`, `SecurityCollector`, `StorageCollector`, `IntegrityCollector` и др.).
+
+### 2. `apps/windows/modules` — Функциональные доменные подсистемы
+Содержит **изолированные тематические подсистемы (мини-приложения/микромодули)**, каждое из которых отвечает за конкретную предметную область Windows и обычно имеет собственный `router.py`, `tui.py`, `core/`, `models.py` и `tests/`:
+* **Оборудование и сеть:** `hardware` (GPU Prober, LibreHardwareMonitor), `network` (LAN Scanner, Speedtest, Network Usage).
+* **Диски и хранилище:** `storage_manager` (клонирование, экспресс-бенчмарк DiskSpd, низкоуровневые сенсоры накопителей).
+* **Системное администрирование:** `services_manager`, `task_scheduler`, `process_manager`, `firewall_manager`, `defender`, `registry`, `startup`.
+* **Резервное копирование и целостность:** `system_checkpoints`, `boot_recovery`, `backup_manager`, `servicing_integrity`.
+
+### 📊 Сравнительная таблица
+
+| Критерий | `apps/windows/core` | `apps/windows/modules` |
+| :--- | :--- | :--- |
+| **Назначение** | Инфраструктура, мета-анализ, агентные циклы, сквозной аудит | Самодостаточные доменные утилиты управления конкретными функциями ОС |
+| **Структура** | Единый фреймворк классов, инструментов и базовых моделей | Набор независимых пакетов (в каждом `router.py`, `tui.py`, `core/`, `tests/`) |
+| **Зависимости** | Базовый слой; импортируется модулями и API | Использует WinAPI/FFI и спец. утилиты; передает данные ядру и телеметрии |
+| **Работа с БД** | Не пишет в БД напрямую (только через слой телеметрии) | **Никогда самостоятельно не пишет в `telemetry.db`** |
+
+### 🔄 Однонаправленный конвейер сбора телеметрии
+В системе действует строгое правило сбора телеметрии:
+$$\text{[телеметрия]} \longrightarrow \text{[внутренние модули apps/windows]} \longrightarrow \text{[телеметрия]} \longrightarrow \text{[бд telemetry.db]}$$
+
+1. **Слой телеметрии** (`apps/windows/telemetry`) запрашивает данные у внутренних модулей (`hardware`, `network`, `storage_manager` и др.).
+2. **Внутренние модули** выполняют опрос ОС/оборудования и возвращают чистые структуры данных/модели. Они **не имеют прямых зависимостей от `TelemetryStorage` и не пишут в базу данных**.
+3. **Слой телеметрии** агрегирует полученные метрики и централизованно сохраняет их в `telemetry.db` через `TelemetryStorage`.
+
+---
+
 ## 🚀 Режимы работы (Diagnostic Modes)
 
 1. **`Quick Health Check` (`--mode quick`)**: Быстрая проверка ключевых параметров за 3 секунды (CPU/RAM/Диск, критические ошибки логов, UAC, Defender).

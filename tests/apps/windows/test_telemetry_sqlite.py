@@ -42,7 +42,7 @@ from apps.windows.telemetry_research.extractor import TelemetryDataExtractor
 def test_storage(tmp_path: Path) -> TelemetryStorage:
     """Создает изолированный экземпляр базы данных SQLite для тестов."""
     db_file = tmp_path / 'test_telemetry.db'
-    return TelemetryStorage(db_path=db_file)
+    return TelemetryStorage(db_path=db_file, buffer_mode='direct')
 
 def _create_sample_snapshot() -> SystemSnapshot:
     """Вспомогательная функция для создания тестового SystemSnapshot."""

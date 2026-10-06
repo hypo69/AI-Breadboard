@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 08:46:00
+# Updated: 2026-10-06 02:55:00
 # =============================================================================
 
 from __future__ import annotations
@@ -37,7 +37,6 @@ except ImportError:
 
 from logger import logger
 from apps.windows.modules.hardware.lhm_service import LhmService
-from apps.windows.telemetry.sqlite import TelemetryStorage
 
 _last_net_io: Optional[Any] = psutil.net_io_counters() if psutil else None
 _last_net_time: float = time.time() if psutil else 0.0
@@ -135,8 +134,18 @@ def _get_wifi_info() -> WifiStatusInfo:
     return info
 
 
+_cached_bt_info: Optional[BluetoothStatusInfo] = None
+_cached_bt_time: float = 0.0
+_BT_CACHE_TTL: float = 30.0
+
+
 def _get_bluetooth_info() -> BluetoothStatusInfo:
-    """Опрашивает статус контроллера и устройств Bluetooth через PowerShell."""
+    """Опрашивает статус контроллера и устройств Bluetooth через PowerShell с кэшированием."""
+    global _cached_bt_info, _cached_bt_time
+    now = time.time()
+    if _cached_bt_info is not None and (now - _cached_bt_time < _BT_CACHE_TTL):
+        return _cached_bt_info
+
     info = BluetoothStatusInfo()
     try:
         cmd = "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object -ExpandProperty FriendlyName"
@@ -144,7 +153,7 @@ def _get_bluetooth_info() -> BluetoothStatusInfo:
             ["powershell", "-NoProfile", "-NonInteractive", "-Command", cmd],
             capture_output=True,
             text=True,
-            timeout=1.8,
+            timeout=5.0,
             encoding="utf-8",
             errors="ignore",
         )
@@ -155,8 +164,12 @@ def _get_bluetooth_info() -> BluetoothStatusInfo:
             info.name = main_ctrl
             info.devices_count = len(devs)
             info.devices = devs[:6]
+            _cached_bt_info = info
+            _cached_bt_time = now
     except Exception as e:
         logger.debug(f"[RouterNetworkLoad] Ошибка опроса Bluetooth: {e}")
+        if _cached_bt_info is not None:
+            return _cached_bt_info
     return info
 
 

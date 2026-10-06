@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:47:30
+# Updated: 2026-10-05 23:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -44,10 +44,10 @@ _storage: Optional[TelemetryStorage] = None
 
 
 def get_storage() -> TelemetryStorage:
-    """Получить или создать синглтон хранилища телеметрии SQLite."""
+    """Получить или создать синглтон хранилища телеметрии SQLite в режиме read-only."""
     global _storage
     if _storage is None:
-        _storage = TelemetryStorage.get_instance()
+        _storage = TelemetryStorage.get_instance(read_only=True)
     return _storage
 
 

@@ -16,7 +16,7 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 03:07:00
 # =============================================================================
 
 """Модуль комплексной диагностики состояния служб, процессов и аппаратных ресурсов."""
@@ -24,19 +24,18 @@
 from typing import List, Dict, Any, Callable
 from dataclasses import dataclass
 from enum import Enum
-import logging
+from logger import logger
 from .data_model import ProcessInfo, ServiceInfo, DriverInfo, SystemState
-logger = logging.getLogger(__name__)
 
 class Severity(Enum):
-    """Alert severity levels"""
+    """Уровни критичности предупреждений."""
     INFO = 'info'
     WARNING = 'warning'
     CRITICAL = 'critical'
 
 @dataclass
 class DiagnosticResult:
-    """Result of a diagnostic check"""
+    """Результат диагностической проверки."""
     check_id: str
     check_name: str
     severity: Severity
@@ -51,11 +50,11 @@ class DiagnosticResult:
 
 class DiagnosticsEngine:
     """
-    Comprehensive diagnostics engine with 80+ checks
+    Движок комплексной системной диагностики Windows.
     """
 
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self.checks: Dict[str, Callable] = {}
         self._register_checks()
 

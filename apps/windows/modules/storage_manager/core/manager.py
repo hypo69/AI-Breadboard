@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-06 02:55:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""Менеджер дисковых накопителей, прямого WinAPI I/O и посекторного клонирования."""
 
 import asyncio
 import base64
@@ -68,56 +68,102 @@ class StorageManager:
         self.clone_engine = clone_engine or DiskCloneEngine(self.raw_io)
 
     def get_volumes(self) -> List[VolumeInfo]:
-        """Получение списка логических томов и данных использования."""
+        """Получение списка логических томов и данных использования через Win32 API."""
         volumes: List[VolumeInfo] = []
         try:
-            for part in psutil.disk_partitions(all=False):
-                try:
-                    usage = psutil.disk_usage(part.mountpoint)
-                    vol = VolumeInfo(
-                        volume_id=part.device,
-                        drive_letter=part.mountpoint.replace('\\', ''),
-                        label='',
-                        filesystem=part.fstype or 'NTFS',
-                        total_gb=round(usage.total / (1024 ** 3), 2),
-                        free_gb=round(usage.free / (1024 ** 3), 2),
-                        percent_used=round(usage.percent, 1),
-                        health_status='Healthy',
-                    )
-                    volumes.append(vol)
-                except (PermissionError, OSError):
-                    continue
+            win32_vols = self.raw_io.get_logical_volumes()
+            for v in win32_vols:
+                vol = VolumeInfo(
+                    volume_id=v.get('volume_guid') or v.get('drive_letter', ''),
+                    drive_letter=v.get('drive_letter'),
+                    mount_point=v.get('mount_point', ''),
+                    volume_guid=v.get('volume_guid', ''),
+                    label=v.get('label', ''),
+                    filesystem=v.get('filesystem', 'NTFS'),
+                    filesystem_flags=v.get('filesystem_flags', 0),
+                    total_gb=v.get('total_gb', 0.0),
+                    free_gb=v.get('free_gb', 0.0),
+                    available_gb=round(v.get('available_bytes', 0) / (1024 ** 3), 2),
+                    percent_used=v.get('percent_used', 0.0),
+                    cluster_size_bytes=v.get('cluster_size_bytes', 4096),
+                    sector_size_bytes=v.get('sector_size_bytes', 512),
+                    health_status='Healthy',
+                )
+                volumes.append(vol)
         except Exception as exc:
-            logger.warning(f"Ошибка получения списка томов: {exc}")
+            logger.debug(f"Ошибка получения томов через Win32 API: {exc}")
+
+        if not volumes:
+            try:
+                for part in psutil.disk_partitions(all=False):
+                    try:
+                        usage = psutil.disk_usage(part.mountpoint)
+                        vol = VolumeInfo(
+                            volume_id=part.device,
+                            drive_letter=part.mountpoint.replace('\\', ''),
+                            mount_point=part.mountpoint,
+                            label='',
+                            filesystem=part.fstype or 'NTFS',
+                            total_gb=round(usage.total / (1024 ** 3), 2),
+                            free_gb=round(usage.free / (1024 ** 3), 2),
+                            available_gb=round(usage.free / (1024 ** 3), 2),
+                            percent_used=round(usage.percent, 1),
+                            health_status='Healthy',
+                        )
+                        volumes.append(vol)
+                    except (PermissionError, OSError):
+                        continue
+            except Exception as exc:
+                logger.warning(f"Ошибка получения списка томов через psutil: {exc}")
         return volumes
 
     def get_disks(self) -> List[DiskInfo]:
-        """Получение списка физических дисков через Storage API / WMI."""
+        """Получение списка физических дисков через быстрый Win32 IOCTL."""
         disks: List[DiskInfo] = []
         try:
-            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
-            sensor = WindowsStorageSensor(timeout_sec=5)
-            p_disks = sensor.get_physical_disks()
-            for d in p_disks:
-                is_first_disk = str(d.device_id) in ('Disk0', '0', r'\\.\PHYSICALDRIVE0', r'\\.\PhysicalDrive0')
-                size_val = d.size_gb or (round(d.size_bytes / (1024 ** 3), 2) if d.size_bytes else 0.0)
+            raw_disks = self.raw_io.list_physical_disks()
+            for rd in raw_disks:
+                d_id = rd.get('disk_id', 0)
+                is_first_disk = (d_id == 0)
                 disks.append(
                     DiskInfo(
-                        disk_id=d.device_id,
-                        name=d.friendly_name or d.model,
-                        bus_type=d.bus_type,
-                        media_type=d.media_type,
-                        size_gb=size_val,
-                        status=d.health_status,
+                        disk_id=d_id,
+                        name=rd.get('product') or f'PhysicalDrive{d_id}',
+                        bus_type=rd.get('bus_type', 'UNKNOWN'),
+                        media_type='SSD' if 'SSD' in (rd.get('product', '') + rd.get('bus_type', '')).upper() or rd.get('bus_type') == 'NVMe' else 'HDD',
+                        size_gb=rd.get('size_gb', 0.0),
+                        status='Healthy',
                         is_boot=is_first_disk,
                         is_system=is_first_disk,
                     )
                 )
         except Exception as exc:
-            logger.debug(f"Получение дисков через Storage API не удалось: {exc}")
+            logger.debug(f"Получение дисков через Win32 IOCTL не удалось: {exc}")
 
         if not disks:
-            # Fallback на системный диск 0
+            try:
+                from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+                sensor = WindowsStorageSensor(timeout_sec=30)
+                p_disks = sensor.get_physical_disks()
+                for d in p_disks:
+                    is_first_disk = str(d.device_id) in ('Disk0', '0', r'\\.\PHYSICALDRIVE0', r'\\.\PhysicalDrive0')
+                    size_val = d.size_gb or (round(d.size_bytes / (1024 ** 3), 2) if d.size_bytes else 0.0)
+                    disks.append(
+                        DiskInfo(
+                            disk_id=d.device_id,
+                            name=d.friendly_name or d.model,
+                            bus_type=d.bus_type,
+                            media_type=d.media_type,
+                            size_gb=size_val,
+                            status=d.health_status,
+                            is_boot=is_first_disk,
+                            is_system=is_first_disk,
+                        )
+                    )
+            except Exception as exc:
+                logger.debug(f"Получение дисков через WindowsStorageSensor не удалось: {exc}")
+
+        if not disks:
             geom = self.raw_io.get_geometry(0)
             size_gb = round(geom.disk_size_bytes / (1024 ** 3), 2) if geom.disk_size_bytes else 512.0
             disks.append(
@@ -138,14 +184,12 @@ class StorageManager:
         """Получение полной информации о диске, геометрии, разметке и SMART."""
         geom = self.raw_io.get_geometry(disk_id)
         headers = self.raw_io.inspect_headers(disk_id)
+        prop = self.raw_io.query_storage_device_property(disk_id)
+        smart = self.raw_io.query_nvme_smart_health(disk_id)
 
-        # Базовая информация
-        disks = self.get_disks()
-        base_match = next((d for d in disks if d.disk_id == disk_id), None)
-
-        friendly_name = base_match.name if base_match else f"PhysicalDrive{disk_id}"
-        bus_type = base_match.bus_type if base_match else "UNKNOWN"
-        media_type = base_match.media_type if base_match else "UNKNOWN"
+        friendly_name = prop.get('product') or f"PhysicalDrive{disk_id}"
+        bus_type = prop.get('bus_type', 'UNKNOWN')
+        media_type = 'SSD' if 'SSD' in (friendly_name + bus_type).upper() or bus_type == 'NVMe' else 'HDD'
         is_sys = (disk_id == 0)
 
         return DiskDetailedInfo(
@@ -154,10 +198,19 @@ class StorageManager:
             friendly_name=friendly_name,
             bus_type=bus_type,
             media_type=media_type,
+            serial_number=prop.get('serial_number', ''),
+            firmware_revision=prop.get('revision', ''),
             geometry=geom,
             headers=headers,
             partitions=headers.partitions,
             smart_status='Healthy',
+            smart_temperature_c=smart.get('temperature_c'),
+            smart_wear_pct=smart.get('percentage_used'),
+            tbw_written_tb=smart.get('data_units_written_tb'),
+            tbw_read_tb=smart.get('data_units_read_tb'),
+            power_on_hours=smart.get('power_on_hours'),
+            unsafe_shutdowns=smart.get('unsafe_shutdowns'),
+            media_errors=smart.get('media_errors'),
             is_system=is_sys,
             is_boot=is_sys,
         )
