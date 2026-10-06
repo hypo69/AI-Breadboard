@@ -1,0 +1,984 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Window Management & Personalization Control Plane
+=============================================================================
+Description:
+  Клиентский веб-интерфейс единого центра управления окнами, внешним видом
+  и персонализацией Windows. Включает 6 интегрированных суб-вкладок:
+  1. 🪟 Диспетчер окон (295 OS-параметров по 15 категориям)
+  2. 🎨 Темы и Цвета (Темы .theme, Dark/Light mode, акцентные цвета)
+  3. 🖱️ Курсор и Указатель (Размер 1..128px, цвета, шлейф, тень, скорость)
+  4. 🖼️ Обои и Экран блокировки (Picture, Solid, Slideshow, Spotlight, Fit modes)
+  5. 🤖 AI Spotlight («О фотографии» / Learn about this picture, метаданные, GPS, факты)
+  6. 📜 Журнал аудита и Откат (История транзакций из telemetry.db с 1-клик откатом)
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/window_management_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-06 18:35:00
+=============================================================================
+-->
+
+<style>
+  .wcp-container {
+    padding: 0.75rem;
+    color: var(--text-color, #18181b);
+  }
+  .wcp-header {
+    background: var(--surface-2, #1e293b);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: var(--radius-md, 10px);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color, #f8fafc);
+  }
+  .wcp-metric-pill {
+    background: var(--surface-1, #0f172a);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-color, #f8fafc);
+  }
+
+  /* Навигация верхнего уровня (6 суб-вкладок) */
+  .wcp-main-tabs-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    background: var(--surface-2, #1e293b);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: var(--radius-md, 10px);
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .wcp-main-tab-btn {
+    background: var(--surface-1, #0f172a);
+    border: 1px solid var(--border-color, #334155);
+    color: var(--text-color, #f8fafc);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .wcp-main-tab-btn:hover {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: #0ea5e9;
+    color: #38bdf8;
+  }
+  .wcp-main-tab-btn.active {
+    background: #0ea5e9 !important;
+    color: #0f172a !important;
+    border-color: #0ea5e9 !important;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
+  }
+
+  /* Внутренние категории для диспетчера окон */
+  .wcp-categories-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    background: var(--surface-2, #1e293b);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: var(--radius-md, 10px);
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .wcp-cat-btn {
+    background: var(--surface-1, #0f172a);
+    border: 1px solid var(--border-color, #334155);
+    color: var(--text-color, #f8fafc);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .wcp-cat-btn:hover {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: #0ea5e9;
+    color: #38bdf8;
+  }
+  .wcp-cat-btn.active {
+    background: #0ea5e9 !important;
+    color: #0f172a !important;
+    border-color: #0ea5e9 !important;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  }
+
+  .wcp-card {
+    background: var(--surface-1, #0f172a);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: var(--radius-md, 10px);
+    padding: 0.85rem;
+    transition: all 0.18s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+  .wcp-card:hover {
+    border-color: #0ea5e9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .wcp-card.modified {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.04);
+  }
+
+  .wcp-tag {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .wcp-tag-safe {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+  .wcp-tag-caution {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .wcp-tag-critical {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .wcp-tag-backend {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+  }
+  .wcp-tag-scope {
+    background: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.25);
+  }
+
+  /* Стили для карточек тем и персонализации */
+  .theme-preview-card {
+    background: var(--surface-1, #0f172a);
+    border: 2px solid var(--border-color, #334155);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .theme-preview-card:hover {
+    border-color: #0ea5e9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+  .theme-preview-card.active-theme {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.05);
+  }
+
+  /* Превью курсора */
+  .cursor-preview-box {
+    width: 140px;
+    height: 140px;
+    border: 2px dashed var(--border-color, #334155);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Карточка AI Spotlight */
+  .spotlight-hero-card {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-1, #0f172a);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .spotlight-img-container {
+    position: relative;
+    max-height: 480px;
+    overflow: hidden;
+    background: #000;
+  }
+  .spotlight-badge-overlay {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    color: #fff;
+    font-size: 0.8rem;
+  }
+
+  .wcp-table-container {
+    background: var(--surface-1, #0f172a);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: var(--radius-md, 10px);
+    overflow: hidden;
+  }
+  .wcp-table thead th {
+    background: var(--surface-2, #1e293b);
+    color: var(--text-color, #f8fafc);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color, #334155);
+    padding: 0.65rem 0.75rem;
+  }
+  .wcp-table tbody td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--border-color, #334155);
+    vertical-align: middle;
+  }
+  .wcp-table tbody tr:hover {
+    background: rgba(14, 165, 233, 0.05);
+  }
+</style>
+
+<div class="container-fluid wcp-container" id="window-management-tab-container">
+
+  <!-- Header Card & Overview Stats -->
+  <div class="wcp-header shadow-sm">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="fs-1">🎛️</div>
+        <div>
+          <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+            Windows Window Management & Personalization Control Plane
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-7">295 Настроек + Personalization</span>
+          </h5>
+          <small class="text-secondary d-block mt-1">
+            Единый пульт управления параметрами окон, DWM, Snap Assist, темами, курсором, обоями и AI Spotlight с откатом через telemetry.db
+          </small>
+        </div>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button id="wcp-btn-reload" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5 shadow-sm" title="Перечитать текущие значения из реестра и Win32 API">
+          <i class="bi bi-arrow-clockwise"></i>
+          <span>Обновить</span>
+        </button>
+        <button id="wcp-btn-restore-point" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1.5 shadow-sm" title="Создать точку восстановления Windows">
+          <i class="bi bi-shield-plus"></i>
+          <span>Точка восстановления</span>
+        </button>
+        <button id="wcp-btn-batch-apply" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 shadow-sm px-3" disabled title="Применить все измененные параметры">
+          <i class="bi bi-check2-all"></i>
+          <span>Применить</span>
+          <span id="wcp-staged-count-badge" class="badge bg-white text-primary rounded-pill ms-1 d-none">0</span>
+        </button>
+        <button id="wcp-btn-clear-staged" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm d-none" title="Сбросить несохраненные изменения">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Главные 6 суб-вкладок (Навигатор) -->
+  <div class="wcp-main-tabs-nav" id="wcp-main-subtabs">
+    <button class="wcp-main-tab-btn active" data-subtab="windows">
+      <i class="bi bi-window-stack"></i>
+      <span>1. Диспетчер окон (295)</span>
+    </button>
+    <button class="wcp-main-tab-btn" data-subtab="themes">
+      <i class="bi bi-palette-fill"></i>
+      <span>2. Темы и Цвета</span>
+    </button>
+    <button class="wcp-main-tab-btn" data-subtab="cursor">
+      <i class="bi bi-cursor-fill"></i>
+      <span>3. Курсор и Указатель</span>
+    </button>
+    <button class="wcp-main-tab-btn" data-subtab="wallpaper">
+      <i class="bi bi-image-fill"></i>
+      <span>4. Обои и Экран блокировки</span>
+    </button>
+    <button class="wcp-main-tab-btn" data-subtab="spotlight">
+      <i class="bi bi-stars"></i>
+      <span>5. AI Spotlight («О фотографии»)</span>
+    </button>
+    <button class="wcp-main-tab-btn" data-subtab="history">
+      <i class="bi bi-clock-history"></i>
+      <span>6. Журнал аудита и Откат</span>
+    </button>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- СУБ-ВКЛАДКА 1: Диспетчер окон (Window Management - 295 параметров)        -->
+  <!-- ========================================================================= -->
+  <div class="wcp-subtab-pane" id="wcp-subtab-content-windows">
+    <!-- Quick Metrics Bar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 p-2 bg-body-tertiary border rounded fs-8">
+      <div class="d-flex flex-wrap align-items-center gap-2" id="wcp-stats-pills">
+        <div class="wcp-metric-pill">
+          <i class="bi bi-grid text-primary"></i>
+          <span>Всего: <strong id="wcp-stat-total" class="text-white">295</strong></span>
+        </div>
+        <div class="wcp-metric-pill">
+          <i class="bi bi-check-circle-fill text-success"></i>
+          <span>Безопасных (Safe): <strong id="wcp-stat-safe" class="text-success">225</strong></span>
+        </div>
+        <div class="wcp-metric-pill">
+          <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+          <span>Внимание (Caution): <strong id="wcp-stat-caution" class="text-warning">61</strong></span>
+        </div>
+        <div class="wcp-metric-pill">
+          <i class="bi bi-shield-slash-fill text-danger"></i>
+          <span>Критических: <strong id="wcp-stat-critical" class="text-danger">9</strong></span>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 text-secondary small">
+        <span>Бэкенды:</span>
+        <span class="badge bg-dark border border-secondary text-info">Win32 SPI: 112</span>
+        <span class="badge bg-dark border border-secondary text-primary">Registry: 95</span>
+        <span class="badge bg-dark border border-secondary text-warning">DWM: 20</span>
+        <span class="badge bg-dark border border-secondary text-success">Display: 27</span>
+        <span class="badge bg-dark border border-secondary text-danger">Policy: 41</span>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls Bar -->
+    <div class="card bg-body-tertiary border-secondary-subtle p-2 mb-2 shadow-sm">
+      <div class="row g-2 align-items-center">
+        <!-- Поисковая строка -->
+        <div class="col-12 col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-body border-secondary-subtle text-muted"><i class="bi bi-search"></i></span>
+            <input type="text" id="wcp-search-input" class="form-control border-secondary-subtle" placeholder="Поиск по названию, ID, ключу реестра, SPI константе..." autocomplete="off">
+            <button class="btn btn-outline-secondary border-secondary-subtle d-none" id="wcp-search-clear-btn" type="button"><i class="bi bi-x"></i></button>
+          </div>
+        </div>
+
+        <!-- Фильтр по риску -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <select id="wcp-filter-risk" class="form-select form-select-sm border-secondary-subtle">
+            <option value="all">Уровень риска (Все)</option>
+            <option value="safe">🟢 Только Safe</option>
+            <option value="caution">🟡 Только Caution</option>
+            <option value="critical">🔴 Только Critical</option>
+          </select>
+        </div>
+
+        <!-- Фильтр по бэкенду -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <select id="wcp-filter-backend" class="form-select form-select-sm border-secondary-subtle">
+            <option value="all">Бэкенд (Все)</option>
+            <option value="spi">Win32 SPI</option>
+            <option value="winreg">Windows Registry</option>
+            <option value="dwm">DWM API</option>
+            <option value="display">Display Config API</option>
+            <option value="policy">Policy CSP / GPO</option>
+            <option value="win32">Win32 API</option>
+          </select>
+        </div>
+
+        <!-- Фильтр по скоупу -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <select id="wcp-filter-scope" class="form-select form-select-sm border-secondary-subtle">
+            <option value="all">Scope (Все)</option>
+            <option value="user">User (HKCU)</option>
+            <option value="machine">Machine (HKLM)</option>
+            <option value="session">Session</option>
+          </select>
+        </div>
+
+        <!-- Переключатели вида и быстрые фильтры -->
+        <div class="col-6 col-md-2 d-flex align-items-center justify-content-end gap-2">
+          <div class="form-check form-switch mb-0" title="Показать только измененные параметры">
+            <input class="form-check-input" type="checkbox" id="wcp-filter-only-modified">
+            <label class="form-check-label small text-muted" for="wcp-filter-only-modified" style="font-size: 0.75rem;">Изменённые</label>
+          </div>
+          <div class="btn-group btn-group-sm" role="group" aria-label="Вид отображения">
+            <button type="button" class="btn btn-outline-secondary active" id="wcp-view-cards-btn" title="Сетка карточек"><i class="bi bi-grid-fill"></i></button>
+            <button type="button" class="btn btn-outline-secondary" id="wcp-view-table-btn" title="Компактная таблица"><i class="bi bi-list-ul"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Pills Navigation -->
+    <div class="wcp-categories-nav" id="wcp-categories-pills">
+      <button class="wcp-cat-btn active" data-category="all">
+        <span>🌐 Все разделы</span>
+        <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-1">295</span>
+      </button>
+      <button class="wcp-cat-btn" data-category="focus_activation"><span>🎯 1. Focus</span></button>
+      <button class="wcp-cat-btn" data-category="window_animations"><span>✨ 2. Animations</span></button>
+      <button class="wcp-cat-btn" data-category="window_geometry"><span>📐 3. Geometry</span></button>
+      <button class="wcp-cat-btn" data-category="window_arrangement"><span>🪟 4. Snap</span></button>
+      <button class="wcp-cat-btn" data-category="alttab_task_switching"><span>🔄 5. Alt+Tab</span></button>
+      <button class="wcp-cat-btn" data-category="virtual_desktops"><span>🖥️ 6. Desktops</span></button>
+      <button class="wcp-cat-btn" data-category="dwm_composition"><span>🎨 7. DWM</span></button>
+      <button class="wcp-cat-btn" data-category="taskbar_switching"><span>📌 8. Taskbar</span></button>
+      <button class="wcp-cat-btn" data-category="mouse_behaviour"><span>🖱️ 9. Mouse</span></button>
+      <button class="wcp-cat-btn" data-category="keyboard_focus"><span>⌨️ 10. Keyboard</span></button>
+      <button class="wcp-cat-btn" data-category="accessibility"><span>♿ 11. Access</span></button>
+      <button class="wcp-cat-btn" data-category="display_multimonitor"><span>📺 12. Displays</span></button>
+      <button class="wcp-cat-btn" data-category="desktop_explorer"><span>📁 13. Explorer</span></button>
+      <button class="wcp-cat-btn" data-category="window_metrics_theme"><span>🌈 14. Metrics</span></button>
+      <button class="wcp-cat-btn" data-category="shell_policy_controls"><span>🛡️ 15. Policies</span></button>
+    </div>
+
+    <!-- Status / Loading Indicator -->
+    <div id="wcp-loading-spinner" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Загрузка параметров...</span>
+      </div>
+      <div class="text-muted mt-2 small">Загрузка каталога и считывание текущих параметров Windows...</div>
+    </div>
+
+    <!-- Filter Results Counter -->
+    <div id="wcp-results-header" class="d-flex align-items-center justify-content-between mb-2 small text-muted d-none">
+      <div>
+        Отображается: <strong id="wcp-filtered-count" class="text-body">295</strong> из <strong>295</strong> параметров
+      </div>
+      <div id="wcp-active-filters-desc" class="text-truncate ms-2"></div>
+    </div>
+
+    <!-- View Mode 1: Cards Grid View -->
+    <div id="wcp-cards-view" class="row g-3 d-none"></div>
+
+    <!-- View Mode 2: Table View -->
+    <div id="wcp-table-view" class="wcp-table-container d-none mb-3">
+      <div class="table-responsive">
+        <table class="table table-hover table-borderless mb-0 wcp-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">#</th>
+              <th style="width: 260px;">Параметр</th>
+              <th style="width: 140px;">Категория</th>
+              <th style="width: 130px;">Бэкенд & Scope</th>
+              <th style="width: 90px;">Риск</th>
+              <th style="width: 220px;">Текущее / Новое значение</th>
+              <th style="width: 140px;" class="text-end">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="wcp-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- No Results Placeholder -->
+    <div id="wcp-no-results" class="card bg-body-tertiary border-secondary-subtle text-center p-5 d-none my-3">
+      <div class="fs-1 text-muted mb-2">🔍</div>
+      <h6 class="fw-semibold">Ничего не найдено</h6>
+      <p class="text-muted small mb-3">По вашему фильтру или поисковому запросу не найдено ни одного параметра.</p>
+      <div>
+        <button class="btn btn-sm btn-outline-primary" id="wcp-reset-filters-btn">Сбросить фильтры</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- СУБ-ВКЛАДКА 2: Темы и Цвета (Themes & Colors)                             -->
+  <!-- ========================================================================= -->
+  <div class="wcp-subtab-pane d-none" id="wcp-subtab-content-themes">
+    <div class="row g-3">
+      <!-- Текущий статус темы -->
+      <div class="col-12 col-lg-4">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 h-100 shadow-sm">
+          <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-palette text-primary"></i>
+            Режим оформления Windows
+          </h6>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Системная тема (Light / Dark):</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-light flex-fill text-body" id="wcp-theme-mode-light">
+                <i class="bi bi-sun me-1 text-warning"></i>Светлая
+              </button>
+              <button class="btn btn-sm btn-outline-primary flex-fill" id="wcp-theme-mode-dark">
+                <i class="bi bi-moon-stars me-1"></i>Тёмная
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted">Акцентный цвет системы (Accent Color):</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="color" class="form-control form-control-color border" id="wcp-theme-accent-color" value="#0078d7" style="width: 44px; height: 36px;">
+              <input type="text" class="form-control form-control-sm font-monospace text-uppercase" id="wcp-theme-accent-hex" value="#0078D7">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted">Эффекты прозрачности DWM (Mica / Acrylic):</label>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="wcp-theme-transparency" checked>
+              <label class="form-check-label small" for="wcp-theme-transparency">Включить прозрачность окон</label>
+            </div>
+          </div>
+
+          <div class="pt-2 border-top border-secondary border-opacity-25 mt-auto">
+            <button class="btn btn-primary btn-sm w-100" id="wcp-theme-save-accent-btn">
+              <i class="bi bi-check2 me-1"></i>Применить цвета
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Каталог тем .theme -->
+      <div class="col-12 col-lg-8">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 shadow-sm h-100">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-collection text-info"></i>
+              Установленные темы Windows (.theme)
+            </h6>
+            <button class="btn btn-sm btn-outline-secondary" id="wcp-themes-refresh-btn">
+              <i class="bi bi-arrow-clockwise me-1"></i>Обновить темы
+            </button>
+          </div>
+
+          <div class="row g-3" id="wcp-themes-grid">
+            <!-- Populated dynamically by main.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- СУБ-ВКЛАДКА 3: Курсор и Указатель мыши (Cursor & Pointer)                 -->
+  <!-- ========================================================================= -->
+  <div class="wcp-subtab-pane d-none" id="wcp-subtab-content-cursor">
+    <div class="row g-3">
+      <!-- Настройки размера и цвета -->
+      <div class="col-12 col-lg-7">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 shadow-sm">
+          <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-cursor text-primary"></i>
+            Параметры указателя мыши (Accessibility & Pointer)
+          </h6>
+
+          <!-- Размер курсора -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small fw-semibold mb-0">Размер указателя (Разрешение: 1 - 128 px):</label>
+              <span class="badge bg-primary fs-7" id="wcp-cursor-size-badge">32 px</span>
+            </div>
+            <input type="range" class="form-range" id="wcp-cursor-size-slider" min="1" max="128" value="32">
+            <div class="d-flex justify-content-between text-muted small" style="font-size: 0.72rem;">
+              <span>1 px (Минимум)</span>
+              <span>32 px (Стандарт)</span>
+              <span>64 px (Крупный)</span>
+              <span>128 px (Максимум)</span>
+            </div>
+          </div>
+
+          <!-- Цвет указателя -->
+          <div class="mb-4">
+            <label class="form-label small fw-semibold mb-2">Цветовая схема указателя:</label>
+            <div class="row g-2">
+              <div class="col-6 col-sm-3">
+                <button class="btn btn-sm btn-outline-secondary w-100 text-start active" data-cursor-color="white" id="wcp-cursor-btn-white">
+                  ⚪ Белый
+                </button>
+              </div>
+              <div class="col-6 col-sm-3">
+                <button class="btn btn-sm btn-outline-secondary w-100 text-start" data-cursor-color="black" id="wcp-cursor-btn-black">
+                  ⚫ Чёрный
+                </button>
+              </div>
+              <div class="col-6 col-sm-3">
+                <button class="btn btn-sm btn-outline-secondary w-100 text-start" data-cursor-color="inverted" id="wcp-cursor-btn-inverted">
+                  🔄 Инверсный
+                </button>
+              </div>
+              <div class="col-6 col-sm-3">
+                <button class="btn btn-sm btn-outline-secondary w-100 text-start" data-cursor-color="custom" id="wcp-cursor-btn-custom">
+                  🎨 Свой цвет
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-2 d-none" id="wcp-cursor-custom-color-picker">
+              <div class="d-flex align-items-center gap-2">
+                <input type="color" class="form-control form-control-color border" id="wcp-cursor-color-input" value="#ffff00" style="width: 44px; height: 36px;">
+                <span class="small text-muted">Выберите контрастный цвет указателя (например, ярко-жёлтый или бирюзовый)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Дополнительные флаги курсора -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="wcp-cursor-shadow" checked>
+                <label class="form-check-label small" for="wcp-cursor-shadow">Тень под указателем</label>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="wcp-cursor-trails">
+                <label class="form-check-label small" for="wcp-cursor-trails">Отображать шлейф указателя</label>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="wcp-cursor-hide-typing" checked>
+                <label class="form-check-label small" for="wcp-cursor-hide-typing">Скрывать при вводе текста</label>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="wcp-cursor-ctrl-locate">
+                <label class="form-check-label small" for="wcp-cursor-ctrl-locate">Показывать при нажатии Ctrl</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Скорость движения -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small fw-semibold mb-0">Скорость движения указателя (1 - 20):</label>
+              <span class="badge bg-secondary fs-7" id="wcp-cursor-speed-badge">10</span>
+            </div>
+            <input type="range" class="form-range" id="wcp-cursor-speed-slider" min="1" max="20" value="10">
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm px-4" id="wcp-cursor-apply-btn">
+              <i class="bi bi-check2 me-1"></i>Применить настройки курсора
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="wcp-cursor-reset-btn">
+              Сброс к 32px
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Интерактивное превью курсора -->
+      <div class="col-12 col-lg-5">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 h-100 shadow-sm d-flex flex-column align-items-center justify-content-center text-center">
+          <h6 class="fw-bold mb-3 text-muted">Интерактивный предварительный просмотр</h6>
+          <div class="cursor-preview-box mb-3 shadow-inner" id="wcp-cursor-live-box">
+            <div id="wcp-cursor-icon" style="font-size: 32px; color: #fff; transition: all 0.15s ease; user-select: none;">
+              ↖
+            </div>
+          </div>
+          <div class="small text-muted" id="wcp-cursor-preview-desc">Размер: 32px | Цвет: Белый</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- СУБ-ВКЛАДКА 4: Обои и Экран блокировки (Wallpaper & Lock Screen)           -->
+  <!-- ========================================================================= -->
+  <div class="wcp-subtab-pane d-none" id="wcp-subtab-content-wallpaper">
+    <div class="row g-3">
+      <!-- Настройки обоев -->
+      <div class="col-12 col-lg-6">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 shadow-sm">
+          <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-image text-primary"></i>
+            Фон рабочего стола и мониторы
+          </h6>
+
+          <!-- Режим фона -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Тип фона рабочего стола:</label>
+            <select class="form-select form-select-sm" id="wcp-wallpaper-mode-select">
+              <option value="picture">🖼️ Фотография (Picture)</option>
+              <option value="solid_color">🎨 Сплошной цвет (Solid Color)</option>
+              <option value="slideshow">🔄 Слайд-шоу из папки (Slideshow)</option>
+              <option value="spotlight">🌟 Windows Spotlight (Динамические фото)</option>
+            </select>
+          </div>
+
+          <!-- Путь к изображению / папка -->
+          <div class="mb-3" id="wcp-wallpaper-path-group">
+            <label class="form-label small fw-semibold">Путь к файлу изображения:</label>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="wcp-wallpaper-path-input" placeholder="C:\Windows\Web\Wallpaper\Windows\img0.jpg">
+            </div>
+          </div>
+
+          <!-- Режим размещения (Fit Mode) -->
+          <div class="mb-3" id="wcp-wallpaper-fit-group">
+            <label class="form-label small fw-semibold">Режим заполнения экрана (Fit Mode):</label>
+            <select class="form-select form-select-sm" id="wcp-wallpaper-fit-select">
+              <option value="fill">Заполнение (Fill - 10)</option>
+              <option value="fit">По размеру (Fit - 6)</option>
+              <option value="stretch">Растянуть (Stretch - 2)</option>
+              <option value="tile">Замостить (Tile - 0/1)</option>
+              <option value="center">По центру (Center - 0/0)</option>
+              <option value="span">Распределить по всем мониторам (Span - 22)</option>
+            </select>
+          </div>
+
+          <!-- Сплошной цвет -->
+          <div class="mb-3 d-none" id="wcp-wallpaper-color-group">
+            <label class="form-label small fw-semibold">Цвет фона:</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="color" class="form-control form-control-color border" id="wcp-wallpaper-color-input" value="#000000" style="width: 44px; height: 36px;">
+              <input type="text" class="form-control form-control-sm font-monospace text-uppercase" id="wcp-wallpaper-color-hex" value="#000000">
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary btn-sm px-3" id="wcp-wallpaper-apply-btn">
+              <i class="bi bi-check2 me-1"></i>Установить обои
+            </button>
+            <button class="btn btn-outline-info btn-sm" id="wcp-wallpaper-random-spotlight-btn">
+              <i class="bi bi-shuffle me-1"></i>Случайное из Spotlight
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Превью обоев -->
+      <div class="col-12 col-lg-6">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 h-100 shadow-sm d-flex flex-column">
+          <h6 class="fw-bold mb-2 text-muted">Текущие обои рабочего стола</h6>
+          <div class="flex-fill rounded border border-secondary border-opacity-25 overflow-hidden position-relative d-flex align-items-center justify-content-center bg-dark" style="min-height: 240px;">
+            <img id="wcp-wallpaper-preview-img" src="" alt="Wallpaper Preview" class="img-fluid w-100 h-100" style="object-fit: cover; display: none;">
+            <div id="wcp-wallpaper-preview-placeholder" class="text-center text-muted p-4">
+              <i class="bi bi-image fs-1 mb-2 d-block"></i>
+              <span>Предпросмотр обоев</span>
+            </div>
+          </div>
+          <div class="small text-muted mt-2" id="wcp-wallpaper-preview-info">Режим: Заполнение</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- СУБ-ВКЛАДКА 5: AI Spotlight («О фотографии» / Learn About This Picture)   -->
+  <!-- ========================================================================= -->
+  <div class="wcp-subtab-pane d-none" id="wcp-subtab-content-spotlight">
+    <div class="row g-3">
+      <!-- Главная карточка дня «О фотографии» -->
+      <div class="col-12 col-xl-8">
+        <div class="spotlight-hero-card">
+          <div class="spotlight-img-container">
+            <img id="wcp-spotlight-hero-img" src="" alt="Spotlight Image" class="w-100" style="height: 380px; object-fit: cover;">
+            <div class="spotlight-badge-overlay">
+              <i class="bi bi-stars text-warning me-1"></i>
+              <span>Windows Spotlight AI Intelligence</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h4 class="fw-bold mb-0" id="wcp-spotlight-title">Петра, древний город в скалах</h4>
+              <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1.5" id="wcp-spotlight-category">Всемирное наследие UNESCO</span>
+            </div>
+            <div class="text-muted mb-3 d-flex align-items-center gap-2">
+              <i class="bi bi-geo-alt-fill text-danger"></i>
+              <span id="wcp-spotlight-location">Иордания, провинция Маан (30.3285° N, 35.4444° E)</span>
+            </div>
+            <p class="lead fs-6 text-body-secondary mb-3" id="wcp-spotlight-description">
+              Древний набатейский город, высеченный прямо в розово-красных песчаниковых скалах. Одно из Новых семи чудес света.
+            </p>
+
+            <!-- Распознанные объекты и теги -->
+            <div class="mb-3">
+              <div class="small text-uppercase text-muted fw-bold mb-1">Распознанные объекты и ландшафт:</div>
+              <div class="d-flex flex-wrap gap-1" id="wcp-spotlight-tags">
+                <span class="badge bg-secondary-subtle text-body">Древняя архитектура</span>
+                <span class="badge bg-secondary-subtle text-body">Каньон Сик</span>
+                <span class="badge bg-secondary-subtle text-body">Песчаник</span>
+                <span class="badge bg-secondary-subtle text-body">Эль-Хазне</span>
+              </div>
+            </div>
+
+            <!-- Образовательные факты («Знаете ли вы, что...») -->
+            <div class="alert alert-info border-info-subtle bg-info-subtle text-info-emphasis p-3 mb-3">
+              <h6 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-lightbulb-fill"></i>
+                Интересный факт / Знаете ли вы?
+              </h6>
+              <div id="wcp-spotlight-fact" class="small">
+                Город был построен более 2000 лет назад и имел сложнейшую гидравлическую систему водоснабжения в пустыне.
+              </div>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary border-opacity-25">
+              <button class="btn btn-primary btn-sm" id="wcp-spotlight-set-wallpaper-btn">
+                <i class="bi bi-image me-1"></i>Установить как обои рабочего стола
+              </button>
+              <button class="btn btn-outline-info btn-sm" id="wcp-spotlight-set-lockscreen-btn">
+                <i class="bi bi-lock-fill me-1"></i>На экран блокировки
+              </button>
+              <a href="#" target="_blank" class="btn btn-outline-secondary btn-sm" id="wcp-spotlight-wiki-link">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Узнать больше на Википедии
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Галерея кэшированных обоев Spotlight -->
+      <div class="col-12 col-xl-4">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 shadow-sm h-100">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-images text-success"></i>
+              Галерея Spotlight
+            </h6>
+            <button class="btn btn-sm btn-outline-info" id="wcp-spotlight-gallery-refresh-btn">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+          <div class="overflow-auto" style="max-height: 600px;" id="wcp-spotlight-gallery-list">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- СУБ-ВКЛАДКА 6: Журнал аудита и Откат (Audit & Rollback - telemetry.db)     -->
+  <!-- ========================================================================= -->
+  <div class="wcp-subtab-pane d-none" id="wcp-subtab-content-history">
+    <div class="card bg-body-tertiary border-secondary-subtle p-3 shadow-sm">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+          <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-success"></i>
+            Журнал аудита изменений и Откат (telemetry.db)
+          </h5>
+          <small class="text-muted">Полная история модификаций всех параметров окон и персонализации с возможностью мгновенного отката</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-info" id="wcp-history-tab-refresh-btn">
+            <i class="bi bi-arrow-clockwise me-1"></i>Обновить журнал
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+        <table class="table table-hover table-sm border small mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th style="width: 150px;">Дата / Время</th>
+              <th style="width: 140px;">ID Действия</th>
+              <th style="width: 220px;">Параметр / Название</th>
+              <th style="width: 160px;">Предыдущее знач.</th>
+              <th style="width: 160px;">Применённое знач.</th>
+              <th style="width: 90px;">Оператор</th>
+              <th style="width: 100px;">Статус</th>
+              <th style="width: 120px;" class="text-end">Откат</th>
+            </tr>
+          </thead>
+          <tbody id="wcp-history-tab-tbody">
+            <!-- Populated dynamically from telemetry.db -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: Preview & Dry-Run -->
+<div class="modal fade" id="wcpPreviewModal" tabindex="-1" aria-labelledby="wcpPreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow border-secondary-subtle">
+      <div class="modal-header border-secondary-subtle">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-info-subtle text-info p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+            <i class="bi bi-search fs-5"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0" id="wcpPreviewModalLabel">Предпросмотр изменения параметра (Dry-Run)</h5>
+            <div class="small text-muted" id="wcp-preview-subtitle">Проверка валидности и последствий перед применением</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body p-3" id="wcp-preview-body"></div>
+      <div class="modal-footer border-secondary-subtle py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary btn-sm" id="wcp-preview-apply-btn">
+          <i class="bi bi-check2 me-1"></i>Подтвердить и применить
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Batch Apply Confirmation -->
+<div class="modal fade" id="wcpBatchModal" tabindex="-1" aria-labelledby="wcpBatchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow border-secondary-subtle">
+      <div class="modal-header border-secondary-subtle">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+            <i class="bi bi-check2-all fs-5"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0" id="wcpBatchModalLabel">Пакетное применение изменений</h5>
+            <div class="small text-muted" id="wcp-batch-subtitle">Проверьте список подготовленных изменений</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="wcp-batch-create-restore-point" checked>
+            <label class="form-check-label fw-semibold" for="wcp-batch-create-restore-point">
+              🛡️ Создать точку восстановления Windows перед применением
+            </label>
+            <div class="small text-muted mt-1">Рекомендуется для безопасности при изменении системных политик и реестра.</div>
+          </div>
+        </div>
+
+        <h6 class="fw-bold small text-uppercase text-muted mb-2">Список изменений:</h6>
+        <div class="table-responsive border rounded" style="max-height: 280px; overflow-y: auto;">
+          <table class="table table-sm table-hover mb-0 small">
+            <thead class="table-dark">
+              <tr>
+                <th>Параметр</th>
+                <th>Текущее</th>
+                <th>Новое</th>
+                <th>Риск</th>
+              </tr>
+            </thead>
+            <tbody id="wcp-batch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary-subtle py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary btn-sm" id="wcp-batch-confirm-apply-btn">
+          <i class="bi bi-play-fill me-1"></i>Применить все изменения
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

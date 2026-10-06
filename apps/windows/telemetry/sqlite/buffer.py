@@ -52,7 +52,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:28:30
+# Updated: 2026-10-06 17:47:00
 # =============================================================================
 
 from __future__ import annotations
@@ -304,7 +304,7 @@ class TelemetryBuffer:
                     logger.warning(f'Ошибка усечения файла буфера: {trunc_err}')
 
             if inserted_count > 0:
-                logger.debug(f'💾 [Хранилище SQLite] Пакетный сброс буфера: {inserted_count} записей зафиксировано в {self._cm.db_path.name}')
+                logger.debug(f'[Хранилище SQLite] Пакетный сброс буфера: {inserted_count} записей зафиксировано в {self._cm.db_path.name}')
 
             return inserted_count
 

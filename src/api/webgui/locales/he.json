@@ -45,8 +45,11 @@
     "userDirectories": "📁 ספריות משתמשים",
     "userDirectoriesLong": "📁 ספריות משתמשים ואחסון",
     "fileRecovery": "🗂️ שחזור קבצים שנמחקו",
-    "startupAuditor": "🚀 מנהל הפעלה אוטומטית"
+    "startupAuditor": "🚀 מנהל הפעלה אוטומטית",
+    "windowManagement": "🎛️ ניהול חלונות ומערכת",
+    "taskbar": "📌 סרגל המשימות וחלונות"
   },
+
   "movieSearch": {
     "title": "🔍 חיפוש סרטים בטורנט",
     "placeholder": "הקלד שם סרט או סדרה...",

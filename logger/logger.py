@@ -16,7 +16,7 @@
 # Package: logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:27:40
+# Updated: 2026-10-06 18:19:00
 # =============================================================================
 
 from __future__ import annotations
@@ -254,6 +254,13 @@ class Logger(metaclass=SingletonMeta):
         self.log_files_path.mkdir(parents=True, exist_ok=True)
         for log_path in [self.info_log_path, self.debug_log_path, self.errors_log_path, self.json_log_path, self.fastapi_log_path, self.gemini_log_path, self.playwright_log_path, self.yt_dlp_log_path]:
             log_path.touch(exist_ok=True)
+        if sys.platform == 'win32':
+            for stream in (sys.stdout, sys.stderr, getattr(sys, '__stdout__', None), getattr(sys, '__stderr__', None)):
+                if stream is not None and hasattr(stream, 'reconfigure'):
+                    try:
+                        stream.reconfigure(encoding='utf-8', errors='replace')
+                    except Exception:
+                        pass
         console_formatter = PrettyConsoleFormatter('%(asctime)s - %(levelname)s - %(message)s')
         target_stream = sys.__stdout__ if getattr(sys, '__stdout__', None) is not None else sys.__stderr__
         if target_stream is not None:

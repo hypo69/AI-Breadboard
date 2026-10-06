@@ -1,0 +1,159 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Focus Settings Tab
+=============================================================================
+Description:
+  Веб-интерфейс панели управления сессиями фокусировки Windows 11 (Focus Sessions),
+  режимом «Не беспокоить» (Do Not Disturb), подавлением бейджей и мигания панели
+  задач, а также вызовом нативного приложения «Часы» и системных настроек.
+
+Usage Examples:
+    Web Route:
+      /html/focus_settings_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/focus_settings_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-06 19:35:00
+=============================================================================
+-->
+
+<div class="container-fluid p-3 focus-tab-wrapper d-flex flex-column gap-3" style="max-width: 900px; margin: 0 auto;">
+
+  <!-- Breadcrumb Header -->
+  <div class="d-flex flex-column gap-1">
+    <div class="d-flex align-items-center gap-2 text-muted small">
+      <span>System</span>
+      <i class="bi bi-chevron-right" style="font-size: 0.75rem;"></i>
+      <span class="text-body fw-semibold">Focus</span>
+    </div>
+    <h3 class="mb-0 fw-bold d-flex align-items-center gap-2">
+      <span>Фокусировка внимания (Focus)</span>
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle small fs-6" id="focus-status-badge">Не активна</span>
+    </h3>
+    <div class="text-muted small">
+      Сессии фокусировки помогают продуктивнее работать, сокращая отвлекающие факторы. При запуске сессии параметры применяются автоматически на заданное время.
+    </div>
+  </div>
+
+  <!-- Main Focus Session Card -->
+  <div class="card border-secondary-subtle shadow-sm bg-body">
+    <div class="card-body p-4 d-flex flex-column gap-3">
+
+      <!-- Top Row: Focus Icon, Title, and Start/Stop Button -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pb-3 border-bottom border-secondary-subtle">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.3rem;">
+            <i class="bi bi-circle-half"></i>
+          </div>
+          <div>
+            <div class="fw-bold fs-5">Focus</div>
+            <div class="text-muted small" id="focus-session-hint">Готов к запуску сессии без отвлечений</div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <div id="focus-countdown-box" class="d-none badge bg-primary fs-6 py-2 px-3 align-items-center gap-2">
+            <i class="bi bi-stopwatch"></i>
+            <span id="focus-timer-text">30:00</span>
+          </div>
+          <button class="btn btn-primary px-4 py-2 d-flex align-items-center gap-2 shadow-sm" id="btn-toggle-focus">
+            <i class="bi bi-play-fill" id="btn-focus-icon"></i>
+            <span id="btn-focus-text">Start focus session</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Duration Control Row -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 py-2">
+        <div>
+          <div class="fw-semibold">Session duration</div>
+          <div class="text-muted small">Продолжительность сессии фокусировки</div>
+        </div>
+        <div class="d-flex align-items-center gap-2 bg-body-secondary p-1 rounded border border-secondary-subtle">
+          <button class="btn btn-sm btn-outline-secondary px-2 py-1" id="btn-duration-minus" type="button" title="Уменьшить длительность">
+            <i class="bi bi-dash-lg"></i>
+          </button>
+          <span class="fw-bold px-3 text-center" style="min-width: 90px;" id="lbl-duration">30 mins</span>
+          <button class="btn btn-sm btn-outline-secondary px-2 py-1" id="btn-duration-plus" type="button" title="Увеличить длительность">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings Checkboxes Group -->
+      <div class="d-flex flex-column gap-2 pt-2 border-top border-secondary-subtle">
+
+        <div class="form-check d-flex align-items-center gap-2 py-2">
+          <input class="form-check-input mt-0 fs-5" type="checkbox" id="chk-clock-timer" checked>
+          <label class="form-check-label fw-medium user-select-none" for="chk-clock-timer">
+            Show the timer in the Clock app
+            <span class="text-muted d-block small fw-normal">Отображать компактный таймер в приложении Windows Clock</span>
+          </label>
+        </div>
+
+        <div class="form-check d-flex align-items-center gap-2 py-2">
+          <input class="form-check-input mt-0 fs-5" type="checkbox" id="chk-hide-badges" checked>
+          <label class="form-check-label fw-medium user-select-none" for="chk-hide-badges">
+            Hide badges on taskbar apps
+            <span class="text-muted d-block small fw-normal">Скрывать счетчики и бейджи непрочитанных сообщений на значках панели задач</span>
+          </label>
+        </div>
+
+        <div class="form-check d-flex align-items-center gap-2 py-2">
+          <input class="form-check-input mt-0 fs-5" type="checkbox" id="chk-hide-flashing" checked>
+          <label class="form-check-label fw-medium user-select-none" for="chk-hide-flashing">
+            Hide flashing on taskbar apps
+            <span class="text-muted d-block small fw-normal">Отключить оранжевое мигание кнопок приложений при поступлении событий</span>
+          </label>
+        </div>
+
+        <div class="form-check d-flex align-items-center gap-2 py-2">
+          <input class="form-check-input mt-0 fs-5" type="checkbox" id="chk-turn-on-dnd" checked>
+          <label class="form-check-label fw-medium user-select-none" for="chk-turn-on-dnd">
+            Turn on do not disturb
+            <span class="text-muted d-block small fw-normal">Включать режим «Не беспокоить» (Do Not Disturb / Quiet Hours) для блокировки всплывающих уведомлений</span>
+          </label>
+        </div>
+
+      </div>
+
+    </div>
+    <div class="card-footer bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between gap-2 p-3">
+      <div class="text-muted small" id="focus-last-synced">Синхронизировано с реестром Windows</div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" id="btn-open-win-settings">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>Параметры Windows</span>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" id="btn-open-clock-app">
+          <i class="bi bi-alarm"></i>
+          <span>Приложение «Часы»</span>
+        </button>
+        <button class="btn btn-success btn-sm d-flex align-items-center gap-1" id="btn-save-focus-settings">
+          <i class="bi bi-check2"></i>
+          <span>Сохранить настройки</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Plane Quick Link Card -->
+  <div class="card border-secondary-subtle shadow-sm bg-body-secondary">
+    <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-window-sidebar fs-4 text-info"></i>
+        <div>
+          <div class="fw-semibold small">Связанные параметры Window Management Control Plane</div>
+          <div class="text-muted small">В каталоге доступно 15 низкоуровневых параметров перехвата фокуса и отслеживания окон за курсором.</div>
+        </div>
+      </div>
+      <button class="btn btn-outline-info btn-sm" id="btn-goto-taskbar-tab">
+        <i class="bi bi-arrow-right-circle me-1"></i> Панель задач и окна
+      </button>
+    </div>
+  </div>
+
+</div>

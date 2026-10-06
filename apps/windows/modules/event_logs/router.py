@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.event_logs
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 02:28:00
+# Updated: 2026-10-06 17:30:00
 # =============================================================================
 
 from __future__ import annotations
-"""FastAPI роутер для управления системными журналами Windows и Log Intelligence API."""
+"""FastAPI роутер для управления системными журналами Windows и Log Intelligence API на базе SQLite."""
 
 import asyncio
 from typing import Any, Dict, List, Optional
@@ -44,13 +44,22 @@ _manager = EventLogsManager()
 @router.get('/summary', response_model=EventLogReport)
 @router.get('/report', response_model=EventLogReport)
 async def get_event_logs_report() -> EventLogReport:
-    """Сводный отчет о журналах событий и последних ошибках."""
+    """Сводный отчет о журналах событий и последних ошибках из SQLite (< 5 мс)."""
     return await asyncio.to_thread(_manager.generate_report)
+
+
+@router.post('/refresh', response_model=EventLogReport)
+async def refresh_event_logs_report(
+    channel: str = Query('System', description='Канал для сканирования'),
+    hours: int = Query(24, ge=1, le=720, description='Глубина выборки в часах'),
+) -> EventLogReport:
+    """Принудительное фоновое пересканирование журналов событий с записью в SQLite."""
+    return await asyncio.to_thread(_manager.refresh_and_save, channel, hours)
 
 
 @router.get('/channels', response_model=List[EventLogChannel])
 async def list_channels() -> List[EventLogChannel]:
-    """Список всех зарегистрированных каналов событий."""
+    """Список всех зарегистрированных каналов событий из SQLite (< 3 мс)."""
     return await asyncio.to_thread(_manager.list_channels)
 
 
@@ -61,13 +70,13 @@ async def get_channel_events(
     level: str = Query('', description='Фильтр по уровню важности'),
     hours: int = Query(24, ge=1, le=720, description='Глубина выборки в часах'),
 ) -> List[EventLogEntry]:
-    """Получение нормализованного списка событий из канала."""
+    """Получение нормализованного списка событий из канала через SQLite кеш (< 5 мс)."""
     return await asyncio.to_thread(_manager.get_events, channel, limit, level, hours)
 
 
 @router.get('/errors', response_model=List[EventLogEntry])
 async def get_recent_errors(limit: int = Query(10, ge=1, le=100)) -> List[EventLogEntry]:
-    """Список последних критических событий и ошибок."""
+    """Список последних критических событий и ошибок из SQLite (< 5 мс)."""
     return await asyncio.to_thread(_manager.get_recent_errors, limit)
 
 
@@ -85,7 +94,7 @@ async def process_log_intelligence(
     hours: int = Query(24, ge=1, le=720, description='Глубина выборки в часах'),
     limit: int = Query(100, ge=10, le=1000, description='Лимит выборки событий'),
 ) -> Dict[str, Any]:
-    """Запуск полного цикла Log Intelligence (EDA профайлинг -> Decision Gate -> Adaptive RAG)."""
+    """Запуск или получение из SQLite кеша полного цикла Log Intelligence."""
     return await asyncio.to_thread(_manager.process_intelligence, channel, hours, limit)
 
 

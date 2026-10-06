@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 14:24:00
+ * Updated: 2026-10-06 21:52:00
  * =============================================================================
  */
 
@@ -420,6 +420,93 @@
   }
   window.toggleSysGpuDetails = toggleSysGpuDetails;
   window.toggleSysGpuSensors = toggleSysGpuDetails;
+
+  /**
+   * Управление режимом Drill-down по нажатию на значок дрели слева от названия компонента.
+   * Раскрывает все скрытые панели, графики и датчики конкретного компонента.
+   *
+   * @param {string|HTMLElement} cardIdOrEl - Идентификатор карточки или элемент кнопки
+   * @param {number} [idx] - Индекс устройства (для GPU)
+   */
+  function toggleSysCardDrill(cardIdOrEl, idx) {
+    let card = null;
+    let btn = null;
+    if (typeof cardIdOrEl === 'string') {
+      card = document.getElementById(cardIdOrEl);
+    } else if (cardIdOrEl instanceof HTMLElement) {
+      btn = cardIdOrEl;
+      card = btn.closest('.sys-card');
+    }
+    if (!card) return;
+    if (!btn) {
+      btn = card.querySelector('.sys-drill-btn');
+    }
+
+    const isExpanded = card.classList.contains('sys-card-drill-expanded');
+    if (isExpanded) {
+      card.classList.remove('sys-card-drill-expanded');
+      if (btn) {
+        btn.classList.remove('active');
+        btn.title = 'Drill-down: Развернуть/скрыть все скрытые панели и датчики';
+      }
+    } else {
+      card.classList.add('sys-card-drill-expanded');
+      if (btn) {
+        btn.classList.add('active');
+        btn.title = 'Drill-down: Свернуть скрытые панели';
+      }
+
+      // Если это CPU - также открываем вложенный аккордеон деталей ядер и сенсоров
+      if (card.classList.contains('sys-card-cpu') || card.id === 'sys-card-cpu') {
+        const box = document.getElementById('sys-cpu-details-collapse');
+        const icon = document.getElementById('sys-cpu-details-toggle-icon');
+        const text = document.getElementById('sys-cpu-details-toggle-text');
+        const actionBtn = document.getElementById('sys-cpu-details-action-btn');
+        const parentBtn = document.getElementById('sys-cpu-details-toggle-btn');
+        if (box) box.style.display = 'flex';
+        if (icon) icon.className = 'bi bi-chevron-up';
+        if (text) text.textContent = 'Свернуть детализацию';
+        if (actionBtn) actionBtn.className = 'btn btn-xs btn-info text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+        if (parentBtn) parentBtn.classList.add('expanded');
+        if (typeof renderCpuSpark === 'function' && Array.isArray(_cpuSparkHistory)) {
+          renderCpuSpark(_cpuSparkHistory);
+        }
+      }
+
+      // Если это GPU - также открываем вложенный аккордеон деталей GPU
+      if (card.classList.contains('sys-card-gpu') || (card.id && card.id.startsWith('sys-card-gpu-'))) {
+        const cardIdx = idx != null ? idx : (card.id ? card.id.replace('sys-card-gpu-', '') : 0);
+        const box = document.getElementById(`sys-gpu-details-collapse-${cardIdx}`) || document.getElementById('sys-gpu-details-collapse');
+        const icon = document.getElementById(`sys-gpu-details-toggle-icon-${cardIdx}`) || document.getElementById('sys-gpu-details-toggle-icon');
+        const text = document.getElementById(`sys-gpu-details-toggle-text-${cardIdx}`) || document.getElementById('sys-gpu-details-toggle-text');
+        const actionBtn = document.getElementById(`sys-gpu-details-action-btn-${cardIdx}`) || document.getElementById('sys-gpu-details-action-btn');
+        const parentBtn = document.getElementById(`sys-gpu-details-toggle-btn-${cardIdx}`) || document.getElementById('sys-gpu-details-toggle-btn');
+        if (box) box.style.display = 'flex';
+        if (icon) icon.className = 'bi bi-chevron-up';
+        if (text) text.textContent = 'Свернуть детализацию';
+        if (actionBtn) actionBtn.className = 'btn btn-xs btn-warning text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+        if (parentBtn) parentBtn.classList.add('expanded');
+        if (typeof renderGpuSpark === 'function') {
+          renderGpuSpark(_gpuSparkHistories[cardIdx] || [], cardIdx);
+        }
+      }
+
+      // RAM график
+      if (card.classList.contains('sys-card-ram') || card.id === 'sys-card-ram') {
+        if (typeof renderMemIoSpark === 'function' && Array.isArray(_memIoSparkHistory)) {
+          renderMemIoSpark(_memIoSparkHistory);
+        }
+      }
+
+      // Net график
+      if (card.classList.contains('sys-card-net') || card.id === 'sys-card-net') {
+        if (typeof renderNetSpark === 'function' && Array.isArray(_netSparkHistory)) {
+          renderNetSpark(_netSparkHistory);
+        }
+      }
+    }
+  }
+  window.toggleSysCardDrill = toggleSysCardDrill;
 
   function updateAllComponentSensors() {
     if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) return;
@@ -2351,11 +2438,23 @@
         <div class="sys-card-top-banner p-3 rounded-3 mb-3">
           <!-- Левая колонка: Модель графического процессора и экспресс-метрики KPI -->
           <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
-            <div class="text-start mb-1.5">
-              <span class="fw-bold text-warning" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
-              <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.70rem;">${vendor} · PCIe</span>
-                <span class="badge bg-warning-subtle text-warning border border-warning font-monospace" id="sys-gpu-status-badge-${idx}" style="font-size: 0.70rem;">● Ready</span>
+            <div class="text-start mb-1.5 d-flex align-items-center">
+              <button type="button" class="sys-drill-btn" id="sys-drill-btn-gpu-${idx}" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-gpu-${idx}', ${idx})" title="Drill-down: Развернуть/скрыть все скрытые панели и датчики GPU">
+                <svg class="sys-drill-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 9V4H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h9z"/>
+                  <path d="M14 6.5h3.5v3H14"/>
+                  <path d="M17.5 8h4.5"/>
+                  <path d="M6 11v5a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6"/>
+                  <path d="M5.5 18h7v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3z"/>
+                  <path d="M10 13.5h1.5"/>
+                </svg>
+              </button>
+              <div>
+                <span class="fw-bold text-warning" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
+                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                  <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.70rem;">${vendor} · PCIe</span>
+                  <span class="badge bg-warning-subtle text-warning border border-warning font-monospace" id="sys-gpu-status-badge-${idx}" style="font-size: 0.70rem;">● Ready</span>
+                </div>
               </div>
             </div>
             <div class="sys-banner-kpi-grid">

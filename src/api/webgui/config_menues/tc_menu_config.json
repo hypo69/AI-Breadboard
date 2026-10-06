@@ -20,11 +20,20 @@
         "visible": true
       },
       {
+        "id": "processes_load_inspector",
+        "label": "Активность процессов",
+        "icon": "bi-activity",
+        "tab": "tab-processes-load-inspector",
+        "order": 3,
+        "visible": true
+      },
+      {
         "id": "system_control_center",
-        "label": "System Logs & Activity",
+        "label": "Журналы и активность",
+        "i18n": "tabs.systemControl",
         "icon": "bi-journal-text",
         "tab": "tab-system-control",
-        "order": 3,
+        "order": 4,
         "visible": true
       },
       {
@@ -32,7 +41,7 @@
         "label": "Defender Security",
         "icon": "bi-shield-lock",
         "tab": "tab-defender",
-        "order": 4,
+        "order": 5,
         "visible": true
       },
       {
@@ -40,7 +49,7 @@
         "label": "Windows Sysadmin",
         "icon": "bi-server",
         "tab": "tab-windows-admin",
-        "order": 5,
+        "order": 6,
         "visible": true
       },
       {
@@ -48,7 +57,7 @@
         "label": "История и графики",
         "icon": "bi-graph-up",
         "tab": "tab-telemetry-history",
-        "order": 6,
+        "order": 7,
         "visible": true
       },
       {
@@ -57,7 +66,24 @@
         "i18n": "tabs.scenarios",
         "icon": "💬",
         "tab": "tab-scenarios",
-        "order": 7,
+        "order": 8,
+        "visible": true
+      },
+      {
+        "id": "system32_commands",
+        "label": "Команды System32",
+        "i18n": "tabs.system32Commands",
+        "icon": "🛠️",
+        "tab": "tab-system32-commands",
+        "order": 9,
+        "visible": true
+      },
+      {
+        "id": "event_logs",
+        "label": "Журналы событий (Event Logs)",
+        "icon": "📝",
+        "tab": "tab-event-logs",
+        "order": 10,
         "visible": true
       }
     ],
@@ -145,19 +171,11 @@
         "visible": false
       },
       {
-        "id": "google_user_desktop",
-        "label": "Google User Desktop",
-        "icon": "🌐",
-        "tab": "tab-google-desktop",
-        "order": 11,
-        "visible": true
-      },
-      {
         "id": "gcloud_monitor",
         "label": "Google Cloud",
         "icon": "☁️",
         "tab": "tab-gcloud",
-        "order": 12,
+        "order": 11,
         "visible": false
       },
       {
@@ -165,7 +183,7 @@
         "label": "Website Intelligence",
         "icon": "📊",
         "tab": "tab-website-monitor",
-        "order": 13,
+        "order": 12,
         "visible": false
       },
       {
@@ -174,7 +192,7 @@
         "i18n": "tabs.trading",
         "icon": "📈",
         "tab": "tab-trading",
-        "order": 14,
+        "order": 13,
         "visible": false
       },
       {
@@ -182,7 +200,7 @@
         "label": "User Assistant",
         "icon": "🗓️",
         "tab": "tab-user-assistant",
-        "order": 15,
+        "order": 14,
         "visible": false
       },
       {
@@ -191,7 +209,7 @@
         "i18n": "tabs.helpdesk",
         "icon": "🎧",
         "tab": "tab-helpdesk",
-        "order": 16,
+        "order": 15,
         "visible": false
       },
       {
@@ -199,7 +217,7 @@
         "label": "Wikipedia Lab",
         "icon": "🌐",
         "tab": "tab-wikipedia-research",
-        "order": 17,
+        "order": 16,
         "visible": false
       },
       {
@@ -207,7 +225,7 @@
         "label": "Windows Backup",
         "icon": "💾",
         "tab": "tab-windows-backup",
-        "order": 18,
+        "order": 17,
         "visible": true
       },
       {
@@ -216,7 +234,7 @@
         "i18n": "tabs.sensorLogs",
         "icon": "⚡",
         "tab": "tab-hardware-monitor",
-        "order": 19,
+        "order": 18,
         "visible": true
       },
       {
@@ -224,7 +242,7 @@
         "label": "Телеметрия и логи",
         "icon": "⚡",
         "tab": "tab-autolog",
-        "order": 20,
+        "order": 19,
         "visible": true
       },
       {
@@ -232,7 +250,7 @@
         "label": "Визуализация истории",
         "icon": "📈",
         "tab": "tab-telemetry-history",
-        "order": 21,
+        "order": 20,
         "visible": true
       },
       {
@@ -240,7 +258,7 @@
         "label": "Исследования телеметрии",
         "icon": "🔬",
         "tab": "tab-telemetry-research",
-        "order": 22,
+        "order": 21,
         "visible": true
       },
       {
@@ -249,7 +267,7 @@
         "i18n": "tabs.softwareTransparency",
         "icon": "🔍",
         "tab": "tab-software-transparency",
-        "order": 23,
+        "order": 22,
         "visible": true
       },
       {
@@ -258,7 +276,7 @@
         "i18n": "tabs.userDirectories",
         "icon": "📁",
         "tab": "tab-user-directories",
-        "order": 24,
+        "order": 23,
         "visible": true
       },
       {
@@ -266,7 +284,7 @@
         "label": "Установить Ninite",
         "icon": "⚡",
         "tab": "tab-ninite-updater",
-        "order": 25,
+        "order": 24,
         "visible": true
       },
       {
@@ -275,16 +293,7 @@
         "i18n": "tabs.fileRecovery",
         "icon": "🗂️",
         "tab": "tab-file-recovery",
-        "order": 26,
-        "visible": true
-      },
-      {
-        "id": "file_history_ai_search",
-        "label": "Поиск истории файлов AI",
-        "i18n": "tabs.fileHistorySearch",
-        "icon": "🔍",
-        "tab": "tab-file-history-search",
-        "order": 27,
+        "order": 25,
         "visible": true
       },
       {
@@ -293,7 +302,7 @@
         "i18n": "tabs.rag",
         "icon": "🧠",
         "tab": "tab-rag",
-        "order": 28,
+        "order": 26,
         "visible": false
       },
       {
@@ -301,17 +310,8 @@
         "label": "PixelRAG",
         "icon": "🖼️",
         "tab": "tab-pixelrag",
-        "order": 29,
+        "order": 27,
         "visible": false
-      },
-      {
-        "id": "models",
-        "label": "Модели и API",
-        "i18n": "tabs.models",
-        "icon": "🤖",
-        "tab": "tab-models",
-        "order": 30,
-        "visible": true
       },
       {
         "id": "agents",
@@ -319,7 +319,7 @@
         "i18n": "tabs.agents",
         "icon": "🧩",
         "tab": "tab-agents",
-        "order": 31,
+        "order": 28,
         "visible": false
       },
       {
@@ -328,7 +328,7 @@
         "i18n": "tabs.skills",
         "icon": "⚡",
         "tab": "tab-skills",
-        "order": 32,
+        "order": 29,
         "visible": false
       },
       {
@@ -337,7 +337,7 @@
         "i18n": "tabs.mcp",
         "icon": "🔌",
         "tab": "tab-mcp",
-        "order": 33,
+        "order": 30,
         "visible": false
       },
       {
@@ -345,8 +345,34 @@
         "label": "AI Benchmark",
         "icon": "🏎️",
         "tab": "tab-ai-benchmark",
+        "order": 31,
+        "visible": false
+      },
+      {
+        "id": "google_user_desktop",
+        "label": "Google User Desktop",
+        "icon": "🌐",
+        "tab": "tab-google-desktop",
+        "order": 32,
+        "visible": false
+      },
+      {
+        "id": "file_history_ai_search",
+        "label": "Поиск истории файлов AI",
+        "i18n": "tabs.fileHistorySearch",
+        "icon": "🔍",
+        "tab": "tab-file-history-search",
+        "order": 33,
+        "visible": false
+      },
+      {
+        "id": "models",
+        "label": "Модели и API",
+        "i18n": "tabs.models",
+        "icon": "🤖",
+        "tab": "tab-models",
         "order": 34,
-        "visible": true
+        "visible": false
       },
       {
         "id": "storage_manager",
@@ -354,7 +380,7 @@
         "icon": "💽",
         "tab": "tab-storage-manager",
         "order": 35,
-        "visible": true
+        "visible": false
       },
       {
         "id": "boot_recovery",
@@ -421,19 +447,11 @@
         "visible": true
       },
       {
-        "id": "event_logs",
-        "label": "Журналы событий (Event Logs)",
-        "icon": "📝",
-        "tab": "tab-event-logs",
-        "order": 44,
-        "visible": true
-      },
-      {
         "id": "software_manager",
         "label": "Пакетный менеджер (Winget)",
         "icon": "📦",
         "tab": "tab-software-manager",
-        "order": 45,
+        "order": 44,
         "visible": true
       },
       {
@@ -441,7 +459,7 @@
         "label": "Post-Install Wizard",
         "icon": "⚡",
         "tab": "tab-post-install-wizard",
-        "order": 46,
+        "order": 45,
         "visible": true
       },
       {
@@ -449,6 +467,14 @@
         "label": "Maintenance & Recovery",
         "icon": "🛠️",
         "tab": "tab-maintenance-recovery",
+        "order": 46,
+        "visible": true
+      },
+      {
+        "id": "taskbar_controller",
+        "label": "Панель задач и Окна (Taskbar)",
+        "icon": "📌",
+        "tab": "tab-taskbar",
         "order": 47,
         "visible": true
       }

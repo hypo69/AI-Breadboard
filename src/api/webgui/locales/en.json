@@ -42,8 +42,11 @@
     "userDirectories": "📁 User Directories",
     "userDirectoriesLong": "📁 User Directories & Storage",
     "fileRecovery": "🗂️ File Recovery",
-    "startupAuditor": "🚀 Startup Auditor"
+    "startupAuditor": "🚀 Startup Auditor",
+    "windowManagement": "🎛️ Window Management & OS",
+    "taskbar": "📌 Taskbar & Windows"
   },
+
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",
     "placeholder": "Enter movie or series name (e.g. Matrix 1080p)...",

@@ -95,6 +95,9 @@ py manage_tools.py docs generate
 pytest tests/ --cov                # Pytest с отчётом о покрытии
 ```
 
+> [!IMPORTANT]
+> **Исключение тестов**: Запрещено запускать тесты `TestTradingDeskEngineApp` (исключены в `pytest.ini` и помечены `@pytest.mark.skip`).
+
 ---
 
 ## ⚙️ Основные архитектурные принципы

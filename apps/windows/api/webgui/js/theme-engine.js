@@ -17,7 +17,7 @@
  * Package: apps.windows.api.webgui.js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 07:22:00
+ * Updated: 2026-10-06 21:10:15
  * =============================================================================
  */
 
@@ -69,7 +69,7 @@ export const BUILTIN_THEMES = [
   },
   {
     id: 'dark',
-    name: 'Тёмная (Контрастная)',
+    name: '🌙 Midnight Console',
     nameEn: 'Dark (High-Contrast)',
     category: 'dark',
     icon: 'bi-moon-stars-fill',

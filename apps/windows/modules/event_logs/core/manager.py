@@ -18,19 +18,21 @@
 # Package: apps.windows.modules.event_logs.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 02:28:00
+# Updated: 2026-10-06 17:30:00
 # =============================================================================
 
 from __future__ import annotations
-"""Менеджер каналов и записей Windows Event Log с интеграцией Log Intelligence."""
+"""Менеджер каналов и записей Windows Event Log с интеграцией Log Intelligence и хранилищем SQLite."""
 
 import asyncio
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from logger import logger
 from apps.windows.log_intelligence.src.models import LogEntry as IntelLogEntry
 from apps.windows.log_intelligence.src.pipeline import LogIntelligencePipeline
+from apps.windows.telemetry.sqlite import TelemetryStorage
 from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
 from apps.windows.modules.event_logs.core.models import (
     EventLogActionRequest,
@@ -43,13 +45,68 @@ from apps.windows.modules.event_logs.core.models import (
 class EventLogsManager:
     """Менеджер каналов и записей Windows Event Log с аналитическим пайплайном Log Intelligence."""
 
-    def __init__(self, pipeline: Optional[LogIntelligencePipeline] = None) -> None:
+    def __init__(
+        self,
+        pipeline: Optional[LogIntelligencePipeline] = None,
+        storage: Optional[TelemetryStorage] = None,
+    ) -> None:
         """Инициализация менеджера журналов и адаптивного пайплайна интеллекта."""
         self.wevtapi = WevtAPI()
         self.pipeline = pipeline or LogIntelligencePipeline()
+        self.storage = storage or TelemetryStorage.get_instance()
 
-    def list_channels(self) -> List[EventLogChannel]:
-        """Получение списка основных каналов событий с живой проверкой через WevtAPI."""
+    def refresh_and_save(self, channel: str = 'System', hours: int = 24) -> EventLogReport:
+        """Принудительный опрос ОС, профайлинг и сохранение среза в SQLite."""
+        live_channels = self._collect_live_channels()
+        live_entries = self._collect_live_events(channel=channel, limit=100, hours=hours)
+        errors = self._collect_live_errors(limit=20)
+
+        # Выполняем Log Intelligence аудит
+        intel_entries: List[IntelLogEntry] = []
+        for e in live_entries:
+            intel_entries.append(
+                IntelLogEntry(
+                    timestamp=e.time_created,
+                    level=e.level,
+                    source=e.provider_name,
+                    provider=e.provider_name,
+                    channel=e.channel,
+                    event_id=e.event_id,
+                    message=e.message,
+                )
+            )
+
+        intel_profile = None
+        try:
+            intel_profile = self.pipeline.process_events(intel_entries, channel=channel)
+        except Exception as exc:
+            logger.debug(f'[EventLogsManager] Ошибка расчета интеллекта логов: {exc}')
+
+        snapshot_id = f"evt_snap_{int(datetime.now(timezone.utc).timestamp())}_{uuid.uuid4().hex[:6]}"
+        profiles_list = [intel_profile] if intel_profile else []
+        self.storage.save_event_log_snapshot(
+            snapshot_id=snapshot_id,
+            channels=live_channels,
+            entries=live_entries + errors,
+            intelligence_profiles=profiles_list,
+        )
+
+        crit_count = sum(1 for e in errors if e.level.lower() == 'critical')
+        err_count = sum(1 for e in errors if e.level.lower() == 'error')
+        warn_count = sum(1 for e in errors if e.level.lower() == 'warning')
+
+        return EventLogReport(
+            total_channels=len(live_channels),
+            critical_events_24h=crit_count,
+            error_events_24h=err_count,
+            warning_events_24h=warn_count,
+            channels=live_channels,
+            recent_errors=errors,
+            timestamp=datetime.now().isoformat(),
+        )
+
+    def _collect_live_channels(self) -> List[EventLogChannel]:
+        """Прямой сбор каналов через WevtAPI."""
         default_channels = [
             EventLogChannel(name='System', enabled=True, record_count=12400, size_bytes=20971520),
             EventLogChannel(name='Application', enabled=True, record_count=8500, size_bytes=15728640),
@@ -80,6 +137,26 @@ class EventLogsManager:
 
         return default_channels
 
+    def list_channels(self) -> List[EventLogChannel]:
+        """Получение списка каналов событий строго из базы данных SQLite (Data-First)."""
+        cached = self.storage.get_latest_event_log_channels()
+        if cached:
+            return [
+                EventLogChannel(
+                    name=c.get('name', ''),
+                    enabled=bool(c.get('enabled', True)),
+                    record_count=int(c.get('record_count', 0) or 0),
+                    size_bytes=int(c.get('size_bytes', 0) or 0),
+                    channel_type=c.get('channel_type', 'Admin'),
+                    display_name=c.get('display_name'),
+                    description=c.get('description'),
+                )
+                for c in cached
+            ]
+        # Cold start fallback
+        report = self.refresh_and_save()
+        return report.channels
+
     def get_events(
         self,
         channel: str = 'System',
@@ -87,7 +164,65 @@ class EventLogsManager:
         level: str = '',
         hours: int = 24,
     ) -> List[EventLogEntry]:
-        """Чтение событий из указанного канала с нормализацией."""
+        """Чтение событий из SQLite кеша с нормализацией."""
+        cached = self.storage.get_event_log_entries(channel=channel, level=level, limit=limit, hours=hours)
+        if cached:
+            return [
+                EventLogEntry(
+                    channel=ev.get('channel', channel),
+                    event_id=int(ev.get('event_id', 0) or 0),
+                    level=ev.get('level', 'Information'),
+                    provider_name=ev.get('provider_name', '') or ev.get('provider', ''),
+                    time_created=ev.get('time_created', '') or ev.get('timestamp', ''),
+                    message=ev.get('message', ''),
+                )
+                for ev in cached
+            ]
+        # Cold start fallback
+        self.refresh_and_save(channel=channel, hours=hours)
+        cached_after = self.storage.get_event_log_entries(channel=channel, level=level, limit=limit, hours=hours)
+        if cached_after:
+            return [
+                EventLogEntry(
+                    channel=ev.get('channel', channel),
+                    event_id=int(ev.get('event_id', 0) or 0),
+                    level=ev.get('level', 'Information'),
+                    provider_name=ev.get('provider_name', '') or ev.get('provider', ''),
+                    time_created=ev.get('time_created', '') or ev.get('timestamp', ''),
+                    message=ev.get('message', ''),
+                )
+                for ev in cached_after
+            ]
+        return self._collect_live_events(channel=channel, limit=limit, hours=hours)
+
+    def get_recent_errors(self, limit: int = 10) -> List[EventLogEntry]:
+        """Получение последних зафиксированных системных ошибок из SQLite."""
+        report = self.storage.get_latest_event_log_report()
+        if report and report.get('recent_errors'):
+            errors = report['recent_errors']
+            return [
+                EventLogEntry(
+                    channel=ev.get('channel', 'System'),
+                    event_id=int(ev.get('event_id', 0) or 0),
+                    level=ev.get('level', 'Error'),
+                    provider_name=ev.get('provider_name', '') or ev.get('provider', ''),
+                    time_created=ev.get('time_created', '') or ev.get('timestamp', ''),
+                    message=ev.get('message', ''),
+                )
+                for ev in errors[:limit]
+            ]
+        # Cold start
+        rep = self.refresh_and_save()
+        return rep.recent_errors[:limit]
+
+    def _collect_live_events(
+        self,
+        channel: str = 'System',
+        limit: int = 50,
+        level: str = '',
+        hours: int = 24,
+    ) -> List[EventLogEntry]:
+        """Прямой сбор событий через WevtAPI."""
         result_entries: List[EventLogEntry] = []
         try:
             raw_events = self.wevtapi.read_events(
@@ -111,7 +246,6 @@ class EventLogsManager:
             logger.debug(f'[EventLogsManager] Чтение событий {channel}: {exc}')
 
         if not result_entries:
-            # Fallback entries
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             result_entries = [
                 EventLogEntry(
@@ -133,8 +267,8 @@ class EventLogsManager:
             ]
         return result_entries
 
-    def get_recent_errors(self, limit: int = 10) -> List[EventLogEntry]:
-        """Получение последних зафиксированных системных ошибок."""
+    def _collect_live_errors(self, limit: int = 10) -> List[EventLogEntry]:
+        """Прямой сбор последних ошибок."""
         events: List[EventLogEntry] = []
         try:
             raw_errs = self.wevtapi.read_events(channel='System', limit=limit, level='Error', hours=24)
@@ -176,22 +310,43 @@ class EventLogsManager:
         return events[:limit]
 
     def generate_report(self) -> EventLogReport:
-        """Формирование сводного отчета о журналах событий."""
-        channels = self.list_channels()
-        errors = self.get_recent_errors()
+        """Формирование сводного отчета о журналах событий из SQLite."""
+        report_dict = self.storage.get_latest_event_log_report()
+        if not report_dict:
+            return self.refresh_and_save()
 
-        crit_count = sum(1 for e in errors if e.level.lower() == 'critical')
-        err_count = sum(1 for e in errors if e.level.lower() == 'error')
-        warn_count = sum(1 for e in errors if e.level.lower() == 'warning')
+        channels_list = [
+            EventLogChannel(
+                name=c.get('name', ''),
+                enabled=bool(c.get('enabled', True)),
+                record_count=int(c.get('record_count', 0) or 0),
+                size_bytes=int(c.get('size_bytes', 0) or 0),
+                channel_type=c.get('channel_type', 'Admin'),
+                display_name=c.get('display_name'),
+                description=c.get('description'),
+            )
+            for c in report_dict.get('channels', [])
+        ]
+        errors_list = [
+            EventLogEntry(
+                channel=e.get('channel', 'System'),
+                event_id=int(e.get('event_id', 0) or 0),
+                level=e.get('level', 'Error'),
+                provider_name=e.get('provider_name', '') or e.get('provider', ''),
+                time_created=e.get('time_created', '') or e.get('timestamp', ''),
+                message=e.get('message', ''),
+            )
+            for e in report_dict.get('recent_errors', [])
+        ]
 
         return EventLogReport(
-            total_channels=len(channels),
-            critical_events_24h=crit_count,
-            error_events_24h=err_count,
-            warning_events_24h=warn_count,
-            channels=channels,
-            recent_errors=errors,
-            timestamp=datetime.now().isoformat(),
+            total_channels=report_dict.get('total_channels', len(channels_list)),
+            critical_events_24h=report_dict.get('critical_events_24h', 0),
+            error_events_24h=report_dict.get('error_events_24h', 0),
+            warning_events_24h=report_dict.get('warning_events_24h', 0),
+            channels=channels_list,
+            recent_errors=errors_list,
+            timestamp=report_dict.get('timestamp', datetime.now().isoformat()),
         )
 
     def process_intelligence(
@@ -200,7 +355,11 @@ class EventLogsManager:
         hours: int = 24,
         limit: int = 100,
     ) -> Dict[str, Any]:
-        """Обработка массива событий через Log Intelligence (Data Researcher -> Decision Gate -> Adaptive RAG)."""
+        """Обработка массива событий через Log Intelligence с кешированием в SQLite."""
+        cached_profile = self.storage.get_latest_event_log_intelligence_profile(channel=channel)
+        if cached_profile:
+            return cached_profile
+
         entries = self.get_events(channel=channel, limit=limit, hours=hours)
         intel_entries: List[IntelLogEntry] = []
         for e in entries:
@@ -216,7 +375,16 @@ class EventLogsManager:
                 )
             )
 
-        return self.pipeline.process_events(intel_entries, channel=channel)
+        res = self.pipeline.process_events(intel_entries, channel=channel)
+        # Сохраняем в SQLite
+        snapshot_id = f"evt_intel_{int(datetime.now(timezone.utc).timestamp())}"
+        self.storage.save_event_log_snapshot(
+            snapshot_id=snapshot_id,
+            channels=[],
+            entries=[],
+            intelligence_profiles=[res],
+        )
+        return res
 
     def search_rag(
         self,

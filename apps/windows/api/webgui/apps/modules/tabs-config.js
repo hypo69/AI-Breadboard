@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 14:26:00
+ * Updated: 2026-10-06 19:30:00
  */
 
 export const APP_TAB_DEFS = [
@@ -28,8 +28,9 @@ export const APP_TAB_DEFS = [
   { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v13', js: '/html/system_inspector_tab/main.js?v=20261006_v13' },
   { id: 'processes_load_inspector', tab: 'processes-load-inspector', tabId: 'tab-processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261006_v2', js: '/html/processes_load_inspector_tab/main.js?v=20261006_v2' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
+  { id: 'focus_settings', tab: 'focus-settings', tabId: 'tab-focus-settings', html: '/html/focus_settings_tab/index.html?v=20261006_v1', js: '/html/focus_settings_tab/main.js?v=20261006_v1' },
   { id: 'system32_commands', tab: 'system32-commands', tabId: 'tab-system32-commands', html: '/html/system32_commands_tab/index.html?v=20261006_v1', js: '/html/system32_commands_tab/main.js?v=20261006_v1' },
-  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261006_v14', js: '/html/system_control_tab/main.js?v=20261006_v14' },
+  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261006_v15', js: '/html/system_control_tab/main.js?v=20261006_v15' },
   { id: 'post_install_wizard', tab: 'post-install-wizard', tabId: 'tab-post-install-wizard', html: '/html/post_install_wizard_tab/index.html?v=20261006_v1', js: '/html/post_install_wizard_tab/main.js?v=20261006_v1' },
   { id: 'maintenance_recovery', tab: 'maintenance-recovery', tabId: 'tab-maintenance-recovery', html: '/html/maintenance_recovery_tab/index.html?v=20261006_v1', js: '/html/maintenance_recovery_tab/main.js?v=20261006_v1' },
   { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
@@ -82,6 +83,7 @@ export const APP_TAB_DEFS = [
   { id: 'performance_tracing', tab: 'performance-tracing', tabId: 'tab-performance-tracing', html: '/html/performance_tracing_tab/index.html?v=20261001_v1', js: '/html/performance_tracing_tab/main.js?v=20261001_v1' },
   { id: 'event_logs', tab: 'event-logs', tabId: 'tab-event-logs', html: '/html/event_logs_tab/index.html?v=20261001_v1', js: '/html/event_logs_tab/main.js?v=20261001_v1' },
   { id: 'software_manager', tab: 'software-manager', tabId: 'tab-software-manager', html: '/html/software_manager_tab/index.html?v=20261004_v2', js: '/html/software_manager_tab/main.js?v=20261004_v2' },
+  { id: 'taskbar_controller', tab: 'taskbar-controller', tabId: 'tab-taskbar-controller', html: '/html/taskbar_tab/index.html?v=20261006_v1', js: '/html/taskbar_tab/main.js?v=20261006_v1' },
 ];
 
 export const TC_EXCLUDES = new Set([

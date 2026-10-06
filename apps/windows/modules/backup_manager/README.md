@@ -35,3 +35,14 @@ python -m apps.windows.modules.backup_manager
 | `GET` | `/api/v1/windows-backup/vss/snapshots` | Список теневых копий томов VSS |
 | `GET` | `/api/v1/windows-backup/user-folders/overview` | Подсчет объемов пользовательских папок и аудит свободного места на дисках |
 | `POST` | `/api/v1/windows-backup/user-folders/relocate` | Перенос пользовательской директории на выбранный вторичный диск |
+---
+
+## 🕓 Версионирование файлов (VSS + SQLite, `/api/v1/versions`)
+
+Класс `WindowsVersionProvider` (`core/version_provider.py`): горячий слой — VSS-снимок (`Win32_ShadowCopy.Create`, без копирования), холодный — сжатые блобы (zstd/zlib) в таблицах `file_versions` / `file_version_blobs` базы `telemetry.db`. Без прав администратора — автоматический fallback в холодный слой. Ротация: `migrate_hot_to_cold()` (старше 24 ч), `purge_expired(days=30)`.
+
+| Метод | Эндпоинт | Описание |
+|---|---|---|
+| `POST` | `/api/v1/versions/save` | Зафиксировать версию файла |
+| `GET` | `/api/v1/versions/list?file_path=` | История версий |
+| `POST` | `/api/v1/versions/restore` | Восстановить версию (проверка SHA-256, `.bak`, атомарная замена) |

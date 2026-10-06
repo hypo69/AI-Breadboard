@@ -7,17 +7,17 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/apps/modules/init-interface.js?v=20261004_v17" type="module"></script>
+ *     <script src="/windows/api/webgui/apps/modules/init-interface.js?v=20261006_v10" type="module"></script>
  *
  *   JavaScript Import:
- *     import { setupGlobalApi } from '/windows/api/webgui/apps/modules/init-interface.js';
+ *     import { setupGlobalApi, setupThemeAndLang } from '/windows/api/webgui/apps/modules/init-interface.js';
  *
  * File: init-interface.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 12:12:00
+ * Updated: 2026-10-06 22:15:00
  * =============================================================================
  */
 
@@ -25,11 +25,15 @@
  * apps/modules/init-interface.js — Инициализация тем, языка и глобального окружения /apps
  */
 
-import { initI18n, switchLang, applyTranslations } from '../../js/i18n.js';
+import { initI18n, switchLang, switchLocale, applyTranslations, normalizeLocaleTag, getCurrentLocale, getCurrentLang } from '../../js/i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme, themeEngine, ThemeEngine } from '../../js/theme.js';
 
 export function setupGlobalApi() {
   window.switchLang = switchLang;
+  window.switchLocale = switchLocale;
+  window.normalizeLocaleTag = normalizeLocaleTag;
+  window.getCurrentLocale = getCurrentLocale;
+  window.getCurrentLang = getCurrentLang;
   window.applyTranslations = applyTranslations;
   window.setTheme = setTheme;
   window.getThemeMode = getThemeMode;
@@ -66,14 +70,20 @@ export function setupGlobalApi() {
 export async function setupThemeAndLang() {
   initTheme();
 
-  const savedLang = localStorage.getItem('app_language') || 'ru';
-  await initI18n(savedLang);
+  // Инициализация i18n с автоматической проверкой URL параметров (?region=ru-ru и т.д.)
+  await initI18n();
 
   const langSel = document.getElementById('apps-lang-selector');
   if (langSel) {
-    langSel.value = savedLang;
+    const curLocale = getCurrentLocale();
+    const curLang = getCurrentLang();
+    const matchLocale = Array.from(langSel.options).find(opt => opt.value.toLowerCase() === curLocale.toLowerCase());
+    const matchLang = Array.from(langSel.options).find(opt => opt.value.toLowerCase() === curLang.toLowerCase());
+    if (matchLocale) langSel.value = matchLocale.value;
+    else if (matchLang) langSel.value = matchLang.value;
+
     langSel.addEventListener('change', (e) => {
-      switchLang(e.target.value);
+      switchLocale(e.target.value);
     });
   }
 

@@ -35,8 +35,13 @@ from apps.windows.modules.startup.core.models import (
 from apps.windows.modules.startup.core.scanner import StartupScanner
 from apps.windows.modules.startup.core.auditor import StartupAuditor
 from apps.windows.modules.startup.core.manager import StartupManager
-from apps.windows.modules.startup.router import init_router
 from apps.windows.modules.startup.tui import StartupAuditorTUI
+
+
+def init_router(*args, **kwargs):
+    """Ленивая инициализация FastAPI роутера Startup Auditor."""
+    from apps.windows.modules.startup.router import init_router as _init
+    return _init(*args, **kwargs)
 
 __all__ = [
     'init_router',

@@ -17,8 +17,8 @@ Project: ai-breadboard
 Package: windows/api/webgui/apps
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 12:54:00
-=============================================================================
+ * Updated: 2026-10-06 22:15:00
+ * =============================================================================
 -->
 
 <!DOCTYPE html>
@@ -29,9 +29,9 @@ Updated: 2026-10-06 12:54:00
   <title>AI Breadboard — Приложения (/apps)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20261006_v8" rel="stylesheet">
+  <link href="/html/css/main.css?v=20261006_v10" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/html/js/toast.js?v=20261006_v8"></script>
+  <script src="/html/js/toast.js?v=20261006_v10"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
 </head>
 <body>
@@ -147,9 +147,10 @@ Updated: 2026-10-06 12:54:00
               <span data-i18n="userSettings.language">Язык интерфейса</span>
             </label>
             <select class="form-select lang-selector" id="apps-lang-selector">
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
-              <option value="he">עברית</option>
+              <option value="ru-RU">Русский (ru-RU)</option>
+              <option value="en-US">English (en-US)</option>
+              <option value="he-IL">עברית (he-IL)</option>
+              <option value="uk-UA">Українська (uk-UA)</option>
             </select>
           </div>
 
@@ -188,14 +189,11 @@ Updated: 2026-10-06 12:54:00
         </div>
         <div class="modal-body">
           <div class="alert alert-info small mb-3">
-            <i class="bi bi-info-circle"></i> Настройте видимость и порядок элементов меню. Используйте переключатели для выбора позиции (сверху/снизу/скрыть) и слайдеры для изменения порядка элементов.
+            <i class="bi bi-info-circle"></i> Настройте отображение и порядок элементов меню. Элементы сгруппированы по позициям: сверху, сбоку и скрытые. Переключатели меняют размещение, а стрелки и слайдеры — порядок элементов.
           </div>
           
           <div class="menu-editor-section">
-            <h6 class="text-primary fw-bold mb-3">
-              <i class="bi bi-list-ul"></i> Все элементы меню
-            </h6>
-            <div class="list-group list-group-flush" id="allMenuEditor">
+            <div id="allMenuEditor">
               <div class="text-muted small p-3 text-center">Загрузка...</div>
             </div>
           </div>
@@ -232,6 +230,9 @@ Updated: 2026-10-06 12:54:00
 
     <!-- Windows System Administrator Tab -->
     <div id="tab-windows-admin" class="tab-pane fade"></div>
+
+    <!-- Windows Focus Settings Tab -->
+    <div id="tab-focus-settings" class="tab-pane fade"></div>
 
     <!-- System Control Center Tab (System Logs & Activity) -->
     <div id="tab-system-control" class="tab-pane fade"></div>
@@ -357,14 +358,15 @@ Updated: 2026-10-06 12:54:00
     <div id="tab-performance-tracing" class="tab-pane fade"></div>
     <div id="tab-event-logs" class="tab-pane fade"></div>
     <div id="tab-software-manager" class="tab-pane fade"></div>
+    <div id="tab-taskbar-controller" class="tab-pane fade"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/window-api.js?v=20261006_v7"></script>
-<script src="/html/js/chatService.js?v=20261006_v7"></script>
-<script src="/html/js/appConfigEditor.js?v=20261006_v7"></script>
-<script type="module" src="/html/apps/main.js?v=20261006_v7"></script>
+<script src="/html/js/window-api.js?v=20261006_v10"></script>
+<script src="/html/js/chatService.js?v=20261006_v10"></script>
+<script src="/html/js/appConfigEditor.js?v=20261006_v10"></script>
+<script type="module" src="/html/apps/main.js?v=20261006_v10"></script>
 
 </body>
 </html>

@@ -20,7 +20,7 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:40:00
+# Updated: 2026-10-06 18:33:00
 # =============================================================================
 
 from __future__ import annotations
@@ -47,7 +47,21 @@ if str(_PROJECT_ROOT) not in sys.path:
 from logger import logger
 
 POWERSHELL_STORAGE_SCRIPT = """
+$ProgressPreference = 'SilentlyContinue'
 $ErrorActionPreference = 'SilentlyContinue'
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$errWriter = New-Object System.IO.StreamWriter([System.Console]::OpenStandardError(), $utf8NoBom)
+$errWriter.AutoFlush = $true
+[System.Console]::SetError($errWriter)
+
+$outWriter = New-Object System.IO.StreamWriter([System.Console]::OpenStandardOutput(), $utf8NoBom)
+$outWriter.AutoFlush = $true
+[System.Console]::SetOut($outWriter)
+
+[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[System.Console]::InputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
 function Trace-Step {
@@ -270,6 +284,17 @@ class WindowsStorageSensor:
         self.timeout_sec = timeout_sec
         self.ttl_sec = ttl_sec
 
+        # Загрузка сохраненного снимка с диска, если память еще пуста
+        if not WindowsStorageSensor._CACHE_SNAPSHOT:
+            snap_file = _PROJECT_ROOT / "storage_snapshot.json"
+            if snap_file.is_file():
+                try:
+                    with open(snap_file, "r", encoding="utf-8") as f:
+                        WindowsStorageSensor._CACHE_SNAPSHOT = json.load(f)
+                        WindowsStorageSensor._CACHE_TIME = time.time()
+                except Exception as ex:
+                    logger.debug(f"[WindowsStorageSensor] Ошибка загрузки storage_snapshot.json: {ex}")
+
     @property
     def is_windows(self) -> bool:
         """Проверка, выполняется ли код на платформе Windows."""
@@ -347,9 +372,10 @@ class WindowsStorageSensor:
         effective_timeout = timeout if timeout and timeout > 0 else self.timeout_sec
         creationflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
         t_start = time.perf_counter()
+        encoded_script = base64.b64encode(script.encode('utf-16le')).decode('ascii')
         try:
             result = subprocess.run(
-                ['powershell.exe', '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
+                ['powershell.exe', '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', encoded_script],
                 capture_output=True,
                 text=True,
                 encoding='utf-8',

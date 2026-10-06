@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 14:10:00
+ * Updated: 2026-10-06 18:33:00
  * =============================================================================
  */
 
@@ -315,7 +315,11 @@ export async function loadTab(tabName, htmlUrl, jsUrl) {
         const s = document.createElement('script');
         s.type = 'module';
         s.src = jsUrl;
-        s.onload = s.onerror = resolve;
+        s.onload = resolve;
+        s.onerror = (err) => {
+          console.warn(`[TabCore] Ошибка загрузки скрипта ${jsUrl}:`, err);
+          resolve();
+        };
         document.body.appendChild(s);
       });
     }
@@ -329,7 +333,19 @@ export async function loadTab(tabName, htmlUrl, jsUrl) {
       }
     }
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-danger m-3">Ошибка загрузки ${tabName}: ${e.message}</div>`;
+    const safeName = String(tabName).replace(/[^a-zA-Z0-9_-]/g, '');
+    container.innerHTML = `
+      <div class="alert alert-danger m-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <span>Ошибка загрузки <strong>${safeName}</strong>: ${e.message}</span>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" type="button" onclick="window.switchTab ? window.switchTab('tab-${safeName}') : null">
+          <i class="bi bi-arrow-clockwise me-1"></i> Повторить попытку
+        </button>
+      </div>
+    `;
+    throw e;
   }
 }
 

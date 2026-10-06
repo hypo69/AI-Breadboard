@@ -1,0 +1,59 @@
+{
+  "tabs": {
+    "groupStandard": "Стандартні",
+    "groupExtended": "Розширені",
+    "groupDialog": "Діалог та аудіо",
+    "groupAi": "ШІ та Знання",
+    "groupPlugins": "Плагіни та пошук",
+    "groupSystem": "Адміністрування",
+    "groupApps": "Додатки",
+    "groupUserServices": "Сервіси",
+    "chat": "💬 Чат",
+    "voice": "🎙️ Голос та аудіо",
+    "rag": "🧠 RAG",
+    "tts": "🗣️ Налаштування TTS",
+    "skills": "⚡ Навички",
+    "news": "📰 Новини",
+    "plugins": "🔌 Плагіни",
+    "managePlugins": "⚙️ Керування",
+    "managePluginsLong": "⚙️ Керування плагінами",
+    "admin": "⚙️ Керування",
+    "users": "👥 Користувачі",
+    "models": "🤖 Моделі та API",
+    "agents": "🧩 Агенти ШІ",
+    "search": "🌐 Веб-пошук",
+    "sources": "📑 Джерела",
+    "logs": "📋 Системні логи",
+    "sensorLogs": "⚡ Логи сенсорів",
+    "help": "📚 Довідник",
+    "instructions": "📝 Системні інструкції",
+    "mcp": "🔌 MCP Сервери",
+    "googleAccounts": "🌐 Google акаунти",
+    "helpdesk": "🛟 Helpdesk",
+    "trading": "📈 Торговий термінал",
+    "network": "🌐 Мережевий термінал",
+    "systemInspector": "📡 Телеметрія",
+    "aboutSystem": "ℹ️ Про систему",
+    "player": "Плеєр",
+    "cabinet": "Кабінет",
+    "settings": "Налаштування"
+  },
+  "player": {
+    "noFiles": "Немає файлів",
+    "loadError": "Помилка завантаження файлів",
+    "prev": "⏮ Попередній",
+    "next": "Наступний ⏭",
+    "nowPlaying": "Зараз грає:"
+  },
+  "chat": {
+    "placeholder": "Введіть повідомлення...",
+    "send": "Надіслати",
+    "startPrompt": "Почніть розмову з AI",
+    "error": "Помилка",
+    "typing": "Друкує..."
+  },
+  "common": {
+    "loading": "Завантаження...",
+    "error": "Помилка"
+  }
+}

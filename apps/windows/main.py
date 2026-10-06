@@ -13,7 +13,7 @@
 #
 #     res = load_tc_config()
 #
-# Updated: 2026-10-06 04:30:00
+# Updated: 2026-10-06 18:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -513,7 +513,21 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     except Exception as exc:
         logger.debug(f'Роутер capabilities не зарегистрирован: {exc}')
 
-    # 10.1. Progressive Knowledge Base WikiLLM (/api/windows/wikillm)
+    # 10.1. Windows Window Management Control Plane (/api/v1/window-management)
+    try:
+        from apps.windows.modules.window_control_plane.router import init_router as init_wcp_router
+        app.include_router(init_wcp_router())
+    except Exception as exc:
+        logger.debug(f'Роутер window_control_plane не зарегистрирован: {exc}')
+
+    # 10.2. Windows Personalization & Appearance (/api/v1/windows/personalization)
+    try:
+        from apps.windows.modules.personalization.router import init_router as init_personalization_router
+        app.include_router(init_personalization_router())
+    except Exception as exc:
+        logger.debug(f'Роутер personalization не зарегистрирован: {exc}')
+
+    # 10.3. Progressive Knowledge Base WikiLLM (/api/windows/wikillm)
     try:
         from apps.windows.wikillm.router import init_router as init_wikillm_router
         app.include_router(init_wikillm_router())

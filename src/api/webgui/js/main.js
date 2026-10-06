@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 02:30:00
+ * Updated: 2026-10-06 18:24:00
  * =============================================================================
  */
 
@@ -75,7 +75,10 @@ const TABS = {
   'file-history-search':      ['/html/file_history_ai_search_tab/index.html',   '/html/file_history_ai_search_tab/main.js'],
 
   // Управление Windows и Sysadmin
+  'taskbar':                  ['/html/taskbar_tab/index.html',                  '/html/taskbar_tab/main.js'],
+  'window-management':        ['/html/window_management_tab/index.html',        '/html/window_management_tab/main.js'],
   'system-control':           ['/html/system_control_tab/index.html',           '/html/system_control_tab/main.js'],
+
   'post-install-wizard':      ['/html/post_install_wizard_tab/index.html',      '/html/post_install_wizard_tab/main.js'],
   'maintenance-recovery':     ['/html/maintenance_recovery_tab/index.html',     '/html/maintenance_recovery_tab/main.js'],
   'windows-admin':            ['/html/windows_admin_tab/index.html',            '/html/windows_admin_tab/main.js'],

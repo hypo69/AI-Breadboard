@@ -308,6 +308,7 @@
     "modeTimeline": "📊 Timeline",
     "modeRaw": "📄 Raw Record",
     "modeActivity": "⚙️ App Activity Log",
+    "modeEventLogs": "📝 WevtAPI & Intel Logs",
     "btnAskAi": "Ask AI",
     "searchPlaceholder": "Search by text, provider...",
     "allLevels": "All Levels",

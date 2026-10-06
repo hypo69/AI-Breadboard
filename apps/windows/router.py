@@ -16,7 +16,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 02:30:00
+# Updated: 2026-10-06 18:15:00
 # =============================================================================
 
 """# Description:"""
@@ -35,7 +35,13 @@ from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
 from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
 from apps.windows.core.root_cause_engine import RootCauseEngine
 from apps.windows.core.safe_executor import SafeExecutor
+from apps.windows.modules.window_control_plane.router import router as window_mgmt_router
+from apps.windows.modules.personalization.router import router as personalization_router
+
 router = APIRouter(prefix='/api/windows', tags=['windows-diagnostics'])
+router.include_router(window_mgmt_router, prefix='/window-management', tags=['Window Management'])
+router.include_router(personalization_router, prefix='/personalization', tags=['Personalization'])
+
 _diagnostician = WindowsAIDiagnostician()
 _investigator = WindowsAIRootCauseAnalyzer()
 _engine = RootCauseEngine()

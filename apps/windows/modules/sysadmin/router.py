@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.sysadmin
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 23:02:00
 # =============================================================================
 
 from __future__ import annotations
@@ -393,11 +393,46 @@ async def toggle_watcher_exclusions(payload: ToggleExclusionsRequest) -> dict:
     return {'success': True, 'enabled': new_state, 'exclusions': watcher.get_exclusions(), 'message': f"Фильтрация исключений {('включена' if new_state else 'отключена')}"}
 
 @router.get('/file-audit/live-events')
-async def get_live_file_events(limit: int=Query(50, ge=1, le=200)) -> dict:
-    """Получить события файловой системы в реальном времени (ReadDirectoryChangesW)."""
-    watcher = get_directory_watcher()
-    live_events = watcher.get_recent_events(limit=limit)
-    return {'watch_dirs': watcher.get_watch_dirs(), 'watch_dir': watcher.watch_dir, 'is_running': watcher._is_running, 'events_count': len(live_events), 'filtered_count': watcher.filtered_events_count, 'exclusions_enabled': watcher.exclusions.enabled, 'events': [asdict(e) for e in live_events]}
+async def get_live_file_events(limit: int = Query(50, ge=1, le=200)) -> dict:
+    """Получить события файловой системы в реальном времени (из SQLite телеметрии или активного watcher)."""
+    watcher = get_directory_watcher(auto_start=False)
+    live_events: List[Dict[str, Any]] = []
+
+    if watcher._is_running and watcher.events_history:
+        recent = watcher.get_recent_events(limit=limit)
+        live_events = [asdict(e) for e in recent]
+    else:
+        try:
+            from apps.windows.telemetry.sqlite import TelemetryStorage
+            storage = TelemetryStorage.get_instance(read_only=True)
+            db_events = storage.get_w64_events(event_type='etw_file_access', limit=limit)
+            for d in db_events:
+                ev_data = d.get('data') or d.get('details') or {}
+                raw_path = d.get('path') or ev_data.get('ObjectName') or ''
+                access_mask = str(ev_data.get('AccessMask') or '')
+                is_del = access_mask in {'0x10000', '%%1537', 'DELETE', 'Delete'} or 'DELETE' in str(ev_data.get('AccessList') or '').upper()
+                live_events.append({
+                    'timestamp': d.get('timestamp') or '',
+                    'action': 'FILE_DELETED' if is_del else 'FILE_ACCESSED',
+                    'path': raw_path,
+                    'is_deletion': is_del,
+                    'watch_dir': '',
+                    'process_name': d.get('name') or ev_data.get('ProcessName') or ev_data.get('SubjectUserName') or '',
+                    'process_id': d.get('pid') or ev_data.get('ProcessId'),
+                    'details': ev_data,
+                })
+        except Exception as exc:
+            logger.debug(f'Ошибка чтения файловых событий из телеметрии SQLite: {exc}')
+
+    return {
+        'watch_dirs': watcher.get_watch_dirs(),
+        'watch_dir': watcher.watch_dir,
+        'is_running': watcher._is_running,
+        'events_count': len(live_events),
+        'filtered_count': watcher.filtered_events_count,
+        'exclusions_enabled': watcher.exclusions.enabled,
+        'events': live_events,
+    }
 
 @router.get('/file-audit/telemetry')
 async def get_file_watcher_telemetry() -> dict:

@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 12:25:00
+# Updated: 2026-10-06 17:43:00
 # =============================================================================
 
 from __future__ import annotations
@@ -306,7 +306,7 @@ def init_router() -> APIRouter:
         limit: int = 100,
         only_internet: bool = False,
     ) -> List[ProcessNetworkActivity]:
-        """Возвращает список активных сетевых соединений программ и процессов.
+        """Возвращает список активных сетевых соединений программ и процессов из SQLite (< 3 мс).
 
         Args:
             limit: Максимальное число записей в выдаче.
@@ -315,6 +315,15 @@ def init_router() -> APIRouter:
         Returns:
             List[ProcessNetworkActivity]: Список объектов сетевой активности процессов.
         """
+        try:
+            from apps.windows.telemetry.sqlite import TelemetryStorage
+            storage = TelemetryStorage.get_instance(read_only=True)
+            db_activity = storage.get_latest_process_network_activity(limit=limit, only_internet=only_internet)
+            if db_activity:
+                return [ProcessNetworkActivity.model_validate(a) for a in db_activity]
+        except Exception as exc:
+            logger.debug(f"[RouterNetworkLoad] Ошибка чтения активности процессов из SQLite: {exc}")
+
         try:
             collector = get_collector()
             return collector.get_process_network_activity(limit=limit, only_internet=only_internet)

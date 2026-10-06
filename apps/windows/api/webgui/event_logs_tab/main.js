@@ -22,6 +22,7 @@
  * =============================================================================
  */
 
+// Updated: 2026-10-06 21:50:00
 const registerTabPoller = window.registerTabPoller || function() {};
 
 let isInitialized = false;
@@ -270,6 +271,13 @@ export function initEventLogsTab() {
   });
 
   registerTabPoller('tab-event-logs', fetchEventLogsSummary, 15000, { immediate: true });
+  // Первичная загрузка (на случай отсутствия registerTabPoller)
+  fetchEventLogsSummary();
 }
 
 window.initEventLogsTab = initEventLogsTab;
+
+// Автоинициализация: загрузчик вкладок только подключает скрипт
+if (document.getElementById('el-tbody')) {
+  initEventLogsTab();
+}

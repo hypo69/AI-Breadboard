@@ -13,7 +13,7 @@
  * Project: ai-breadboard
  * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-06 09:32:00
+ * Updated: 2026-10-06 19:05:00
  * =============================================================================
  */
 
@@ -240,6 +240,49 @@
   background-color: var(--nav-hover-bg);
   border-color: var(--border-color);
   color: var(--text-color);
+}
+
+/* Переключатели групп кнопок (btn-check radio/checkbox) */
+.btn-check:checked + .btn-outline-primary,
+.btn-check:active + .btn-outline-primary {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-secondary,
+.btn-check:active + .btn-outline-secondary {
+  background-color: #64748b !important;
+  border-color: #64748b !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-info,
+.btn-check:active + .btn-outline-info {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-danger,
+.btn-check:active + .btn-outline-danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-warning,
+.btn-check:active + .btn-outline-warning {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-success,
+.btn-check:active + .btn-outline-success {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -855,8 +898,24 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   КАСКАДНАЯ ДИЗАЙН-СИСТЕМА (UNIFIED CASCADING UI SYSTEM)
+   ГЛОБАЛЬНЫЕ УТИЛИТАРНЫЕ КЛАССЫ (UNIFIED UTILITY CLASSES)
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Универсальная карточка (для простых случаев) ─────────────────────── */
+.card-unified {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-unified:hover {
+  border-color: var(--nav-active);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── 1. KPI & Метрические карточки ───────────────────────────────────────── */
 
 /* ── 1. KPI & Метрические карточки ───────────────────────────────────────── */
 .ui-kpi-card {

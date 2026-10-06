@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/admin/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 22:15:00
  * =============================================================================
  */
 
@@ -100,10 +100,14 @@ export function setupGlobalFunctions() {
 
 export function setupLanguageSelector() {
   const langSelectors = document.querySelectorAll('.lang-selector');
-  const savedLang = localStorage.getItem('language') || 'ru';
+  const savedLocale = localStorage.getItem('app_locale') || localStorage.getItem('app_language') || localStorage.getItem('language') || 'ru-RU';
 
   langSelectors.forEach((selector) => {
-    selector.value = savedLang;
+    const optLocale = Array.from(selector.options).find(opt => opt.value.toLowerCase() === savedLocale.toLowerCase());
+    const optLang = Array.from(selector.options).find(opt => opt.value.toLowerCase() === savedLocale.split('-')[0].toLowerCase());
+    if (optLocale) selector.value = optLocale.value;
+    else if (optLang) selector.value = optLang.value;
+
     selector.addEventListener('change', (e) => {
       switchLang(e.target.value);
     });

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/user
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 11:15:30
+ * Updated: 2026-10-06 22:15:00
  * =============================================================================
  */
 
@@ -336,16 +336,7 @@ async function initInterface() {
   initTheme();
 
   // Initialize i18n
-  const savedLang = localStorage.getItem('app_language') || 'ru';
-  await initI18n(savedLang);
-  
-  // Setup language selector
-  document.querySelectorAll('.lang-selector').forEach((sel) => {
-    sel.value = savedLang;
-    sel.addEventListener('change', (e) => {
-      switchLang(e.target.value);
-    });
-  });
+  await initI18n();
 
   // Initialize User Settings & Google OAuth
   await initUserSettings();

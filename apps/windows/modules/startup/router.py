@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.startup
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 14:00:00
+# Updated: 2026-10-06 17:34:00
 # =============================================================================
 
 from __future__ import annotations
-"""FastAPI роутер для аудита и управления автозагрузкой Windows."""
+"""FastAPI роутер для аудита и управления автозагрузкой Windows на базе SQLite."""
 
 import asyncio
 import json
@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
 from logger import logger
+from apps.windows.telemetry.sqlite import TelemetryStorage
 from apps.windows.modules.startup.core.auditor import StartupAuditor
 from apps.windows.modules.startup.core.manager import StartupManager
 from apps.windows.modules.startup.core.models import (
@@ -58,6 +59,38 @@ def init_router() -> APIRouter:
     scanner = StartupScanner()
     auditor = StartupAuditor(scanner=scanner)
     manager = StartupManager()
+    storage = TelemetryStorage.get_instance()
+
+    def _get_cached_or_cold_start_report() -> AuditReport:
+        """Получает последний срез автозапуска из SQLite или выполняет Cold Start с сохранением в БД."""
+        latest = storage.get_latest_startup_archive()
+        if latest and latest.get('data'):
+            try:
+                rep_data = latest['data']
+                if isinstance(rep_data, dict) and 'report' in rep_data:
+                    return AuditReport.model_validate(rep_data['report'])
+                return AuditReport.model_validate(rep_data)
+            except Exception as e:
+                logger.debug(f'Ошибка валидации архива автозапуска из SQLite: {e}')
+
+        # Cold start fallback
+        try:
+            from apps.windows.telemetry import SystemCollector
+            collector = SystemCollector()
+            archive_entry = collector.archive_startup_state(auto_diff=True)
+            if archive_entry and archive_entry.report:
+                return archive_entry.report
+        except Exception as exc:
+            logger.debug(f'Сбор автозапуска через SystemCollector fallback: {exc}')
+
+        rep = auditor.run_audit()
+        try:
+            from apps.windows.telemetry_research.startup_history_manager import StartupHistoryManager
+            archive_entry = StartupHistoryManager.archive_report(rep, previous_archive=None)
+            storage.save_startup_archive(archive_entry)
+        except Exception:
+            pass
+        return rep
 
     @router.get('/status')
     async def get_status() -> Dict[str, Any]:
@@ -71,7 +104,7 @@ def init_router() -> APIRouter:
 
     @router.get('/audit', response_model=AuditReport)
     async def run_full_audit(sync_telemetry: bool = Query(default=False, description='Синхронизировать снимок с телеметрией')) -> AuditReport:
-        """Запускает полный аудит автозапуска и возвращает структурированный отчет."""
+        """Возвращает срез аудита автозапуска из SQLite (< 5 мс)."""
         try:
             if sync_telemetry:
                 try:
@@ -81,9 +114,9 @@ def init_router() -> APIRouter:
                     return archive_entry.report
                 except Exception as tel_err:
                     logger.debug(f'Не удалось синхронизировать снимок с телеметрией: {tel_err}')
-            return auditor.run_audit()
+            return await asyncio.to_thread(_get_cached_or_cold_start_report)
         except Exception as e:
-            logger.error(f'Ошибка при выполнении аудита автозагрузки: {e}')
+            logger.error(f'Ошибка при получении аудита автозагрузки: {e}')
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post('/refresh', response_model=StartupRefreshResponse)
@@ -118,11 +151,9 @@ def init_router() -> APIRouter:
 
     @router.get('/changes')
     async def get_startup_changes(limit: int = Query(default=100, description='Лимит возвращаемых изменений')) -> Dict[str, Any]:
-        """Возвращает историю изменений в автозапуске, зафиксированных телеметрией."""
+        """Возвращает историю изменений в автозапуске, зафиксированных телеметрией из SQLite."""
         try:
-            from apps.windows.telemetry import SystemCollector
-            collector = SystemCollector()
-            changes_data = collector.get_startup_changes(limit=limit)
+            changes_data = storage.get_startup_changes(limit=limit)
             items = [StartupChangeItem.model_validate(c) if isinstance(c, dict) else c for c in changes_data]
             return {'success': True, 'changes': items}
         except Exception as e:
@@ -131,26 +162,42 @@ def init_router() -> APIRouter:
 
     @router.get('/history')
     async def get_startup_history(limit: int = Query(default=50, description='Лимит архивных снимков')) -> Dict[str, Any]:
-        """Возвращает метаданные сохраненных архивных снимков автозапуска из телеметрии."""
+        """Возвращает метаданные сохраненных архивных снимков автозапуска из SQLite."""
         try:
-            from apps.windows.telemetry import SystemCollector
-            collector = SystemCollector()
-            return {'success': True, 'history': collector.get_startup_history(limit=limit)}
+            return {'success': True, 'history': storage.get_startup_archives(limit=limit)}
         except Exception as e:
             logger.debug(f'Не удалось получить историю архивов автозапуска: {e}')
             return {'success': False, 'history': [], 'error': str(e)}
 
     @router.get('/summary', response_model=AuditSummary)
     async def get_summary() -> AuditSummary:
-        """Возвращает краткую сводку аудита и показатель чистоты (Health Score)."""
-        report = auditor.run_audit()
+        """Возвращает краткую сводку аудита и показатель чистоты (Health Score) из SQLite (< 5 мс)."""
+        report = await asyncio.to_thread(_get_cached_or_cold_start_report)
         return report.summary
 
     @router.get('/entries', response_model=List[StartupEntry])
-    async def get_entries(category: Optional[str]=Query(default=None, description='Фильтр по категории'), risk_level: Optional[str]=Query(default=None, description='Фильтр по уровню риска (clean, warning, suspicious, critical)'), location_type: Optional[str]=Query(default=None, description='Фильтр по типу локации'), enabled_only: Optional[bool]=Query(default=None, description='Фильтр только активных элементов'), search: Optional[str]=Query(default=None, description='Поисковый запрос по имени, команде или пути')) -> List[StartupEntry]:
-        """Возвращает список элементов автозагрузки с фильтрацией."""
-        report = auditor.run_audit()
+    async def get_entries(
+        category: Optional[str] = Query(default=None, description='Фильтр по категории'),
+        risk_level: Optional[str] = Query(default=None, description='Фильтр по уровню риска (clean, warning, suspicious, critical)'),
+        location_type: Optional[str] = Query(default=None, description='Фильтр по типу локации'),
+        enabled_only: Optional[bool] = Query(default=None, description='Фильтр только активных элементов'),
+        search: Optional[str] = Query(default=None, description='Поисковый запрос по имени, команде или пути')
+    ) -> List[StartupEntry]:
+        """Возвращает список элементов автозагрузки с фильтрацией из SQLite (< 5 мс)."""
+        report = await asyncio.to_thread(_get_cached_or_cold_start_report)
         entries = report.entries
+        if category:
+            entries = [e for e in entries if category.lower() in (e.category.value if hasattr(e.category, 'value') else str(e.category)).lower()]
+        if risk_level:
+            entries = [e for e in entries if risk_level.lower() == (e.risk_level.value if hasattr(e.risk_level, 'value') else str(e.risk_level)).lower()]
+        if location_type:
+            entries = [e for e in entries if location_type.lower() == (e.location_type.value if hasattr(e.location_type, 'value') else str(e.location_type)).lower()]
+        if enabled_only is not None:
+            entries = [e for e in entries if e.is_enabled == enabled_only]
+        if search:
+            s_lower = search.lower()
+            entries = [e for e in entries if s_lower in e.name.lower() or s_lower in e.command.lower() or (e.file_path and s_lower in e.file_path.lower())]
+        return entries
         if category:
             entries = [e for e in entries if category.lower() in (e.category.value if hasattr(e.category, 'value') else str(e.category)).lower()]
         if risk_level:
@@ -234,8 +281,8 @@ def init_router() -> APIRouter:
 
     @router.get('/export')
     async def export_report(format: str=Query(default='json', pattern='^(json|csv)$', description='Формат выгрузки: json или csv')) -> Response:
-        """Экспортирует отчет аудита в формате JSON или CSV."""
-        report = auditor.run_audit()
+        """Экспортирует отчет аудита в формате JSON или CSV из SQLite/кэша."""
+        report = await asyncio.to_thread(_get_cached_or_cold_start_report)
         if format == 'csv':
             csv_content = manager.export_to_csv(report)
             return PlainTextResponse(content=csv_content, media_type='text/csv', headers={'Content-Disposition': f'attachment; filename=startup_audit_{report.timestamp[:10]}.csv'})

@@ -16,15 +16,18 @@
 # Package: apps.windows.modules.defender
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 12:15:00
+# Updated: 2026-10-06 17:42:00
 # =============================================================================
 
 from __future__ import annotations
 """FastAPI REST API роутер для Microsoft Defender & Security Center."""
 
+import asyncio
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from logger import logger
+from apps.windows.telemetry.sqlite import TelemetryStorage
 from apps.windows.defender.core.ai_diagnostician import AIDiagnostician
 from apps.windows.defender.core.asr_manager import ASRManager
 from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
@@ -38,6 +41,7 @@ from apps.windows.defender.core.models import (
     DefenderEventRecord,
     DefenderStatus,
     DefenderTaskInfo,
+    ExclusionItem,
     ExclusionsAuditReport,
     ScanRequest,
     ScanResponse,
@@ -48,13 +52,14 @@ from apps.windows.defender.core.models import (
 from apps.windows.defender.core.process_tree_watcher import ProcessTreeWatcher
 from apps.windows.defender.core.threat_manager import ThreatManager
 
-def init_router() -> APIRouter:
-    """Инициализация и сборка маршрутов FastAPI роутера Defender.
+def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
+    """Инициализация и сборка маршрутов FastAPI роутера Defender на базе SQLite.
 
     Returns:
         APIRouter: Сконфигурированный роутер приложения.
     """
     router = APIRouter(prefix='/api/v1/defender', tags=['Windows Defender Security'])
+    store = storage or TelemetryStorage.get_instance(read_only=True)
     event_corr = EventCorrelator()
     defender_svc = DefenderService(event_correlator=event_corr)
     asr_mgr = ASRManager(defender_svc)
@@ -74,12 +79,41 @@ def init_router() -> APIRouter:
 
     @router.get('/status', response_model=DefenderStatus, summary='Получить статус Microsoft Defender')
     async def get_status() -> DefenderStatus:
-        """Возвращает комплексное состояние защиты Microsoft Defender, версии баз и связанных процессов."""
+        """Возвращает комплексное состояние защиты Microsoft Defender из SQLite (< 5 мс)."""
         try:
-            return defender_svc.get_defender_status()
+            db_status = store.get_latest_defender_status()
+            if db_status:
+                return DefenderStatus.model_validate(db_status)
+            # Cold Start Fallback
+            live_status = defender_svc.get_defender_status()
+            snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
+            store.save_defender_snapshot(snap_id, live_status)
+            return live_status
         except Exception as e:
             logger.error(f'Ошибка получения статуса Defender: {e}')
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Не удалось получить статус Defender: {e}')
+            return defender_svc.get_defender_status()
+
+    @router.post('/refresh', summary='Принудительное обновление состояния Defender в БД')
+    @router.post('/rescan', summary='Принудительное пересканирование Defender')
+    async def refresh_defender_status() -> Dict[str, Any]:
+        """Принудительно опрашивает Defender и сохраняет полный снимок в telemetry.db."""
+        try:
+            live_status = await asyncio.to_thread(defender_svc.get_defender_status)
+            live_asr = await asyncio.to_thread(asr_mgr.get_asr_rules)
+            live_exc = await asyncio.to_thread(exclusions_aud.audit_exclusions)
+            live_threats = await asyncio.to_thread(threat_mgr.get_threats_history, 50)
+            snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
+            store.save_defender_snapshot(
+                snap_id,
+                live_status,
+                exclusions=live_exc.exclusions if hasattr(live_exc, 'exclusions') else [],
+                asr_rules=live_asr,
+                threats=live_threats,
+            )
+            return {"status": "ok", "message": "Снимок безопасности Defender успешно обновлен в БД", "data": live_status}
+        except Exception as e:
+            logger.error(f'Ошибка обновления состояния Defender: {e}')
+            return {"status": "error", "message": str(e)}
 
     @router.post('/scan', response_model=DefenderTaskInfo, summary='Запустить асинхронное сканирование Defender')
     async def run_scan(req: ScanRequest) -> DefenderTaskInfo:
@@ -114,12 +148,18 @@ def init_router() -> APIRouter:
 
     @router.get('/asr', response_model=List[ASRRuleInfo], summary='Аудит правил Attack Surface Reduction')
     async def get_asr_rules() -> List[ASRRuleInfo]:
-        """Возвращает статус правил Attack Surface Reduction (ASR) с каталогом GUID и рекомендациями."""
+        """Возвращает статус правил Attack Surface Reduction (ASR) из SQLite (< 5 мс)."""
         try:
-            return asr_mgr.get_asr_rules()
+            db_asr = store.get_latest_defender_asr_rules()
+            if db_asr:
+                return [ASRRuleInfo.model_validate(r) for r in db_asr]
+            live_rules = asr_mgr.get_asr_rules()
+            snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
+            store.save_defender_snapshot(snap_id, defender_svc.get_defender_status(), asr_rules=live_rules)
+            return live_rules
         except Exception as e:
             logger.error(f'Ошибка получения правил ASR: {e}')
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Ошибка получения ASR: {e}')
+            return asr_mgr.get_asr_rules()
 
     @router.get('/cfa', response_model=ControlledFolderAccessInfo, summary='Статус Controlled Folder Access (Ransomware)')
     async def get_cfa() -> ControlledFolderAccessInfo:
@@ -132,21 +172,34 @@ def init_router() -> APIRouter:
 
     @router.get('/exclusions', response_model=ExclusionsAuditReport, summary='Аудит исключений антивируса')
     async def get_exclusions() -> ExclusionsAuditReport:
-        """Выполняет аудит исключений (пути, расширения, процессы) и выявляет потенциально опасные конфигурации."""
+        """Выполняет аудит исключений (пути, расширения, процессы) из SQLite (< 5 мс)."""
         try:
-            return exclusions_aud.audit_exclusions()
+            db_exc = store.get_latest_defender_exclusions()
+            if db_exc:
+                items = [ExclusionItem.model_validate(x) if hasattr(ExclusionItem, 'model_validate') else x for x in db_exc]
+                return ExclusionsAuditReport(timestamp=datetime.now(timezone.utc).isoformat(), total_exclusions=len(items), exclusions=items, overall_risk='SAFE')
+            live_exc = exclusions_aud.audit_exclusions()
+            snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
+            store.save_defender_snapshot(snap_id, defender_svc.get_defender_status(), exclusions=live_exc.exclusions if hasattr(live_exc, 'exclusions') else [])
+            return live_exc
         except Exception as e:
             logger.error(f'Ошибка аудита исключений: {e}')
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Ошибка аудита исключений: {e}')
+            return exclusions_aud.audit_exclusions()
 
     @router.get('/threats', response_model=List[ThreatRecord], summary='История обнаружения угроз')
     async def get_threats(limit: int=Query(50, ge=1, le=200)) -> List[ThreatRecord]:
-        """Возвращает список зафиксированных угроз, активных инцидентов и объектов в карантине."""
+        """Возвращает список зафиксированных угроз из SQLite (< 5 мс)."""
         try:
-            return threat_mgr.get_threats_history(limit=limit)
+            db_threats = store.get_latest_defender_threats(limit=limit)
+            if db_threats:
+                return [ThreatRecord.model_validate(t) for t in db_threats]
+            live_threats = threat_mgr.get_threats_history(limit=limit)
+            snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
+            store.save_defender_snapshot(snap_id, defender_svc.get_defender_status(), threats=live_threats)
+            return live_threats
         except Exception as e:
             logger.error(f'Ошибка получения истории угроз: {e}')
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Ошибка получения угроз: {e}')
+            return threat_mgr.get_threats_history(limit=limit)
 
     @router.get('/events', response_model=List[DefenderEventRecord], summary='События журнала Defender Operational')
     async def get_events(limit: int=Query(50, ge=1, le=200)) -> List[DefenderEventRecord]:

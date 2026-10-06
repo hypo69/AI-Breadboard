@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.backup_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 21:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -216,3 +216,25 @@ class RelocateFolderResponse(BaseModel):
     message: str = Field(description='Информационное сообщение')
     files_copied: int = Field(default=0, description='Количество скопированных файлов')
     bytes_copied: int = Field(default=0, description='Количество скопированных байт')
+class SaveVersionRequest(BaseModel):
+    """Запрос на фиксацию версии файла."""
+    file_path: str = Field(description='Полный путь к файлу')
+    description: Optional[str] = Field(default=None, description='Комментарий к версии')
+
+class RestoreVersionRequest(BaseModel):
+    """Запрос на восстановление версии файла."""
+    version_id: int = Field(description='Идентификатор версии из file_versions')
+
+class FileVersionEntry(BaseModel):
+    """Запись о версии файла (таблица file_versions)."""
+    version_id: int
+    file_path: str
+    volume_letter: str
+    snapshot_id: Optional[str] = None
+    snapshot_device_path: Optional[str] = None
+    storage_layer: str = 'VSS'
+    blob_id: Optional[str] = None
+    file_size_bytes: int
+    sha256_hash: str
+    created_at: str
+    description: Optional[str] = None

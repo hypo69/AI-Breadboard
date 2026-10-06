@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 13:28:00
+ * Updated: 2026-10-06 22:15:00
  * =============================================================================
  */
 
@@ -373,6 +373,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-windows-admin' && typeof window.initWindowsAdminTab === 'function') {
     console.log('[AdminInterface] Switching to windows admin tab...');
     window.initWindowsAdminTab();
+  } else if (cleanId === 'tab-focus-settings' && typeof window.initFocusSettingsTab === 'function') {
+    console.log('[AdminInterface] Switching to focus settings tab...');
+    window.initFocusSettingsTab();
   } else if (cleanId === 'tab-cloudflared' && typeof window.initCloudflaredTab === 'function') {
     console.log('[AdminInterface] Switching to cloudflared tab...');
     window.initCloudflaredTab();
@@ -559,16 +562,7 @@ async function initInterface() {
   initTheme();
 
   // Initialize i18n
-  const savedLang = localStorage.getItem('app_language') || 'ru';
-  await initI18n(savedLang);
-  
-  // Setup language selector
-  document.querySelectorAll('.lang-selector').forEach((sel) => {
-    sel.value = savedLang;
-    sel.addEventListener('change', (e) => {
-      switchLang(e.target.value);
-    });
-  });
+  await initI18n();
 
   // Initialize User Settings & Google OAuth
   await initUserSettings();
@@ -624,7 +618,7 @@ async function initInterface() {
     { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261006_v3', js: '/html/about_system_tab/main.js?v=20261006_v3' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v12', js: '/html/system_inspector_tab/main.js?v=20261006_v12' },
+    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v14', js: '/html/system_inspector_tab/main.js?v=20261006_v14' },
     { id: 'processes_load_inspector', tab: 'processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261006_v1', js: '/html/processes_load_inspector_tab/main.js?v=20261006_v1' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },

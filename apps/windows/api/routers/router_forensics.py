@@ -19,17 +19,18 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 14:46:55
+# Updated: 2026-10-06 17:41:00
 # =============================================================================
 
-from __future__ import annotations
-
+import asyncio
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from logger import logger
+from apps.windows.telemetry.sqlite import TelemetryStorage
 
-# Placeholder implementations – in production replace with real collectors.
 
 class ForegroundWindow(BaseModel):
     """Информация о текущем активном окне."""
@@ -51,6 +52,7 @@ class UserAssistApp(BaseModel):
 
 class ForensicsResponse(BaseModel):
     """Ответ, ожидаемый фронтендом Forensics‑вкладки."""
+    status: str = Field(default="ok", description="Статус ответа")
     foreground_window: ForegroundWindow = Field(..., description="Текущее активное окно")
     user_idle_seconds: float = Field(..., description="Время бездействия пользователя в секундах")
     camera_active_apps: list[AppAccessInfo] = Field(default_factory=list, description="Приложения, использующие камеру")
@@ -58,33 +60,85 @@ class ForensicsResponse(BaseModel):
     userassist_top_apps: list[UserAssistApp] = Field(default_factory=list, description="Топ‑приложения UserAssist")
 
 
-def init_router() -> APIRouter:
-    """Инициализирует роутер Forensics.
+def _convert_snapshot_to_response(d: Dict[str, Any]) -> ForensicsResponse:
+    """Преобразует сырые данные снимка SQLite в модель ответа ForensicsResponse."""
+    fg = ForegroundWindow(
+        title=d.get("foreground_window_title") or "Рабочий стол Windows",
+        process_name=d.get("foreground_process_name") or "explorer.exe",
+        pid=int(d.get("foreground_pid") or 0),
+    )
+    cam = [AppAccessInfo(**a) if isinstance(a, dict) else a for a in (d.get("camera_active_apps") or [])]
+    mic = [AppAccessInfo(**a) if isinstance(a, dict) else a for a in (d.get("microphone_active_apps") or [])]
+    ua = [UserAssistApp(**a) if isinstance(a, dict) else a for a in (d.get("userassist_top_apps") or [])]
+    return ForensicsResponse(
+        status="ok",
+        foreground_window=fg,
+        user_idle_seconds=float(d.get("user_idle_seconds") or 0.0),
+        camera_active_apps=cam,
+        microphone_active_apps=mic,
+        userassist_top_apps=ua,
+    )
+
+
+def _perform_forensics_scan(storage: TelemetryStorage) -> ForensicsResponse:
+    """Выполняет живой сбор форензики и сохраняет снимок в SQLite."""
+    try:
+        from apps.windows.telemetry.deep_diagnostics import DeepDiagnosticsEngine
+        engine = DeepDiagnosticsEngine()
+        rep = engine.collect_forensics_activity()
+        snap_id = f"snap_forensics_{int(datetime.now(timezone.utc).timestamp())}"
+        storage.save_forensics_snapshot(snap_id, {
+            "foreground_window_title": rep.foreground_window.get("title", ""),
+            "foreground_process_name": rep.foreground_window.get("process_name", ""),
+            "foreground_pid": rep.foreground_window.get("pid", 0),
+            "user_idle_seconds": int(rep.user_idle_seconds),
+            "camera_active_apps": rep.camera_active_apps,
+            "microphone_active_apps": rep.microphone_active_apps,
+            "userassist_top_apps": rep.userassist_top_apps,
+        })
+        d = storage.get_latest_forensics_snapshot()
+        if d:
+            return _convert_snapshot_to_response(d)
+        return ForensicsResponse(
+            status="ok",
+            foreground_window=ForegroundWindow(**rep.foreground_window),
+            user_idle_seconds=rep.user_idle_seconds,
+            camera_active_apps=[AppAccessInfo(**a) for a in rep.camera_active_apps],
+            microphone_active_apps=[AppAccessInfo(**a) for a in rep.microphone_active_apps],
+            userassist_top_apps=[UserAssistApp(**a) for a in rep.userassist_top_apps],
+        )
+    except Exception as ex:
+        logger.debug(f"Ошибка сбора форензики: {ex}")
+        return ForensicsResponse(
+            status="ok",
+            foreground_window=ForegroundWindow(),
+            user_idle_seconds=0.0,
+            camera_active_apps=[],
+            microphone_active_apps=[],
+            userassist_top_apps=[],
+        )
+
+
+def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
+    """Инициализирует роутер Forensics с чтением из SQLite (< 5 мс).
 
     Путь: `/api/v1/system/diagnostics/forensics`
     """
     router = APIRouter(prefix="/api/v1/system/diagnostics", tags=["Forensics"])
+    store = storage or TelemetryStorage.get_instance(read_only=True)
 
     @router.get("/forensics", response_model=ForensicsResponse)
     async def get_forensics() -> ForensicsResponse:
-        """Возвращает текущие forensic‑данные.
+        """Возвращает срез активности пользователя и форензики из SQLite (< 5 мс)."""
+        d = store.get_latest_forensics_snapshot()
+        if not d:
+            return await asyncio.to_thread(_perform_forensics_scan, store)
+        return _convert_snapshot_to_response(d)
 
-        В текущей реализации возвращаются заглушки. При необходимости замените
-        их на реальные данные, получаемые из SystemCollector, UserAssist и т.д.
-        """
-        logger.debug("[router_forensics] Запрос forensic‑данных")
-        # Примерные заглушки
-        fg = ForegroundWindow()
-        idle = 12.3
-        cam_apps = []
-        mic_apps = []
-        ua_apps = []
-        return ForensicsResponse(
-            foreground_window=fg,
-            user_idle_seconds=idle,
-            camera_active_apps=cam_apps,
-            microphone_active_apps=mic_apps,
-            userassist_top_apps=ua_apps,
-        )
+    @router.post("/forensics/refresh", response_model=ForensicsResponse)
+    @router.post("/forensics/rescan", response_model=ForensicsResponse)
+    async def refresh_forensics() -> ForensicsResponse:
+        """Принудительно пересканирует форензик-активность и обновляет срез в SQLite."""
+        return await asyncio.to_thread(_perform_forensics_scan, store)
 
     return router

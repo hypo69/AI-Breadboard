@@ -215,6 +215,16 @@ def register_routers(app: FastAPI, state: 'AppState') -> None:
             app.include_router(init_backup_manager_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows backup manager router not registered: {e}')
+        try:
+            from apps.windows.modules.backup_manager.versions_router import init_router as init_file_versions_router
+            app.include_router(init_file_versions_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f'Windows file versions router not registered: {e}')
+        try:
+            from apps.windows.modules.focus_policy.router import init_router as init_focus_policy_router
+            app.include_router(init_focus_policy_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f'Windows focus policy router not registered: {e}')
     if is_app_enabled('windows_defender'):
         try:
             from apps.windows.defender.router import init_router as init_windows_defender_router

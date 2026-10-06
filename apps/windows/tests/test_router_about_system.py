@@ -14,7 +14,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 11:05:00
+# Updated: 2026-10-06 17:39:00
 # =============================================================================
 
 from __future__ import annotations
@@ -91,6 +91,29 @@ def test_api_endpoints(test_client):
     resp_bak = test_client.get("/api/v1/windows-backup/health")
     assert resp_bak.status_code == 200
     assert resp_bak.json().get("status") in ("ok", "warning", "error")
+
+    # 4.1. Throttling Diagnostics & Refresh
+    resp_thr = test_client.get("/api/v1/system/diagnostics/throttling")
+    assert resp_thr.status_code == 200
+    data_thr = resp_thr.json()
+    assert data_thr.get("status") == "ok"
+    assert "dpc_latency_pct" in data_thr
+
+    resp_thr_ref = test_client.post("/api/v1/system/diagnostics/throttling/refresh")
+    assert resp_thr_ref.status_code == 200
+    assert resp_thr_ref.json().get("status") == "ok"
+
+    # 4.2. Process Leaks & Refresh
+    resp_leaks = test_client.get("/api/v1/system/diagnostics/leaks?limit=10")
+    assert resp_leaks.status_code == 200
+    data_leaks = resp_leaks.json()
+    assert "total_processes" in data_leaks or "all_processes" in data_leaks
+
+    resp_leaks_tc = test_client.get("/api/v1/tc/process-leaks?limit=10")
+    assert resp_leaks_tc.status_code == 200
+
+    resp_leaks_ref = test_client.post("/api/v1/system/diagnostics/leaks/refresh?limit=10")
+    assert resp_leaks_ref.status_code == 200
 
     # 5. Dashboard KPI Endpoints
     resp_os = test_client.get("/api/v1/dashboard/os")

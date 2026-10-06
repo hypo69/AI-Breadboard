@@ -1,0 +1,437 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Taskbar & Window Management Tab
+=============================================================================
+Description:
+  Интерактивный пульт управления панелью задач Windows 10/11, окнами рабочего
+  стола, закрепленными приложениями, ITaskbarList3 UX, Command Registry
+  и историей изменений в telemetry.db с поддержкой отката (Rollback).
+
+Usage Examples:
+    Web Route:
+      /windows/api/webgui/taskbar_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/webgui/taskbar_tab/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/taskbar_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-06 17:58:00
+=============================================================================
+-->
+
+<div class="container-fluid p-0 taskbar-tab-wrapper d-flex flex-column" style="min-height: 100vh;">
+
+  <!-- Header Card & Summary Stats -->
+  <div class="card border-secondary-subtle mb-3 shadow-sm flex-shrink-0">
+    <div class="card-body p-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <div class="fs-2">📌</div>
+          <div>
+            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+              <span>Панель задач и Окна (Windows Taskbar & Windows)</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fs-6" id="tb-os-badge">Win32 / COM / Registry</span>
+              <span class="badge bg-success-subtle text-success border border-success-subtle small fs-6">telemetry.db Audit & Rollback</span>
+            </h5>
+            <div class="text-muted small">
+              Управление положением, автоскрытием, значками поиска/виджетов, окнами рабочего стола, ITaskbarList3, историей в telemetry.db и откатом.
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-rollback-last-quick" title="Откатить последнее действие">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span>Откат последнего действия</span>
+          </button>
+          <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-refresh-taskbar-data" title="Обновить состояние">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span>Обновить</span>
+          </button>
+          <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-restart-explorer-quick" title="Перезапустить Explorer">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Перезапуск Explorer</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Bar -->
+      <div class="row g-2 mt-2 pt-2 border-top border-secondary-subtle small">
+        <div class="col-6 col-md-3">
+          <div class="p-2 rounded bg-body-tertiary border border-secondary-subtle text-center">
+            <div class="text-muted small">Габариты панели</div>
+            <div class="fw-bold text-info" id="metric-tb-rect">—</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-2 rounded bg-body-tertiary border border-secondary-subtle text-center">
+            <div class="text-muted small">Выравнивание значков</div>
+            <div class="fw-bold text-success" id="metric-tb-align">—</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-2 rounded bg-body-tertiary border border-secondary-subtle text-center">
+            <div class="text-muted small">Открытых окон</div>
+            <div class="fw-bold text-primary" id="metric-tb-windows">0</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-2 rounded bg-body-tertiary border border-secondary-subtle text-center">
+            <div class="text-muted small">Активное окно (Foreground)</div>
+            <div class="fw-bold text-warning text-truncate" id="metric-tb-fg">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Subtabs -->
+  <ul class="nav nav-pills mb-3 gap-2 flex-shrink-0" id="taskbarSubTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active btn-sm" id="tab-btn-windows" data-bs-toggle="pill" data-bs-target="#panel-windows" type="button" role="tab">
+        <i class="bi bi-window-stack me-1"></i> Окна рабочего стола (<span id="badge-windows-count">0</span>)
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-sm" id="tab-btn-settings" data-bs-toggle="pill" data-bs-target="#panel-settings" type="button" role="tab">
+        <i class="bi bi-sliders me-1"></i> Настройки панели задач
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-sm" id="tab-btn-apps" data-bs-toggle="pill" data-bs-target="#panel-apps" type="button" role="tab">
+        <i class="bi bi-pin-angle me-1"></i> Закрепленные и Запуск
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-sm" id="tab-btn-ux" data-bs-toggle="pill" data-bs-target="#panel-ux" type="button" role="tab">
+        <i class="bi bi-bar-chart-steps me-1"></i> Индикаторы ITaskbarList3
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-sm" id="tab-btn-history" data-bs-toggle="pill" data-bs-target="#panel-history" type="button" role="tab">
+        <i class="bi bi-clock-history me-1"></i> История в telemetry.db (<span id="badge-history-count">0</span>)
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-sm" id="tab-btn-commands" data-bs-toggle="pill" data-bs-target="#panel-commands" type="button" role="tab">
+        <i class="bi bi-terminal me-1"></i> Command Registry (260)
+      </button>
+    </li>
+  </ul>
+
+  <!-- Subtabs Content -->
+  <div class="tab-content flex-grow-1" id="taskbarSubTabsContent">
+
+    <!-- 1. WINDOWS MANAGEMENT -->
+    <div class="tab-pane fade show active" id="panel-windows" role="tabpanel">
+      <div class="card border-secondary-subtle shadow-sm h-100">
+        <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between gap-2 p-2.5">
+          <!-- Filters -->
+          <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 500px;">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control" id="input-search-windows" placeholder="Фильтр по заголовку или процессу...">
+            </div>
+          </div>
+          <!-- Batch Actions -->
+          <div class="d-flex align-items-center gap-1.5 flex-wrap">
+            <button class="btn btn-sm btn-outline-secondary" id="btn-batch-minimize-all" title="Свернуть все окна (Показать рабочий стол)">
+              <i class="bi bi-dash-square me-1"></i> Свернуть все
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" id="btn-batch-restore-all" title="Восстановить все окна">
+              <i class="bi bi-window me-1"></i> Развернуть все
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body p-0 table-responsive" style="max-height: 60vh;">
+          <table class="table table-hover table-sm align-middle mb-0" id="table-windows-list">
+            <thead class="table-dark sticky-top small">
+              <tr>
+                <th style="width: 90px;">HWND</th>
+                <th>Заголовок окна</th>
+                <th style="width: 150px;">Процесс (PID)</th>
+                <th style="width: 140px;">Размеры (WxH)</th>
+                <th style="width: 100px;">Состояние</th>
+                <th style="width: 220px;" class="text-end">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-windows-list" class="small">
+              <tr>
+                <td colspan="6" class="text-center text-muted p-4">
+                  <div class="spinner-border spinner-border-sm text-primary me-2"></div> Загрузка списка открытых окон...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TASKBAR SETTINGS -->
+    <div class="tab-pane fade" id="panel-settings" role="tabpanel">
+      <div class="card border-secondary-subtle shadow-sm">
+        <div class="card-header bg-body-tertiary fw-semibold">
+          <i class="bi bi-sliders me-1 text-primary"></i> Системные настройки и внешний вид панели задач (с фиксацией в telemetry.db)
+        </div>
+        <div class="card-body p-3">
+          <form id="form-taskbar-settings">
+            <div class="row g-3">
+              <!-- Alignment -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small">Выравнивание значков (Windows 11)</label>
+                <div class="btn-group w-100" role="group">
+                  <input type="radio" class="btn-check" name="tb-alignment" id="align-left" value="0">
+                  <label class="btn btn-outline-primary btn-sm" for="align-left">
+                    <i class="bi bi-text-left me-1"></i> По левому краю
+                  </label>
+                  <input type="radio" class="btn-check" name="tb-alignment" id="align-center" value="1">
+                  <label class="btn btn-outline-primary btn-sm" for="align-center">
+                    <i class="bi bi-text-center me-1"></i> По центру
+                  </label>
+                </div>
+              </div>
+
+              <!-- Search mode -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small" for="select-search-mode">Режим строки поиска</label>
+                <select class="form-select form-select-sm" id="select-search-mode">
+                  <option value="0">Скрыт</option>
+                  <option value="1">Только значок поиска</option>
+                  <option value="2">Поле поиска</option>
+                  <option value="3">Кнопка поиска</option>
+                </select>
+              </div>
+
+              <!-- Switches -->
+              <div class="col-md-4">
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="switch-auto-hide">
+                  <label class="form-check-label small fw-semibold" for="switch-auto-hide">Автоматически скрывать панель</label>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="switch-widgets">
+                  <label class="form-check-label small fw-semibold" for="switch-widgets">Показывать виджеты (Widgets)</label>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="switch-task-view">
+                  <label class="form-check-label small fw-semibold" for="switch-task-view">Кнопка Task View</label>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="switch-copilot">
+                  <label class="form-check-label small fw-semibold" for="switch-copilot">Кнопка Copilot</label>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="switch-badges">
+                  <label class="form-check-label small fw-semibold" for="switch-badges">Бейджи уведомлений на значках</label>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="switch-restart-explorer">
+                  <label class="form-check-label small fw-semibold text-warning" for="switch-restart-explorer">Перезапустить Explorer после сохранения</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+              <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm">
+                <i class="bi bi-check2-circle me-1"></i> Применить настройки
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PINNED APPS & LAUNCH -->
+    <div class="tab-pane fade" id="panel-apps" role="tabpanel">
+      <div class="row g-3">
+        <!-- Pinned List -->
+        <div class="col-md-7">
+          <div class="card border-secondary-subtle shadow-sm h-100">
+            <div class="card-header bg-body-tertiary fw-semibold d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-pin-angle me-1 text-primary"></i> Закрепленные на панели задачи ярлыки</span>
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="btn-refresh-pinned">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+            <div class="card-body p-2" id="pinned-apps-container">
+              <div class="text-muted small p-3 text-center">Загрузка закрепленных приложений...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- App Launcher -->
+        <div class="col-md-5">
+          <div class="card border-secondary-subtle shadow-sm h-100">
+            <div class="card-header bg-body-tertiary fw-semibold">
+              <i class="bi bi-play-circle me-1 text-success"></i> Быстрый запуск приложения
+            </div>
+            <div class="card-body p-3">
+              <form id="form-launch-app">
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold">Путь к файлу / Команда</label>
+                  <input type="text" class="form-control form-control-sm" id="launch-app-path" placeholder="notepad.exe, msedge, explorer..." required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold">Аргументы</label>
+                  <input type="text" class="form-control form-control-sm" id="launch-app-args" placeholder="--incognito, path...">
+                </div>
+                <div class="mb-3 form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="launch-app-admin">
+                  <label class="form-check-label small fw-semibold" for="launch-app-admin">Запуск от имени администратора (UAC)</label>
+                </div>
+                <button type="submit" class="btn btn-success btn-sm w-100">
+                  <i class="bi bi-rocket-takeoff me-1"></i> Запустить
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. TASKBAR UX & ITASKBARLIST3 -->
+    <div class="tab-pane fade" id="panel-ux" role="tabpanel">
+      <div class="card border-secondary-subtle shadow-sm">
+        <div class="card-header bg-body-tertiary fw-semibold">
+          <i class="bi bi-bar-chart-steps me-1 text-primary"></i> Интерактивный эмулятор ITaskbarList3 (Индикаторы прогресса и оверлеи)
+        </div>
+        <div class="card-body p-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Целевое окно (HWND)</label>
+              <select class="form-select form-select-sm" id="select-ux-target-window"></select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Режим индикатора прогресса</label>
+              <select class="form-select form-select-sm" id="select-ux-progress-state">
+                <option value="normal">Обычный (Зеленый / Normal)</option>
+                <option value="indeterminate">Неопределенный (Бегущий / Indeterminate)</option>
+                <option value="error">Ошибка (Красный / Error)</option>
+                <option value="paused">Пауза (Желтый / Paused)</option>
+                <option value="no_progress">Сбросить (No Progress)</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Прогресс выполнения (%): <span id="label-progress-val">50%</span></label>
+              <input type="range" class="form-range" id="range-ux-progress" min="0" max="100" value="50">
+            </div>
+
+            <div class="col-md-6 d-flex align-items-end">
+              <button class="btn btn-primary btn-sm w-100" id="btn-apply-ux-progress">
+                <i class="bi bi-send me-1"></i> Передать прогресс на панель задач
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. HISTORY & ROLLBACK (telemetry.db) -->
+    <div class="tab-pane fade" id="panel-history" role="tabpanel">
+      <div class="card border-secondary-subtle shadow-sm">
+        <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between gap-2 p-2.5">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history me-1 text-primary"></i>
+            <span class="fw-semibold">Журнал изменений в SQLite telemetry.db</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-info btn-sm" id="btn-refresh-history">
+              <i class="bi bi-arrow-clockwise me-1"></i> Обновить историю
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body p-0 table-responsive" style="max-height: 55vh;">
+          <table class="table table-hover table-sm align-middle mb-0" id="table-history-list">
+            <thead class="table-dark sticky-top small">
+              <tr>
+                <th style="width: 60px;">ID</th>
+                <th style="width: 160px;">Время</th>
+                <th style="width: 180px;">Команда</th>
+                <th>Детали и состояния</th>
+                <th style="width: 110px;">Статус</th>
+                <th style="width: 120px;" class="text-end">Откат</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-history-list" class="small">
+              <tr>
+                <td colspan="6" class="text-center text-muted p-4">Загрузка журнала изменений из telemetry.db...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. COMMAND REGISTRY (260) -->
+    <div class="tab-pane fade" id="panel-commands" role="tabpanel">
+      <div class="card border-secondary-subtle shadow-sm">
+        <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between gap-2 p-2.5">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-terminal me-1 text-primary"></i>
+            <span class="fw-semibold">Каталог команд Control Plane</span>
+            <span class="badge bg-secondary-subtle text-secondary small" id="badge-commands-count">0</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm" id="filter-cmd-category" style="width: 140px;">
+              <option value="">Все категории</option>
+              <option value="window">window</option>
+              <option value="taskbar">taskbar</option>
+              <option value="shell">shell</option>
+              <option value="policy">policy</option>
+            </select>
+            <select class="form-select form-select-sm" id="filter-cmd-risk" style="width: 130px;">
+              <option value="">Любой риск</option>
+              <option value="safe">🟢 safe</option>
+              <option value="caution">🟡 caution</option>
+              <option value="admin">🟠 admin</option>
+              <option value="high">🔴 high</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card-body p-0 table-responsive" style="max-height: 55vh;">
+          <table class="table table-hover table-sm align-middle mb-0" id="table-commands-list">
+            <thead class="table-dark sticky-top small">
+              <tr>
+                <th style="width: 220px;">ID Команды</th>
+                <th style="width: 100px;">Класс</th>
+                <th style="width: 90px;">Риск</th>
+                <th>Описание</th>
+                <th>API / Механизм</th>
+                <th style="width: 100px;" class="text-end">Действие</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-commands-list" class="small">
+              <tr>
+                <td colspan="6" class="text-center text-muted p-4">Загрузка каталога команд...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

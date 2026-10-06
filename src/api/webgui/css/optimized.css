@@ -1,0 +1,866 @@
+/**
+ * =============================================================================\n * Process Name: AI-Breadboard Styles - Optimized Global Styles\n * =============================================================================\n * Description:\n *   Минималистичные глобальные стили с использованием наследования.\n *   Устраняет дублирование стилей между вкладками.\n *   Основано на CSS-переменных из variables.css\n *\n * File: optimized.css\n * Project: ai-breadboard\n * Package: src/api/webgui/css\n * Author: AI Assistant\n * Updated: 2026-10-06\n * =============================================================================\n */
+
+/* ═══════════════════════════════════════════════════════════════════════════\n   ГЛОБАЛЬНЫЕ СТИЛИ - ЕДИНЫЙ ИСТОЧНИК ИСТИНЫ\n   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Базовые стили карточек (используются во всех вкладках) ─────────────── */
+.card,
+.ui-panel,
+.ui-kpi-card,
+.sys-card,
+.def-card,
+.sysctl-card,
+.scc-card,
+.winadmin-card,
+.about-sys-card,
+.hw-card,
+.net-card,
+.speed-gauge-card {
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover,
+.ui-panel:hover,
+.ui-kpi-card:hover,
+.sys-card:hover,
+.def-card:hover,
+.sysctl-card:hover,
+.scc-card:hover,
+.winadmin-card:hover,
+.about-sys-card:hover,
+.hw-card:hover,
+.net-card:hover,
+.speed-gauge-card:hover {
+  border-color: var(--nav-active);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── 2. Заголовки карточек (единый стиль для всех вкладок) ─────────────────── */
+.card-header,
+.ui-panel-header,
+.sys-panel-header,
+.def-panel-header,
+.sysctl-panel-header,
+.winadmin-panel-header,
+.about-sys-panel-header,
+.hw-panel-header,
+.net-panel-header {
+  background: var(--surface-2);
+  border-bottom: 1.5px solid var(--border-color);
+  color: var(--text-color);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── 3. Таблицы (единый стиль для всех вкладок) ────────────────────────────── */
+.table,
+.ui-spec-table,
+.about-sys-spec-table,
+.sysctl-spec-table,
+.def-spec-table,
+.winadmin-spec-table,
+.hw-table,
+.net-table {
+  --bs-table-color: var(--text-color);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--border-color);
+  font-size: 0.82rem;
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.ui-spec-table th,
+.about-sys-spec-table th,
+.sysctl-spec-table th,
+.def-spec-table th,
+.winadmin-spec-table th,
+.hw-table th,
+.net-table th {
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  vertical-align: middle;
+}
+
+.table td,
+.ui-spec-table td,
+.about-sys-spec-table td,
+.sysctl-spec-table td,
+.def-spec-table td,
+.winadmin-spec-table td,
+.hw-table td,
+.net-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  line-height: 1.45;
+  color: var(--text-color);
+}
+
+.table tr:hover td,
+.ui-spec-table tr:hover td,
+.about-sys-spec-table tr:hover td,
+.sysctl-spec-table tr:hover td,
+.def-spec-table tr:hover td,
+.winadmin-spec-table tr:hover td,
+.hw-table tr:hover td,
+.net-table tr:hover td {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.table tr:last-child td,
+.ui-spec-table tr:last-child td,
+.about-sys-spec-table tr:last-child td,
+.sysctl-spec-table tr:last-child td,
+.def-spec-table tr:last-child td,
+.winadmin-spec-table tr:last-child td,
+.hw-table tr:last-child td,
+.net-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── 4. Заголовки разных уровней (единый стиль) ────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.ui-module-title,
+.sys-core-title {
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1.05rem; }
+h5 { font-size: 0.95rem; }
+h6 { font-size: 0.85rem; }
+
+/* ── 5. Формы (единый стиль для всех инпутов) ──────────────────────────────── */
+.form-control,
+.form-select,
+.ui-form-input {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-control:focus,
+.form-select:focus,
+.ui-form-input:focus {
+  border-color: var(--nav-active);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+  outline: none;
+}
+
+/* ── 6. Кнопки (единый стиль для всех кнопок) ──────────────────────────────── */
+.btn,
+.ui-btn,
+.ui-subnav-btn {
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.btn-sm,
+.ui-btn-sm {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.78rem;
+}
+
+.btn-primary,
+.ui-btn-primary {
+  background: var(--nav-active);
+  border-color: var(--nav-active);
+  color: #fff;
+}
+
+.btn-primary:hover,
+.ui-btn-primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+/* ── 7. Бейджи (единый стиль для всех вкладок) ─────────────────────────────── */
+.badge,
+.ui-badge,
+.ui-spec-key,
+.ui-spec-val {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.22em 0.5em;
+  letter-spacing: 0.02em;
+}
+
+/* ── 8. Алерты (единый стиль для всех вкладок) ─────────────────────────────── */
+.alert,
+.ui-alert {
+  font-size: 0.83rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border-width: 1px;
+  border-style: solid;
+}
+
+.alert-success,
+.ui-alert-success {
+  background: var(--alert-success-bg);
+  border-color: var(--alert-success-border);
+  color: var(--alert-success-text);
+}
+
+.alert-danger,
+.ui-alert-danger {
+  background: var(--alert-danger-bg);
+  border-color: var(--alert-danger-border);
+  color: var(--alert-danger-text);
+}
+
+.alert-warning,
+.ui-alert-warning {
+  background: var(--alert-warning-bg);
+  border-color: var(--alert-warning-border);
+  color: var(--alert-warning-text);
+}
+
+.alert-info,
+.ui-alert-info {
+  background: var(--alert-info-bg);
+  border-color: var(--alert-info-border);
+  color: var(--alert-info-text);
+}
+
+/* ── 9. Модальные окна (единый стиль для всех вкладок) ─────────────────────── */
+.modal-content,
+.ui-modal {
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  color: var(--modal-text);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header,
+.ui-modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.6rem 0.9rem;
+  background: var(--surface-2);
+}
+
+.modal-body,
+.ui-modal-body {
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.modal-footer,
+.ui-modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 0.5rem 0.9rem;
+  background: var(--surface-2);
+}
+
+/* ── 10. Скроллбары (единый стиль для всей платформы) ──────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
+/* ── 11. Системные панели (для вкладок с системной информацией) ────────────── */
+.sys-container,
+.ui-panel-body {
+  padding: 0.75rem;
+}
+
+.sys-core-section-title {
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── 12. Специфичные элементы (минимальные переопределения) ────────────────── */
+/* Каскадные токены KPI-карточек */
+.ui-kpi-card {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.ui-kpi-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.ui-kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+.ui-kpi-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* Модификаторы состояний KPI карточек */
+.ui-kpi-card.is-success { --kpi-border: var(--status-success-border); }
+.ui-kpi-card.is-danger { --kpi-border: var(--status-danger-border); }
+.ui-kpi-card.is-warning { --kpi-border: var(--status-warning-border); }
+.ui-kpi-card.is-info { --kpi-border: var(--status-info-border); }
+
+/* Унифицированные суб-навигационные переключатели */
+.ui-subnav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+
+.ui-subnav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.ui-subnav-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-color);
+}
+
+.ui-subnav-btn.active {
+  background: var(--surface-2);
+  border-color: var(--nav-active);
+  color: var(--nav-active);
+  font-weight: 600;
+}
+
+/* Унифицированные статусные бейджи */
+.ui-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.2;
+}
+
+.ui-badge-success {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+}
+
+.ui-badge-danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
+}
+
+.ui-badge-warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+.ui-badge-info {
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+  border: 1px solid var(--status-info-border);
+}
+
+.ui-badge-neutral {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+/* ── 13. Алиасы совместимости (для старых вкладок) ──────────────────────────── */
+/* Все алиасы наследуют от базовых классов, переопределяя только необходимое */
+.sys-panel { composes: ui-panel; }
+.def-panel { composes: ui-panel; }
+.sysctl-panel { composes: ui-panel; }
+.winadmin-panel { composes: ui-panel; }
+.about-sys-panel { composes: ui-panel; }
+
+/* ── 14. Модификаторы тем (минимальные переопределения) ────────────────────── */
+/* Тема Defender */
+.theme-defender {
+  --kpi-min-height: 64px;
+  --kpi-padding: 0.5rem 0.75rem;
+  --kpi-accent: #22c55e;
+}
+
+/* Тема Sysadmin */
+.theme-sysadmin {
+  --kpi-min-height: 68px;
+  --kpi-padding: 0.55rem 0.85rem;
+}
+
+/* Тема Inspector */
+.theme-inspector {
+  --kpi-min-height: 80px;
+  --kpi-val-size: 1.35rem;
+}
+
+/* Тема Sysctl */
+.theme-sysctl {
+  --kpi-min-height: 72px;
+}
+
+/* ── 15. Стили для Network Tab ─────────────────────────────────────────────── */
+.net-container {
+  padding: 0.5rem 0.75rem;
+}
+
+.net-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
+.net-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  font-family: var(--font-mono);
+  line-height: 1.15;
+}
+
+.net-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.net-panel-header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.net-table {
+  width: 100%;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  border-collapse: separate;
+  margin-bottom: 0;
+}
+
+.net-table th {
+  background: var(--surface-2);
+  padding: 6px 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.net-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-color);
+}
+
+.speed-gauge-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+
+.speed-gauge-val {
+  font-size: 2.2rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  line-height: 1.1;
+}
+
+/* ── 16. Стили для Hardware Monitor Tab ────────────────────────────────────── */
+.hw-container {
+  padding: 0.5rem 0.75rem;
+}
+
+.hw-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 60px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hw-card:hover {
+  border-color: var(--nav-active);
+  box-shadow: var(--shadow-md);
+}
+
+.hw-card-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.hw-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1.15;
+}
+
+.hw-card-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
+.hw-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.hw-panel-header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.45rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.hw-scrollable {
+  height: auto;
+  min-height: 100px;
+  max-height: clamp(280px, 52vh, 620px);
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.hw-table {
+  margin-bottom: 0;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.hw-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.hw-table th {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.45rem 0.6rem;
+}
+
+.hw-table td {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.45rem 0.6rem;
+  vertical-align: middle;
+}
+
+/* ── 17. Стили для Defender Tab ─────────────────────────────────────────────── */
+.def-container {
+  padding: 0.5rem 0.75rem;
+}
+
+.def-badge-active {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+}
+
+.def-badge-disabled {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
+}
+
+.def-badge-audit {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+.def-badge-warn {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+.def-badge-critical {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
+  font-weight: bold;
+}
+
+.def-desc-text,
+.theme-defender td.text-secondary,
+.theme-defender .table td.text-secondary {
+  color: var(--text-color);
+}
+
+/* ── 18. Стили для About System Tab ────────────────────────────────────────── */
+.about-sys-wrapper {
+  padding: 0.75rem;
+  color: var(--text-color);
+}
+
+.about-sys-top-header {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.about-sys-progress-track {
+  background: var(--surface-2);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.about-sys-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.about-sys-badge-ok {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  font-weight: 600;
+}
+
+.about-sys-badge-warn {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  font-weight: 600;
+}
+
+.about-sys-tree-node {
+  margin-bottom: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.about-sys-tree-title {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-color);
+  transition: background 0.12s;
+}
+
+.about-sys-tree-title:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.about-sys-tree-body {
+  padding: 8px 12px;
+  font-size: 0.80rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-color);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 4px 16px;
+}
+
+.about-sys-prop-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  transition: background 0.12s ease;
+  min-width: 0;
+}
+
+.about-sys-prop-row:hover {
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.about-sys-prop-row:last-child {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.about-sys-prop-key {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.80rem;
+  user-select: text;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.about-sys-prop-key::after {
+  content: ":";
+  margin-inline-start: 1px;
+  color: var(--text-muted);
+}
+
+.about-sys-prop-val {
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.82rem;
+  word-break: break-word;
+  user-select: text;
+  font-family: var(--font-mono);
+  min-width: 0;
+}
+
+/* ── 19. Стили для Proto и Status Badges ────────────────────────────────────── */
+.proto-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.proto-tcp { background: var(--status-info-bg); color: var(--status-info-text); border: 1px solid var(--status-info-border); }
+.proto-udp { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+.proto-tls { background: var(--status-success-bg); color: var(--status-success-text); border: 1px solid var(--status-success-border); }
+.proto-http { background: var(--status-warning-bg); color: var(--status-warning-text); border: 1px solid var(--status-warning-border); }
+.proto-dns { background: var(--status-info-bg); color: var(--status-info-text); border: 1px solid var(--status-info-border); }
+.proto-other { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border-color); }
+
+.status-badge-up { background: var(--status-success-bg); color: var(--status-success-text); border: 1px solid var(--status-success-border); }
+.status-badge-down { background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); }
+.status-badge-listen { background: var(--status-info-bg); color: var(--status-info-text); border: 1px solid var(--status-info-border); }
+.status-badge-established { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #9333ea; }
+
+/* ── 20. Стили для Sub-Navigation ────────────────────────────────────────────── */
+.net-subnav .nav-link {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.8rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.net-subnav .nav-link.active {
+  background: var(--surface-2);
+  color: var(--nav-active);
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+}

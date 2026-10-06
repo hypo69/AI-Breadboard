@@ -4,7 +4,8 @@ Process Name: AI-Breadboard Automation - Tc
 =============================================================================
 Description:
   Точка входа и лончер внутреннего сервера Windows System API (Terminal Controller / TC)
-  с поддержкой переключения телеметрии реального времени (TC mode) на лету.
+  с поддержкой BCP 47 локалей/регионов (?region=ru-RU, ?language-region=ru-RU)
+  и переключения телеметрии реального времени (TC mode) на лету.
 
   Зачем нужен этот скрипт:
     1. Запуск низкоуровневого API: поднимает FastAPI сервер модуля apps/windows/api (порт 8001).
@@ -12,13 +13,15 @@ Description:
        перед запуском сервера.
     3. Управление режимом телеметрии: активирует режим реального времени (TC mode, flush 5s)
        с авто-возвратом в стандартный режим через 5 минут.
+    4. Локализация и BCP 47: поддержка передачи региона/языка в параметрах командной строки
+       и маршрутизация в веб-интерфейс.
 
 File: tc.ps1
 Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 11:06:00
+Updated: 2026-10-06 22:15:00
 =============================================================================
 
 .SYNOPSIS
@@ -27,12 +30,18 @@ Updated: 2026-10-06 11:06:00
 .DESCRIPTION
     Проверяет доступность порта 8001 (или переопределенного), завершает старые процессы
     при необходимости, активирует режим реального времени телеметрии и запускает сервер.
+    Позволяет сразу передать региональные и языковые параметры интерфейса (BCP 47).
 
 .PARAMETER HostAddress
     Сетевой адрес для прослушивания запросов (по умолчанию: 127.0.0.1).
 
 .PARAMETER Port
     Сетевой порт сервиса (по умолчанию: 8001).
+
+.PARAMETER LanguageRegion
+    Код языка и региона по стандарту BCP 47 (например: ru-RU, he-IL, uk-UA, en-US).
+    Автоматически нормализует переданные теги (ru-ru -> ru-RU).
+    Алиасы: -Region, -Locale, -Lang, -Language_Region.
 
 .PARAMETER RealtimeTelemetry
     Включить телеметрию в реальном времени (TC mode, сброс каждые 5с, автоотключение через 5 мин).
@@ -49,6 +58,10 @@ Updated: 2026-10-06 11:06:00
     Запуск Windows API сервера с телеметрией реального времени.
 
 .EXAMPLE
+    .\tc.ps1 -Region "ru-ru"
+    Запуск с автоматическим формированием ссылки с локалью BCP 47 (ru-RU).
+
+.EXAMPLE
     .\tc.ps1 -GodMode
     Запуск Windows API сервера и открытие/фокусировка папки God Mode.
 
@@ -63,6 +76,9 @@ param (
     [string]$HostAddress,
 
     [string]$Port,
+
+    [Alias('Region', 'Locale', 'Lang', 'Language_Region', 'language-region')]
+    [string]$LanguageRegion,
 
     [switch]$RealtimeTelemetry = $true,
 
@@ -83,6 +99,39 @@ $pythonExe = if ($env:PYTHON_HOME) { Join-Path $env:PYTHON_HOME 'python.exe' } e
 
 $host_ = if ($HostAddress) { $HostAddress } else { '127.0.0.1' }
 $port_ = if ($Port)        { $Port }        else { '8001' }
+
+$regionQuery = ''
+if ($LanguageRegion) {
+    # Очистка и нормализация тега по стандарту BCP 47 (language-REGION)
+    $cleanTag = $LanguageRegion.Trim().Trim("`'""").Replace('_', '-')
+    if ($cleanTag -match '^([a-zA-Z]{2,3})(?:-([a-zA-Z]{2,4}))?$') {
+        $langPart = $Matches[1].ToLower()
+        $defaultRegions = @{ 
+            'ru' = 'RU'
+            'he' = 'IL'
+            'uk' = 'UA'
+            'en' = 'US'
+            'de' = 'DE'
+            'fr' = 'FR'
+            'es' = 'ES'
+            'pt' = 'BR'
+            'zh' = 'CN'
+            'ja' = 'JP'
+        }
+        $regPart = if ($Matches[2]) { 
+            $Matches[2].ToUpper() 
+        } elseif ($defaultRegions.ContainsKey($langPart)) { 
+            $defaultRegions[$langPart] 
+        } else { 
+            $langPart.ToUpper() 
+        }
+        $normalizedTag = "${langPart}-${regPart}"
+    } else {
+        $normalizedTag = $cleanTag
+    }
+    $regionQuery = "?region=${normalizedTag}"
+    Write-Host "  [🌐 BCP 47 Locale]: $normalizedTag" -ForegroundColor Cyan
+}
 
 if ($GodMode) {
     $godModeGuid = "ED7BA470-8E54-465E-825C-99712043E01C"
@@ -133,5 +182,7 @@ foreach ($pid_ in $occupied) {
         Write-Host "[WARN] Не удалось завершить PID ${pid_}: $_" -ForegroundColor Yellow
     }
 }
+
+Write-Host "  [Windows Internal API] TC UI: http://${host_}:${port_}/tc${regionQuery}" -ForegroundColor Cyan
 
 & $pythonExe -m apps.windows.api --host $host_ --port $port_

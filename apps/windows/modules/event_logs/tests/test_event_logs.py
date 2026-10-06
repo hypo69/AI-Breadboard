@@ -14,7 +14,7 @@
 # Package: apps.windows.modules.event_logs.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 02:28:00
+# Updated: 2026-10-06 17:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -104,3 +104,20 @@ def test_event_logs_intelligence_pipeline(client: TestClient, manager: EventLogs
     resp_search = client.get('/api/event-logs/intelligence/search?query=system&top_k=3')
     assert resp_search.status_code == 200
     assert isinstance(resp_search.json(), list)
+
+
+def test_event_logs_sqlite_data_first_and_refresh(client: TestClient):
+    """Проверка работы архитектуры Data-First SQLite и эндпоинта принудительного обновления."""
+    # 1. Принудительное обновление
+    resp_refresh = client.post('/api/event-logs/refresh?channel=System&hours=24')
+    assert resp_refresh.status_code == 200
+    report_data = resp_refresh.json()
+    assert report_data['total_channels'] > 0
+    assert len(report_data['channels']) > 0
+
+    # 2. Мгновенное чтение из SQLite
+    resp_summary = client.get('/api/event-logs/summary')
+    assert resp_summary.status_code == 200
+    summary = resp_summary.json()
+    assert summary['total_channels'] == report_data['total_channels']
+

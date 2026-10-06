@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.firewall_manager.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 17:30:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""Тестирование модуля управления сетевым экраном Windows на базе SQLite."""
 
 import pytest
 from fastapi import FastAPI
@@ -75,3 +75,19 @@ def test_firewall_endpoints(client: TestClient):
     resp_profiles = client.get('/api/firewall-manager/profiles')
     assert resp_profiles.status_code == 200
     assert len(resp_profiles.json()) == 3
+
+
+def test_firewall_sqlite_data_first_and_refresh(client: TestClient):
+    """Проверка работы архитектуры Data-First SQLite и эндпоинта refresh."""
+    resp_refresh = client.post('/api/firewall-manager/refresh')
+    assert resp_refresh.status_code == 200
+    data = resp_refresh.json()
+    assert len(data['profiles']) == 3
+    assert data['total_rules'] > 0
+
+    resp_rules = client.get('/api/firewall-manager/rules?direction=In')
+    assert resp_rules.status_code == 200
+    rules = resp_rules.json()
+    assert isinstance(rules, list)
+    for r in rules:
+        assert r['direction'] == 'In'

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 14:19:00
+ * Updated: 2026-10-06 18:34:00
  * =============================================================================
  */
 
@@ -1970,7 +1970,7 @@
   }
 
 
-  async function fetchHardwareSpec() {
+  async function fetchHardwareSpec(forceNetwork = false) {
     const container = document.getElementById('about-sys-tree-container');
     const badgeCount = document.getElementById('about-sys-node-count');
     if (!container) return;
@@ -1980,7 +1980,7 @@
       const nodes = await cachedFetch(
         '/api/v1/system/hardware',
         'hardware_spec',
-        { ttl: config.ttl, strategy: config.strategy }
+        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
       );
       hardwareData = Array.isArray(nodes) ? nodes : [];
 
@@ -1993,9 +1993,17 @@
       renderHardwareTree(hardwareData, filter);
     } catch (e) {
       console.error('[AboutSystemTab] Failed to fetch hardware spec:', e);
-      container.innerHTML = `<div class="text-center py-4 text-danger small">Ошибка загрузки оборудования: ${escapeHtml(e.message)}</div>`;
+      container.innerHTML = `
+        <div class="text-center py-4 text-danger small">
+          <div><i class="bi bi-exclamation-circle me-1"></i> Ошибка загрузки оборудования: ${escapeHtml(e.message)}</div>
+          <button class="btn btn-sm btn-outline-primary mt-2" type="button" onclick="window.fetchHardwareSpec ? window.fetchHardwareSpec(true) : null">
+            <i class="bi bi-arrow-clockwise me-1"></i> Повторить попытку
+          </button>
+        </div>
+      `;
     }
   }
+  window.fetchHardwareSpec = fetchHardwareSpec;
 
   function renderDisksTable(disks) {
     const tbody = document.getElementById('about-sys-disks-tbody');

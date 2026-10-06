@@ -15,7 +15,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 15:30:00
+ * Updated: 2026-10-06 19:05:00
  * =============================================================================
  */
 
@@ -89,7 +89,9 @@
   }
   .btn-outline-light:hover,
   .btn-outline-light:focus,
-  .btn-outline-light.active {
+  .btn-outline-light.active,
+  .btn-check:checked + .btn-outline-light,
+  .btn-check:active + .btn-outline-light {
     background-color: var(--surface-2) !important;
     color: var(--text-color) !important;
     border-color: var(--border-contrast) !important;
@@ -102,10 +104,12 @@
   }
   .btn-outline-secondary:hover,
   .btn-outline-secondary:focus,
-  .btn-outline-secondary.active {
-    background-color: var(--surface-2) !important;
-    color: var(--text-color) !important;
-    border-color: var(--border-contrast) !important;
+  .btn-outline-secondary.active,
+  .btn-check:checked + .btn-outline-secondary,
+  .btn-check:active + .btn-outline-secondary {
+    background-color: #64748b !important;
+    color: #ffffff !important;
+    border-color: #64748b !important;
   }
 
   .btn-outline-info {
@@ -115,7 +119,9 @@
   }
   .btn-outline-info:hover,
   .btn-outline-info:focus,
-  .btn-outline-info.active {
+  .btn-outline-info.active,
+  .btn-check:checked + .btn-outline-info,
+  .btn-check:active + .btn-outline-info {
     background-color: #0284c7 !important;
     color: #ffffff !important;
     border-color: #0284c7 !important;
@@ -128,7 +134,9 @@
   }
   .btn-outline-warning:hover,
   .btn-outline-warning:focus,
-  .btn-outline-warning.active {
+  .btn-outline-warning.active,
+  .btn-check:checked + .btn-outline-warning,
+  .btn-check:active + .btn-outline-warning {
     background-color: #d97706 !important;
     color: #ffffff !important;
     border-color: #d97706 !important;
@@ -141,7 +149,9 @@
   }
   .btn-outline-primary:hover,
   .btn-outline-primary:focus,
-  .btn-outline-primary.active {
+  .btn-outline-primary.active,
+  .btn-check:checked + .btn-outline-primary,
+  .btn-check:active + .btn-outline-primary {
     background-color: #2563eb !important;
     color: #ffffff !important;
     border-color: #2563eb !important;
@@ -154,7 +164,9 @@
   }
   .btn-outline-danger:hover,
   .btn-outline-danger:focus,
-  .btn-outline-danger.active {
+  .btn-outline-danger.active,
+  .btn-check:checked + .btn-outline-danger,
+  .btn-check:active + .btn-outline-danger {
     background-color: #dc2626 !important;
     color: #ffffff !important;
     border-color: #dc2626 !important;

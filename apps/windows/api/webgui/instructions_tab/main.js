@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/instructions_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 22:15:00
  * =============================================================================
  */
 
@@ -251,9 +251,8 @@ async function initInstructionsTab() {
 
   console.log('[InstructionsTab] Initializing...');
 
-  const savedLang = localStorage.getItem('app_language') || 'ru';
   try {
-    await initI18n(savedLang);
+    await initI18n();
     console.log('[InstructionsTab] i18n initialized');
   } catch (e) {
     console.error('[InstructionsTab] i18n init error:', e);

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 02:30:00
+ * Updated: 2026-10-06 22:15:00
  * =============================================================================
  */
 
@@ -79,6 +79,8 @@ const TABS = {
   'post-install-wizard':      ['/html/post_install_wizard_tab/index.html',      '/html/post_install_wizard_tab/main.js'],
   'maintenance-recovery':     ['/html/maintenance_recovery_tab/index.html',     '/html/maintenance_recovery_tab/main.js'],
   'windows-admin':            ['/html/windows_admin_tab/index.html',            '/html/windows_admin_tab/main.js'],
+  'focus-settings':           ['/html/focus_settings_tab/index.html',           '/html/focus_settings_tab/main.js'],
+  'taskbar-controller':       ['/html/taskbar_tab/index.html',                  '/html/taskbar_tab/main.js'],
   'startup-auditor':          ['/html/startup_auditor_tab/index.html',          '/html/startup_auditor_tab/main.js'],
   'services-manager':         ['/html/services_manager_tab/index.html',         '/html/services_manager_tab/main.js'],
   'task-scheduler':           ['/html/task_scheduler_tab/index.html',           '/html/task_scheduler_tab/main.js'],
@@ -149,13 +151,8 @@ async function init() {
   // 1. Тема
   initTheme();
 
-  // 2. i18n
-  const lang = localStorage.getItem('app_language') || 'ru';
-  await initI18n(lang);
-  document.querySelectorAll('.lang-selector').forEach(sel => {
-    sel.value = lang;
-    sel.addEventListener('change', e => switchLang(e.target.value));
-  });
+  // 2. i18n (с автоматическим парсингом URL параметров: ?region=ru-ru, ?locale=ru-RU и т.д.)
+  await initI18n();
 
   // 3. Пользователь, активность, кеш
   await initUserSettings();

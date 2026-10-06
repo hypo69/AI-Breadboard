@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.sysadmin.src
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 23:02:00
 # =============================================================================
 
 from __future__ import annotations
@@ -630,12 +630,17 @@ class DirectoryWatcher:
         return snap.to_dict()
 _global_watcher: Optional[DirectoryWatcher] = None
 
-def get_directory_watcher(watch_dirs: Optional[Union[str, List[str]]]=None, exclusions: Optional[Union[WatcherExclusions, Dict[str, Any]]]=None) -> DirectoryWatcher:
+def get_directory_watcher(
+    watch_dirs: Optional[Union[str, List[str]]] = None,
+    exclusions: Optional[Union[WatcherExclusions, Dict[str, Any]]] = None,
+    auto_start: bool = False,
+) -> DirectoryWatcher:
     """Получить глобальный экземпляр DirectoryWatcher.
 
     Args:
         watch_dirs: Путь или список путей для мониторинга. Если не указаны, используются пути из config.json.
         exclusions: Настройки исключений. Если не указаны, загружаются из config.json.
+        auto_start: Автоматически запустить поток мониторинга (по умолчанию False, сбор возложен на tlm.ps1).
 
     Returns:
         DirectoryWatcher: Экземпляр наблюдателя.
@@ -664,5 +669,6 @@ def get_directory_watcher(watch_dirs: Optional[Union[str, List[str]]]=None, excl
                 logger.debug(f'Не удалось загрузить параметры из config.json при первом создании: {e}')
         active_exclusions = exclusions if exclusions is not None else cfg_exclusions
         _global_watcher = DirectoryWatcher(watch_dirs=watch_dirs, exclusions=active_exclusions)
-        _global_watcher.start()
+        if auto_start:
+            _global_watcher.start()
     return _global_watcher

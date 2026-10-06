@@ -13,7 +13,7 @@
  * Project: ai-breadboard
  * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-06 09:32:00
+ * Updated: 2026-10-06 19:05:00
  * =============================================================================
  */
 
@@ -23,9 +23,20 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   КАРТОЧКИ
+   КАРТОЧКИ - ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ ВКЛАДОК
    ═══════════════════════════════════════════════════════════════════════════ */
-.card {
+.card,
+.ui-panel,
+.ui-kpi-card,
+.sys-card,
+.def-card,
+.sysctl-card,
+.scc-card,
+.winadmin-card,
+.about-sys-card,
+.hw-card,
+.net-card,
+.speed-gauge-card {
   background-color: var(--card-bg);
   border: 1.5px solid var(--border-color);
   color: var(--card-text);
@@ -34,7 +45,31 @@
   box-shadow: var(--shadow-sm);
 }
 
-.card-header {
+.card:hover,
+.ui-panel:hover,
+.ui-kpi-card:hover,
+.sys-card:hover,
+.def-card:hover,
+.sysctl-card:hover,
+.scc-card:hover,
+.winadmin-card:hover,
+.about-sys-card:hover,
+.hw-card:hover,
+.net-card:hover,
+.speed-gauge-card:hover {
+  border-color: var(--nav-active);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header,
+.ui-panel-header,
+.sys-panel-header,
+.def-panel-header,
+.sysctl-panel-header,
+.winadmin-panel-header,
+.about-sys-panel-header,
+.hw-panel-header,
+.net-panel-header {
   background-color: var(--surface-2);
   border-bottom: 1.5px solid var(--border-color);
   color: var(--text-color);
@@ -242,6 +277,49 @@
   color: var(--text-color);
 }
 
+/* Переключатели групп кнопок (btn-check radio/checkbox) */
+.btn-check:checked + .btn-outline-primary,
+.btn-check:active + .btn-outline-primary {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-secondary,
+.btn-check:active + .btn-outline-secondary {
+  background-color: #64748b !important;
+  border-color: #64748b !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-info,
+.btn-check:active + .btn-outline-info {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-danger,
+.btn-check:active + .btn-outline-danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-warning,
+.btn-check:active + .btn-outline-warning {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.btn-check:checked + .btn-outline-success,
+.btn-check:active + .btn-outline-success {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    МОДАЛЬНЫЕ ОКНА
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -296,58 +374,80 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ТАБЛИЦЫ
+   ТАБЛИЦЫ - ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ ВКЛАДОК
    ═══════════════════════════════════════════════════════════════════════════ */
-.table {
+.table,
+.ui-spec-table,
+.about-sys-spec-table,
+.sysctl-spec-table,
+.def-spec-table,
+.winadmin-spec-table,
+.hw-table,
+.net-table {
   --bs-table-color: var(--text-color);
   --bs-table-bg: transparent;
   --bs-table-border-color: var(--border-color);
   font-size: 0.82rem;
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .table th,
-.table td {
-  padding: 0.4rem 0.6rem;
+.ui-spec-table th,
+.about-sys-spec-table th,
+.sysctl-spec-table th,
+.def-spec-table th,
+.winadmin-spec-table th,
+.hw-table th,
+.net-table th {
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
   vertical-align: middle;
 }
 
-.table-hover tbody tr:hover {
-  background-color: var(--nav-hover-bg);
+.table td,
+.ui-spec-table td,
+.about-sys-spec-table td,
+.sysctl-spec-table td,
+.def-spec-table td,
+.winadmin-spec-table td,
+.hw-table td,
+.net-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  line-height: 1.45;
+  color: var(--text-color);
 }
 
-.table-dark {
-  --bs-table-bg: var(--surface-2);
-  --bs-table-color: var(--text-color);
+.table tr:hover td,
+.ui-spec-table tr:hover td,
+.about-sys-spec-table tr:hover td,
+.sysctl-spec-table tr:hover td,
+.def-spec-table tr:hover td,
+.winadmin-spec-table tr:hover td,
+.hw-table tr:hover td,
+.net-table tr:hover td {
+  background: rgba(56, 189, 248, 0.04);
 }
 
-[data-theme="dark"] .table-light,
-[data-theme="dark"] thead.table-light,
-[data-theme="dark"] thead.table-light th {
-  background-color: var(--surface-2) !important;
-  color: var(--text-color) !important;
-  border-color: var(--border-color) !important;
-}
-
-[data-theme="dark"] .table {
-  color: var(--text-color) !important;
-  border-color: var(--border-color) !important;
-}
-
-.table-responsive-adaptive {
-  height: auto;
-  min-height: 120px;
-  max-height: clamp(320px, 58vh, 720px);
-  overflow-y: auto;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.table-responsive-adaptive thead th,
-.table-sticky-header thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background-color: var(--surface-2);
+.table tr:last-child td,
+.ui-spec-table tr:last-child td,
+.about-sys-spec-table tr:last-child td,
+.sysctl-spec-table tr:last-child td,
+.def-spec-table tr:last-child td,
+.winadmin-spec-table tr:last-child td,
+.hw-table tr:last-child td,
+.net-table tr:last-child td {
+  border-bottom: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -12,12 +12,12 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/system_inspector_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
-File: index.html
-Project: ai-breadboard
-Package: windows/api/webgui/system_inspector_tab
-Author: hypo69
-Updated: 2026-10-06 14:23:00
-=============================================================================
+ * File: index.html
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/system_inspector_tab
+ * Author: hypo69
+ * Updated: 2026-10-06 21:52:00
+ =============================================================================
 -->
 
 <!-- System & Hardware Inspector Application Tab -->
@@ -152,6 +152,89 @@ Updated: 2026-10-06 14:23:00
   .sys-compact-mode #sys-gpu-panels-container {
     gap: 0.5rem !important;
     margin-bottom: 0.5rem !important;
+  }
+
+  /* Принудительное развертывание карточки компонента по клику на значок дрели (Drill-down) */
+  .sys-compact-mode .sys-card.sys-card-drill-expanded {
+    padding: 1rem !important;
+    border-color: var(--nav-active) !important;
+    box-shadow: 0 0 16px rgba(13, 202, 240, 0.25) !important;
+  }
+  .sys-compact-mode .sys-card.sys-card-drill-expanded .sys-card-header-bar {
+    display: flex !important;
+  }
+  .sys-compact-mode .sys-card.sys-card-drill-expanded .sys-full-only {
+    display: block !important;
+  }
+  .sys-compact-mode .sys-card.sys-card-drill-expanded .sys-full-only.row {
+    display: flex !important;
+  }
+  .sys-compact-mode .sys-card.sys-card-drill-expanded .sys-detailed-sensors {
+    display: block !important;
+  }
+  .sys-compact-mode .sys-card.sys-card-drill-expanded .sys-card-top-banner {
+    margin-bottom: 1rem !important;
+  }
+
+  /* Интерактивная кнопка со значком дрели (Drill-down) слева от названия компонента */
+  .sys-drill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0;
+    margin-right: 8px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border-color);
+    background: var(--surface-1);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-xs);
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+  .sys-drill-btn:hover {
+    border-color: var(--nav-active) !important;
+    color: var(--nav-active) !important;
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(13, 202, 240, 0.45);
+  }
+  .sys-drill-btn.active {
+    background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 14px rgba(14, 165, 233, 0.65) !important;
+    transform: rotate(-10deg) scale(1.05);
+  }
+  [data-theme="dark"] .sys-drill-btn {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  [data-theme="dark"] .sys-drill-btn.active {
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%) !important;
+    color: #ffffff !important;
+  }
+  [data-theme="terminal"] .sys-drill-btn {
+    background: #0b120c;
+    border-color: #1a4223;
+    color: #22c55e;
+  }
+  [data-theme="terminal"] .sys-drill-btn.active {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+    color: #0b120c !important;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.7) !important;
+  }
+  .sys-drill-btn .sys-drill-svg {
+    pointer-events: none;
+    transition: transform 0.22s ease;
+  }
+  .sys-drill-btn:hover .sys-drill-svg {
+    transform: rotate(12deg);
   }
 
   /* Верхний баннер панелей: строгое выравнивание колонок через CSS Grid */
@@ -652,7 +735,7 @@ Updated: 2026-10-06 14:23:00
   <!-- 1. Панель Загрузка CPU -->
   <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card sys-card-cpu h-100 p-3">
+      <div class="sys-card sys-card-cpu h-100 p-3" id="sys-card-cpu">
         <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
             <span class="sys-label text-info" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-cpu text-info me-1.5"></i>Загрузка CPU</span>
@@ -663,11 +746,23 @@ Updated: 2026-10-06 14:23:00
         <div class="sys-card-top-banner p-3 rounded-3 mb-3">
           <!-- Левая колонка: Модель процессора и экспресс-метрики KPI -->
           <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
-            <div class="text-start mb-1.5">
-              <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-cpu-model">--</span>
-              <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-cpu-vendor-badge" style="font-size: 0.70rem;">Intel Corporation · 64-bit</span>
-                <span class="badge bg-info-subtle text-info border border-info font-monospace" id="sys-cpu-status-badge" style="font-size: 0.70rem;">● Active</span>
+            <div class="text-start mb-1.5 d-flex align-items-center">
+              <button type="button" class="sys-drill-btn" id="sys-drill-btn-cpu" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-cpu')" title="Drill-down: Развернуть/скрыть все скрытые панели и датчики CPU">
+                <svg class="sys-drill-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 9V4H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h9z"/>
+                  <path d="M14 6.5h3.5v3H14"/>
+                  <path d="M17.5 8h4.5"/>
+                  <path d="M6 11v5a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6"/>
+                  <path d="M5.5 18h7v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3z"/>
+                  <path d="M10 13.5h1.5"/>
+                </svg>
+              </button>
+              <div>
+                <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-cpu-model">--</span>
+                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                  <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-cpu-vendor-badge" style="font-size: 0.70rem;">Intel Corporation · 64-bit</span>
+                  <span class="badge bg-info-subtle text-info border border-info font-monospace" id="sys-cpu-status-badge" style="font-size: 0.70rem;">● Active</span>
+                </div>
               </div>
             </div>
             <div class="sys-banner-kpi-grid">
@@ -810,7 +905,7 @@ Updated: 2026-10-06 14:23:00
   <!-- 3. Панель Память (RAM) и Дисковый ввод-вывод -->
   <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card sys-card-ram p-3">
+      <div class="sys-card sys-card-ram p-3" id="sys-card-ram">
         <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
             <span class="sys-label text-success" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-memory text-success me-1.5"></i>Память (RAM) и Дисковый ввод-вывод</span>
@@ -822,11 +917,23 @@ Updated: 2026-10-06 14:23:00
         <div class="sys-card-top-banner p-3 rounded-3 mb-3">
           <!-- Левая колонка: Модель RAM и экспресс-метрики KPI -->
           <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
-            <div class="text-start mb-1.5">
-              <span class="fw-bold text-success" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);" id="sys-metric-ram-model">-- GB RAM</span>
-              <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-ram-type-badge" style="font-size: 0.70rem;">DDR4 · System Memory</span>
-                <span class="badge bg-success-subtle text-success border border-success font-monospace" id="sys-ram-status-badge" style="font-size: 0.70rem;">● Dual Channel</span>
+            <div class="text-start mb-1.5 d-flex align-items-center">
+              <button type="button" class="sys-drill-btn" id="sys-drill-btn-ram" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-ram')" title="Drill-down: Развернуть/скрыть все скрытые панели и датчики RAM">
+                <svg class="sys-drill-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 9V4H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h9z"/>
+                  <path d="M14 6.5h3.5v3H14"/>
+                  <path d="M17.5 8h4.5"/>
+                  <path d="M6 11v5a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6"/>
+                  <path d="M5.5 18h7v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3z"/>
+                  <path d="M10 13.5h1.5"/>
+                </svg>
+              </button>
+              <div>
+                <span class="fw-bold text-success" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);" id="sys-metric-ram-model">-- GB RAM</span>
+                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                  <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-ram-type-badge" style="font-size: 0.70rem;">DDR4 · System Memory</span>
+                  <span class="badge bg-success-subtle text-success border border-success font-monospace" id="sys-ram-status-badge" style="font-size: 0.70rem;">● Dual Channel</span>
+                </div>
               </div>
             </div>
             <div class="sys-banner-kpi-grid">
@@ -961,7 +1068,7 @@ Updated: 2026-10-06 14:23:00
   <!-- 4. Панель Сетевые адаптеры и беспроводная связь (Ethernet / Wi-Fi / Bluetooth) -->
   <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card sys-card-net p-3">
+      <div class="sys-card sys-card-net p-3" id="sys-card-net">
         <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
             <span class="sys-label text-info" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-hdd-network text-info me-1.5"></i>Сетевые адаптеры и беспроводная связь</span>
@@ -973,11 +1080,23 @@ Updated: 2026-10-06 14:23:00
         <div class="sys-card-top-banner p-3 rounded-3 mb-3">
           <!-- Левая колонка: Модель сети и экспресс-метрики KPI -->
           <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
-            <div class="text-start mb-1.5">
-              <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-net-model">Ethernet (1000 Mbps) · Wi-Fi / BT</span>
-              <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-net-speed-badge" style="font-size: 0.70rem;">1.0 Gbps Full Duplex</span>
-                <span class="badge bg-info-subtle text-info border border-info font-monospace" id="sys-net-status-badge" style="font-size: 0.70rem;">● Link Active</span>
+            <div class="text-start mb-1.5 d-flex align-items-center">
+              <button type="button" class="sys-drill-btn" id="sys-drill-btn-net" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-net')" title="Drill-down: Развернуть/скрыть все скрытые панели и адаптеры сети">
+                <svg class="sys-drill-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 9V4H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h9z"/>
+                  <path d="M14 6.5h3.5v3H14"/>
+                  <path d="M17.5 8h4.5"/>
+                  <path d="M6 11v5a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6"/>
+                  <path d="M5.5 18h7v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3z"/>
+                  <path d="M10 13.5h1.5"/>
+                </svg>
+              </button>
+              <div>
+                <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-net-model">Ethernet (1000 Mbps) · Wi-Fi / BT</span>
+                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                  <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-net-speed-badge" style="font-size: 0.70rem;">1.0 Gbps Full Duplex</span>
+                  <span class="badge bg-info-subtle text-info border border-info font-monospace" id="sys-net-status-badge" style="font-size: 0.70rem;">● Link Active</span>
+                </div>
               </div>
             </div>
             <div class="sys-banner-kpi-grid">
@@ -1129,7 +1248,7 @@ Updated: 2026-10-06 14:23:00
   <!-- 5. Панель Параметры накопителей (Диски SSD / HDD / NVMe) -->
   <div class="row mb-3">
     <div class="col-12">
-      <div class="sys-card sys-card-storage p-3">
+      <div class="sys-card sys-card-storage p-3" id="sys-card-storage">
         <div class="sys-card-header-bar">
           <div class="d-flex align-items-center gap-2">
             <span class="sys-label text-info" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-hdd-fill text-info me-1.5"></i>Параметры накопителей (Диски SSD / HDD / NVMe)</span>
@@ -1143,11 +1262,23 @@ Updated: 2026-10-06 14:23:00
         <div class="sys-card-top-banner p-3 rounded-3 mb-3">
           <!-- Левая колонка: Модель хранилища и экспресс-метрики KPI -->
           <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
-            <div class="text-start mb-1.5">
-              <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-storage-model">Дисковая подсистема и накопители</span>
-              <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-storage-summary-badge-top" style="font-size: 0.70rem;">NVMe / SSD / HDD</span>
-                <span class="badge bg-success-subtle text-success border border-success font-monospace" id="sys-storage-status-badge" style="font-size: 0.70rem;">● SMART OK</span>
+            <div class="text-start mb-1.5 d-flex align-items-center">
+              <button type="button" class="sys-drill-btn" id="sys-drill-btn-storage" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-storage')" title="Drill-down: Развернуть/скрыть все скрытые панели накопителей">
+                <svg class="sys-drill-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 9V4H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h9z"/>
+                  <path d="M14 6.5h3.5v3H14"/>
+                  <path d="M17.5 8h4.5"/>
+                  <path d="M6 11v5a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6"/>
+                  <path d="M5.5 18h7v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3z"/>
+                  <path d="M10 13.5h1.5"/>
+                </svg>
+              </button>
+              <div>
+                <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-storage-model">Дисковая подсистема и накопители</span>
+                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                  <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-storage-summary-badge-top" style="font-size: 0.70rem;">NVMe / SSD / HDD</span>
+                  <span class="badge bg-success-subtle text-success border border-success font-monospace" id="sys-storage-status-badge" style="font-size: 0.70rem;">● SMART OK</span>
+                </div>
               </div>
             </div>
             <div class="sys-banner-kpi-grid">

@@ -318,6 +318,7 @@
     "modeTimeline": "📊 ציר זמן",
     "modeRaw": "📄 רשומה גולמית",
     "modeActivity": "⚙️ יומן פעילות",
+    "modeEventLogs": "📝 יומני WevtAPI ו-Intel",
     "btnAskAi": "שאל בינה מלאכותית",
     "searchPlaceholder": "חיפוש לפי טקסט, מקור...",
     "allLevels": "כל הרמות",

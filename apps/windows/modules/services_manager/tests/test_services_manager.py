@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.services_manager.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 17:30:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""Тестирование модуля управления службами Windows на базе SQLite."""
 
 import pytest
 from fastapi import FastAPI
@@ -72,3 +72,16 @@ def test_services_endpoints(client: TestClient):
 
     resp_list = client.get('/api/services-manager/list')
     assert resp_list.status_code == 200
+
+
+def test_services_sqlite_data_first_and_scan(client: TestClient):
+    """Проверка работы архитектуры Data-First SQLite и эндпоинта /scan."""
+    resp_scan = client.post('/api/services-manager/scan')
+    assert resp_scan.status_code == 200
+    data = resp_scan.json()
+    assert data['total_services'] > 0
+    assert len(data['services']) > 0
+
+    resp_summary = client.get('/api/services-manager/summary')
+    assert resp_summary.status_code == 200
+    assert resp_summary.json()['total_services'] == data['total_services']

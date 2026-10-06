@@ -16,7 +16,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 17:45:00
 # =============================================================================
 
 """Тесты модуля инспекции прозрачности ПО в составе apps/windows."""
@@ -24,7 +24,20 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from apps.windows.core.software_transparency import ConfigFile, ConfigInspector, EvidenceStatus, GeminiAppResearch, GeminiResearcher, NetworkTracker, SoftwareItem, SoftwareInventory, StorageAnalyzer, init_software_transparency_router
+from apps.windows.core.software_transparency import (
+    ConfigFile,
+    ConfigInspector,
+    EvidenceStatus,
+    GeminiAppResearch,
+    GeminiResearcher,
+    NetworkTracker,
+    SoftwareItem,
+    SoftwareInventory,
+    StorageAnalyzer,
+    init_software_transparency_router,
+)
+from apps.windows.telemetry.sqlite import TelemetryStorage
+
 
 def test_models_creation():
     """Проверка создания Pydantic моделей карточек ПО."""
@@ -32,6 +45,7 @@ def test_models_creation():
     assert app.name == 'Test App'
     assert app.architecture == 'x64'
     assert app.config_files == []
+
 
 def test_secret_sanitizer():
     """Проверка очистки конфиденциальных секретов в конфигах."""
@@ -43,6 +57,7 @@ def test_secret_sanitizer():
     assert '[REDACTED_SECRET]' in sanitized or '[REDACTED_API_KEY]' in sanitized or '[REDACTED_JWT_TOKEN]' in sanitized
     assert '3600' in sanitized
 
+
 def test_software_inventory_scan():
     """Проверка работы инвентаризатора ПО."""
     inv = SoftwareInventory()
@@ -53,12 +68,14 @@ def test_software_inventory_scan():
     assert first_app.id is not None
     assert first_app.name != ''
 
+
 def test_storage_analyzer():
     """Проверка анализатора мест хранения данных."""
     analyzer = StorageAnalyzer()
     app = SoftwareItem(id='test-app', name='Chrome', version='140.0', publisher='Google LLC')
     dirs = analyzer.discover_storage_for_app(app)
     assert isinstance(dirs, list)
+
 
 def test_network_tracker():
     """Проверка сетевого трекера приложений."""
@@ -70,6 +87,7 @@ def test_network_tracker():
     domains = [e.domain_or_ip for e in endpoints]
     assert 'api.example.com' in domains or any(('google' in d for d in domains))
 
+
 @pytest.mark.anyio
 async def test_gemini_researcher_fallback():
     """Проверка работы ИИ-исследователя прозрачности ПО."""
@@ -80,24 +98,52 @@ async def test_gemini_researcher_fallback():
     assert 'Google Chrome' in res.summary
     assert len(res.confirmed_facts) > 0
 
+
 def test_fastapi_router():
-    """Проверка эндпоинтов роутера прозрачности ПО."""
+    """Проверка эндпоинтов роутера прозрачности ПО и сохранения в SQLite."""
     app = FastAPI()
     app.include_router(init_software_transparency_router())
     client = TestClient(app)
+
     res_status = client.get('/api/v1/software-scanner/status')
     assert res_status.status_code == 200
     assert res_status.json()['status'] == 'online'
+
     res_scan = client.get('/api/v1/software-scanner/scan')
     assert res_scan.status_code == 200
     data = res_scan.json()
     assert 'summary' in data
     assert 'apps' in data
     assert len(data['apps']) > 0
+
     first_app_id = data['apps'][0]['id']
+
+    # Проверка получения списка приложений
+    res_apps = client.get('/api/v1/software-scanner/apps')
+    assert res_apps.status_code == 200
+    assert len(res_apps.json()) > 0
+
+    # Проверка получения деталей одного приложения
     res_single = client.get(f'/api/v1/software-scanner/apps/{first_app_id}')
     assert res_single.status_code == 200
     assert res_single.json()['id'] == first_app_id
+
+    # Проверка вызова research и сохранения
     res_research = client.post('/api/v1/software-scanner/research', json={'app_id': first_app_id})
     assert res_research.status_code == 200
     assert 'summary' in res_research.json()
+
+    # Проверка принудительного обновления через /refresh
+    res_refresh = client.post('/api/v1/software-scanner/refresh')
+    assert res_refresh.status_code == 200
+    assert res_refresh.json()['status'] == 'ok'
+
+    # Проверка чтения напрямую из SQLite TelemetryStorage
+    storage = TelemetryStorage.get_instance()
+    db_items = storage.get_software_inventory_from_db(limit=10)
+    assert isinstance(db_items, list)
+    assert len(db_items) > 0
+
+    db_details = storage.get_software_app_details_from_db(first_app_id)
+    assert db_details is not None
+    assert db_details['app_id'] == first_app_id

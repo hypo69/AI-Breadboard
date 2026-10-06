@@ -499,7 +499,13 @@ pytest apps/network_terminal/tests/ --cov=apps/network_terminal --cov-report=ter
 
 ---
 
-**Последнее обновление:** сентябрь 2026
+## 🚫 Исключённые тесты (Excluded Test Suites)
+
+- **`TestTradingDeskEngineApp`**: тесты торгового движка (`tests/test_apps_trading.py`) отключены от автоматического прогона по требованию пользователя. Исключены в `pytest.ini` (`-k "not TestTradingDeskEngineApp"`) и помечены `@pytest.mark.skip`.
+
+---
+
+**Последнее обновление:** 2026-10-06
 
 **Ссылки:**
 - [`standards/DOCUMENTATION.md`](../standards/DOCUMENTATION.md) — Стандарты документирования

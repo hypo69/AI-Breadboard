@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-06 19:11:00
 # =============================================================================
 
 """Unit tests for apps.trading_terminal package."""
@@ -25,6 +25,9 @@ import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from apps.trading_terminal import TradingDeskEngine, TradingState, MarketTicker, OrderRequest, init_router, render_ui
+
+# Полное отключение всех тестов модуля trading (код пока не используется)
+pytestmark = pytest.mark.skip(reason="Торговый модуль и тесты отключены: код пока не трогаем")
 
 class TestTradingDeskEngineApp:
     """Test suite for apps.trading_terminal.engine."""

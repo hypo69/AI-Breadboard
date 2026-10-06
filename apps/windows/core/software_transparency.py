@@ -16,7 +16,7 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 00:50:00
+# Updated: 2026-10-06 17:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ from logger import logger
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from apps.windows.core.software_audit import SoftwareAuditEngine
+from apps.windows.telemetry.sqlite import TelemetryStorage
 
 class StorageCategory(str, Enum):
     """Категории хранилищ данных программы."""
@@ -394,9 +395,69 @@ class GeminiResearcher:
     def _generate_fallback(self, app: SoftwareItem) -> GeminiAppResearch:
         return GeminiAppResearch(app_name=app.name, summary=f'Программа {app.name} от разработчика {app.publisher}. Версия: {app.version}.', config_purpose_explanation='Параметры работы и пользовательские настройки.', data_storage_explanation='Локальные каталоги %APPDATA% и %LOCALAPPDATA%.', network_activity_explanation='Проверка обновлений и взаимодействия по сетевым протоколам.', confirmed_facts=[f'ПО установлено в системе ({app.name})', f'Издатель: {app.publisher}'], inferred_facts=['Использует стандартную структуру расположения данных Windows'], unknown_aspects=['Детали проприетарных протоколов сети'], confidence_level='Подтверждено документацией')
 
-def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIRouter:
-    """Инициализация FastAPI роутера сканера прозрачности ПО."""
+def _map_db_to_software_item(app_dict: Dict[str, Any]) -> SoftwareItem:
+    """Преобразование записи БД в объект SoftwareItem."""
+    storage_dirs: List[StorageDirectory] = []
+    for loc in app_dict.get('storage_locations', []):
+        cat_str = loc.get('category', 'unknown')
+        try:
+            category_enum = StorageCategory(cat_str)
+        except Exception:
+            category_enum = StorageCategory.UNKNOWN
+        storage_dirs.append(StorageDirectory(
+            path=loc.get('path', ''),
+            display_path=loc.get('path', ''),
+            category=category_enum,
+            file_count=int(loc.get('file_count', 0) or 0),
+            total_size_bytes=int(loc.get('size_bytes', 0) or 0),
+            status=EvidenceStatus.LOCAL_OBSERVED,
+        ))
+
+    cfg_files: List[ConfigFile] = []
+    for cf in app_dict.get('config_files', []):
+        f_path = cf.get('file_path', '')
+        cfg_files.append(ConfigFile(
+            path=f_path,
+            display_path=f_path,
+            filename=Path(f_path).name if f_path else 'config',
+            format=cf.get('format', 'unknown'),
+            size_bytes=int(cf.get('size_bytes', 0) or 0),
+            sample_content=cf.get('snippet'),
+            status=EvidenceStatus.LOCAL_OBSERVED,
+        ))
+
+    ai_research = None
+    if app_dict.get('ai_research'):
+        ai_data = app_dict['ai_research']
+        ai_research = GeminiAppResearch(
+            app_name=app_dict.get('display_name', ''),
+            summary=ai_data.get('summary', ''),
+            config_purpose_explanation=ai_data.get('config_purpose_explanation', ''),
+            data_storage_explanation=ai_data.get('data_storage_explanation', ''),
+            network_activity_explanation=ai_data.get('network_activity_explanation', ''),
+            confirmed_facts=ai_data.get('confirmed_facts', []),
+            inferred_facts=ai_data.get('inferred_facts', []),
+            confidence_level=str(ai_data.get('confidence_level', 'Средний')),
+        )
+
+    return SoftwareItem(
+        id=app_dict.get('app_id', ''),
+        name=app_dict.get('display_name', ''),
+        version=app_dict.get('version') or 'Не указана',
+        publisher=app_dict.get('publisher') or 'Неизвестен',
+        install_location=app_dict.get('install_location'),
+        architecture=app_dict.get('architecture') or 'x64',
+        install_date=app_dict.get('install_date'),
+        config_files=cfg_files,
+        data_directories=storage_dirs,
+        ai_research=ai_research,
+    )
+
+
+def init_software_transparency_router(chat_provider: Optional[Any] = None) -> APIRouter:
+    """Инициализация FastAPI роутера сканера прозрачности ПО на базе SQLite."""
     router = APIRouter(prefix='/api/v1/software-scanner', tags=['AI Software Transparency Scanner'])
+    storage = TelemetryStorage.get_instance()
     inventory = SoftwareInventory()
     storage_analyzer = StorageAnalyzer()
     config_inspector = ConfigInspector()
@@ -405,57 +466,165 @@ def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIR
     _cache: Dict[str, SoftwareItem] = {}
     _last_summary: Optional[ScanSummary] = None
 
-    @router.get('/status')
-    async def get_status() -> Dict[str, Any]:
-        return {'status': 'online', 'service': 'AI Software Transparency Scanner', 'version': '1.0.0', 'cached_apps_count': len(_cache)}
-
-    @router.get('/scan', response_model=FullScanReport)
-    async def run_full_scan(force_refresh: bool=Query(False, description='Принудительно пересканировать')) -> FullScanReport:
+    async def _execute_full_scan() -> FullScanReport:
         nonlocal _cache, _last_summary
         start_time = time.time()
+        apps = inventory.scan_installed_software()
+        _cache = {}
+        total_configs = 0
+        total_domains = 0
+        total_bytes = 0
+
+        inventory_records = []
+        storage_locations = []
+        config_files_records = []
+        ai_research_records = []
+
+        for app in apps:
+            dirs = storage_analyzer.discover_storage_for_app(app)
+            app.data_directories = dirs
+            for d in dirs:
+                total_bytes += d.total_size_bytes
+                storage_locations.append({
+                    'app_id': app.id,
+                    'category': d.category.value if hasattr(d.category, 'value') else str(d.category),
+                    'path': d.path,
+                    'size_bytes': d.total_size_bytes,
+                    'file_count': d.file_count,
+                })
+
+            cfgs = config_inspector.inspect_directories_for_configs(dirs)
+            app.config_files = cfgs
+            total_configs += len(cfgs)
+            for c in cfgs:
+                config_files_records.append({
+                    'app_id': app.id,
+                    'file_path': c.path,
+                    'format': c.format,
+                    'size_bytes': c.size_bytes,
+                    'snippet': c.sample_content,
+                })
+
+            nets = network_tracker.track_app_network(app, cfgs)
+            app.network_endpoints = nets
+            total_domains += len(nets)
+
+            inventory_records.append({
+                'app_id': app.id,
+                'display_name': app.name,
+                'version': app.version,
+                'publisher': app.publisher,
+                'install_date': app.install_date,
+                'install_location': app.install_location,
+                'architecture': app.architecture,
+                'is_system_component': False,
+            })
+
+            if app.ai_research:
+                ai_research_records.append({
+                    'app_id': app.id,
+                    'summary': app.ai_research.summary,
+                    'config_purpose_explanation': app.ai_research.config_purpose_explanation,
+                    'data_storage_explanation': app.ai_research.data_storage_explanation,
+                    'network_activity_explanation': app.ai_research.network_activity_explanation,
+                    'confirmed_facts': app.ai_research.confirmed_facts,
+                    'inferred_facts': app.ai_research.inferred_facts,
+                    'confidence_level': 1.0 if app.ai_research.confidence_level == 'Высокий' else 0.5,
+                })
+
+            _cache[app.id] = app
+
+        # Сохранение в SQLite
+        try:
+            storage.save_software_inventory(
+                apps=inventory_records,
+                storage_locations=storage_locations,
+                config_files=config_files_records,
+                ai_research=ai_research_records,
+            )
+        except Exception as ex:
+            logger.debug(f'Ошибка сохранения инвентаря ПО в SQLite: {ex}')
+
+        dur = round(time.time() - start_time, 2)
+        _last_summary = ScanSummary(
+            total_apps=len(_cache),
+            total_configs_found=total_configs,
+            total_network_domains=total_domains,
+            total_storage_bytes=total_bytes,
+            scan_duration_sec=dur,
+            last_scan_time=time.strftime('%Y-%m-%dT%H:%M:%S'),
+        )
+        return FullScanReport(summary=_last_summary, apps=list(_cache.values()))
+
+    @router.get('/status')
+    async def get_status() -> Dict[str, Any]:
+        return {
+            'status': 'online',
+            'service': 'AI Software Transparency Scanner',
+            'version': '1.0.0',
+            'cached_apps_count': len(_cache),
+        }
+
+    @router.get('/scan', response_model=FullScanReport)
+    @router.post('/scan', response_model=FullScanReport)
+    async def run_full_scan(force_refresh: bool = Query(False, description='Принудительно пересканировать')) -> FullScanReport:
         if not _cache or force_refresh:
-            apps = inventory.scan_installed_software()
-            _cache = {}
-            total_configs = 0
-            total_domains = 0
-            total_bytes = 0
-            for app in apps:
-                dirs = storage_analyzer.discover_storage_for_app(app)
-                app.data_directories = dirs
-                for d in dirs:
-                    total_bytes += d.total_size_bytes
-                cfgs = config_inspector.inspect_directories_for_configs(dirs)
-                app.config_files = cfgs
-                total_configs += len(cfgs)
-                nets = network_tracker.track_app_network(app, cfgs)
-                app.network_endpoints = nets
-                total_domains += len(nets)
-                _cache[app.id] = app
-            dur = round(time.time() - start_time, 2)
-            _last_summary = ScanSummary(total_apps=len(_cache), total_configs_found=total_configs, total_network_domains=total_domains, total_storage_bytes=total_bytes, scan_duration_sec=dur, last_scan_time=time.strftime('%Y-%m-%dT%H:%M:%S'))
+            return await _execute_full_scan()
         return FullScanReport(summary=_last_summary or ScanSummary(total_apps=len(_cache)), apps=list(_cache.values()))
 
+    @router.post('/refresh')
+    async def refresh_software() -> Dict[str, Any]:
+        """Принудительное пересканирование ПО с сохранением в SQLite."""
+        report = await _execute_full_scan()
+        return {'status': 'ok', 'message': 'Инвентаризация ПО обновлена', 'total_apps': report.summary.total_apps}
+
     @router.get('/apps', response_model=List[SoftwareItem])
-    async def get_apps() -> List[SoftwareItem]:
+    async def get_apps(limit: int = 200, offset: int = 0) -> List[SoftwareItem]:
+        """Возвращает список установленных программ из БД с поддержкой холодного старта."""
         if not _cache:
-            await run_full_scan()
-        return list(_cache.values())
+            db_apps = storage.get_software_inventory_from_db(limit=limit, offset=offset)
+            if db_apps:
+                items = []
+                for a in db_apps:
+                    details = storage.get_software_app_details_from_db(a.get('app_id', ''))
+                    if details:
+                        item = _map_db_to_software_item(details)
+                        _cache[item.id] = item
+                        items.append(item)
+                if items:
+                    return items
+            # Cold Start Fallback
+            await _execute_full_scan()
+        return list(_cache.values())[offset:offset + limit] if offset or limit < len(_cache) else list(_cache.values())
 
     @router.get('/apps/{app_id}', response_model=SoftwareItem)
     async def get_app_details(app_id: str) -> SoftwareItem:
-        if not _cache:
-            await run_full_scan()
+        """Возвращает карточку программы из кэша или базы данных SQLite."""
         if app_id in _cache:
             return _cache[app_id]
+
+        db_app = storage.get_software_app_details_from_db(app_id)
+        if db_app:
+            item = _map_db_to_software_item(db_app)
+            _cache[item.id] = item
+            return item
+
+        if not _cache:
+            await _execute_full_scan()
+            if app_id in _cache:
+                return _cache[app_id]
+
         for k, v in _cache.items():
             if app_id.lower() in k.lower() or app_id.lower() in v.name.lower():
                 return v
+
         raise HTTPException(status_code=404, detail=f"Программа с ID '{app_id}' не найдена")
 
     @router.post('/research', response_model=GeminiAppResearch)
     async def research_app(req: ResearchRequest) -> GeminiAppResearch:
+        """Запуск ИИ-исследования программы и сохранение результата в SQLite."""
         if not _cache:
-            await run_full_scan()
+            await _execute_full_scan()
         target_app = _cache.get(req.app_id)
         if not target_app:
             for k, v in _cache.items():
@@ -464,9 +633,32 @@ def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIR
                     break
         if not target_app:
             raise HTTPException(status_code=404, detail=f"Программа '{req.app_id}' не найдена для исследования")
+
         if target_app.ai_research and (not req.force_refresh):
             return target_app.ai_research
+
         research_res = await researcher.research_software(target_app)
         target_app.ai_research = research_res
+
+        try:
+            storage.save_software_inventory(
+                apps=[],
+                storage_locations=[],
+                config_files=[],
+                ai_research=[{
+                    'app_id': target_app.id,
+                    'summary': research_res.summary,
+                    'config_purpose_explanation': research_res.config_purpose_explanation,
+                    'data_storage_explanation': research_res.data_storage_explanation,
+                    'network_activity_explanation': research_res.network_activity_explanation,
+                    'confirmed_facts': research_res.confirmed_facts,
+                    'inferred_facts': research_res.inferred_facts,
+                    'confidence_level': 1.0 if research_res.confidence_level == 'Высокий' else 0.5,
+                }],
+            )
+        except Exception as ex:
+            logger.debug(f'Ошибка сохранения AI research в SQLite: {ex}')
+
         return research_res
+
     return router

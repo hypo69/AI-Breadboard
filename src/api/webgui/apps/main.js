@@ -14,7 +14,7 @@
  * Package: src/api/webgui/apps
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 01:12:00
+ * Updated: 2026-10-06 19:05:00
  * =============================================================================
  */
 
@@ -249,168 +249,264 @@ function initMenuEditor(cfg, appsMap = {}) {
   if (!editorBtn || !modal || !list || !cfg) return;
 
   let currentItems = [];
-  let draggedIdx = null;
+  let draggedGlobalIdx = null;
 
   function collectInitialItems() {
     return [
-      ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'top' })),
-      ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'bottom' })),
+      ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: x.position || (x.visible === false ? 'hidden' : 'top') })),
+      ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.position || (x.visible === false ? 'hidden' : 'bottom') })),
     ];
   }
 
   function renderList() {
     list.innerHTML = '';
-    const total = currentItems.length;
 
-    currentItems.forEach((item, idx) => {
-      const safeId = (item.id || `item_${idx}`).replace(/[^a-zA-Z0-9_-]/g, '');
-      const div = document.createElement('div');
-      div.className = 'menu-editor-item d-flex align-items-center gap-2 p-2 mb-2 rounded border border-secondary-subtle';
-      div.dataset.id = item.id;
-      div.dataset.index = idx;
-      div.draggable = true;
+    const GROUPS = [
+      {
+        key: 'top',
+        title: 'Сверху (Верхняя панель)',
+        icon: 'bi-layout-text-window-reverse',
+        badgeCls: 'bg-primary text-white',
+        borderCls: 'border-primary-subtle'
+      },
+      {
+        key: 'bottom',
+        title: 'Сбоку (Боковое меню)',
+        icon: 'bi-layout-sidebar-inset',
+        badgeCls: 'bg-info text-dark',
+        borderCls: 'border-info-subtle'
+      },
+      {
+        key: 'hidden',
+        title: 'Скрыто (Не отображаются)',
+        icon: 'bi-eye-slash',
+        badgeCls: 'bg-secondary text-white',
+        borderCls: 'border-secondary-subtle'
+      }
+    ];
 
-      // 1. Ручка перетаскивания (Drag Handle)
-      const dragHandle = document.createElement('div');
-      dragHandle.className = 'drag-handle-container text-muted px-1';
-      dragHandle.title = 'Перетащите для изменения порядка';
-      dragHandle.innerHTML = '<i class="bi bi-grip-vertical fs-5"></i>';
+    GROUPS.forEach(grp => {
+      const groupItems = currentItems.filter(x => x.position === grp.key);
+      const grpTotal = groupItems.length;
 
-      // 2. Порядковый номер
-      const orderBadge = document.createElement('span');
-      orderBadge.className = 'badge bg-secondary-subtle text-light border px-2 py-1';
-      orderBadge.textContent = `#${idx + 1}`;
-      orderBadge.style.minWidth = '38px';
-      orderBadge.style.textAlign = 'center';
+      const section = document.createElement('div');
+      section.className = `menu-group-section mb-3 p-2 rounded border ${grp.borderCls}`;
+      section.style.background = 'var(--surface-1, rgba(255,255,255,0.03))';
 
-      // 3. Иконка элемента
-      const iconContainer = document.createElement('div');
-      iconContainer.className = 'item-icon d-flex align-items-center justify-content-center px-1 text-center';
-      iconContainer.style.minWidth = '30px';
-      const iconEl = createIconElement(item.icon, '📄');
-      iconContainer.appendChild(iconEl);
+      // Заголовок группы
+      const header = document.createElement('div');
+      header.className = 'd-flex align-items-center justify-content-between mb-2 px-1 pb-1 border-bottom border-secondary-subtle';
+      header.innerHTML = `
+        <span class="fw-bold d-flex align-items-center gap-2 small">
+          <i class="bi ${grp.icon}"></i> ${grp.title}
+        </span>
+        <span class="badge ${grp.badgeCls} rounded-pill px-2 py-1">${grpTotal}</span>
+      `;
+      section.appendChild(header);
 
-      // 4. Информация об элементе (название и вкладка)
-      const info = document.createElement('div');
-      info.className = 'item-info flex-grow-1 min-w-0 px-1';
-      const labelDiv = document.createElement('div');
-      labelDiv.className = 'fw-semibold text-truncate small';
-      labelDiv.textContent = item.label;
-      const tabDiv = document.createElement('div');
-      tabDiv.className = 'text-muted text-truncate font-monospace';
-      tabDiv.style.fontSize = '0.75rem';
-      tabDiv.textContent = item.tab;
-      info.append(labelDiv, tabDiv);
+      const itemsContainer = document.createElement('div');
+      itemsContainer.className = 'menu-group-items d-flex flex-column gap-2';
+      itemsContainer.dataset.group = grp.key;
 
-      // 4. Слайдер-перетаскиватель порядка и кнопки перемещения
-      const orderCtrl = document.createElement('div');
-      orderCtrl.className = 'd-flex align-items-center gap-1 me-2';
-      orderCtrl.style.width = '160px';
-      orderCtrl.style.flexShrink = '0';
+      if (grpTotal === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'text-muted small text-center py-2 fst-italic';
+        empty.textContent = 'Нет элементов в этой группе';
+        itemsContainer.appendChild(empty);
+      } else {
+        groupItems.forEach((item, grpIdx) => {
+          const globalIdx = currentItems.indexOf(item);
+          const safeId = (item.id || `item_${globalIdx}`).replace(/[^a-zA-Z0-9_-]/g, '');
 
-      const btnUp = document.createElement('button');
-      btnUp.type = 'button';
-      btnUp.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
-      btnUp.title = 'Переместить выше';
-      btnUp.disabled = idx === 0;
-      btnUp.innerHTML = '<i class="bi bi-chevron-up"></i>';
-      btnUp.addEventListener('click', () => {
-        if (idx > 0) {
-          const [moved] = currentItems.splice(idx, 1);
-          currentItems.splice(idx - 1, 0, moved);
-          renderList();
-        }
-      });
+          const div = document.createElement('div');
+          div.className = 'menu-editor-item d-flex align-items-center gap-2 p-2 rounded border border-secondary-subtle';
+          div.dataset.id = item.id || `item_${globalIdx}`;
+          div.dataset.globalIndex = globalIdx;
+          div.dataset.groupIndex = grpIdx;
+          div.draggable = true;
 
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.className = 'form-range order-slider flex-grow-1 m-0';
-      slider.min = '1';
-      slider.max = String(total);
-      slider.value = String(idx + 1);
-      slider.title = `Слайдер порядка: ${idx + 1} из ${total}`;
+          // 1. Ручка перетаскивания (Drag Handle)
+          const dragHandle = document.createElement('div');
+          dragHandle.className = 'drag-handle-container text-muted px-1';
+          dragHandle.title = 'Перетащите для изменения порядка';
+          dragHandle.style.cursor = 'grab';
+          dragHandle.innerHTML = '<i class="bi bi-grip-vertical fs-5"></i>';
 
-      slider.addEventListener('input', (e) => {
-        const targetIdx = parseInt(e.target.value, 10) - 1;
-        if (targetIdx !== idx && targetIdx >= 0 && targetIdx < total) {
-          const [moved] = currentItems.splice(idx, 1);
-          currentItems.splice(targetIdx, 0, moved);
-          renderList();
-        }
-      });
+          // 2. Порядковый номер в группе
+          const orderBadge = document.createElement('span');
+          orderBadge.className = 'badge bg-secondary-subtle text-light border px-2 py-1';
+          orderBadge.textContent = `#${grpIdx + 1}`;
+          orderBadge.style.minWidth = '38px';
+          orderBadge.style.textAlign = 'center';
 
-      const btnDown = document.createElement('button');
-      btnDown.type = 'button';
-      btnDown.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
-      btnDown.title = 'Переместить ниже';
-      btnDown.disabled = idx === total - 1;
-      btnDown.innerHTML = '<i class="bi bi-chevron-down"></i>';
-      btnDown.addEventListener('click', () => {
-        if (idx < total - 1) {
-          const [moved] = currentItems.splice(idx, 1);
-          currentItems.splice(idx + 1, 0, moved);
-          renderList();
-        }
-      });
+          // 3. Иконка элемента
+          const iconContainer = document.createElement('div');
+          iconContainer.className = 'item-icon d-flex align-items-center justify-content-center px-1 text-center';
+          iconContainer.style.minWidth = '28px';
+          const iconEl = createIconElement(item.icon, '📄');
+          iconContainer.appendChild(iconEl);
 
-      orderCtrl.append(btnUp, slider, btnDown);
+          // 4. Информация об элементе
+          const info = document.createElement('div');
+          info.className = 'item-info flex-grow-1 min-w-0 px-1';
+          const labelDiv = document.createElement('div');
+          labelDiv.className = 'fw-semibold text-truncate small';
+          labelDiv.textContent = item.label;
+          const tabDiv = document.createElement('div');
+          tabDiv.className = 'text-muted text-truncate font-monospace';
+          tabDiv.style.fontSize = '0.75rem';
+          tabDiv.textContent = item.tab;
+          info.append(labelDiv, tabDiv);
 
-      // 5. Переключатели позиции (Сверху / Слева / Скрыть)
-      const group = document.createElement('div');
-      group.className = 'btn-group btn-group-sm flex-shrink-0';
-      group.setAttribute('role', 'group');
+          // 5. Управление порядком внутри группы
+          const orderCtrl = document.createElement('div');
+          orderCtrl.className = 'd-flex align-items-center gap-1 me-2';
+          orderCtrl.style.width = '160px';
+          orderCtrl.style.flexShrink = '0';
 
-      [['top', 'Сверху', 'btn-outline-primary'], ['bottom', 'Слева', 'btn-outline-secondary'], ['hidden', 'Скрыть', 'btn-outline-danger']]
-        .forEach(([val, text, cls]) => {
-          const inp = document.createElement('input');
-          inp.type = 'radio'; inp.className = 'btn-check';
-          inp.name = `pos-${safeId}`; inp.id = `pos-${val}-${safeId}`; inp.value = val;
-          inp.checked = item.position === val;
-          inp.addEventListener('change', () => {
-            item.position = val;
-            item.visible = val !== 'hidden';
+          const btnUp = document.createElement('button');
+          btnUp.type = 'button';
+          btnUp.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
+          btnUp.title = 'Переместить выше в группе';
+          btnUp.disabled = grpIdx === 0;
+          btnUp.innerHTML = '<i class="bi bi-chevron-up"></i>';
+          btnUp.addEventListener('click', () => {
+            if (grpIdx > 0) {
+              const prevItem = groupItems[grpIdx - 1];
+              const curIdx = currentItems.indexOf(item);
+              const targetIdx = currentItems.indexOf(prevItem);
+              currentItems.splice(curIdx, 1);
+              currentItems.splice(targetIdx, 0, item);
+              renderList();
+            }
           });
-          const lbl = document.createElement('label');
-          lbl.className = `btn ${cls}`; lbl.setAttribute('for', inp.id); lbl.textContent = text;
-          group.append(inp, lbl);
+
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.className = 'form-range order-slider flex-grow-1 m-0';
+          slider.min = '1';
+          slider.max = String(grpTotal);
+          slider.value = String(grpIdx + 1);
+          slider.title = `Позиция в группе: ${grpIdx + 1} из ${grpTotal}`;
+
+          slider.addEventListener('input', (e) => {
+            const targetGrpIdx = parseInt(e.target.value, 10) - 1;
+            if (targetGrpIdx !== grpIdx && targetGrpIdx >= 0 && targetGrpIdx < grpTotal) {
+              const targetItem = groupItems[targetGrpIdx];
+              const curIdx = currentItems.indexOf(item);
+              const targetIdx = currentItems.indexOf(targetItem);
+              currentItems.splice(curIdx, 1);
+              currentItems.splice(targetIdx, 0, item);
+              renderList();
+            }
+          });
+
+          const btnDown = document.createElement('button');
+          btnDown.type = 'button';
+          btnDown.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
+          btnDown.title = 'Переместить ниже в группе';
+          btnDown.disabled = grpIdx === grpTotal - 1;
+          btnDown.innerHTML = '<i class="bi bi-chevron-down"></i>';
+          btnDown.addEventListener('click', () => {
+            if (grpIdx < grpTotal - 1) {
+              const nextItem = groupItems[grpIdx + 1];
+              const curIdx = currentItems.indexOf(item);
+              const targetIdx = currentItems.indexOf(nextItem);
+              currentItems.splice(curIdx, 1);
+              currentItems.splice(targetIdx, 0, item);
+              renderList();
+            }
+          });
+
+          orderCtrl.append(btnUp, slider, btnDown);
+
+          // 6. Переключатели позиции (Сверху / Сбоку / Скрыть)
+          const group = document.createElement('div');
+          group.className = 'btn-group btn-group-sm flex-shrink-0';
+          group.setAttribute('role', 'group');
+
+          const radioName = `pos_grp_${globalIdx}_${safeId}`;
+          [
+            ['top', 'Сверху', 'btn-outline-primary'],
+            ['bottom', 'Сбоку', 'btn-outline-info'],
+            ['hidden', 'Скрыть', 'btn-outline-danger']
+          ].forEach(([val, text, cls]) => {
+            const inp = document.createElement('input');
+            inp.type = 'radio';
+            inp.className = 'btn-check';
+            inp.autocomplete = 'off';
+            inp.name = radioName;
+            inp.id = `pos_${val}_${globalIdx}_${safeId}`;
+            inp.value = val;
+            inp.checked = (item.position === val);
+            inp.addEventListener('change', () => {
+              if (inp.checked && item.position !== val) {
+                item.position = val;
+                item.visible = (val !== 'hidden');
+                // Перемещаем элемент в конец новой группы в currentItems
+                const curIdx = currentItems.indexOf(item);
+                currentItems.splice(curIdx, 1);
+                const lastOfGroup = currentItems.filter(x => x.position === val).pop();
+                if (lastOfGroup) {
+                  const lastIdx = currentItems.indexOf(lastOfGroup);
+                  currentItems.splice(lastIdx + 1, 0, item);
+                } else {
+                  currentItems.push(item);
+                }
+                renderList();
+              }
+            });
+
+            const lbl = document.createElement('label');
+            lbl.className = `btn ${cls}`;
+            lbl.setAttribute('for', inp.id);
+            lbl.textContent = text;
+            group.append(inp, lbl);
+          });
+
+          // Drag & Drop события
+          div.addEventListener('dragstart', (e) => {
+            draggedGlobalIdx = globalIdx;
+            div.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(globalIdx));
+          });
+
+          div.addEventListener('dragend', () => {
+            div.classList.remove('dragging');
+            document.querySelectorAll('.menu-editor-item').forEach(el => el.classList.remove('drag-over'));
+          });
+
+          div.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            div.classList.add('drag-over');
+          });
+
+          div.addEventListener('dragleave', () => {
+            div.classList.remove('drag-over');
+          });
+
+          div.addEventListener('drop', (e) => {
+            e.preventDefault();
+            div.classList.remove('drag-over');
+            const fromGlobalIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            if (!isNaN(fromGlobalIdx) && fromGlobalIdx !== globalIdx) {
+              const [moved] = currentItems.splice(fromGlobalIdx, 1);
+              moved.position = grp.key;
+              moved.visible = (grp.key !== 'hidden');
+              currentItems.splice(globalIdx, 0, moved);
+              renderList();
+            }
+          });
+
+          div.append(dragHandle, orderBadge, iconContainer, info, orderCtrl, group);
+          itemsContainer.appendChild(div);
         });
+      }
 
-      // 6. Drag & Drop события
-      div.addEventListener('dragstart', (e) => {
-        draggedIdx = idx;
-        div.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(idx));
-      });
-
-      div.addEventListener('dragend', () => {
-        div.classList.remove('dragging');
-        document.querySelectorAll('.menu-editor-item').forEach(el => el.classList.remove('drag-over'));
-      });
-
-      div.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        div.classList.add('drag-over');
-      });
-
-      div.addEventListener('dragleave', () => {
-        div.classList.remove('drag-over');
-      });
-
-      div.addEventListener('drop', (e) => {
-        e.preventDefault();
-        div.classList.remove('drag-over');
-        if (draggedIdx !== null && draggedIdx !== idx) {
-          const [moved] = currentItems.splice(draggedIdx, 1);
-          currentItems.splice(idx, 0, moved);
-          draggedIdx = null;
-          renderList();
-        }
-      });
-
-      div.append(dragHandle, orderBadge, info, orderCtrl, group);
-      list.appendChild(div);
+      section.appendChild(itemsContainer);
+      list.appendChild(section);
     });
 
     return currentItems;

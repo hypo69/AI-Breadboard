@@ -218,6 +218,24 @@
         "factory": "init_router",
         "enabled": true,
         "description": "Каталог системных возможностей и инструментов Windows System32 (/api/v1/system32/*)"
+    },
+    {
+        "module": "apps.windows.modules.taskbar.router",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Управление панелью задач Windows 10/11 и окнами рабочего стола (/api/v1/taskbar/*)"
+    },
+    {
+        "module": "apps.windows.modules.window_control_plane.router",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Windows Window Management Control Plane (295 параметров) (/api/v1/window-management/*)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_focus",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Управление сессиями фокусировки внимания и Do Not Disturb (/api/windows/focus/*)"
     }
   ]
 }
