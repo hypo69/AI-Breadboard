@@ -1,20 +1,20 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard UI - Main Script
+ * Process Name: Windows Storage Wear Tab - Main Script
  * =============================================================================
  * Description:
- *   Клиентский веб-скрипт модуля main.
+ *   Клиентский скрипт управления интерфейсом модуля main.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/src/api/webgui/storage_wear_tab/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/storage_wear_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
- * Package: src/api/webgui/storage_wear_tab
+ * Package: windows/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-05 23:30:00
+ * Updated: 2026-10-06 07:41:00
  * =============================================================================
  */
 
@@ -93,7 +93,7 @@
             const pohFormatted = formatPohLocal(d.power_on_hours);
             const pohHtml = pohFormatted
               ? `<div class="font-monospace text-info">${pohFormatted}</div><div class="small text-muted font-monospace mt-0.5">Старт: ${escapeHtml(d.first_power_on || '—')}</div>`
-              : '<span class="text-muted font-monospace small">Сессия ОС</span>';
+              : '<span class="text-muted font-monospace small">—</span>';
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
@@ -183,20 +183,75 @@
     }
   }
 
+  const POLL_ID = 'storage_wear';
+
+  function getFrequency() {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'manual';
+  }
+
+  function setFrequency(freq) {
+    try {
+      localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+    } catch (_) {}
+    applyPoller(freq, false);
+  }
+
+  function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(`tab-storage-wear_${POLL_ID}`);
+    }
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
+  function applyPoller(freq, runInitial = false) {
+    stopPolling();
+    if (freq === 'start' || freq === 'manual') {
+      if (runInitial) fetchStorageBatteryWear();
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-storage-wear_${POLL_ID}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-storage-wear', fetchStorageBatteryWear, intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) fetchStorageBatteryWear();
+      autoRefreshTimer = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-storage-wear') : true) {
+          fetchStorageBatteryWear();
+        }
+      }, intervalMs);
+    }
+  }
+
   function bindEvents() {
     const btnRefresh = document.getElementById('btn-diag-wear-refresh');
     if (btnRefresh) {
       btnRefresh.onclick = () => fetchStorageBatteryWear();
     }
 
-    const autoSwitch = document.getElementById('diag-wear-auto-refresh');
-    if (autoSwitch) {
-      autoSwitch.onchange = (e) => {
-        if (e.target.checked) {
-          autoRefreshTimer = setInterval(fetchStorageBatteryWear, 10000);
-        } else if (autoRefreshTimer) {
-          clearInterval(autoRefreshTimer);
-          autoRefreshTimer = null;
+    const select = document.getElementById('diag-wear-poll-freq');
+    if (select) {
+      select.onchange = (e) => {
+        const newFreq = e.target.value;
+        setFrequency(newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
+          fetchStorageBatteryWear();
+        }
+        if (window.showToast) {
+          const label = select.options[select.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса износа: ${label}`, 'info');
         }
       };
     }
@@ -204,7 +259,10 @@
 
   async function init() {
     bindEvents();
-    await fetchStorageBatteryWear();
+    const currentFreq = getFrequency();
+    const select = document.getElementById('diag-wear-poll-freq');
+    if (select) select.value = currentFreq;
+    applyPoller(currentFreq, true);
   }
 
   if (document.readyState === 'loading') {

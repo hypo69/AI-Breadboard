@@ -21,8 +21,8 @@
       },
       {
         "id": "system_control_center",
-        "label": "System Control",
-        "icon": "bi-tools",
+        "label": "System Logs & Activity",
+        "icon": "bi-journal-text",
         "tab": "tab-system-control",
         "order": 3,
         "visible": true
@@ -220,6 +220,14 @@
         "visible": true
       },
       {
+        "id": "autolog_manager",
+        "label": "Телеметрия и логи",
+        "icon": "⚡",
+        "tab": "tab-autolog",
+        "order": 20,
+        "visible": true
+      },
+      {
         "id": "telemetry_history",
         "label": "Визуализация истории",
         "icon": "📈",
@@ -349,19 +357,11 @@
         "visible": true
       },
       {
-        "id": "disk_speed",
-        "label": "Скорость дисков (DiskSpd)",
-        "icon": "⚡",
-        "tab": "tab-disk-speed",
-        "order": 36,
-        "visible": true
-      },
-      {
         "id": "boot_recovery",
         "label": "Загрузка и WinRE (Boot)",
         "icon": "🚀",
         "tab": "tab-boot-recovery",
-        "order": 37,
+        "order": 36,
         "visible": true
       },
       {
@@ -434,6 +434,22 @@
         "icon": "📦",
         "tab": "tab-software-manager",
         "order": 45,
+        "visible": true
+      },
+      {
+        "id": "post_install_wizard",
+        "label": "Post-Install Wizard",
+        "icon": "⚡",
+        "tab": "tab-post-install-wizard",
+        "order": 46,
+        "visible": true
+      },
+      {
+        "id": "maintenance_recovery",
+        "label": "Maintenance & Recovery",
+        "icon": "🛠️",
+        "tab": "tab-maintenance-recovery",
+        "order": 47,
         "visible": true
       }
     ]

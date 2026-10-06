@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 12:12:00
+ * Updated: 2026-10-06 07:22:00
  * =============================================================================
  */
 
@@ -200,18 +200,18 @@
 }
 
 #nav-google-btn {
-  background: #ffffff;
-  color: #1f2937 !important;
+  background: var(--surface-1);
+  color: var(--text-color) !important;
   font-size: 0.78rem;
   font-weight: 600;
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-color);
   padding: 3px 10px;
   transition: all 0.18s ease;
 }
 
 #nav-google-btn:hover {
-  background: #f8fafc;
+  background: var(--nav-hover-bg);
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }

@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-05 23:35:00
+# Updated: 2026-10-06 05:32:00
 # =============================================================================
 
 from __future__ import annotations
@@ -89,6 +89,11 @@ class TelemetryConnectionManager:
             conn.execute('PRAGMA journal_mode = WAL;')
             conn.execute('PRAGMA synchronous = NORMAL;')
             conn.execute('PRAGMA foreign_keys = ON;')
+            conn.execute('PRAGMA busy_timeout = 15000;')
+            conn.execute('PRAGMA cache_size = -64000;')
+            conn.execute('PRAGMA temp_store = MEMORY;')
+            conn.execute('PRAGMA mmap_size = 268435456;')
+            conn.execute('PRAGMA wal_autocheckpoint = 1000;')
 
         conn.row_factory = sqlite3.Row
         return conn

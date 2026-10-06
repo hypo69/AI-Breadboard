@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 04:46:00
+# Updated: 2026-10-06 07:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -24,50 +24,23 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import threading
 import time
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 from logger import logger
 from .models import ETWTraceEvent, ProcessLifecycleEvent, W64CollectorStatus
 from .sqlite import TelemetryStorage
+from .win32_ffi.wevtapi import WevtAPI
 
-_file_write_lock = threading.Lock()
-
-def _append_jsonl_safely(file_path: Path, data: Dict[str, Any], retries: int = 4, retry_delay: float = 0.05) -> bool:
-    """Безопасная запись JSONL строки с повторными попытками при блокировке файла.
-
-    Args:
-        file_path: Путь к целевому файлу JSONL.
-        data: Словарь с данными для сериализации в JSON.
-        retries: Количество попыток записи при ошибке доступа.
-        retry_delay: Задержка между попытками (сек).
-
-    Returns:
-        bool: True если запись успешна, иначе исключение.
-    """
-    line = json.dumps(data, ensure_ascii=False) + '\n'
-    for attempt in range(retries):
-        try:
-            with _file_write_lock:
-                with open(file_path, 'a', encoding='utf-8') as f:
-                    f.write(line)
-            return True
-        except (PermissionError, OSError) as ex:
-            if attempt < retries - 1:
-                time.sleep(retry_delay * (attempt + 1))
-            else:
-                raise ex
-    return False
 
 class AIW64ETWCollector:
     """Сборщик низкоуровневых событий через ETW и журналы аудита Windows."""
 
     def __init__(
         self,
-        log_dir: Optional[str] = None,
         enable_process_trace: bool = True,
         enable_disk_trace: bool = True,
         enable_network_trace: bool = True,
@@ -75,11 +48,11 @@ class AIW64ETWCollector:
         poll_interval_sec: float = 5.0,
         storage: Optional[TelemetryStorage] = None,
         on_event_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        **kwargs: Any,
     ) -> None:
         """Инициализация ETW сборщика телеметрии.
 
         Args:
-            log_dir: Директория для сохранения JSONL логов ETW.
             enable_process_trace: Трассировка создания/завершения процессов (ID 4688).
             enable_disk_trace: Трассировка операций файлового аудита (ID 4663).
             enable_network_trace: Трассировка сетевых подключений Windows Filtering Platform.
@@ -87,14 +60,8 @@ class AIW64ETWCollector:
             poll_interval_sec: Интервал между выборками событий ETW (сек).
             storage: Экземпляр хранилища TelemetryStorage.
             on_event_callback: Callback-обработчик каждого зафиксированного события.
+            **kwargs: Дополнительные параметры конфигурации.
         """
-        if log_dir is None:
-            appdata = os.environ.get('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local'))
-            self.log_dir = str(Path(appdata) / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs' / 'etw')
-        else:
-            self.log_dir = log_dir
-
-        Path(self.log_dir).mkdir(parents=True, exist_ok=True)
         self.enable_process_trace = enable_process_trace
         self.enable_disk_trace = enable_disk_trace
         self.enable_network_trace = enable_network_trace
@@ -103,12 +70,16 @@ class AIW64ETWCollector:
         self.storage = storage or TelemetryStorage.get_instance()
         self.on_event_callback = on_event_callback
 
+        self.wevt_api = WevtAPI() if os.name == 'nt' else None
+        self._seen_records: set[tuple[str, int]] = set()
+        self._seen_queue: deque[tuple[str, int]] = deque(maxlen=5000)
+
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._event_counter = 0
         self._last_event_time: Optional[str] = None
-        logger.debug(f'AIW64ETWCollector инициализирован. Директория логов: {self.log_dir}')
+        logger.debug('AIW64ETWCollector инициализирован (буферизация в оперативной памяти)')
 
     def start(self) -> bool:
         """Запустить фоновый поток сбора ETW событий.
@@ -154,7 +125,7 @@ class AIW64ETWCollector:
 
     def _collect_etw_events(self) -> None:
         """Собрать порцию событий из включенных провайдеров."""
-        if os.name != 'nt':
+        if os.name != 'nt' or not self.wevt_api or not self.wevt_api.is_available():
             return
 
         if self.enable_process_trace:
@@ -166,160 +137,59 @@ class AIW64ETWCollector:
         if self.enable_registry_trace:
             self._collect_registry_events()
 
+    def _collect_security_events(self, event_ids: int | list[int], event_type: str, max_events: int = 50) -> None:
+        """Собрать порцию событий из Security журнала Windows через WevtAPI.
+
+        Args:
+            event_ids: Идентификатор или список идентификаторов событий.
+            event_type: Название типа события для логирования.
+            max_events: Максимальное количество событий в выборке.
+        """
+        if not self.wevt_api or not self.wevt_api.is_available():
+            return
+
+        try:
+            raw_events = self.wevt_api.read_events(
+                channel='Security',
+                limit=max_events,
+                event_id=event_ids,
+            )
+            for ev in raw_events:
+                rec_id = ev.get('record_id')
+                if rec_id:
+                    key = ('Security', rec_id)
+                    if key in self._seen_records:
+                        continue
+                    if len(self._seen_queue) == self._seen_queue.maxlen:
+                        oldest = self._seen_queue[0]
+                        self._seen_records.discard(oldest)
+                    self._seen_queue.append(key)
+                    self._seen_records.add(key)
+
+                event_data = ev.get('event_data', {})
+                if event_data:
+                    self._log_event(event_type, event_data)
+        except Exception as ex:
+            logger.debug(f'Ошибка сбора событий {event_type} ETW: {ex}')
+
     def _collect_process_events(self) -> None:
         """Собрать события создания процессов (Security ID 4688)."""
-        try:
-            ps_script = """
-            $startTime = (Get-Date).AddMinutes(-1)
-            $events = Get-WinEvent -FilterHashtable @{
-                LogName = 'Security'
-                Id = 4688
-                StartTime = $startTime
-            } -MaxEvents 50 -ErrorAction SilentlyContinue
-
-            foreach ($e in $events) {
-                $xml = [xml]$e.ToXml()
-                $data = @{}
-                foreach ($d in $xml.Event.EventData.Data) {
-                    $data[$d.Name] = $d.'#text'
-                }
-                $data | ConvertTo-Json -Compress
-            }
-            """
-            res = subprocess.run(
-                ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', f'& {{ {ps_script} }}'],
-                capture_output=True,
-                text=True,
-                timeout=8,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-            )
-            if res.returncode == 0 and res.stdout.strip():
-                for line in res.stdout.strip().splitlines():
-                    if line.strip():
-                        try:
-                            event = json.loads(line)
-                            self._log_event('etw_process_create', event)
-                        except json.JSONDecodeError:
-                            continue
-        except Exception as ex:
-            logger.debug(f'Ошибка сбора событий процессов ETW: {ex}')
+        self._collect_security_events(4688, 'etw_process_create')
 
     def _collect_file_events(self) -> None:
         """Собрать события файловых операций (Security ID 4663)."""
-        try:
-            ps_script = """
-            $startTime = (Get-Date).AddMinutes(-1)
-            $events = Get-WinEvent -FilterHashtable @{
-                LogName = 'Security'
-                Id = 4663
-                StartTime = $startTime
-            } -MaxEvents 50 -ErrorAction SilentlyContinue
-
-            foreach ($e in $events) {
-                $xml = [xml]$e.ToXml()
-                $data = @{}
-                foreach ($d in $xml.Event.EventData.Data) {
-                    $data[$d.Name] = $d.'#text'
-                }
-                $data | ConvertTo-Json -Compress
-            }
-            """
-            res = subprocess.run(
-                ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', f'& {{ {ps_script} }}'],
-                capture_output=True,
-                text=True,
-                timeout=8,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-            )
-            if res.returncode == 0 and res.stdout.strip():
-                for line in res.stdout.strip().splitlines():
-                    if line.strip():
-                        try:
-                            event = json.loads(line)
-                            self._log_event('etw_file_access', event)
-                        except json.JSONDecodeError:
-                            continue
-        except Exception as ex:
-            logger.debug(f'Ошибка сбора событий файлов ETW: {ex}')
+        self._collect_security_events(4663, 'etw_file_access')
 
     def _collect_network_events(self) -> None:
         """Собрать события сетевых блокировок/подключений WFP (Security ID 5156/5158)."""
-        try:
-            ps_script = """
-            $startTime = (Get-Date).AddMinutes(-1)
-            $events = Get-WinEvent -FilterHashtable @{
-                LogName = 'Security'
-                Id = 5156,5158
-                StartTime = $startTime
-            } -MaxEvents 50 -ErrorAction SilentlyContinue
-
-            foreach ($e in $events) {
-                $xml = [xml]$e.ToXml()
-                $data = @{}
-                foreach ($d in $xml.Event.EventData.Data) {
-                    $data[$d.Name] = $d.'#text'
-                }
-                $data | ConvertTo-Json -Compress
-            }
-            """
-            res = subprocess.run(
-                ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', f'& {{ {ps_script} }}'],
-                capture_output=True,
-                text=True,
-                timeout=8,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-            )
-            if res.returncode == 0 and res.stdout.strip():
-                for line in res.stdout.strip().splitlines():
-                    if line.strip():
-                        try:
-                            event = json.loads(line)
-                            self._log_event('etw_network_connection', event)
-                        except json.JSONDecodeError:
-                            continue
-        except Exception as ex:
-            logger.debug(f'Ошибка сбора сетевых событий ETW: {ex}')
+        self._collect_security_events([5156, 5158], 'etw_network_connection')
 
     def _collect_registry_events(self) -> None:
         """Собрать события аудита реестра (Security ID 4657)."""
-        try:
-            ps_script = """
-            $startTime = (Get-Date).AddMinutes(-1)
-            $events = Get-WinEvent -FilterHashtable @{
-                LogName = 'Security'
-                Id = 4657
-                StartTime = $startTime
-            } -MaxEvents 50 -ErrorAction SilentlyContinue
-
-            foreach ($e in $events) {
-                $xml = [xml]$e.ToXml()
-                $data = @{}
-                foreach ($d in $xml.Event.EventData.Data) {
-                    $data[$d.Name] = $d.'#text'
-                }
-                $data | ConvertTo-Json -Compress
-            }
-            """
-            res = subprocess.run(
-                ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', f'& {{ {ps_script} }}'],
-                capture_output=True,
-                text=True,
-                timeout=8,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-            )
-            if res.returncode == 0 and res.stdout.strip():
-                for line in res.stdout.strip().splitlines():
-                    if line.strip():
-                        try:
-                            event = json.loads(line)
-                            self._log_event('etw_registry_access', event)
-                        except json.JSONDecodeError:
-                            continue
-        except Exception as ex:
-            logger.debug(f'Ошибка сбора событий реестра ETW: {ex}')
+        self._collect_security_events(4657, 'etw_registry_access')
 
     def _log_event(self, event_type: str, event_data: Dict[str, Any]) -> None:
-        """Записать событие в потоковый JSONL файл и базу данных SQLite.
+        """Зафиксировать событие ETW в оперативной памяти с пакетным сбросом в SQLite.
 
         Args:
             event_type: Тип события ETW.
@@ -327,8 +197,6 @@ class AIW64ETWCollector:
         """
         self._event_counter += 1
         now_iso = datetime.now(timezone.utc).isoformat()
-        date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        log_file = Path(self.log_dir) / f'{event_type}_{date_str}.jsonl'
 
         payload = {
             'event_id': f'etw_{int(time.time())}_{self._event_counter}',
@@ -339,13 +207,7 @@ class AIW64ETWCollector:
         }
         self._last_event_time = now_iso
 
-        # 1. Запись в JSONL
-        try:
-            _append_jsonl_safely(log_file, payload)
-        except Exception as ex:
-            logger.debug(f'Не удалось записать JSONL лог ETW {event_type}: {ex}')
-
-        # 2. Сохранение в SQLite TelemetryStorage
+        # 1. Сохранение в SQLite TelemetryStorage через буфер памяти
         if self.storage:
             try:
                 db_record = {
@@ -409,7 +271,7 @@ class AIW64ETWCollector:
             except Exception as ex:
                 logger.debug(f'Ошибка сохранения ETW события в БД: {ex}')
 
-        # 3. Передача в callback
+        # 2. Передача в callback
         if self.on_event_callback:
             try:
                 self.on_event_callback(payload)
@@ -425,7 +287,6 @@ class AIW64ETWCollector:
         status = W64CollectorStatus(
             running=self._running,
             events_count=self._event_counter,
-            log_dir=self.log_dir,
             last_event_time=self._last_event_time,
         )
         return status.model_dump()

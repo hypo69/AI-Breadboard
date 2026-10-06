@@ -15,7 +15,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 12:12:00
+ * Updated: 2026-10-06 07:22:00
  * =============================================================================
  */
 
@@ -57,6 +57,11 @@
   .bg-black:not(.btn) {
     background-color: var(--bg-color) !important;
     color: var(--text-color) !important;
+  }
+
+  /* Bootstrap bg-white заменяется на комфортную поверхность темы NightView */
+  .bg-white:not(.btn):not(.badge) {
+    background-color: var(--surface-1) !important;
   }
 
   /* text-white / text-light в карточках и панелях */

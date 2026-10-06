@@ -76,6 +76,8 @@ const TABS = {
 
   // Управление Windows и Sysadmin
   'system-control':           ['/html/system_control_tab/index.html',           '/html/system_control_tab/main.js'],
+  'post-install-wizard':      ['/html/post_install_wizard_tab/index.html',      '/html/post_install_wizard_tab/main.js'],
+  'maintenance-recovery':     ['/html/maintenance_recovery_tab/index.html',     '/html/maintenance_recovery_tab/main.js'],
   'windows-admin':            ['/html/windows_admin_tab/index.html',            '/html/windows_admin_tab/main.js'],
   'startup-auditor':          ['/html/startup_auditor_tab/index.html',          '/html/startup_auditor_tab/main.js'],
   'services-manager':         ['/html/services_manager_tab/index.html',         '/html/services_manager_tab/main.js'],

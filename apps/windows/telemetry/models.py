@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 03:07:00
+# Updated: 2026-10-06 07:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -409,6 +409,7 @@ class PhysicalDiskHealth(BaseModel):
     """Physical drive SMART and health telemetry."""
     device_id: str = Field(default='', description='Drive identifier or disk index')
     model: str = Field(default='Physical Drive', description='Drive model name')
+    serial_number: Optional[str] = Field(default=None, description='Серийный номер накопителя')
     media_type: str = Field(default='SSD', description='Media type (NVMe, SSD, HDD)')
     size_gb: float = Field(default=0.0, description='Drive total capacity in GB')
     health_status: str = Field(default='Healthy', description='Drive health status (Healthy, Warning, Unhealthy)')
@@ -743,7 +744,6 @@ class W64CollectorStatus(BaseModel):
     """Статус и статистика работы сборщиков W64/ETW."""
     running: bool = Field(default=False, description='Флаг активности сборщика')
     events_count: int = Field(default=0, description='Общее количество зафиксированных событий')
-    log_dir: str = Field(default='', description='Директория хранения JSONL логов')
     last_event_time: Optional[str] = Field(default=None, description='Время последнего зафиксированного события')
 
 

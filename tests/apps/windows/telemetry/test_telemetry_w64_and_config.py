@@ -16,12 +16,12 @@
 # Package: tests.apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:28:00
+# Updated: 2026-10-06 07:35:00
 # =============================================================================
 
 """Тесты W64 Collector, ETW Collector, ConfigManager, JsonLogger, init_db и Win32 FFI функций на 100% реальных вызовах.
 
-Updated: 2026-10-04 07:28:00"""
+Updated: 2026-10-06 07:35:00"""
 
 import os
 import time
@@ -52,7 +52,6 @@ class TestAIW64CollectorReal:
     """Тестирование сборщика событий W64 на реальной системе."""
 
     def test_w64_collector_lifecycle_and_baseline(self, tmp_path):
-        log_dir = str(tmp_path / "w64_logs")
         db_path = str(tmp_path / "w64_telemetry.db")
         storage = TelemetryStorage(db_path=db_path)
 
@@ -61,7 +60,6 @@ class TestAIW64CollectorReal:
             events_received.append(evt)
 
         collector = AIW64Collector(
-            log_dir=log_dir,
             enable_file_monitoring=True,
             enable_process_monitoring=True,
             enable_registry_monitoring=False,
@@ -74,7 +72,6 @@ class TestAIW64CollectorReal:
         )
 
         # Проверка базового состояния
-        assert collector.log_dir == log_dir
         assert collector.poll_interval == 0.2
 
         # Запуск фонового сбора
@@ -99,13 +96,11 @@ class TestAIW64ETWCollectorReal:
     """Тестирование сборщика ETW и журналов аудита на реальной системе."""
 
     def test_etw_collector_lifecycle(self, tmp_path):
-        log_dir = str(tmp_path / "etw_logs")
         db_path = str(tmp_path / "etw_telemetry.db")
         storage = TelemetryStorage(db_path=db_path)
 
         events_received = []
         collector = AIW64ETWCollector(
-            log_dir=log_dir,
             enable_process_trace=True,
             enable_disk_trace=False,
             enable_network_trace=False,

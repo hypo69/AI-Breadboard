@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 13:10:00
+# Updated: 2026-10-06 06:47:00
 # =============================================================================
 
 from __future__ import annotations
@@ -245,14 +245,25 @@ class SystemCollector:
         return self._identity_cached
 
     async def _resolve_cpu_model(self) -> str:
-        """Resolve CPU brand/model name from platform or WMI.
+        """Resolve CPU brand/model name from registry, platform or WMI.
 
         Returns:
             str: Resolved CPU model name.
         """
         if self._cpu_model_cached:
             return self._cpu_model_cached
-        model = platform.processor() or ''
+        model = ''
+        if os.name == 'nt':
+            try:
+                import winreg
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'HARDWARE\DESCRIPTION\System\CentralProcessor\0') as key:
+                    val, _ = winreg.QueryValueEx(key, 'ProcessorNameString')
+                    if val and val.strip():
+                        model = val.strip()
+            except Exception:
+                pass
+        if not model:
+            model = platform.processor() or ''
         if os.name == 'nt' and (not model or 'Intel64' in model or 'AMD64' in model):
             try:
                 from src.utils.com_worker import com_worker
@@ -686,6 +697,7 @@ class SystemCollector:
                         disks.append(PhysicalDiskHealth(
                             device_id=str(d.get("device_id") or f"Disk {len(disks)}"),
                             model=str(d.get("model") or d.get("friendly_name") or d.get("name") or "Physical Drive"),
+                            serial_number=str(d.get("serial_number")) if d.get("serial_number") and d.get("serial_number") != "N/A" else None,
                             media_type=str(d.get("media_type") or "SSD"),
                             size_gb=round(float(d.get("size_gb") or 0.0), 1),
                             health_status=str(d.get("health_status") or "Healthy"),
@@ -706,17 +718,18 @@ class SystemCollector:
             except Exception as ex:
                 logger.debug(f"Не удалось прочитать physical_disks из БД: {ex}")
 
-        # 2. Прямой опрос через WindowsStorageSensor выполняется ТОЛЬКО при явном force=True (в демоне tlm.ps1)
+        # 2. Прямой опрос через WindowsStorageSensor при force=True или отсутствии дисков в БД
         disks: List[PhysicalDiskHealth] = []
-        if os.name == 'nt' and force:
+        if os.name == 'nt':
             try:
                 from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
                 sensor = WindowsStorageSensor(ttl_sec=43200.0)
-                phys_disks = sensor.get_physical_disks(force_refresh=True)
+                phys_disks = sensor.get_physical_disks(force_refresh=force, sync=True)
                 for d in phys_disks:
                     disks.append(PhysicalDiskHealth(
                         device_id=d.device_id,
                         model=d.model or d.friendly_name or 'Physical Drive',
+                        serial_number=d.serial_number if d.serial_number and d.serial_number != 'N/A' else None,
                         media_type=d.media_type or 'SSD',
                         size_gb=round(d.size_gb, 1) if d.size_gb else 0.0,
                         health_status=d.health_status or 'Healthy',
@@ -737,6 +750,7 @@ class SystemCollector:
             disks.append(PhysicalDiskHealth(
                 device_id='Disk 0',
                 model='System Drive (NVMe/SSD)',
+                serial_number=None,
                 media_type='SSD',
                 size_gb=512.0,
                 health_status='Healthy',

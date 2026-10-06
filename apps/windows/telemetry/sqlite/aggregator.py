@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 00:20:00
+# Updated: 2026-10-06 05:32:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from __future__ import annotations
 """Многоуровневый SQL-агрегатор временных рядов телеметрии и планировщик агрегации."""
 
 import sqlite3
+import threading
 import time
 from datetime import datetime, timezone
 from enum import Enum
@@ -472,6 +473,50 @@ class TelemetrySqlAggregator:
             connection_manager: Менеджер подключений SQLite.
         """
         self._cm = connection_manager
+        self._scheduler_timer: Optional[threading.Timer] = None
+        self._scheduler_interval: float = 300.0
+        self._scheduler_running: bool = False
+
+    def start_background_scheduler(self, interval_seconds: float = 300.0) -> None:
+        """Запускает фоновый регламентный планировщик агрегации.
+
+        Args:
+            interval_seconds: Периодичность запуска каскада агрегации в секундах (по умолчанию 300с = 5 мин).
+        """
+        if self._cm.read_only:
+            return
+        self.stop_background_scheduler()
+        self._scheduler_interval = max(10.0, float(interval_seconds))
+        self._scheduler_running = True
+        self._schedule_next_run()
+        logger.info(f"Запущен фоновый регламентный планировщик агрегации (квант: {self._scheduler_interval}с)")
+
+    def stop_background_scheduler(self) -> None:
+        """Останавливает фоновый регламентный планировщик агрегации."""
+        self._scheduler_running = False
+        if self._scheduler_timer:
+            try:
+                self._scheduler_timer.cancel()
+            except Exception:
+                pass
+            self._scheduler_timer = None
+
+    def _schedule_next_run(self) -> None:
+        if not self._scheduler_running or self._cm.read_only:
+            return
+        self._scheduler_timer = threading.Timer(self._scheduler_interval, self._on_scheduler_tick)
+        self._scheduler_timer.daemon = True
+        self._scheduler_timer.start()
+
+    def _on_scheduler_tick(self) -> None:
+        if not self._scheduler_running or self._cm.read_only:
+            return
+        try:
+            self.run_pipeline()
+        except Exception as ex:
+            logger.debug(f"Ошибка регламентной фоновой агрегации: {ex}")
+        finally:
+            self._schedule_next_run()
 
     def aggregate(
         self,

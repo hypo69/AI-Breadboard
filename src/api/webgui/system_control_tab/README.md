@@ -1,38 +1,14 @@
-# 🛠️ System Control Center Web Interface Tab
+# Вкладка System Logs & Activity Center (Журналы событий и активность)
 
-**Путь:** `src/api/webgui/system_control_tab/`  
-**Статус:** ✅ Активно (Русский стандарт)  
-**Автор:** hypo69  
+**Путь:** `src/api/webgui/system_control_tab/`
 
----
+## Описание
+Вкладка **System Logs & Activity Center** предоставляет интерфейс для мониторинга потока системных событий Windows, работы с каналами логов, семантического RAG-поиска, аудита аномалий, анализа инцидентов и просмотра истории операций.
 
-## 📋 Обзор
-
-Вкладка **System Control Center (Центр управления системой)** предоставляет административную веб-панель, интегрированную в интерфейс `/tc` и `/apps` AI Breadboard.
-
----
-
-## 🏛️ Архитектура и подразделы
-
-Вкладка состоит из `index.html` и `main.js`, экспортируя функцию `window.initSystemControlTab()` для переключения вкладок и управления жизненным циклом.
-
-### Подразделы:
-1. **📊 1. Monitoring:** Телеметрия хоста в реальном времени, статус Windows Defender, профили брандмауэра, режим UAC и метрики дисковых накопителей.
-2. **⚡ 2. Post-Install Wizard:** Пошаговое выполнение контрольных списков настройки (*Windows Post-Install Baseline*, *Security Hardening*, *Developer Workstation*).
-3. **🛠️ 3. Maintenance & Recovery:** Безопасная очистка временного кэша, проверка целостности системных файлов (SFC), проверка хранилища компонентов DISM и создание точек восстановления Windows.
-4. **📋 4. Activity Log:** Журнал аудита всех операций и выполненных действий (все события и изменения сохраняются в логах).
-
----
-
-## 🔗 Backend API
-
-Взаимодействует с FastAPI бэкендом по префиксу `/api/system-control`:
-- `GET /api/system-control/status`
-- `GET /api/system-control/profiles`
-- `POST /api/system-control/profiles/apply`
-- `POST /api/system-control/maintenance/cleanup`
-- `POST /api/system-control/maintenance/sfc`
-- `POST /api/system-control/maintenance/dism`
-- `GET /api/system-control/restore-points`
-- `POST /api/system-control/restore-points`
-- `GET /api/system-control/logs`
+## Основные возможности
+- Мониторинг потока событий в реальном времени (Live Events Stream).
+- Интеллектуальный аудит журнала (Smart Digest) с кластеризацией и дедупликацией.
+- Семантический RAG-поиск по журналам событий без расхода токенов LLM.
+- Детекция каскадных сбоев и цепочек инцидентов.
+- Контекстный анализ причин ошибок с рекомендациями ИИ.
+- Просмотр журнала активности операций панели управления.

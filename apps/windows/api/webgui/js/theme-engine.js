@@ -17,7 +17,7 @@
  * Package: apps.windows.api.webgui.js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 12:12:00
+ * Updated: 2026-10-06 07:22:00
  * =============================================================================
  */
 
@@ -47,12 +47,12 @@ export const BUILTIN_THEMES = [
   },
   {
     id: 'light',
-    name: 'Светлая (Классическая)',
-    nameEn: 'Light (Classic)',
+    name: 'Светлая (NightView)',
+    nameEn: 'Light (NightView)',
     category: 'light',
     icon: 'bi-sun-fill',
     iconColor: 'text-warning',
-    description: 'Чистая светлая тема с мягкими нейтральными поверхностями',
+    description: 'Мягкая светлая тема в стиле NightView без слепящей белизны для комфортного чтения ночью',
     baseType: 'light',
   },
   {

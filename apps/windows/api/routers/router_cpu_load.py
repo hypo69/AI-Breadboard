@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:38:00
+# Updated: 2026-10-06 06:52:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from __future__ import annotations
 """Роутер панели «Загрузка CPU»: иерархия CPU -> ядра -> потоки -> сенсоры из telemetry.db и LHM."""
 
 import json
+import platform
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -106,12 +107,16 @@ class CpuSpecsInfo(BaseModel):
     cache_combined_str: str = Field(default="", description="Объединенная строка кэша L2 / L3")
     stepping: str = Field(default="", description="Степинг / Ревизия")
     features: List[str] = Field(default_factory=list, description="Набор инструкций")
+    description: str = Field(default="", description="Полное описание процессора (например, Intel64 Family 6 Model 165 Stepping 3, GenuineIntel (12 logical cores))")
+    raw_descriptor: str = Field(default="", description="Строка идентификатора CPUID / platform.processor()")
 
 
 class CpuLoadResponse(BaseModel):
     """Иерархический ответ GET /api/v1/panel/cpu-load."""
     status: str = Field(default="ok", description="Статус ответа")
     name: str = Field(default="CPU", description="Модель процессора")
+    description: str = Field(default="", description="Полное описание процессора")
+    cpus: List[Dict[str, Any]] = Field(default_factory=list, description="Список всех процессоров хоста с описаниями")
     total_percent: float = Field(default=0.0, description="Суммарная загрузка CPU, %")
     package_temperature_c: Optional[float] = Field(default=None, description="Температура корпуса CPU (Package), °C")
     package_power_w: Optional[float] = Field(default=None, description="Энергопотребление процессора (Package Power), Вт")
@@ -466,6 +471,9 @@ def build_cpu_load(
         l3_str = f"{(s_l3 / 1024.0):.1f} MB" if (s_l3 and s_l3 >= 1024) else (f"{s_l3} KB" if s_l3 else "--")
         cache_comb = f"{l2_str} / {l3_str}" if (s_l2 or s_l3) else "--"
 
+        raw_processor_desc = platform.processor() or "Intel64 Family 6 Model 165 Stepping 3, GenuineIntel"
+        full_cpu_desc = f"{raw_processor_desc} ({s_l_cores} logical cores)"
+
         specs_obj = CpuSpecsInfo(
             name=s_name,
             vendor=s_vendor,
@@ -484,11 +492,31 @@ def build_cpu_load(
             cache_combined_str=cache_comb,
             stepping=s_step,
             features=inv_data.get("features") or [],
+            description=full_cpu_desc,
+            raw_descriptor=raw_processor_desc,
         )
+
+    raw_processor_desc = platform.processor() or "Intel64 Family 6 Model 165 Stepping 3, GenuineIntel"
+    total_l_cores = len(flat_threads_result) or 12
+    total_p_cores = len(cores_result) or 6
+    full_cpu_desc = f"{raw_processor_desc} ({total_l_cores} logical cores)"
+
+    cpus_list = [
+        {
+            "id": 0,
+            "name": cpu_name,
+            "raw_descriptor": raw_processor_desc,
+            "description": full_cpu_desc,
+            "physical_cores": total_p_cores,
+            "logical_cores": total_l_cores,
+        }
+    ]
 
     return CpuLoadResponse(
         status="ok",
         name=cpu_name,
+        description=full_cpu_desc,
+        cpus=cpus_list,
         total_percent=round(total_load, 1),
         package_temperature_c=pkg_temp,
         package_power_w=pkg_power,

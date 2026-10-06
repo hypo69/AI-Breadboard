@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-06 06:47:00
 # =============================================================================
 
 """Модуль глубокой аппаратной и системной диагностики, поведенческой форензики и анализа утечек.
@@ -447,42 +447,65 @@ class DeepDiagnosticsEngine:
         try:
             from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor()
-            snapshot = sensor.collect_snapshot()
+            snapshot = sensor.collect_snapshot(sync=True)
             raw_partitions = snapshot.get('sources', {}).get('partitions', [])
+            raw_logical = snapshot.get('sources', {}).get('logical_disks', [])
+
+            # Извлечем сведения о логических дисках (буква тома -> ФС и свободное место)
+            logical_info: Dict[str, Dict[str, Any]] = {}
+            for log_d in raw_logical:
+                if isinstance(log_d, dict):
+                    ld_id = str(log_d.get('DeviceID') or '').upper().rstrip('\\')
+                    if ld_id:
+                        logical_info[ld_id] = {
+                            'fs': log_d.get('FileSystem') or 'NTFS',
+                            'free_bytes': int(log_d.get('FreeSpace') or 0),
+                        }
+
             part_map: Dict[str, List[str]] = {}
+            part_free_map: Dict[str, float] = {}
             for p in raw_partitions:
                 if isinstance(p, dict):
                     dn = p.get('DiskNumber')
                     dl = p.get('DriveLetter')
                     if dn is not None and dl:
-                        part_map.setdefault(str(dn), []).append(f'{dl}:')
+                        dn_str = str(dn)
+                        letter = f'{dl}:'.upper()
+                        fs_name = logical_info.get(letter, {}).get('fs', 'NTFS')
+                        part_map.setdefault(dn_str, []).append(f'{letter} [{fs_name}]')
+                        free_b = logical_info.get(letter, {}).get('free_bytes', 0)
+                        if free_b > 0:
+                            part_free_map[dn_str] = part_free_map.get(dn_str, 0.0) + (free_b / 1024 ** 3)
+
             io_counters = psutil.disk_io_counters(perdisk=True) if PSUTIL_AVAILABLE and hasattr(psutil, 'disk_io_counters') else {}
             now_dt = datetime.now(timezone.utc)
-            physical_disks = sensor.get_physical_disks()
+            physical_disks = sensor.get_physical_disks(sync=True)
             if physical_disks:
                 for d in physical_disks:
                     dev_num_str = ''.join(filter(str.isdigit, d.device_id))
                     mounted = part_map.get(dev_num_str, [])
-                    free_total = 0.0
-                    has_free = False
-                    if PSUTIL_AVAILABLE:
-                        for letter in mounted:
-                            try:
-                                u = psutil.disk_usage(f'{letter}\\')
-                                free_total += round(u.free / 1024 ** 3, 1)
-                                has_free = True
-                            except Exception:
-                                pass
+                    has_free = dev_num_str in part_free_map
+                    free_total = part_free_map.get(dev_num_str, 0.0)
+                    if not has_free and PSUTIL_AVAILABLE and mounted:
+                        for part_label in mounted:
+                            m_letter = part_label.split()[0] if part_label else ''
+                            if m_letter and ':' in m_letter:
+                                try:
+                                    u = psutil.disk_usage(f'{m_letter}\\')
+                                    free_total += (u.free / 1024 ** 3)
+                                    has_free = True
+                                except Exception:
+                                    pass
                     io_key = f'PhysicalDrive{dev_num_str}'
                     io = io_counters.get(io_key)
-                    bytes_read = io.read_bytes if io else 0
-                    bytes_written = io.write_bytes if io else 0
-                    read_count = io.read_count if io else 0
-                    write_count = io.write_count if io else 0
+                    bytes_read = io.read_bytes if io else (d.lifetime_read_bytes or 0)
+                    bytes_written = io.write_bytes if io else (d.lifetime_write_bytes or 0)
+                    read_count = io.read_count if io else (d.read_errors_total or 0)
+                    write_count = io.write_count if io else (d.write_errors_total or 0)
                     poh = d.power_on_hours
                     first_on_str = (now_dt - timedelta(hours=int(poh))).strftime('%Y-%m-%d') if poh and poh > 0 else None
                     health_pct = 100.0
-                    if d.wear_percentage is not None:
+                    if d.wear_percentage is not None and d.wear_percentage > 0:
                         health_pct = max(0.0, min(100.0, 100.0 - float(d.wear_percentage)))
                     elif d.health_status and d.health_status.lower() in ('warning', 'caution'):
                         health_pct = 70.0
@@ -492,10 +515,10 @@ class DeepDiagnosticsEngine:
                     if d.health_status and d.health_status not in ('Healthy', 'OK', '0', 'PASSED'):
                         status_str = d.health_status
                     disks.append({
-                        'device_id': f'Диск {dev_num_str}' if dev_num_str else d.device_id,
+                        'device_id': f'Disk {dev_num_str}' if dev_num_str else d.device_id,
                         'name': d.model or d.friendly_name or 'Физический накопитель',
                         'model': d.model or d.friendly_name,
-                        'serial_number': d.serial_number if d.serial_number != 'N/A' else None,
+                        'serial_number': d.serial_number if d.serial_number and d.serial_number != 'N/A' else None,
                         'bus_type': d.bus_type or 'Unknown',
                         'media_type': d.media_type or 'SSD',
                         'partitions': ', '.join(mounted) if mounted else '—',
@@ -610,15 +633,15 @@ class DeepDiagnosticsEngine:
             res = subprocess.run('netsh wlan show interfaces', capture_output=True, text=True, timeout=4, shell=True)
             if res.returncode == 0 and res.stdout:
                 out = res.stdout
-                state_match = re.search('State\\s*:\s*connected|Состояние\\s*:\s*подключено', out, re.IGNORECASE)
+                state_match = re.search(r'State\s*:\s*connected|Состояние\s*:\s*подключено', out, re.IGNORECASE)
                 if state_match:
                     wifi_data['is_connected'] = True
-                    ssid_m = re.search('SSID\\s*:\s*(.+)', out)
-                    bssid_m = re.search('BSSID\\s*:\s*(.+)', out)
-                    sig_m = re.search('Signal|Сигнал\\s*:\s*(\\d+)%', out)
-                    chan_m = re.search('Channel|Канал\\s*:\s*(\\d+)', out)
-                    radio_m = re.search('Radio type|Тип радиомодуля\\s*:\s*(.+)', out)
-                    auth_m = re.search('Authentication|Проверка подлинности\\s*:\s*(.+)', out)
+                    ssid_m = re.search(r'SSID\s*:\s*(.+)', out)
+                    bssid_m = re.search(r'BSSID\s*:\s*(.+)', out)
+                    sig_m = re.search(r'Signal|Сигнал\s*:\s*(\d+)%', out)
+                    chan_m = re.search(r'Channel|Канал\s*:\s*(\d+)', out)
+                    radio_m = re.search(r'Radio type|Тип радиомодуля\s*:\s*(.+)', out)
+                    auth_m = re.search(r'Authentication|Проверка подлинности\s*:\s*(.+)', out)
                     if ssid_m:
                         wifi_data['ssid'] = ssid_m.group(1).strip()
                     if bssid_m:

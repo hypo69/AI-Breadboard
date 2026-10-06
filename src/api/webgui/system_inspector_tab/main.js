@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 01:26:00
+ * Updated: 2026-10-06 06:50:00
  * =============================================================================
  */
 
@@ -32,6 +32,13 @@
   let isLhmRunning = false;
   let cachedHardwareSensorsData = null;
   let lastCpuCoresData = [];
+  let lastCpuSensorsData = [];
+  let lastCpuData = null;
+  let lastGpuData = null;
+  let lastGpuDevices = [];
+  const _gpuSparkHistories = {};
+  const currentGpuSparkScales = {};
+  const lastGpuSparkDataMap = {};
 
   async function fetchLhmSensors() {
     const badgeCount = document.getElementById('sys-lhm-sensors-count');
@@ -285,11 +292,20 @@
     const container = document.getElementById(containerId);
     const countBadge = document.getElementById(countBadgeId);
     if (!container) return;
-    if (countBadge) {
-      countBadge.textContent = sensors && sensors.length ? `${sensors.length} параметров` : '0 параметров';
-    }
-    if (!sensors || sensors.length === 0) {
-      container.innerHTML = `<div class="text-muted small text-center py-2 col-12" style="font-size: 0.74rem;">Нет дополнительных данных сенсоров</div>`;
+
+    if (sensors && sensors.length > 0) {
+      if (countBadge) {
+        countBadge.textContent = `${sensors.length} параметров`;
+      }
+    } else {
+      // Если элементы уже отрендерены, не перетираем их заглушкой при временной задержке поллинга
+      if (container.children.length > 0 && !container.querySelector('.sys-no-sensors-msg')) {
+        return;
+      }
+      if (countBadge) {
+        countBadge.textContent = '0 параметров';
+      }
+      container.innerHTML = `<div class="sys-no-sensors-msg text-muted small text-center py-2 col-12" style="font-size: 0.74rem;">Нет дополнительных данных сенсоров</div>`;
       return;
     }
 
@@ -301,7 +317,8 @@
     });
 
     container.innerHTML = sorted.map(s => {
-      const name = escapeHtml(s.sensor_name);
+      const rawName = s.sensor_name || s.name || '';
+      const name = escapeHtml((!rawName || rawName.toLowerCase() === 'unknown') ? (s.id ? `Sensor #${s.id}` : 'Sensor') : rawName);
       const cat = (s.sensor_category || '').toLowerCase();
       const val = Number(s.value || 0);
       const unit = (s.unit || '').trim();
@@ -354,15 +371,69 @@
     }).join('');
   }
 
+  function toggleSysCpuDetails() {
+    const box = document.getElementById('sys-cpu-details-collapse');
+    const icon = document.getElementById('sys-cpu-details-toggle-icon');
+    const text = document.getElementById('sys-cpu-details-toggle-text');
+    const btn = document.getElementById('sys-cpu-details-action-btn');
+    const parentBtn = document.getElementById('sys-cpu-details-toggle-btn');
+    if (!box) return;
+    const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
+    if (isHidden) {
+      box.style.display = 'flex';
+      if (icon) icon.className = 'bi bi-chevron-up';
+      if (text) text.textContent = 'Свернуть детализацию';
+      if (btn) btn.className = 'btn btn-xs btn-info text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (parentBtn) parentBtn.classList.add('expanded');
+    } else {
+      box.style.display = 'none';
+      if (icon) icon.className = 'bi bi-chevron-down';
+      if (text) text.textContent = 'Развернуть детализацию';
+      if (btn) btn.className = 'btn btn-xs btn-outline-info rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (parentBtn) parentBtn.classList.remove('expanded');
+    }
+  }
+  window.toggleSysCpuDetails = toggleSysCpuDetails;
+  window.toggleSysCpuSensors = toggleSysCpuDetails;
+
+  function toggleSysGpuDetails(idx = 0) {
+    const box = document.getElementById(`sys-gpu-details-collapse-${idx}`) || document.getElementById('sys-gpu-details-collapse');
+    const icon = document.getElementById(`sys-gpu-details-toggle-icon-${idx}`) || document.getElementById('sys-gpu-details-toggle-icon');
+    const text = document.getElementById(`sys-gpu-details-toggle-text-${idx}`) || document.getElementById('sys-gpu-details-toggle-text');
+    const btn = document.getElementById(`sys-gpu-details-action-btn-${idx}`) || document.getElementById('sys-gpu-details-action-btn');
+    const parentBtn = document.getElementById(`sys-gpu-details-toggle-btn-${idx}`) || document.getElementById('sys-gpu-details-toggle-btn');
+    if (!box) return;
+    const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
+    if (isHidden) {
+      box.style.display = 'flex';
+      if (icon) icon.className = 'bi bi-chevron-up';
+      if (text) text.textContent = 'Свернуть детализацию';
+      if (btn) btn.className = 'btn btn-xs btn-warning text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (parentBtn) parentBtn.classList.add('expanded');
+    } else {
+      box.style.display = 'none';
+      if (icon) icon.className = 'bi bi-chevron-down';
+      if (text) text.textContent = 'Развернуть детализацию';
+      if (btn) btn.className = 'btn btn-xs btn-outline-warning rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (parentBtn) parentBtn.classList.remove('expanded');
+    }
+  }
+  window.toggleSysGpuDetails = toggleSysGpuDetails;
+  window.toggleSysGpuSensors = toggleSysGpuDetails;
+
   function updateAllComponentSensors() {
     if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) return;
 
     // 1. CPU Sensors (электрические параметры, мощности, вольтажи, шины, TjMax)
     const cpuSensors = cachedSensors.filter(s => {
+      const sid = String(s.id || s.sensor_id || '').toLowerCase();
       const hwType = (s.hardware_type || '').toLowerCase();
       const hwName = (s.hardware_name || '').toLowerCase();
       const sName = (s.sensor_name || '').toLowerCase();
       const cat = (s.sensor_category || '').toLowerCase();
+
+      // Строго отсекаем дисковые метрики и не-CPU компоненты
+      if (sid.startsWith('disk_speed_') || hwType.includes('storage') || cat.includes('storage')) return false;
 
       const isCpu = hwType === 'cpu' || hwName.includes('cpu') || hwName.includes('intel') || hwName.includes('amd');
       if (!isCpu) return false;
@@ -374,7 +445,14 @@
 
       return true;
     });
-    renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', cpuSensors);
+    if (cpuSensors.length > 0) {
+      lastCpuSensorsData = cpuSensors;
+      renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', cpuSensors);
+    } else if (lastCpuSensorsData && lastCpuSensorsData.length > 0) {
+      renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', lastCpuSensorsData);
+    } else {
+      renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', []);
+    }
 
     // 2. GPU Sensors (мощности, вольтажи, частоты, вентиляторы, память GPU)
     const gpuSensors = cachedSensors.filter(s => {
@@ -922,7 +1000,7 @@
     return params;
   }
 
-  function renderCpuCores(cores) {
+  function renderCpuCores(cores, totalThreadsCount) {
     const box = document.getElementById('sys-metric-cpu-cores');
     const badgeCount = document.getElementById('sys-cores-count-badge');
     if (!box) return;
@@ -933,8 +1011,11 @@
       cores = lastCpuCoresData;
     }
 
+    const cCount = cores ? cores.length : 0;
+    const thCount = totalThreadsCount || (cores ? cores.reduce((acc, c) => acc + (c.threads ? c.threads.length : 0), 0) : 0);
+
     if (badgeCount) {
-      badgeCount.textContent = cores && cores.length ? `${cores.length} ядер` : '0 ядер';
+      badgeCount.textContent = cCount ? `${cCount} ядер • ${thCount} потоков` : '0 ядер';
     }
 
     if (!Array.isArray(cores) || cores.length === 0) {
@@ -945,51 +1026,43 @@
     box.innerHTML = cores.map(c => {
       const load = c.load_percent == null ? null : Number(c.load_percent);
       const temp = c.temperature_c == null ? null : Number(c.temperature_c);
+      const freqStr = c.frequency_str || (c.frequency_mhz ? (c.frequency_mhz >= 1000 ? (c.frequency_mhz / 1000).toFixed(2) + ' GHz' : c.frequency_mhz.toFixed(0) + ' MHz') : '--');
+      const powerStr = c.power_w != null ? `${Number(c.power_w).toFixed(1)} W` : (c.power_str || '--');
       const loadStr = load == null ? '--' : `${load.toFixed(0)}%`;
+      const tempStr = temp != null ? `${temp.toFixed(0)} °C` : '-- °C';
       const gaugeSvg = createGaugeSvg(load, 100, 54);
       const tempHtml = createTempSliderHtml(temp, 30, 95, false);
 
-      const params = extractCoreParameters(c.index, cores.length, cachedSensors);
-
-      let paramsRowsHtml = '';
-      if (params.length > 0) {
-        paramsRowsHtml = params.map(p => `
-          <div class="sys-core-param-row">
-            <span class="sys-core-param-key text-truncate" title="${escapeHtml(p.label)}">
-              <i class="${p.icon} me-1"></i>${escapeHtml(p.label)}
+      const threadsList = Array.isArray(c.threads) ? c.threads : [];
+      const threadsHtml = threadsList.map(th => {
+        const thLoad = Number(th.load_percent || 0);
+        const barClass = thLoad >= 80 ? 'bg-danger' : thLoad >= 60 ? 'bg-warning' : 'bg-info';
+        return `
+          <div class="d-flex align-items-center justify-content-between gap-1 mb-1" style="font-size: 0.72rem;">
+            <span class="text-truncate text-light" style="max-width: 65px;" title="${escapeHtml(th.name || 'Thread')}">
+              ${escapeHtml(th.name || 'Thread')}
             </span>
-            <span class="sys-core-param-val ${p.badgeClass}">${escapeHtml(p.value)}</span>
-          </div>
-        `).join('');
-      } else {
-        paramsRowsHtml = `
-          <div class="sys-core-param-row">
-            <span class="sys-core-param-key"><i class="bi bi-activity text-info me-1"></i>Нагрузка</span>
-            <span class="sys-core-param-val text-info">${loadStr}</span>
-          </div>
-          <div class="sys-core-param-row">
-            <span class="sys-core-param-key"><i class="bi bi-thermometer-half text-danger me-1"></i>Температура</span>
-            <span class="sys-core-param-val ${temp != null && temp >= 75 ? 'text-danger' : 'text-warning'}">${temp != null ? temp.toFixed(0) + ' °C' : '-- °C'}</span>
-          </div>
-          <div class="sys-core-param-row">
-            <span class="sys-core-param-key"><i class="bi bi-cpu text-secondary me-1"></i>Поток</span>
-            <span class="sys-core-param-val text-secondary">#${c.index}</span>
+            <div class="progress flex-grow-1" style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+              <div class="progress-bar ${barClass}" style="width: ${Math.min(100, thLoad)}%; border-radius: 3px;"></div>
+            </div>
+            <span class="font-monospace text-light fw-bold" style="width: 32px; text-align: right; font-size: 0.69rem;">${thLoad.toFixed(0)}%</span>
           </div>
         `;
-      }
+      }).join('');
 
       return `
-        <div class="sys-core-card" title="Ядро #${c.index}: Нагрузка ${loadStr}, Температура ${temp != null ? temp.toFixed(0) + '°C' : 'N/A'}">
+        <div class="sys-core-card p-2 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border-color, rgba(255,255,255,0.08));" title="Ядро #${c.index}: Нагрузка ${loadStr}, Температура ${tempStr}">
           <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: var(--border-subtle, rgba(255,255,255,0.06)) !important;">
             <div class="d-flex align-items-center gap-1.5">
               <i class="bi bi-cpu text-info"></i>
               <span class="sys-core-title fw-bold" style="font-size: 0.82rem;">Core #${c.index}</span>
             </div>
-            <span class="sys-core-load-badge">${loadStr}</span>
+            <span class="badge ${load != null && load >= 80 ? 'bg-danger' : 'bg-info-subtle text-info border border-info'}" style="font-size: 0.70rem;">${loadStr}</span>
           </div>
-          <div class="d-flex align-items-center gap-2 flex-grow-1">
-            <div class="d-flex flex-column align-items-center justify-content-center" style="width: 102px; flex-shrink: 0;">
-              <div style="width: 100px; height: 54px;">
+          
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-flex flex-column align-items-center justify-content-center" style="width: 96px; flex-shrink: 0;">
+              <div style="width: 96px; height: 52px;">
                 ${gaugeSvg}
               </div>
               <div class="w-100 mt-1">
@@ -998,8 +1071,30 @@
             </div>
             <div class="flex-grow-1 ps-1" style="min-width: 0;">
               <div class="sys-core-param-table">
-                ${paramsRowsHtml}
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-activity text-info me-1"></i>Нагрузка</span>
+                  <span class="sys-core-param-val text-info">${loadStr}</span>
+                </div>
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-thermometer-half text-danger me-1"></i>Температура</span>
+                  <span class="sys-core-param-val ${temp != null && temp >= 75 ? 'text-danger' : 'text-warning'}">${tempStr}</span>
+                </div>
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-speedometer2 text-info me-1"></i>Частота</span>
+                  <span class="sys-core-param-val text-info">${escapeHtml(freqStr)}</span>
+                </div>
+                <div class="sys-core-param-row">
+                  <span class="sys-core-param-key"><i class="bi bi-lightning text-warning me-1"></i>Мощность</span>
+                  <span class="sys-core-param-val text-warning">${escapeHtml(powerStr)}</span>
+                </div>
               </div>
+            </div>
+          </div>
+
+          <div class="pt-1 border-top" style="border-color: var(--border-subtle, rgba(255,255,255,0.06)) !important;">
+            <div class="text-muted small mb-1" style="font-size: 0.68rem; font-weight: 600;">Потоки:</div>
+            <div class="sys-core-threads-list">
+              ${threadsHtml || '<div class="text-muted small">1 поток</div>'}
             </div>
           </div>
         </div>
@@ -1028,59 +1123,463 @@
   const _cpuSparkHistory = [];
   const _gpuSparkHistory = [];
 
+  let currentCpuSparkScale = 'log';
+  let lastCpuSparkData = [];
+
+  function setCpuSparkScale(scale) {
+    currentCpuSparkScale = scale;
+    const btnLog = document.getElementById('btn-cpu-spark-log');
+    const btnLin = document.getElementById('btn-cpu-spark-lin');
+    if (btnLog && btnLin) {
+      if (scale === 'log') {
+        btnLog.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLin.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      } else {
+        btnLin.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLog.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      }
+    }
+    if (lastCpuSparkData && lastCpuSparkData.length) {
+      renderCpuSpark(lastCpuSparkData);
+    }
+  }
+  window.setCpuSparkScale = setCpuSparkScale;
+
+  function buildSmoothSvgPath(pts) {
+    if (!pts || pts.length === 0) return '';
+    if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = i > 0 ? pts[i - 1] : pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = i !== pts.length - 2 ? pts[i + 2] : p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+
   function renderCpuSpark(history) {
     const box = document.getElementById('sys-cpu-spark');
+    const container = document.getElementById('sys-cpu-spark-container');
+    const tooltip = document.getElementById('sys-cpu-spark-tooltip');
     if (!box) return;
+
+    if (Array.isArray(history) && history.length >= 2) {
+      lastCpuSparkData = history;
+    } else if (lastCpuSparkData && lastCpuSparkData.length >= 2) {
+      history = lastCpuSparkData;
+    } else {
+      return;
+    }
+
     box.replaceChildren();
-    if (!Array.isArray(history) || history.length < 2) return;
     const ns = 'http://www.w3.org/2000/svg';
-    const W = 200, H = 56;
+    const W = 600, H = 84;
+    const padTop = 6, padBottom = 6;
+    const innerH = H - padTop - padBottom;
+
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
-    svg.style.cssText = 'width:100%;height:100%;';
-    const line = (getY, color) => {
-      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
-      const pl = document.createElementNS(ns, 'polyline');
-      pl.setAttribute('points', pts.join(' '));
-      pl.setAttribute('fill', 'none');
-      pl.setAttribute('stroke', color);
-      pl.setAttribute('stroke-width', '1.4');
-      svg.appendChild(pl);
+    svg.style.cssText = 'width:100%;height:100%;display:block;cursor:crosshair;';
+
+    // 1. Defs с градиентами и фильтром свечения
+    const defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML = `
+      <linearGradient id="cpuGradLoad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#0dcaf0" stop-opacity="0.38"/>
+        <stop offset="60%" stop-color="#0dcaf0" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#0dcaf0" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="cpuGradTemp" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="cpuGradPower" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+      </linearGradient>
+    `;
+    svg.appendChild(defs);
+
+    // 2. Горизонтальная сетка (Grid Lines)
+    const gridG = document.createElementNS(ns, 'g');
+    gridG.setAttribute('opacity', '0.2');
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+      const y = H - padBottom - ratio * innerH;
+      const gl = document.createElementNS(ns, 'line');
+      gl.setAttribute('x1', '0');
+      gl.setAttribute('y1', y.toFixed(1));
+      gl.setAttribute('x2', String(W));
+      gl.setAttribute('y2', y.toFixed(1));
+      gl.setAttribute('stroke', '#ffffff');
+      gl.setAttribute('stroke-dasharray', ratio === 0.0 || ratio === 1.0 ? 'none' : '3,3');
+      gl.setAttribute('stroke-width', '1');
+      gridG.appendChild(gl);
+    });
+    svg.appendChild(gridG);
+
+    // 3. Расчет динамических диапазонов
+    const count = history.length;
+    const isLog = currentCpuSparkScale === 'log';
+
+    // Температурный локальный диапазон (для выявления микроколебаний)
+    const rawTemps = history.map(h => Number(h.temperature_c != null ? h.temperature_c : (h.temp || 0))).filter(t => t > 0);
+    const tMin = rawTemps.length ? Math.min(...rawTemps) : 30;
+    const tMax = rawTemps.length ? Math.max(...rawTemps) : 90;
+    const tDelta = Math.max(6, tMax - tMin);
+
+    // Диапазон мощности (для выявления микроколебаний)
+    const rawPowers = history.map(h => Number(h.power_w != null ? h.power_w : (h.power || 0))).filter(p => p > 0);
+    const pMin = rawPowers.length ? Math.min(...rawPowers) : 5;
+    const pMax = rawPowers.length ? Math.max(...rawPowers) : 100;
+    const pDelta = Math.max(8, pMax - pMin);
+
+    // Главная шкала: Загрузка CPU (0..100% высоты холста)
+    const transformLoad = (v) => {
+      const cl = Math.min(100, Math.max(0, Number(v || 0)));
+      if (!isLog) return cl / 100;
+      return Math.log10(1 + 9 * (cl / 100)); // Log-10 mapping: 10% -> 0.28, 50% -> 0.74, 100% -> 1.0
     };
-    line(h => Math.min(100, Math.max(0, Number(h.load || 0))) / 100, '#0dcaf0');
-    line(h => {
-      const t = h.temp != null ? Number(h.temp) : 0;
-      return Math.min(1, Math.max(0, (t - 20) / 80));
-    }, '#ef4444');
+
+    // Вторичная компактная шкала: Температура (занимает 10% - 38% высоты)
+    const transformTemp = (v) => {
+      if (v == null) return 0.12;
+      const frac = Math.min(1, Math.max(0, (Number(v) - (tMin - 1)) / (tDelta + 2)));
+      return 0.10 + frac * 0.28;
+    };
+
+    // Вторичная компактная шкала: Мощность (занимает 4% - 28% высоты)
+    const transformPower = (v) => {
+      if (v == null) return 0.08;
+      const frac = Math.min(1, Math.max(0, (Number(v) - (pMin - 1.5)) / (pDelta + 3)));
+      return 0.04 + frac * 0.24;
+    };
+
+    // Точки графиков
+    const loadPts = [];
+    const tempPts = [];
+    const powerPts = [];
+
+    history.forEach((h, i) => {
+      const x = (i / (count - 1)) * W;
+      
+      const lVal = Number(h.load_percent != null ? h.load_percent : (h.load || 0));
+      const tVal = h.temperature_c != null ? Number(h.temperature_c) : (h.temp != null ? Number(h.temp) : null);
+      const pVal = h.power_w != null ? Number(h.power_w) : (h.power != null ? Number(h.power) : null);
+
+      const yLoad = H - padBottom - transformLoad(lVal) * innerH;
+      const yTemp = H - padBottom - transformTemp(tVal) * innerH;
+      const yPower = H - padBottom - transformPower(pVal) * innerH;
+
+      loadPts.push({ x, y: yLoad, raw: lVal, time: h.time_label || h.timestamp });
+      tempPts.push({ x, y: yTemp, raw: tVal });
+      powerPts.push({ x, y: yPower, raw: pVal });
+    });
+
+    // 4. Отрисовка площадей и кривых (Area & Spline)
+    const drawSeries = (pts, strokeColor, fillColor, strokeWidth = 1.8) => {
+      if (pts.length < 2) return;
+      const linePath = buildSmoothSvgPath(pts);
+
+      // Заливка градиентом
+      if (fillColor) {
+        const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${H - padBottom} L ${pts[0].x.toFixed(1)} ${H - padBottom} Z`;
+        const aEl = document.createElementNS(ns, 'path');
+        aEl.setAttribute('d', areaPath);
+        aEl.setAttribute('fill', fillColor);
+        svg.appendChild(aEl);
+      }
+
+      // Линия кривой
+      const pEl = document.createElementNS(ns, 'path');
+      pEl.setAttribute('d', linePath);
+      pEl.setAttribute('fill', 'none');
+      pEl.setAttribute('stroke', strokeColor);
+      pEl.setAttribute('stroke-width', String(strokeWidth));
+      pEl.setAttribute('stroke-linejoin', 'round');
+      pEl.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(pEl);
+    };
+
+    // Рисуем: Тонкие тренды температуры и мощности на компактной шкале + Основной график загрузки с градиентом
+    drawSeries(powerPts, '#f59e0b', null, 1.2);
+    drawSeries(tempPts, '#ef4444', null, 1.3);
+    drawSeries(loadPts, '#0dcaf0', 'url(#cpuGradLoad)', 2.0);
+
+    // 5. Интерактивный Hover-курсор и Тултип
+    const crosshair = document.createElementNS(ns, 'line');
+    crosshair.setAttribute('y1', '0');
+    crosshair.setAttribute('y2', String(H));
+    crosshair.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+    crosshair.setAttribute('stroke-dasharray', '2,2');
+    crosshair.setAttribute('stroke-width', '1');
+    crosshair.style.display = 'none';
+    svg.appendChild(crosshair);
+
+    svg.addEventListener('mousemove', (evt) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+      const ratio = mouseX / rect.width;
+      const idx = Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
+      const pt = loadPts[idx];
+      const hItem = history[idx];
+
+      if (pt && tooltip) {
+        crosshair.setAttribute('x1', pt.x.toFixed(1));
+        crosshair.setAttribute('x2', pt.x.toFixed(1));
+        crosshair.style.display = 'block';
+
+        const tStr = hItem.time_label || (hItem.timestamp ? new Date(hItem.timestamp).toLocaleTimeString() : (hItem.time ? new Date(hItem.time).toLocaleTimeString() : '--:--:--'));
+        const lStr = `${pt.raw.toFixed(1)}%`;
+        const tempVal = tempPts[idx] && tempPts[idx].raw != null ? `${tempPts[idx].raw.toFixed(0)} °C` : '--';
+        const powVal = powerPts[idx] && powerPts[idx].raw != null ? `${powerPts[idx].raw.toFixed(1)} W` : '--';
+
+        tooltip.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
+            <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
+            <span class="badge ${isLog ? 'bg-info-subtle text-info' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin'}</span>
+          </div>
+          <div class="d-flex gap-2 font-monospace">
+            <span class="text-info fw-bold"><i class="bi bi-activity me-0.5"></i>${lStr}</span>
+            <span class="text-danger fw-bold"><i class="bi bi-thermometer-half me-0.5"></i>${tempVal}</span>
+            <span class="text-warning fw-bold"><i class="bi bi-lightning me-0.5"></i>${powVal}</span>
+          </div>
+        `;
+        tooltip.style.display = 'block';
+
+        // Позиционирование тултипа
+        const tipX = Math.min(rect.width - 150, Math.max(10, mouseX - 60));
+        tooltip.style.left = `${tipX}px`;
+      }
+    });
+
+    svg.addEventListener('mouseleave', () => {
+      crosshair.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
     box.appendChild(svg);
   }
 
-  function renderGpuSpark(history) {
-    const box = document.getElementById('sys-gpu-spark');
+  function setGpuSparkScale(scale, idx = 0) {
+    currentGpuSparkScales[idx] = scale;
+    const btnLog = document.getElementById(`btn-gpu-spark-log-${idx}`) || document.getElementById('btn-gpu-spark-log');
+    const btnLin = document.getElementById(`btn-gpu-spark-lin-${idx}`) || document.getElementById('btn-gpu-spark-lin');
+    if (btnLog && btnLin) {
+      if (scale === 'log') {
+        btnLog.className = 'btn btn-xs btn-outline-warning active py-0 px-2 fw-bold';
+        btnLin.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      } else {
+        btnLin.className = 'btn btn-xs btn-outline-warning active py-0 px-2 fw-bold';
+        btnLog.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      }
+    }
+    if (lastGpuSparkDataMap[idx] && lastGpuSparkDataMap[idx].length) {
+      renderGpuSpark(lastGpuSparkDataMap[idx], idx);
+    }
+  }
+  window.setGpuSparkScale = setGpuSparkScale;
+
+  function renderGpuSpark(history, idx = 0) {
+    const box = document.getElementById(`sys-gpu-spark-${idx}`) || document.getElementById('sys-gpu-spark');
+    const container = document.getElementById(`sys-gpu-spark-container-${idx}`) || document.getElementById('sys-gpu-spark-container');
+    const tooltip = document.getElementById(`sys-gpu-spark-tooltip-${idx}`) || document.getElementById('sys-gpu-spark-tooltip');
     if (!box) return;
+
+    if (Array.isArray(history) && history.length >= 2) {
+      lastGpuSparkDataMap[idx] = history;
+    } else if (lastGpuSparkDataMap[idx] && lastGpuSparkDataMap[idx].length >= 2) {
+      history = lastGpuSparkDataMap[idx];
+    } else {
+      return;
+    }
+
     box.replaceChildren();
-    if (!Array.isArray(history) || history.length < 2) return;
     const ns = 'http://www.w3.org/2000/svg';
-    const W = 200, H = 56;
+    const W = 600, H = 84;
+    const padTop = 6, padBottom = 6;
+    const innerH = H - padTop - padBottom;
+
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
-    svg.style.cssText = 'width:100%;height:100%;';
-    const line = (getY, color) => {
-      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
-      const pl = document.createElementNS(ns, 'polyline');
-      pl.setAttribute('points', pts.join(' '));
-      pl.setAttribute('fill', 'none');
-      pl.setAttribute('stroke', color);
-      pl.setAttribute('stroke-width', '1.4');
-      svg.appendChild(pl);
+    svg.style.cssText = 'width:100%;height:100%;display:block;cursor:crosshair;';
+
+    // 1. Defs с уникальным ID градиента для каждого GPU
+    const defs = document.createElementNS(ns, 'defs');
+    const gradId = `gpuGradLoad_${idx}`;
+    defs.innerHTML = `
+      <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.38"/>
+        <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+      </linearGradient>
+    `;
+    svg.appendChild(defs);
+
+    // 2. Горизонтальная сетка (Grid Lines)
+    const gridG = document.createElementNS(ns, 'g');
+    gridG.setAttribute('opacity', '0.2');
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+      const y = H - padBottom - ratio * innerH;
+      const gl = document.createElementNS(ns, 'line');
+      gl.setAttribute('x1', '0');
+      gl.setAttribute('y1', y.toFixed(1));
+      gl.setAttribute('x2', String(W));
+      gl.setAttribute('y2', y.toFixed(1));
+      gl.setAttribute('stroke', '#ffffff');
+      gl.setAttribute('stroke-dasharray', ratio === 0.0 || ratio === 1.0 ? 'none' : '3,3');
+      gl.setAttribute('stroke-width', '1');
+      gridG.appendChild(gl);
+    });
+    svg.appendChild(gridG);
+
+    // 3. Расчет динамических диапазонов
+    const count = history.length;
+    const isLog = currentGpuSparkScales[idx] === 'log' || currentGpuSparkScales[idx] === undefined;
+
+    // Температурный локальный диапазон
+    const rawTemps = history.map(h => Number(h.temperature_c != null ? h.temperature_c : (h.temp || 0))).filter(t => t > 0);
+    const tMin = rawTemps.length ? Math.min(...rawTemps) : 30;
+    const tMax = rawTemps.length ? Math.max(...rawTemps) : 90;
+    const tDelta = Math.max(6, tMax - tMin);
+
+    // Диапазон мощности / памяти
+    const rawPowers = history.map(h => Number(h.power_w != null ? h.power_w : (h.power || h.vram_percent || 0))).filter(p => p > 0);
+    const pMin = rawPowers.length ? Math.min(...rawPowers) : 5;
+    const pMax = rawPowers.length ? Math.max(...rawPowers) : 100;
+    const pDelta = Math.max(8, pMax - pMin);
+
+    // Главная шкала: Загрузка GPU Core (0..100% высоты холста)
+    const transformLoad = (v) => {
+      const cl = Math.min(100, Math.max(0, Number(v || 0)));
+      if (!isLog) return cl / 100;
+      return Math.log10(1 + 9 * (cl / 100));
     };
-    line(h => Math.min(100, Math.max(0, Number(h.load || 0))) / 100, '#f59e0b');
-    line(h => {
-      const t = h.temp != null ? Number(h.temp) : 0;
-      return Math.min(1, Math.max(0, (t - 20) / 80));
-    }, '#ef4444');
+
+    // Вторичная компактная шкала: Температура (занимает 10% - 38% высоты)
+    const transformTemp = (v) => {
+      if (v == null) return 0.12;
+      const frac = Math.min(1, Math.max(0, (Number(v) - (tMin - 1)) / (tDelta + 2)));
+      return 0.10 + frac * 0.28;
+    };
+
+    // Вторичная компактная шкала: Мощность/Память (занимает 4% - 28% высоты)
+    const transformPower = (v) => {
+      if (v == null) return 0.08;
+      const frac = Math.min(1, Math.max(0, (Number(v) - (pMin - 1.5)) / (pDelta + 3)));
+      return 0.04 + frac * 0.24;
+    };
+
+    // Точки графиков
+    const loadPts = [];
+    const tempPts = [];
+    const powerPts = [];
+
+    history.forEach((h, i) => {
+      const x = (i / (count - 1)) * W;
+      
+      const lVal = Number(h.load_percent != null ? h.load_percent : (h.load || 0));
+      const tVal = h.temperature_c != null ? Number(h.temperature_c) : (h.temp != null ? Number(h.temp) : null);
+      const pVal = h.power_w != null ? Number(h.power_w) : (h.power != null ? Number(h.power) : (h.vram_percent != null ? Number(h.vram_percent) : null));
+
+      const yLoad = H - padBottom - transformLoad(lVal) * innerH;
+      const yTemp = H - padBottom - transformTemp(tVal) * innerH;
+      const yPower = H - padBottom - transformPower(pVal) * innerH;
+
+      loadPts.push({ x, y: yLoad, raw: lVal, time: h.time_label || h.timestamp });
+      tempPts.push({ x, y: yTemp, raw: tVal });
+      powerPts.push({ x, y: yPower, raw: pVal });
+    });
+
+    // 4. Отрисовка площадей и кривых (Area & Spline)
+    const drawSeries = (pts, strokeColor, fillColor, strokeWidth = 1.8) => {
+      if (pts.length < 2) return;
+      const linePath = buildSmoothSvgPath(pts);
+
+      // Заливка градиентом
+      if (fillColor) {
+        const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${H - padBottom} L ${pts[0].x.toFixed(1)} ${H - padBottom} Z`;
+        const aEl = document.createElementNS(ns, 'path');
+        aEl.setAttribute('d', areaPath);
+        aEl.setAttribute('fill', fillColor);
+        svg.appendChild(aEl);
+      }
+
+      // Линия кривой
+      const pEl = document.createElementNS(ns, 'path');
+      pEl.setAttribute('d', linePath);
+      pEl.setAttribute('fill', 'none');
+      pEl.setAttribute('stroke', strokeColor);
+      pEl.setAttribute('stroke-width', String(strokeWidth));
+      pEl.setAttribute('stroke-linejoin', 'round');
+      pEl.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(pEl);
+    };
+
+    drawSeries(powerPts, '#0dcaf0', null, 1.2);
+    drawSeries(tempPts, '#ef4444', null, 1.3);
+    drawSeries(loadPts, '#f59e0b', `url(#${gradId})`, 2.0);
+
+    // 5. Интерактивный Hover-курсор и Тултип
+    const crosshair = document.createElementNS(ns, 'line');
+    crosshair.setAttribute('y1', '0');
+    crosshair.setAttribute('y2', String(H));
+    crosshair.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+    crosshair.setAttribute('stroke-dasharray', '2,2');
+    crosshair.setAttribute('stroke-width', '1');
+    crosshair.style.display = 'none';
+    svg.appendChild(crosshair);
+
+    svg.addEventListener('mousemove', (evt) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+      const ratio = mouseX / rect.width;
+      const curIndex = Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
+      const pt = loadPts[curIndex];
+      const hItem = history[curIndex];
+
+      if (pt && tooltip) {
+        crosshair.setAttribute('x1', pt.x.toFixed(1));
+        crosshair.setAttribute('x2', pt.x.toFixed(1));
+        crosshair.style.display = 'block';
+
+        const tStr = hItem.time_label || (hItem.timestamp ? new Date(hItem.timestamp).toLocaleTimeString() : (hItem.time ? new Date(hItem.time).toLocaleTimeString() : '--:--:--'));
+        const lStr = `${pt.raw.toFixed(1)}%`;
+        const tempVal = tempPts[curIndex] && tempPts[curIndex].raw != null ? `${tempPts[curIndex].raw.toFixed(0)} °C` : '--';
+        const powVal = powerPts[curIndex] && powerPts[curIndex].raw != null ? (hItem.power_w != null ? `${powerPts[curIndex].raw.toFixed(1)} W` : `${powerPts[curIndex].raw.toFixed(0)}%`) : '--';
+
+        tooltip.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
+            <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
+            <span class="badge ${isLog ? 'bg-warning-subtle text-warning' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin'}</span>
+          </div>
+          <div class="d-flex gap-2 font-monospace">
+            <span class="text-warning fw-bold"><i class="bi bi-activity me-0.5"></i>${lStr}</span>
+            <span class="text-danger fw-bold"><i class="bi bi-thermometer-half me-0.5"></i>${tempVal}</span>
+            <span class="text-info fw-bold"><i class="bi bi-lightning me-0.5"></i>${powVal}</span>
+          </div>
+        `;
+        tooltip.style.display = 'block';
+
+        const tipX = Math.min(rect.width - 150, Math.max(10, mouseX - 60));
+        tooltip.style.left = `${tipX}px`;
+      }
+    });
+
+    svg.addEventListener('mouseleave', () => {
+      crosshair.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
     box.appendChild(svg);
   }
 
@@ -1504,6 +2003,7 @@
       const res = await fetch('/api/v1/panel/cpu-load');
       if (!res.ok) return;
       const data = await res.json();
+      lastCpuData = data;
       const cpuVal = document.getElementById('sys-metric-cpu-val');
       const cpuFill = document.getElementById('sys-metric-cpu-fill');
       const cpuSub = document.getElementById('sys-metric-cpu-sub');
@@ -1514,7 +2014,27 @@
 
       const pct = Number(data.total_percent || 0);
       const cores = Array.isArray(data.cores) ? data.cores : [];
-      if (cpuVal) cpuVal.innerText = `${pct.toFixed(1)}%`;
+      const threads = Array.isArray(data.threads) ? data.threads : [];
+      const sensors = Array.isArray(data.sensors) ? data.sensors : [];
+      const history = Array.isArray(data.history) ? data.history : [];
+
+      if (cpuVal) {
+        cpuVal.innerText = `${pct.toFixed(1)}%`;
+        // Динамический оттенок значения загрузки
+        if (pct >= 85) {
+          cpuVal.style.color = '#ef4444'; // Красный (критическая нагрузка)
+          cpuVal.style.textShadow = '0 0 14px rgba(239, 68, 68, 0.6)';
+        } else if (pct >= 70) {
+          cpuVal.style.color = '#f97316'; // Оранжевый (высокая нагрузка)
+          cpuVal.style.textShadow = '0 0 12px rgba(249, 115, 22, 0.45)';
+        } else if (pct >= 50) {
+          cpuVal.style.color = '#eab308'; // Желтый / янтарный (умеренная нагрузка)
+          cpuVal.style.textShadow = '0 0 10px rgba(234, 179, 8, 0.4)';
+        } else {
+          cpuVal.style.color = '#0dcaf0'; // Голубой (штатная нагрузка)
+          cpuVal.style.textShadow = '0 0 10px rgba(13, 202, 240, 0.35)';
+        }
+      }
       if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
 
       if (cpuModel && data.name) {
@@ -1523,38 +2043,207 @@
       }
 
       const pkgTemp = data.package_temperature_c != null ? Number(data.package_temperature_c) : null;
+      const pkgPower = data.package_power_w != null ? Number(data.package_power_w) : null;
       if (cpuSub) {
         const t = pkgTemp == null ? '' : ` · ${pkgTemp.toFixed(0)} °C`;
-        cpuSub.innerText = cores.length ? `${cores.length} Ядер${t}` : '-- Ядер';
+        const p = pkgPower == null ? '' : ` · ${pkgPower.toFixed(0)} W`;
+        const cCount = data.cores_count || cores.length;
+        const thCount = data.threads_count || threads.length;
+        cpuSub.innerText = cCount ? `${cCount} ядер • ${thCount} потоков${t}${p}` : '-- Ядер';
       }
       if (cpuPkgTemp) {
-        cpuPkgTemp.innerText = pkgTemp != null ? `Пакет: ${pkgTemp.toFixed(0)} °C` : 'Пакет: -- °C';
+        const pStr = pkgPower != null ? ` · ${pkgPower.toFixed(0)} W` : '';
+        cpuPkgTemp.innerText = pkgTemp != null ? `Пакет: ${pkgTemp.toFixed(0)} °C${pStr}` : 'Пакет: -- °C';
+        if (pkgTemp != null) {
+          if (pkgTemp >= 80) {
+            cpuPkgTemp.className = 'text-danger fw-bold font-monospace';
+          } else if (pkgTemp >= 65) {
+            cpuPkgTemp.className = 'text-warning fw-bold font-monospace';
+          } else {
+            cpuPkgTemp.className = 'text-info font-monospace';
+          }
+        }
       }
 
-      // Gauge полукруг со стрелкой для общего CPU (крупный 130x74)
+      // 1. Заполнение сводной таблицы характеристик CPU (Specs)
+      const specs = data.specs || {};
+      const setSpec = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      if (specs.socket || specs.physical_cores) {
+        setSpec('sys-cpu-spec-arch', specs.architecture || 'x86_64');
+        setSpec('sys-cpu-spec-socket', specs.socket || 'LGA1200');
+        setSpec('sys-cpu-spec-cores', `${specs.physical_cores || cores.length}C / ${specs.logical_cores || threads.length}T`);
+        setSpec('sys-cpu-spec-base-freq', specs.base_frequency_str || '--');
+        setSpec('sys-cpu-spec-max-freq', specs.max_frequency_str || '--');
+        setSpec('sys-cpu-spec-cache', specs.cache_combined_str || '--');
+      }
+
+      const vendorBadge = document.getElementById('sys-metric-cpu-vendor-badge');
+      if (vendorBadge) {
+        const cpus = Array.isArray(data.cpus) && data.cpus.length > 0 ? data.cpus : [];
+        if (cpus.length > 1) {
+          vendorBadge.innerHTML = cpus.map((c, i) => `<div class="text-truncate font-monospace" style="font-size: 0.74rem;">CPU #${c.id ?? i}: ${escapeHtml(c.description || `${c.raw_descriptor || c.name} (${c.logical_cores || 12} logical cores)`)}</div>`).join('');
+        } else if (data.description || specs.description) {
+          vendorBadge.innerText = data.description || specs.description;
+        } else {
+          const rawDesc = specs.raw_descriptor || 'Intel64 Family 6 Model 165 Stepping 3, GenuineIntel';
+          const logCores = data.threads_count || specs.logical_cores || (threads ? threads.length : 12) || 12;
+          vendorBadge.innerText = `${rawDesc} (${logCores} logical cores)`;
+        }
+      }
+
+      // Gauge полукруг со стрелкой для общего CPU
       if (cpuGauge) {
-        cpuGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+        cpuGauge.innerHTML = createGaugeSvg(pct, 120, 68);
       }
 
-      // Слайдер температуры Package (крупный)
+      // Слайдер температуры Package (расположен прямо под спидометром)
       if (cpuPkgSlider) {
-        cpuPkgSlider.innerHTML = createTempSliderHtml(pkgTemp, 30, 95, true);
+        cpuPkgSlider.innerHTML = createTempSliderHtml(pkgTemp, 30, 95, false);
       }
 
-      renderCpuCores(cores);
+      // 2. Физические ядра со своими потоками
+      renderCpuCores(cores, data.threads_count || threads.length);
 
-      // Добавление точки в историю линейного графика CPU
-      _cpuSparkHistory.push({ load: pct, temp: pkgTemp, time: new Date() });
-      if (_cpuSparkHistory.length > 60) _cpuSparkHistory.shift();
-      renderCpuSpark(_cpuSparkHistory);
+      // 3. Общие показатели CPU
+      if (sensors && sensors.length > 0) {
+        lastCpuSensorsData = sensors;
+        renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', sensors);
+      }
+
+      // 4. График истории CPU (Загрузка %, Температура °C, Мощность W)
+      if (history && history.length > 0) {
+        renderCpuSpark(history);
+      } else {
+        _cpuSparkHistory.push({ load: pct, temp: pkgTemp, power: pkgPower, time: new Date() });
+        if (_cpuSparkHistory.length > 60) _cpuSparkHistory.shift();
+        renderCpuSpark(_cpuSparkHistory);
+      }
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения загрузки CPU из API:', e);
     }
   }
 
-  function renderGpuEngines(engines) {
-    const box = document.getElementById('sys-metric-gpu-engines');
-    const badgeCount = document.getElementById('sys-gpu-engines-count-badge');
+  /**
+   * Запуск экспертного AI-аудита и анализа характеристик CPU через Universal AITableModal.
+   */
+  function inspectCpuSpecsWithAi() {
+    if (!lastCpuData) {
+      console.warn('[SystemInspectorTab] Нет загруженных данных CPU для AI-инспекции');
+      return;
+    }
+    const specs = lastCpuData.specs || {};
+    const title = lastCpuData.name || 'Центральный процессор (CPU)';
+    const subtitle = `${specs.vendor || 'Intel/AMD'} · ${specs.socket || 'Socket'} · ${specs.architecture || 'x86_64'}`;
+    const metadata = {
+      'Сокет': specs.socket || 'N/A',
+      'Ядра / Потоки': `${specs.physical_cores || lastCpuData.cores_count || '--'}C / ${specs.logical_cores || lastCpuData.threads_count || '--'}T`,
+      'Базовая частота': specs.base_frequency_str || '--',
+      'Макс. частота': specs.max_frequency_str || '--',
+      'Кэш L2 / L3': specs.cache_combined_str || '--',
+      'Архитектура': specs.architecture || 'x86_64',
+      'Текущая загрузка': `${(lastCpuData.total_percent || 0).toFixed(1)}%`,
+      'Температура пакета': lastCpuData.package_temperature_c != null ? `${lastCpuData.package_temperature_c.toFixed(0)} °C` : 'N/A',
+      'Энергопотребление': lastCpuData.package_power_w != null ? `${lastCpuData.package_power_w.toFixed(1)} W` : 'N/A'
+    };
+
+    if (window.AITableModal && typeof window.AITableModal.show === 'function') {
+      window.AITableModal.show({
+        icon: '💻',
+        title: title,
+        subtitle: subtitle,
+        badges: [
+          { text: specs.architecture || 'x86_64', class: 'bg-primary-subtle text-primary border border-primary' },
+          { text: specs.socket || 'Socket', class: 'bg-info-subtle text-info border border-info' },
+          { text: `${specs.physical_cores || lastCpuData.cores_count || '--'} Cores`, class: 'bg-success-subtle text-success border border-success' }
+        ],
+        metadata: metadata,
+        rawTitle: 'CPU Inventory Telemetry & Specs',
+        rawContent: JSON.stringify({
+          name: lastCpuData.name,
+          specs: specs,
+          metrics: {
+            total_percent: lastCpuData.total_percent,
+            package_temperature_c: lastCpuData.package_temperature_c,
+            package_power_w: lastCpuData.package_power_w
+          },
+          cores_count: (lastCpuData.cores || []).length,
+          threads_count: (lastCpuData.threads || []).length
+        }, null, 2),
+        tableType: 'cpu',
+        actions: []
+      });
+    } else {
+      console.warn('[SystemInspectorTab] Universal AITableModal недоступен в DOM');
+    }
+  }
+  window.inspectCpuSpecsWithAi = inspectCpuSpecsWithAi;
+
+  /**
+   * Запуск экспертного AI-аудита и анализа характеристик GPU через Universal AITableModal.
+   */
+  function inspectGpuSpecsWithAi(idx = 0) {
+    const gpu = (lastGpuDevices && lastGpuDevices[idx]) || lastGpuData;
+    if (!gpu) {
+      console.warn('[SystemInspectorTab] Нет загруженных данных GPU для AI-инспекции');
+      return;
+    }
+    const specs = gpu.specs || {};
+    const title = gpu.name || `Графический процессор (GPU #${idx})`;
+    const subtitle = `${specs.vendor || gpu.vendor || 'GPU'} · ${specs.pci_bus || 'PCIe'} · ${specs.directx || 'DirectX 12'}`;
+    const metadata = {
+      'Производитель': specs.vendor || gpu.vendor || 'NVIDIA/Intel/AMD',
+      'VRAM Объем': specs.vram_str || (gpu.memory && gpu.memory.total_mb ? `${(gpu.memory.total_mb/1024).toFixed(1)} GB` : '--'),
+      'Использование VRAM': specs.vram_used_str || (gpu.memory && gpu.memory.used_percent != null ? `${gpu.memory.used_percent.toFixed(0)}%` : '--'),
+      'Частота ядра': specs.core_clock_str || (gpu.clocks && gpu.clocks.core_mhz ? `${Math.round(gpu.clocks.core_mhz)} MHz` : '--'),
+      'Частота памяти': specs.memory_clock_str || (gpu.clocks && gpu.clocks.memory_mhz ? `${Math.round(gpu.clocks.memory_mhz)} MHz` : '--'),
+      'Версия драйвера': specs.driver_version || '--',
+      'Шина': specs.pci_bus || 'PCIe',
+      'DirectX API': specs.directx || 'DirectX 12',
+      'Текущая загрузка': `${(gpu.core_load_percent || 0).toFixed(1)}%`,
+      'Температура GPU': gpu.core_temperature_c != null ? `${gpu.core_temperature_c.toFixed(0)} °C` : 'N/A',
+      'Энергопотребление': gpu.power_w != null ? `${gpu.power_w.toFixed(1)} W` : 'N/A'
+    };
+
+    if (window.AITableModal && typeof window.AITableModal.show === 'function') {
+      window.AITableModal.show({
+        icon: '🎮',
+        title: title,
+        subtitle: subtitle,
+        badges: [
+          { text: specs.vendor || gpu.vendor || 'GPU', class: 'bg-warning-subtle text-warning border border-warning' },
+          { text: specs.vram_str || (gpu.memory && gpu.memory.total_mb ? `${(gpu.memory.total_mb/1024).toFixed(1)} GB` : 'VRAM'), class: 'bg-info-subtle text-info border border-info' },
+          { text: specs.directx || 'DirectX 12', class: 'bg-success-subtle text-success border border-success' }
+        ],
+        metadata: metadata,
+        rawTitle: `GPU #${gpu.index != null ? gpu.index : idx} Inventory Telemetry & Specs`,
+        rawContent: JSON.stringify({
+          index: gpu.index != null ? gpu.index : idx,
+          name: gpu.name,
+          vendor: gpu.vendor,
+          specs: specs,
+          metrics: {
+            core_load_percent: gpu.core_load_percent,
+            core_temperature_c: gpu.core_temperature_c,
+            hotspot_temperature_c: gpu.hotspot_temperature_c,
+            power_w: gpu.power_w,
+            memory: gpu.memory,
+            clocks: gpu.clocks
+          },
+          engines: gpu.engines || [],
+          sensors_count: (gpu.sensors || []).length
+        }, null, 2),
+        tableType: 'gpu',
+        actions: []
+      });
+    } else {
+      console.warn('[SystemInspectorTab] Universal AITableModal недоступен в DOM');
+    }
+  }
+  window.inspectGpuSpecsWithAi = inspectGpuSpecsWithAi;
+
+  function renderGpuEngines(engines, idx = 0) {
+    const box = document.getElementById(`sys-metric-gpu-engines-${idx}`) || document.getElementById('sys-metric-gpu-engines');
+    const badgeCount = document.getElementById(`sys-gpu-engines-count-badge-${idx}`) || document.getElementById('sys-gpu-engines-count-badge');
     if (!box) return;
 
     if (badgeCount) {
@@ -1570,19 +2259,19 @@
       const load = e.load_percent == null ? null : Number(e.load_percent);
       const temp = e.temperature_c == null ? null : Number(e.temperature_c);
       const loadStr = load == null ? '--' : `${load.toFixed(0)}%`;
-      const gaugeSvg = createGaugeSvg(load, 100, 56);
+      const gaugeSvg = createGaugeSvg(load, 110, 62);
       const tempHtml = createTempSliderHtml(temp, 30, 95, false);
 
       return `
-        <div class="sys-core-card" title="${escapeHtml(e.name)}: Нагрузка ${loadStr}${temp != null ? ', Температура ' + temp.toFixed(0) + '°C' : ''}">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="sys-core-title text-truncate" style="max-width: 85px;" title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
-            <span class="sys-core-load-badge">${loadStr}</span>
+        <div class="sys-core-card p-2.5" style="min-height: 156px; display: flex; flex-direction: column; justify-content: space-between;" title="${escapeHtml(e.name)}: Нагрузка ${loadStr}${temp != null ? ', Температура ' + temp.toFixed(0) + '°C' : ''}">
+          <div class="d-flex justify-content-between align-items-start gap-1.5 mb-1" style="min-height: 32px;">
+            <span class="sys-core-title" style="font-size: 0.84rem; font-weight: 800; color: #ffffff; line-height: 1.25; word-break: break-word;" title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
+            <span class="sys-core-load-badge font-monospace flex-shrink-0" style="font-size: 0.76rem; padding: 2px 6px;">${loadStr}</span>
           </div>
-          <div class="py-1">
+          <div class="py-1 d-flex justify-content-center">
             ${gaugeSvg}
           </div>
-          <div>
+          <div class="mt-auto">
             ${tempHtml}
           </div>
         </div>
@@ -1590,79 +2279,294 @@
     }).join('');
   }
 
+  function renderGpuCardHtml(gpu, idx, totalDevices) {
+    const gpuName = escapeHtml(gpu.name || `GPU #${idx}`);
+    const vendor = escapeHtml(gpu.vendor || 'GPU');
+    const headerTitle = totalDevices > 1 ? `Загрузка GPU #${gpu.index != null ? gpu.index : idx}: ${gpuName}` : `Загрузка GPU: ${gpuName}`;
+
+    return `
+      <div class="sys-card sys-card-gpu h-100 p-3" id="sys-card-gpu-${idx}">
+        <div class="sys-card-header-bar">
+          <div class="d-flex align-items-center gap-2">
+            <span class="sys-label text-warning" style="font-size: 1.05rem; font-weight: 800;">
+              <i class="bi bi-gpu-card text-warning me-1.5"></i>${headerTitle}
+            </span>
+            <span class="badge bg-dark border border-secondary text-info font-monospace ms-1" style="font-size: 0.74rem;">
+              ${vendor}
+            </span>
+          </div>
+          <span class="small text-truncate font-monospace badge bg-dark border border-secondary text-warning" style="font-size: 0.84rem; max-width: 320px;" id="sys-metric-gpu-sub-${idx}">--</span>
+        </div>
+
+        <!-- Верхний баннер: Спидометр и датчик температуры слева, Модель в центре, Сводная спецификация GPU справа -->
+        <div class="d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+          <!-- Левая колонка: Спидометр загрузки, справа от него значение с динамическим оттенком, а СНИЗУ — датчик температуры -->
+          <div class="d-flex flex-column justify-content-between gap-1.5" style="min-width: 250px; max-width: 300px;">
+            <div class="d-flex align-items-center gap-2.5">
+              <div id="sys-metric-gpu-gauge-${idx}" style="width: 120px; height: 68px; flex-shrink: 0;"></div>
+              <div>
+                <div class="sys-value text-warning" id="sys-metric-gpu-val-${idx}" style="font-size: 2.1rem; line-height: 1; font-weight: 800; transition: color 0.3s ease, text-shadow 0.3s ease;">0.0%</div>
+                <div class="text-light mt-1 font-monospace" style="font-size: 0.82rem; font-weight: 700;" id="sys-metric-gpu-core-temp-${idx}">GPU: -- °C</div>
+              </div>
+            </div>
+            <!-- Датчик температуры GPU Core расположен ПОД спидометром загрузки -->
+            <div id="sys-metric-gpu-temp-slider-${idx}" style="width: 100%;"></div>
+          </div>
+
+          <!-- Центральная колонка: Модель графического процессора -->
+          <div class="text-center flex-grow-1 px-2 d-flex flex-column align-items-center justify-content-center">
+            <span class="fw-bold text-warning" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
+            <span class="text-muted small mt-1" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.76rem;">${vendor} · PCIe</span>
+          </div>
+
+          <!-- Правая колонка: Сводная таблица о GPU (кликабельна для запуска AI-аудита) -->
+          <div class="sys-gpu-specs-card p-2 rounded-2 d-flex flex-column justify-content-between" 
+               id="sys-gpu-specs-card-${idx}"
+               style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.12); min-width: 290px; max-width: 360px;"
+               onclick="window.inspectGpuSpecsWithAi && window.inspectGpuSpecsWithAi(${idx})"
+               title="Нажмите для вызова AI-аудита и экспертного анализа графического процессора">
+            <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+              <span class="text-light fw-bold d-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                <i class="bi bi-info-circle text-warning"></i>Характеристики GPU
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1" style="font-size: 0.62rem;"><i class="bi bi-stars me-0.5"></i>AI</span>
+              </span>
+              <span class="badge bg-dark border border-secondary text-warning font-monospace" style="font-size: 0.68rem;" id="sys-gpu-spec-directx-${idx}">DirectX 12</span>
+            </div>
+            <div class="sys-gpu-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 0.74rem;">
+              <div class="d-flex justify-content-between"><span class="text-muted">VRAM Объем:</span><span class="text-light font-monospace fw-semibold" id="sys-gpu-spec-vram-${idx}">--</span></div>
+              <div class="d-flex justify-content-between"><span class="text-muted">Исп. VRAM:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-vram-used-${idx}">--</span></div>
+              <div class="d-flex justify-content-between"><span class="text-muted">Частота Core:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-core-clock-${idx}">--</span></div>
+              <div class="d-flex justify-content-between"><span class="text-muted">Частота Mem:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-mem-clock-${idx}">--</span></div>
+              <div class="d-flex justify-content-between" style="grid-column: span 2;"><span class="text-muted">Драйвер / API:</span><span class="text-info font-monospace fw-semibold" id="sys-gpu-spec-driver-${idx}">--</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- График истории GPU (Загрузка %, Температура °C, Мощность / Память %) с логарифмической/линейной шкалой -->
+        <div class="p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
+          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-warning me-1"></i>История GPU</span>
+              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
+                <button type="button" class="btn btn-xs btn-outline-warning active py-0 px-2 fw-bold" id="btn-gpu-spark-log-${idx}" style="font-size: 0.68rem;" onclick="window.setGpuSparkScale && window.setGpuSparkScale('log', ${idx})">Лог. шкала (Log)</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-gpu-spark-lin-${idx}" style="font-size: 0.68rem;" onclick="window.setGpuSparkScale && window.setGpuSparkScale('linear', ${idx})">Линейная (Lin)</button>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
+              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);" title="Основная шкала: Загрузка GPU Core (0-100%)">● Нагрузка Core %</span>
+              <span class="text-danger" style="text-shadow: 0 0 8px rgba(239,68,68,0.5);" title="Компактная шкала: Температура GPU Core (°C)">● Температура °C</span>
+              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);" title="Компактная шкала: Мощность W / VRAM %">● Мощность / Память %</span>
+              <span class="text-muted font-monospace ms-2" id="sys-gpu-spark-live-cursor-${idx}" style="font-size: 0.70rem;">Live</span>
+            </div>
+          </div>
+          <!-- Контейнер графика и интерактивного тултипа -->
+          <div style="position: relative; width: 100%; height: 90px;" id="sys-gpu-spark-container-${idx}">
+            <div id="sys-gpu-spark-${idx}" style="width: 100%; height: 100%;"></div>
+            <div id="sys-gpu-spark-tooltip-${idx}" style="display: none; position: absolute; top: 6px; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 4px 8px; font-size: 0.70rem; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.6); white-space: nowrap;"></div>
+          </div>
+        </div>
+
+        <!-- Сворачиваемый блок детализации GPU: Блоки, подсистемы и сенсоры питания/напряжения/кулеров -->
+        <div class="sys-detailed-sensors mt-2">
+          <div class="sys-gpu-details-accordion-btn d-flex justify-content-between align-items-center flex-wrap gap-2" 
+               id="sys-gpu-details-toggle-btn-${idx}"
+               title="Нажмите, чтобы развернуть или скрыть детализацию по подсистемам и сенсорам GPU"
+               onclick="window.toggleSysGpuDetails && window.toggleSysGpuDetails(${idx})">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="text-warning" style="font-size: 1rem;"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+              <span class="fw-bold text-white" style="font-size: 0.88rem;">Детализация: Блоки, подсистемы и сенсоры GPU</span>
+              <span class="badge bg-dark border border-secondary text-warning font-monospace ms-1" style="font-size: 0.72rem;" id="sys-gpu-engines-count-badge-${idx}">0 блоков</span>
+              <span class="badge bg-dark border border-secondary text-danger font-monospace" style="font-size: 0.72rem;" id="sys-gpu-sensors-count-badge-${idx}">0 параметров</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-xs btn-outline-warning rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5" id="sys-gpu-details-action-btn-${idx}" type="button" style="pointer-events: none; font-size: 0.76rem;">
+                <i class="bi bi-chevron-down" id="sys-gpu-details-toggle-icon-${idx}"></i>
+                <span id="sys-gpu-details-toggle-text-${idx}">Развернуть детализацию</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Скрытый по умолчанию общий контейнер деталей GPU -->
+          <div id="sys-gpu-details-collapse-${idx}" style="display: none; flex-direction: column; gap: 14px; margin-top: 10px;">
+            <!-- 1. Блоки и подсистемы GPU -->
+            <div>
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+                <span><i class="bi bi-grid-3x3-gap-fill text-warning me-1"></i>Блоки и подсистемы GPU</span>
+              </div>
+              <div id="sys-metric-gpu-engines-${idx}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; font-size: 0.78rem;"></div>
+            </div>
+
+            <!-- 2. Энергопотребление, напряжение, частоты и сенсоры GPU -->
+            <div>
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+                <span><i class="bi bi-lightning-charge text-warning me-1"></i>Энергопотребление, напряжение, вентиляторы и частоты GPU</span>
+              </div>
+              <div id="sys-metric-gpu-sensors-${idx}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
+                <div class="text-muted small text-center py-2 col-12">Опрос сенсоров GPU...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateSingleGpuCard(gpu, idx, totalDevices) {
+    const pct = Number(gpu.core_load_percent || 0);
+    const coreTemp = gpu.core_temperature_c != null ? Number(gpu.core_temperature_c) : null;
+    const hotspotTemp = gpu.hotspot_temperature_c != null ? Number(gpu.hotspot_temperature_c) : null;
+    const powerW = gpu.power_w != null ? Number(gpu.power_w) : null;
+    const clocks = gpu.clocks || {};
+    const memory = gpu.memory || {};
+    const specs = gpu.specs || {};
+    const engines = Array.isArray(gpu.engines) ? gpu.engines : [];
+    const sensorsList = Array.isArray(gpu.sensors) ? gpu.sensors : [];
+
+    const gpuVal = document.getElementById(`sys-metric-gpu-val-${idx}`);
+    const gpuModel = document.getElementById(`sys-metric-gpu-model-${idx}`);
+    const gpuVendorBadge = document.getElementById(`sys-metric-gpu-vendor-badge-${idx}`);
+    const gpuSub = document.getElementById(`sys-metric-gpu-sub-${idx}`);
+    const gpuGauge = document.getElementById(`sys-metric-gpu-gauge-${idx}`);
+    const gpuTempSlider = document.getElementById(`sys-metric-gpu-temp-slider-${idx}`);
+    const gpuCoreTemp = document.getElementById(`sys-metric-gpu-core-temp-${idx}`);
+
+    if (gpuVal) {
+      gpuVal.innerText = `${pct.toFixed(1)}%`;
+      if (pct >= 85) {
+        gpuVal.style.color = '#ef4444';
+        gpuVal.style.textShadow = '0 0 16px rgba(239, 68, 68, 0.7)';
+      } else if (pct >= 60) {
+        gpuVal.style.color = '#f59e0b';
+        gpuVal.style.textShadow = '0 0 14px rgba(245, 158, 11, 0.6)';
+      } else if (pct >= 25) {
+        gpuVal.style.color = '#eab308';
+        gpuVal.style.textShadow = '0 0 12px rgba(234, 179, 8, 0.4)';
+      } else {
+        gpuVal.style.color = '#10b981';
+        gpuVal.style.textShadow = '0 0 10px rgba(16, 185, 129, 0.3)';
+      }
+    }
+
+    if (gpuModel) {
+      gpuModel.innerText = gpu.name || 'GPU';
+      gpuModel.title = gpu.name || 'GPU';
+    }
+
+    if (gpuVendorBadge) {
+      const v = specs.vendor || gpu.vendor || 'GPU';
+      const bus = specs.pci_bus || 'PCIe x16';
+      gpuVendorBadge.textContent = `${v} Corporation · ${bus}`;
+    }
+
+    if (gpuCoreTemp) {
+      let tempText = coreTemp != null ? `GPU: ${coreTemp.toFixed(0)} °C` : 'GPU: -- °C';
+      if (hotspotTemp != null) {
+        tempText += ` (HotSpot: ${hotspotTemp.toFixed(0)}°C)`;
+      }
+      gpuCoreTemp.innerText = tempText;
+    }
+
+    if (gpuSub) {
+      let subText = '';
+      if (clocks && clocks.core_mhz) {
+        subText += `${Math.round(clocks.core_mhz)} MHz`;
+      }
+      if (memory && memory.total_mb) {
+        const totalGb = (memory.total_mb / 1024).toFixed(1);
+        subText += (subText ? ' · ' : '') + `${totalGb} GB VRAM`;
+      }
+      gpuSub.innerText = subText || (gpu.name || 'GPU');
+      gpuSub.title = subText || (gpu.name || 'GPU');
+    }
+
+    // Спецификации
+    const specVram = document.getElementById(`sys-gpu-spec-vram-${idx}`);
+    const specVramUsed = document.getElementById(`sys-gpu-spec-vram-used-${idx}`);
+    const specCoreClock = document.getElementById(`sys-gpu-spec-core-clock-${idx}`);
+    const specMemClock = document.getElementById(`sys-gpu-spec-mem-clock-${idx}`);
+    const specDriver = document.getElementById(`sys-gpu-spec-driver-${idx}`);
+    const specDirectx = document.getElementById(`sys-gpu-spec-directx-${idx}`);
+
+    if (specVram) specVram.textContent = specs.vram_str || (memory.total_mb ? `${(memory.total_mb/1024).toFixed(1)} GB` : '--');
+    if (specVramUsed) specVramUsed.textContent = specs.vram_used_str || (memory.used_percent != null ? `${memory.used_percent.toFixed(0)}%` : '--');
+    if (specCoreClock) specCoreClock.textContent = specs.core_clock_str || (clocks.core_mhz ? `${Math.round(clocks.core_mhz)} MHz` : '--');
+    if (specMemClock) specMemClock.textContent = specs.memory_clock_str || (clocks.memory_mhz ? `${Math.round(clocks.memory_mhz)} MHz` : '--');
+    if (specDriver) specDriver.textContent = specs.driver_version ? `${specs.driver_version} (DirectX 12)` : 'WDDM 2.7 (DirectX 12)';
+    if (specDirectx) specDirectx.textContent = specs.directx || 'DirectX 12';
+
+    // Gauge SVG
+    if (gpuGauge) {
+      gpuGauge.innerHTML = createGaugeSvg(pct, 120, 68);
+    }
+
+    // Temp slider
+    if (gpuTempSlider) {
+      gpuTempSlider.innerHTML = createTempSliderHtml(coreTemp, 30, 95, true);
+    }
+
+    // Engines
+    renderGpuEngines(engines, idx);
+
+    // Sensors
+    const gpuSensorsContainer = document.getElementById(`sys-metric-gpu-sensors-${idx}`);
+    const gpuSensorsCountBadge = document.getElementById(`sys-gpu-sensors-count-badge-${idx}`);
+    if (gpuSensorsCountBadge) {
+      gpuSensorsCountBadge.textContent = `${sensorsList.length} параметров`;
+    }
+    if (gpuSensorsContainer) {
+      if (sensorsList.length === 0) {
+        gpuSensorsContainer.innerHTML = `<div class="text-muted small text-center py-2 col-12">Датчики питания и вентиляторов GPU опрашиваются...</div>`;
+      } else {
+        gpuSensorsContainer.innerHTML = sensorsList.map(s => {
+          const statusClass = s.status === 'danger' ? 'badge bg-danger text-white' : (s.status === 'warning' ? 'badge bg-warning text-dark' : 'badge bg-dark border border-secondary text-warning');
+          return `
+            <div class="sys-sensor-widget-item p-2 rounded-2 d-flex flex-column justify-content-between" style="min-height: 52px;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="sys-sensor-name text-truncate" title="${escapeHtml(s.name)}" style="font-size: 0.74rem; font-weight: 600; color: #cbd5e1;">${escapeHtml(s.name)}</span>
+                <span class="${statusClass} font-monospace" style="font-size: 0.68rem;">${escapeHtml(s.category || 'GPU')}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-baseline">
+                <span class="text-muted" style="font-size: 0.68rem;">Значение</span>
+                <span class="font-monospace fw-bold text-white" style="font-size: 0.82rem;">${escapeHtml(s.value_raw || String(s.value))}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Sparkline
+    if (Array.isArray(gpu.history) && gpu.history.length > 0) {
+      renderGpuSpark(gpu.history, idx);
+    } else {
+      if (!_gpuSparkHistories[idx]) _gpuSparkHistories[idx] = [];
+      _gpuSparkHistories[idx].push({ load: pct, temp: coreTemp, power: powerW, time: new Date() });
+      if (_gpuSparkHistories[idx].length > 60) _gpuSparkHistories[idx].shift();
+      renderGpuSpark(_gpuSparkHistories[idx], idx);
+    }
+  }
+
   async function fetchGpuLoadFromApi() {
     try {
       const res = await fetch('/api/v1/panel/gpu-load');
       if (!res.ok) return;
       const data = await res.json();
+      lastGpuData = data;
 
-      const gpuVal = document.getElementById('sys-metric-gpu-val');
-      const gpuModel = document.getElementById('sys-metric-gpu-model');
-      const gpuSub = document.getElementById('sys-metric-gpu-sub');
-      const gpuGauge = document.getElementById('sys-metric-gpu-gauge');
-      const gpuTempSlider = document.getElementById('sys-metric-gpu-temp-slider');
-      const gpuCoreTemp = document.getElementById('sys-metric-gpu-core-temp');
-      const gpuVramLabel = document.getElementById('sys-metric-gpu-vram-label');
+      const devices = Array.isArray(data.devices) && data.devices.length > 0 ? data.devices : [data];
+      lastGpuDevices = devices;
 
-      const pct = Number(data.core_load_percent || 0);
-      const engines = Array.isArray(data.engines) ? data.engines : [];
+      const container = document.getElementById('sys-gpu-panels-container');
+      if (!container) return;
 
-      if (gpuVal) gpuVal.innerText = `${pct.toFixed(1)}%`;
-
-      if (gpuModel) {
-        gpuModel.innerText = data.name || 'GPU';
-        gpuModel.title = data.name || 'GPU';
+      const currentCards = container.querySelectorAll('.sys-card-gpu');
+      if (currentCards.length !== devices.length) {
+        container.innerHTML = devices.map((gpu, idx) => renderGpuCardHtml(gpu, idx, devices.length)).join('');
       }
 
-      const coreTemp = data.core_temperature_c != null ? Number(data.core_temperature_c) : null;
-      if (gpuCoreTemp) {
-        let tempText = coreTemp != null ? `GPU: ${coreTemp.toFixed(0)} °C` : 'GPU: -- °C';
-        if (data.hotspot_temperature_c != null) {
-          tempText += ` (HotSpot: ${Number(data.hotspot_temperature_c).toFixed(0)}°C)`;
-        }
-        gpuCoreTemp.innerText = tempText;
-      }
-
-      if (gpuSub) {
-        let subText = '';
-        if (data.clocks && data.clocks.core_mhz) {
-          subText += `${Math.round(data.clocks.core_mhz)} MHz`;
-        }
-        if (data.memory && data.memory.total_mb) {
-          const totalGb = (data.memory.total_mb / 1024).toFixed(1);
-          subText += (subText ? ' · ' : '') + `${totalGb} GB VRAM`;
-        }
-        gpuSub.innerText = subText || (data.name || 'GPU');
-        gpuSub.title = subText || (data.name || 'GPU');
-      }
-
-      if (gpuVramLabel) {
-        if (data.memory && data.memory.total_mb) {
-          const usedMb = Math.round(data.memory.used_mb || 0);
-          const totalMb = Math.round(data.memory.total_mb || 0);
-          const memPct = data.memory.used_percent != null ? ` (${Math.round(data.memory.used_percent)}%)` : '';
-          gpuVramLabel.innerText = `VRAM: ${usedMb} / ${totalMb} MB${memPct}`;
-        } else {
-          gpuVramLabel.innerText = 'Температура GPU (LHM)';
-        }
-      }
-
-      // Gauge полукруг со стрелкой для GPU Core (крупный 130x74)
-      if (gpuGauge) {
-        gpuGauge.innerHTML = createGaugeSvg(pct, 130, 74);
-      }
-
-      // Слайдер температуры GPU Core (крупный)
-      if (gpuTempSlider) {
-        gpuTempSlider.innerHTML = createTempSliderHtml(coreTemp, 30, 95, true);
-      }
-
-      renderGpuEngines(engines);
-
-      // Добавление точки в историю линейного графика GPU
-      _gpuSparkHistory.push({ load: pct, temp: coreTemp, time: new Date() });
-      if (_gpuSparkHistory.length > 60) _gpuSparkHistory.shift();
-      renderGpuSpark(_gpuSparkHistory);
+      devices.forEach((gpu, idx) => {
+        updateSingleGpuCard(gpu, idx, devices.length);
+      });
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения загрузки GPU из API:', e);
     }
@@ -1733,25 +2637,9 @@
       if (swapSubSlider) swapSubSlider.innerHTML = createPercentSliderHtml(swapPct, false, `Подкачка ${swapPct.toFixed(1)}%`);
     }
 
-    // GPU
-    if (Array.isArray(snap.gpus) && snap.gpus.length > 0) {
-      const g = snap.gpus[0];
-      const gpuVal = document.getElementById('sys-metric-gpu-val');
-      const gpuModel = document.getElementById('sys-metric-gpu-model');
-      const gpuSub = document.getElementById('sys-metric-gpu-sub');
-      const gpuGauge = document.getElementById('sys-metric-gpu-gauge');
-
-      if (gpuModel) {
-        gpuModel.innerText = g.name || 'GPU';
-        gpuModel.title = g.name || 'GPU';
-      }
-      if (g.load_percent != null && gpuVal) {
-        gpuVal.innerText = `${Number(g.load_percent).toFixed(1)}%`;
-      }
-      if (gpuSub) {
-        gpuSub.innerText = `VRAM: ${Number(g.memory_total_gb || 0).toFixed(1)} GB | CUDA: ${g.has_cuda ? 'Да' : 'Нет'}`;
-      }
-      if (gpuGauge && g.load_percent != null) gpuGauge.innerHTML = createGaugeSvg(g.load_percent, 130, 74);
+    // GPU: данные для независимых карточек берутся строго из fetchGpuLoadFromApi()
+    if (!lastGpuData) {
+      fetchGpuLoadFromApi();
     }
 
     // Disk I/O

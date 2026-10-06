@@ -3,7 +3,7 @@
 Process Name: AI-Breadboard Web Interface - Index View
 =============================================================================
 Description:
-  Шаблон веб-интерфейса системного модуля (index).
+  Шаблон веб-интерфейса истории телеметрии, многоуровневых роллапов и статуса SQLite БД.
 
 Usage Examples:
     Web Route:
@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/telemetry_history_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:13:56
+Updated: 2026-10-06 06:10:00
 =============================================================================
 -->
 
@@ -27,8 +27,8 @@ Updated: 2026-10-01 13:13:56
         <div class="d-flex align-items-center gap-2">
           <div class="fs-3">📈</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white"><span data-i18n="auto___b8809f"></span></h5>
-            <small class="text-muted"><span data-i18n="auto__cpu_ram_gpu__7b9521"></span> Health Score</small>
+            <h5 class="mb-0 fw-bold text-white">История системной телеметрии и роллапы SQLite</h5>
+            <small class="text-muted">Аналитика CPU, RAM, GPU, дисков, WAL-хранилища и здоровье системы</small>
           </div>
         </div>
 
@@ -36,26 +36,26 @@ Updated: 2026-10-01 13:13:56
           <div class="input-group input-group-sm" style="width: auto;">
             <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-folder2-open"></i></span>
             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="th-select-source" style="max-width: 260px;">
-              <option value=""><span data-i18n="auto___ce7f49"></span></option>
+              <option value="">Автовыбор источника</option>
             </select>
           </div>
 
           <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
             <input class="form-check-input" type="checkbox" id="th-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="th-auto-refresh"><span data-i18n="auto__5__93e6f2"></span>)</label>
+            <label class="form-check-label small text-nowrap" for="th-auto-refresh">Автообновление (5с)</label>
           </div>
 
-          <button id="th-btn-refresh" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___d3f1e4"></span>">
+          <button id="th-btn-refresh" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Обновить">
             <i class="bi bi-arrow-clockwise"></i>
-            <span><span data-i18n="auto___c2f668"></span></span>
+            <span>Обновить</span>
           </button>
 
-          <button id="th-btn-export-html" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__html__0a74ec"></span>">
+          <button id="th-btn-export-html" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Экспорт HTML-отчета">
             <i class="bi bi-file-earmark-bar-graph"></i>
-            <span>HTML-<span data-i18n="auto___c957a3"></span></span>
+            <span>HTML-отчет</span>
           </button>
 
-          <button id="th-btn-export-json" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__json__6afa33"></span>">
+          <button id="th-btn-export-json" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="Экспорт JSON">
             <i class="bi bi-download"></i>
             <span>JSON</span>
           </button>
@@ -68,7 +68,7 @@ Updated: 2026-10-01 13:13:56
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div>
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___cdea77"></span> (Health)</div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Индекс здоровья (Health)</div>
               <div class="fw-bold fs-4 mt-0.5 text-success" id="th-kpi-health-score">--%</div>
             </div>
             <div class="fs-2 text-success opacity-75" id="th-kpi-health-icon"><i class="bi bi-heart-pulse-fill"></i></div>
@@ -79,7 +79,7 @@ Updated: 2026-10-01 13:13:56
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div>
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___d407af"></span></div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Записей в БД</div>
               <div class="fw-bold fs-4 text-white mt-0.5" id="th-kpi-records-count">0</div>
             </div>
             <div class="fs-2 text-info opacity-75"><i class="bi bi-database-fill-check"></i></div>
@@ -90,21 +90,21 @@ Updated: 2026-10-01 13:13:56
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div>
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___130041"></span></div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Инциденты и аномалии</div>
               <div class="fw-bold fs-4 text-warning mt-0.5" id="th-kpi-anomalies-count">0</div>
             </div>
             <div class="fs-2 text-warning opacity-75"><i class="bi bi-exclamation-triangle-fill"></i></div>
           </div>
         </div>
 
-        <!-- Time Window -->
+        <!-- SQLite & WAL Status -->
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div class="text-truncate">
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___cbcd2b"></span></div>
-              <div class="fw-bold text-info small mt-1 text-truncate" id="th-kpi-time-window" title="<span data-i18n="auto___86314f"></span>">--</div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Хранилище SQLite</div>
+              <div class="fw-bold text-info small mt-1 text-truncate" id="th-kpi-db-status" title="Статус базы данных">WAL | 256MB MMAP</div>
             </div>
-            <div class="fs-2 text-secondary opacity-75"><i class="bi bi-clock-history"></i></div>
+            <div class="fs-2 text-secondary opacity-75"><i class="bi bi-hdd-network-fill"></i></div>
           </div>
         </div>
       </div>
@@ -117,27 +117,40 @@ Updated: 2026-10-01 13:13:56
     <li class="nav-item" role="presentation">
       <button class="nav-link active d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-charts-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-charts" type="button" role="tab">
         <i class="bi bi-graph-up text-primary"></i>
-        <span><span data-i18n="auto___b03ee7"></span></span>
+        <span>Графики метрик</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-rollups-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-rollups" type="button" role="tab">
+        <i class="bi bi-layers-fill text-warning"></i>
+        <span>Роллапы SQLite</span>
+        <span class="badge bg-warning text-dark ms-1" id="th-badge-table-rollups">0</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-records-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-records" type="button" role="tab">
         <i class="bi bi-table text-info"></i>
-        <span><span data-i18n="auto___525ea9"></span></span>
+        <span>Сырые записи</span>
         <span class="badge bg-secondary ms-1" id="th-badge-table-records">0</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-anomalies-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-anomalies" type="button" role="tab">
-        <i class="bi bi-shield-exclamation text-warning"></i>
-        <span><span data-i18n="auto___e5e48e"></span></span>
-        <span class="badge bg-warning text-dark ms-1" id="th-badge-table-anomalies">0</span>
+        <i class="bi bi-shield-exclamation text-danger"></i>
+        <span>Журнал аномалий</span>
+        <span class="badge bg-danger ms-1" id="th-badge-table-anomalies">0</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-dbstats-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-dbstats" type="button" role="tab">
+        <i class="bi bi-database-gear text-success"></i>
+        <span>Движок БД & RAM</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-files-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-files" type="button" role="tab">
-        <i class="bi bi-files text-success"></i>
-        <span><span data-i18n="auto___0ddb02"></span></span>
+        <i class="bi bi-files text-secondary"></i>
+        <span>Файлы логов</span>
         <span class="badge bg-secondary ms-1" id="th-badge-table-files">0</span>
       </button>
     </li>
@@ -153,7 +166,7 @@ Updated: 2026-10-01 13:13:56
         <div class="card-body p-3">
           <h6 class="text-success fw-bold d-flex align-items-center gap-1.5 mb-2">
             <i class="bi bi-lightbulb-fill"></i>
-            <span><span data-i18n="auto___6c87ac"></span></span>
+            <span>Эвристические выводы и рекомендации</span>
           </h6>
           <ul class="mb-0 text-white small ps-3" id="th-conclusions-list"></ul>
         </div>
@@ -163,37 +176,84 @@ Updated: 2026-10-01 13:13:56
       <div class="row g-3" id="th-charts-container">
         <div class="col-12 text-center py-5 text-muted">
           <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-          <span data-i18n="auto___a0596b"></span>...
+          Загрузка графиков телеметрии...
         </div>
       </div>
     </div>
 
-    <!-- Subtab 2: Logs Records Table -->
+    <!-- Subtab 2: SQLite Multilevel Rollups Explorer -->
+    <div class="tab-pane fade" id="th-subtab-rollups" role="tabpanel">
+      <div class="card shadow-sm border-secondary-subtle">
+        <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-layers-fill text-warning"></i>
+            <span class="fw-semibold text-white small">Многоуровневые роллапы сенсоров (SQLite Rollup Aggregations)</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <label class="text-muted small mb-0">Уровень:</label>
+            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="th-select-rollup-level" style="width: 140px;">
+              <option value="hourly" selected>Часовые (1h)</option>
+              <option value="daily">Суточные (1d)</option>
+              <option value="weekly">Недельные (1w)</option>
+              <option value="monthly">Месячные (1m)</option>
+              <option value="yearly">Годовые (1y)</option>
+            </select>
+
+            <button id="th-btn-reload-rollups" class="btn btn-sm btn-outline-warning" title="Обновить роллапы">
+              <i class="bi bi-arrow-clockwise"></i> Обновить
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 540px;">
+          <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-rollups">
+            <thead class="table-secondary text-nowrap sticky-top">
+              <tr>
+                <th style="width: 170px;">Начало интервала</th>
+                <th style="min-width: 160px;">Сенсор / Метрика</th>
+                <th style="width: 100px;" class="text-end">Сэмплов</th>
+                <th style="width: 110px;" class="text-end">Среднее (Avg)</th>
+                <th style="width: 100px;" class="text-end">Мин (Min)</th>
+                <th style="width: 100px;" class="text-end">Макс (Max)</th>
+                <th style="width: 100px;" class="text-end">P95</th>
+              </tr>
+            </thead>
+            <tbody id="th-tbody-rollups">
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+                  Загрузка агрегированных роллапов...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtab 3: Logs Records Table -->
     <div class="tab-pane fade" id="th-subtab-records" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small"><span data-i18n="auto___4caa92"></span></span>
+            <span class="fw-semibold text-white small">Сырые записи системных срезов</span>
           </div>
 
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="input-group input-group-sm" style="max-width: 280px;">
               <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-search"></i></span>
-              <input type="text" id="th-input-filter-records" class="form-control bg-dark text-white border-secondary" placeholder="<span data-i18n="auto___350a80"></span>...">
+              <input type="text" id="th-input-filter-records" class="form-control bg-dark text-white border-secondary" placeholder="Поиск по метрике...">
             </div>
 
             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="th-select-page-size" style="width: 100px;">
-              <option value="25">25 / <span data-i18n="auto___129ce0"></span></option>
-              <option value="50" selected>50 / <span data-i18n="auto___129ce0"></span></option>
-              <option value="100">100 / <span data-i18n="auto___129ce0"></span></option>
+              <option value="25">25 / стр</option>
+              <option value="50" selected>50 / стр</option>
+              <option value="100">100 / стр</option>
             </select>
 
-            <button id="th-btn-reload-records" class="btn btn-sm btn-outline-secondary" title="<span data-i18n="auto___a97857"></span>">
+            <button id="th-btn-reload-records" class="btn btn-sm btn-outline-secondary" title="Обновить записи">
               <i class="bi bi-arrow-clockwise"></i>
-            </button>
-            <button id="th-btn-log-windows-events" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__windows__790d63"></span>">
-              <i class="bi bi-journal-text"></i>
-              <span><span data-i18n="auto___853d62"></span> Windows</span>
             </button>
           </div>
         </div>
@@ -202,18 +262,18 @@ Updated: 2026-10-01 13:13:56
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-records">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="width: 170px;"><span data-i18n="auto___5901f0"></span></th>
-                <th style="min-width: 160px;"><span data-i18n="auto___4ddba7"></span></th>
-                <th style="width: 120px;" class="text-end"><span data-i18n="auto___9f0b99"></span></th>
-                <th style="width: 90px;" class="text-center"><span data-i18n="auto___2ed6c1"></span>.</th>
-                <th style="min-width: 200px;"><span data-i18n="auto___c0b4d2"></span></th>
+                <th style="width: 170px;">Время</th>
+                <th style="min-width: 160px;">Метрика / Сенсор</th>
+                <th style="width: 120px;" class="text-end">Значение</th>
+                <th style="width: 90px;" class="text-center">Ед. изм.</th>
+                <th style="min-width: 200px;">Параметры</th>
               </tr>
             </thead>
             <tbody id="th-tbody-records">
               <tr>
                 <td colspan="5" class="text-center text-muted py-4">
                   <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-                  <span data-i18n="auto___79c5d3"></span>...
+                  Загрузка записей...
                 </td>
               </tr>
             </tbody>
@@ -221,21 +281,21 @@ Updated: 2026-10-01 13:13:56
         </div>
 
         <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span class="small text-muted" id="th-records-pagination-info"><span data-i18n="auto__0__c19278"></span> 0</span>
+          <span class="small text-muted" id="th-records-pagination-info">0 из 0</span>
           <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-secondary" id="th-btn-prev-page" disabled>&laquo; <span data-i18n="auto___f6dab0"></span></button>
+            <button class="btn btn-sm btn-outline-secondary" id="th-btn-prev-page" disabled>&laquo; Назад</button>
             <span class="btn btn-sm btn-dark disabled border-0" id="th-page-indicator">1 / 1</span>
-            <button class="btn btn-sm btn-outline-secondary" id="th-btn-next-page" disabled><span data-i18n="auto___25905b"></span> &raquo;</button>
+            <button class="btn btn-sm btn-outline-secondary" id="th-btn-next-page" disabled>Вперед &raquo;</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Subtab 3: Anomalies Journal -->
+    <!-- Subtab 4: Anomalies Journal -->
     <div class="tab-pane fade" id="th-subtab-anomalies" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2 px-3 border-secondary">
-          <span class="fw-semibold text-white small"><span data-i18n="auto___414153"></span></span>
+          <span class="fw-semibold text-white small">Журнал инцидентов и аномалий телеметрии</span>
           <span class="badge bg-secondary" id="th-anomalies-header-count">0</span>
         </div>
 
@@ -243,16 +303,16 @@ Updated: 2026-10-01 13:13:56
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-anomalies">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="width: 110px;" class="text-center"><span data-i18n="auto___d9f964"></span></th>
-                <th style="width: 170px;"><span data-i18n="auto___c80d7e"></span></th>
-                <th style="min-width: 160px;"><span data-i18n="auto___410216"></span></th>
-                <th style="width: 160px;"><span data-i18n="auto___b0fd9c"></span></th>
-                <th style="min-width: 250px;"><span data-i18n="auto___44e9ec"></span></th>
+                <th style="width: 110px;" class="text-center">Уровень</th>
+                <th style="width: 170px;">Время фиксации</th>
+                <th style="min-width: 160px;">Тип триггера</th>
+                <th style="width: 160px;">Метрика</th>
+                <th style="min-width: 250px;">Описание аномалии</th>
               </tr>
             </thead>
             <tbody id="th-tbody-anomalies">
               <tr>
-                <td colspan="5" class="text-center text-muted py-4"><span data-i18n="auto___eb2639"></span></td>
+                <td colspan="5" class="text-center text-muted py-4">Аномалий не зафиксировано</td>
               </tr>
             </tbody>
           </table>
@@ -260,14 +320,99 @@ Updated: 2026-10-01 13:13:56
       </div>
     </div>
 
-    <!-- Subtab 4: Log Files Storage -->
+    <!-- Subtab 5: SQLite Database & RAM Performance Monitor -->
+    <div class="tab-pane fade" id="th-subtab-dbstats" role="tabpanel">
+      <div class="row g-3">
+        <!-- DB Pragmas & Memory Card -->
+        <div class="col-12 col-lg-6">
+          <div class="card shadow-sm border-secondary-subtle bg-dark h-100">
+            <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+              <span class="fw-bold text-white small"><i class="bi bi-cpu text-info me-1"></i> Конфигурация движка SQLite</span>
+              <span class="badge bg-success">WAL Mode Active</span>
+            </div>
+            <div class="card-body p-3">
+              <table class="table table-dark table-sm mb-0 small">
+                <tbody>
+                  <tr>
+                    <td class="text-muted">Путь к файлу БД:</td>
+                    <td class="font-monospace text-info text-break" id="th-db-path">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">Размер telemetry.db:</td>
+                    <td class="fw-bold text-white" id="th-db-size">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">Размер WAL журнала:</td>
+                    <td class="fw-bold text-warning" id="th-wal-size">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">Лимит RAM кольцевого буфера:</td>
+                    <td class="fw-bold text-success">32 МБ (защита от OOM)</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">Memory-Mapped I/O (mmap_size):</td>
+                    <td class="fw-bold text-info">256 МБ</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">Кэш страниц SQLite (cache_size):</td>
+                    <td class="fw-bold text-info">64 МБ</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">Таймаут блокировок (busy_timeout):</td>
+                    <td class="fw-bold text-white">15 000 мс</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tables Record Counts -->
+        <div class="col-12 col-lg-6">
+          <div class="card shadow-sm border-secondary-subtle bg-dark h-100">
+            <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+              <span class="fw-bold text-white small"><i class="bi bi-table text-warning me-1"></i> Записи в таблицах SQLite</span>
+              <button id="th-btn-reload-dbstats" class="btn btn-sm btn-outline-info py-0 px-2">Обновить</button>
+            </div>
+            <div class="card-body p-3">
+              <table class="table table-dark table-sm mb-0 small">
+                <tbody id="th-tbody-db-counts">
+                  <tr>
+                    <td class="text-muted">system_snapshots:</td>
+                    <td class="fw-bold text-white text-end" id="th-cnt-snapshots">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">process_snapshots:</td>
+                    <td class="fw-bold text-white text-end" id="th-cnt-processes">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">incidents:</td>
+                    <td class="fw-bold text-warning text-end" id="th-cnt-incidents">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">telemetry_hourly:</td>
+                    <td class="fw-bold text-info text-end" id="th-cnt-hourly">--</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">telemetry_daily:</td>
+                    <td class="fw-bold text-info text-end" id="th-cnt-daily">--</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtab 6: Log Files Storage -->
     <div class="tab-pane fade" id="th-subtab-files" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2 px-3 border-secondary">
-          <span class="fw-semibold text-white small"><span data-i18n="auto___f3a71c"></span></span>
+          <span class="fw-semibold text-white small">Хранилище сырых JSON и лог-файлов</span>
           <button id="th-btn-refresh-files" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
             <i class="bi bi-arrow-clockwise"></i>
-            <span><span data-i18n="auto___c2f668"></span></span>
+            <span>Обновить</span>
           </button>
         </div>
 
@@ -275,18 +420,18 @@ Updated: 2026-10-01 13:13:56
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-files">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="min-width: 220px;"><span data-i18n="auto___1e5ae1"></span></th>
-                <th style="min-width: 250px;"><span data-i18n="auto___e20d51"></span></th>
-                <th style="width: 100px;" class="text-end"><span data-i18n="auto___98713e"></span></th>
-                <th style="width: 170px;"><span data-i18n="auto___d1d19d"></span></th>
-                <th style="width: 130px;" class="text-center"><span data-i18n="auto___4fe9c0"></span></th>
+                <th style="min-width: 220px;">Имя файла</th>
+                <th style="min-width: 250px;">Путь к файлу</th>
+                <th style="width: 100px;" class="text-end">Размер</th>
+                <th style="width: 170px;">Изменен</th>
+                <th style="width: 130px;" class="text-center">Действия</th>
               </tr>
             </thead>
             <tbody id="th-tbody-files">
               <tr>
                 <td colspan="5" class="text-center text-muted py-4">
                   <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-                  <span data-i18n="auto___e316cd"></span>...
+                  Загрузка файлов...
                 </td>
               </tr>
             </tbody>

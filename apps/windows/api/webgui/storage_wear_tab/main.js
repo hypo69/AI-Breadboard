@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-06 07:41:00
  * =============================================================================
  */
 
@@ -93,7 +93,7 @@
             const pohFormatted = formatPohLocal(d.power_on_hours);
             const pohHtml = pohFormatted
               ? `<div class="font-monospace text-info">${pohFormatted}</div><div class="small text-muted font-monospace mt-0.5">Старт: ${escapeHtml(d.first_power_on || '—')}</div>`
-              : '<span class="text-muted font-monospace small">Сессия ОС</span>';
+              : '<span class="text-muted font-monospace small">—</span>';
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `

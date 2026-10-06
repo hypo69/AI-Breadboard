@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:25:00
+# Updated: 2026-10-06 05:33:00
 # =============================================================================
 
 from __future__ import annotations
@@ -211,6 +211,7 @@ class TelemetryStorage:
         return self._buffer.flush()
 
     def close(self) -> None:
+        self._aggregator.stop_background_scheduler()
         self._buffer.close()
 
     # -------------------------------------------------------------------------
@@ -793,4 +794,13 @@ class TelemetryStorage:
 
     def run_aggregation_pipeline(self, start_epoch: Optional[float] = None, end_epoch: Optional[float] = None, detect_spikes: bool = True) -> Dict[str, Any]:
         return self._aggregator.run_pipeline(start_epoch=start_epoch, end_epoch=end_epoch, detect_spikes=detect_spikes)
+
+    def start_background_aggregator(self, interval_seconds: float = 300.0) -> None:
+        """Запускает фоновый регламентный планировщик агрегации."""
+        self._aggregator.start_background_scheduler(interval_seconds=interval_seconds)
+
+    def stop_background_aggregator(self) -> None:
+        """Останавливает фоновый регламентный планировщик агрегации."""
+        self._aggregator.stop_background_scheduler()
+
 

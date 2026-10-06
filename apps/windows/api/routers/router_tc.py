@@ -16,11 +16,11 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-05 23:40:00
+# Updated: 2026-10-06 06:34:00
 # =============================================================================
 
 from __future__ import annotations
-"""FastAPI REST эндпоинты для управления активной AI-моделью, провайдером"""
+"""FastAPI REST эндпоинты для управления активной AI-моделью, провайдером и расширенной телеметрией."""
 
 import asyncio
 import json
@@ -36,11 +36,16 @@ from logger import logger
 from apps.windows.telemetry_research.diagnostic_engine import SystemDiagnosticEngine as SystemAIDiagnostician
 from apps.windows.telemetry import SystemCollector
 from apps.windows.telemetry.sqlite import TelemetryStorage
+from apps.windows.telemetry.sampling_controller import SamplingController
+from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
+from apps.windows.telemetry.models import SamplingMode
 from src.api.routers.core.router_auth import require_admin_user
 
 _collector: Optional[SystemCollector] = None
 _diagnostician: Optional[SystemAIDiagnostician] = None
 _storage: Optional[TelemetryStorage] = None
+_sampling_controller: Optional[SamplingController] = None
+_wevtapi: Optional[WevtAPI] = None
 
 
 def get_storage() -> TelemetryStorage:
@@ -49,6 +54,28 @@ def get_storage() -> TelemetryStorage:
     if _storage is None:
         _storage = TelemetryStorage.get_instance(read_only=True)
     return _storage
+
+
+def get_sampling_controller() -> SamplingController:
+    """Получить или создать синглтон контроллера сэмплирования."""
+    global _sampling_controller
+    if _sampling_controller is None:
+        _sampling_controller = SamplingController()
+    return _sampling_controller
+
+
+def get_wevtapi() -> WevtAPI:
+    """Получить или создать синглтон FFI интерфейса WevtAPI."""
+    global _wevtapi
+    if _wevtapi is None:
+        _wevtapi = WevtAPI()
+    return _wevtapi
+
+
+class ForensicTriggerRequest(BaseModel):
+    """Модель запроса активации форензик-сэмплирования (250 мс)."""
+    duration_seconds: float = Field(default=30.0, description="Длительность форензик-режима в секундах")
+
 
 
 def get_collector() -> SystemCollector:
@@ -703,11 +730,22 @@ def init_router() -> APIRouter:
             pass
 
         cpu_model = "CPU"
-        try:
-            import platform
-            cpu_model = platform.processor() or f"{phys_cores}-Core Processor"
-        except Exception:
-            pass
+        if os.name == "nt":
+            try:
+                import winreg
+
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as key:
+                    val, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+                    if val and val.strip():
+                        cpu_model = val.strip()
+            except Exception:
+                pass
+        if not cpu_model or cpu_model == "CPU":
+            try:
+                import platform
+                cpu_model = platform.processor() or f"{phys_cores}-Core Processor"
+            except Exception:
+                pass
 
         if latest_cpu and latest_cpu.get("cpu_total_percent") is not None:
             pct = float(latest_cpu["cpu_total_percent"])
@@ -764,4 +802,161 @@ def init_router() -> APIRouter:
             "recommendations_count": len(recommendations),
         }
 
+    # =========================================================================
+    # 5. Расширенные эндпоинты телеметрии, роллапов, БД и форензики
+    # =========================================================================
+
+    @router.get("/telemetry/rollups")
+    async def get_telemetry_rollups(
+        request: Request,
+        level: str = "hourly",
+        limit: int = 100,
+        sensor_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Получение агрегированных роллапов телеметрии по уровням (hourly, daily, weekly, monthly, yearly)."""
+        storage = get_storage()
+        rows = storage.get_telemetry_rollups(level=level, limit=limit, sensor_id=sensor_id)
+        return {
+            "status": "ok",
+            "level": level,
+            "count": len(rows),
+            "rollups": rows,
+        }
+
+    @router.get("/telemetry/db-stats")
+    async def get_telemetry_db_stats(request: Request) -> Dict[str, Any]:
+        """Получение метрик производительности и состояния базы данных SQLite (telemetry.db)."""
+        storage = get_storage()
+        db_path = storage.db_path
+        db_size_bytes = 0
+        wal_size_bytes = 0
+        shm_size_bytes = 0
+
+        p = Path(db_path)
+        if p.is_file():
+            db_size_bytes = p.stat().st_size
+        wal_p = Path(str(db_path) + "-wal")
+        if wal_p.is_file():
+            wal_size_bytes = wal_p.stat().st_size
+        shm_p = Path(str(db_path) + "-shm")
+        if shm_p.is_file():
+            shm_size_bytes = shm_p.stat().st_size
+
+        counts: Dict[str, int] = {}
+        try:
+            with storage.connection() as conn:
+                cursor = conn.cursor()
+                for table in ["system_snapshots", "process_snapshots", "incidents", "telemetry_hourly", "telemetry_daily"]:
+                    try:
+                        cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                        row = cursor.fetchone()
+                        counts[table] = row[0] if row else 0
+                    except Exception:
+                        counts[table] = 0
+        except Exception as ex:
+            logger.debug(f"[router_tc] Ошибка при сборе статистики таблиц: {ex}")
+
+        return {
+            "status": "ok",
+            "db_path": db_path,
+            "db_size_bytes": db_size_bytes,
+            "db_size_mb": round(db_size_bytes / (1024 * 1024), 2),
+            "wal_size_bytes": wal_size_bytes,
+            "wal_size_mb": round(wal_size_bytes / (1024 * 1024), 2),
+            "shm_size_bytes": shm_size_bytes,
+            "table_counts": counts,
+            "pragmas": {
+                "journal_mode": "WAL",
+                "synchronous": "NORMAL",
+                "mmap_size_mb": 256,
+                "cache_size_mb": 64,
+                "busy_timeout_ms": 15000,
+            },
+            "buffer_ram_limit_mb": 32,
+        }
+
+    @router.get("/telemetry/incidents")
+    async def get_telemetry_incidents(
+        request: Request,
+        limit: int = 50,
+        trigger_type: Optional[str] = None,
+        severity: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Получение списка зафиксированных инцидентов и аномалий телеметрии."""
+        storage = get_storage()
+        incidents = storage.get_incidents(limit=limit, trigger_type=trigger_type, severity=severity)
+        return {
+            "status": "ok",
+            "count": len(incidents),
+            "incidents": incidents,
+        }
+
+    @router.get("/telemetry/sysmon")
+    async def get_telemetry_sysmon_events(
+        request: Request,
+        limit: int = 50,
+        event_ids: Optional[str] = None,
+        filter_process: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Получение событий Sysmon (Event ID 1, 7, 10, 11, 23, 26) через WevtAPI FFI."""
+        wevt = get_wevtapi()
+        ids_list = None
+        if event_ids:
+            try:
+                ids_list = [int(x.strip()) for x in event_ids.split(",") if x.strip().isdigit()]
+            except Exception:
+                pass
+        events = wevt.query_sysmon_events(limit=limit, event_ids=ids_list, filter_process=filter_process)
+        return {
+            "status": "ok",
+            "count": len(events),
+            "events": events,
+        }
+
+    @router.get("/telemetry/powershell-scripts")
+    async def get_powershell_script_blocks(
+        request: Request,
+        limit: int = 50,
+        filter_text: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Получение блоков скриптов PowerShell (Event ID 4104) через WevtAPI FFI."""
+        wevt = get_wevtapi()
+        blocks = wevt.query_powershell_script_blocks(limit=limit, filter_text=filter_text)
+        return {
+            "status": "ok",
+            "count": len(blocks),
+            "script_blocks": blocks,
+        }
+
+    @router.get("/sampling/status")
+    async def get_sampling_status(request: Request) -> Dict[str, Any]:
+        """Получение текущего режима сэмплирования и интервала телеметрии."""
+        ctrl = get_sampling_controller()
+        status_info = ctrl.get_status()
+        current_mode = ctrl.mode
+        return {
+            "status": "ok",
+            "mode": current_mode.value,
+            "interval_seconds": ctrl.get_current_interval(),
+            "is_forensic": current_mode == SamplingMode.FORENSIC,
+            "is_incident": current_mode == SamplingMode.INCIDENT,
+            "details": status_info,
+        }
+
+    @router.post("/sampling/trigger-forensic")
+    async def trigger_sampling_forensic(payload: ForensicTriggerRequest, request: Request) -> Dict[str, Any]:
+        """Активация высокочастотного форензик-сэмплирования (250 мс) на заданную длительность."""
+        ctrl = get_sampling_controller()
+        duration = float(payload.duration_seconds or 30.0)
+        ctrl.trigger_forensic_mode(duration_seconds=duration)
+        return {
+            "status": "ok",
+            "message": f"Форензик-сэмплинг (250 мс) активирован на {duration} сек.",
+            "duration_seconds": duration,
+            "mode": ctrl.mode.value,
+            "interval_seconds": ctrl.get_current_interval(),
+        }
+
+
     return router
+

@@ -20,13 +20,14 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 03:08:00
+# Updated: 2026-10-06 07:40:00
 # =============================================================================
 
 from __future__ import annotations
 """Сенсор диагностики накопителей Windows без сторонних утилит."""
 
 import argparse
+import base64
 import json
 import os
 import platform
@@ -75,6 +76,23 @@ function Get-SafeStorageReliability {
         }
         catch { @() }
     }
+    return $res
+}
+
+function Get-SafeWmiSmartData {
+    $res = @()
+    try {
+        $rawSmart = @(Get-CimInstance -Namespace 'root/wmi' -ClassName 'MSStorageDriver_FailurePredictData' -ErrorAction Stop)
+        foreach ($it in $rawSmart) {
+            $b64 = if ($it.VendorSpecific) { [System.Convert]::ToBase64String($it.VendorSpecific) } else { $null }
+            $res += [PSCustomObject]@{
+                InstanceName = $it.InstanceName
+                PredictFailure = $it.PredictFailure
+                VendorSpecificB64 = $b64
+            }
+        }
+    }
+    catch { }
     return $res
 }
 
@@ -133,13 +151,16 @@ $partitions = @(Get-SafeCimInstances -ClassName 'MSFT_Partition' -Namespace 'roo
 Trace-Step "4. Опрос SMART и счетчиков надежности (Get-PhysicalDisk | Get-StorageReliabilityCounter)"
 $storage_reliability = @(Get-SafeStorageReliability)
 
-Trace-Step "5. Опрос счетчиков производительности дисков (Get-Counter PhysicalDisk)"
+Trace-Step "5. Опрос WMI SMART атрибутов накопителей (MSStorageDriver_FailurePredictData)"
+$smart_data = @(Get-SafeWmiSmartData)
+
+Trace-Step "6. Опрос счетчиков производительности дисков (Get-Counter PhysicalDisk)"
 $performance_counters = @(Get-SafePerformanceCounters)
 
-Trace-Step "6. Опрос журналов событий Windows Storage (Get-WinEvent System/Storport/Partition/Ntfs)"
+Trace-Step "7. Опрос журналов событий Windows Storage (Get-WinEvent System/Storport/Partition/Ntfs)"
 $event_log = @(Get-SafeEventLog)
 
-Trace-Step "7. Формирование структуры результата"
+Trace-Step "8. Формирование структуры результата"
 $result = [ordered]@{
     computer_system = $computer_system
     operating_system = $operating_system
@@ -153,14 +174,15 @@ $result = [ordered]@{
     disk_drives = $disk_drives
     partitions = $partitions
     storage_reliability = $storage_reliability
+    smart_data = $smart_data
     performance_counters = $performance_counters
     event_log = $event_log
 }
 
-Trace-Step "8. Сериализация в JSON (ConvertTo-Json -Depth 8)"
+Trace-Step "9. Сериализация в JSON (ConvertTo-Json -Depth 8)"
 $json = $result | ConvertTo-Json -Depth 8 -Compress
 
-Trace-Step "9. Завершено успешно"
+Trace-Step "10. Завершено успешно"
 $json
 """
 
@@ -194,6 +216,40 @@ class StorageDiskHealthInfo:
     def to_dict(self) -> Dict[str, Any]:
         """Преобразование информации о накопителе в словарь."""
         return asdict(self)
+
+
+def parse_smart_vendor_data(raw_b64: str) -> Dict[int, Dict[str, Any]]:
+    """Парсинг 512-байтного буфера SMART (структура ATA атрибутов).
+
+    Args:
+        raw_b64: Строка в кодировке Base64, содержащая байты VendorSpecific.
+
+    Returns:
+        Dict[int, Dict[str, Any]]: Словарь разобранных SMART-атрибутов (ID -> {id, val, worst, raw}).
+    """
+    if not raw_b64:
+        return {}
+    try:
+        raw = base64.b64decode(raw_b64)
+        if len(raw) < 362:
+            return {}
+        attrs: Dict[int, Dict[str, Any]] = {}
+        for i in range(2, min(len(raw), 362), 12):
+            attr_id = raw[i]
+            if attr_id == 0:
+                continue
+            val = raw[i + 3]
+            worst = raw[i + 4]
+            raw_val = int.from_bytes(raw[i + 5:i + 11], byteorder='little')
+            attrs[attr_id] = {
+                'id': attr_id,
+                'val': val,
+                'worst': worst,
+                'raw': raw_val
+            }
+        return attrs
+    except Exception:
+        return {}
 
 
 class WindowsStorageSensor:
@@ -360,7 +416,8 @@ class WindowsStorageSensor:
     def collect_snapshot(self, force_refresh: bool = False, sync: bool = False) -> Dict[str, Any]:
         """Собирает полный доступный снимок Windows Storage с кэшированием (раз в 12 часов).
 
-        По умолчанию выполняется асинхронно в фоне без блокировки вызывающего потока.
+        По умолчанию выполняется асинхронно в фоне без блокировки вызывающего потока,
+        но при отсутствии кэша или явном sync/force_refresh выполняет опрос синхронно.
 
         Args:
             force_refresh: Принудительное обновление без использования кэша.
@@ -377,10 +434,10 @@ class WindowsStorageSensor:
         if not force_refresh and WindowsStorageSensor._CACHE_SNAPSHOT and (now - WindowsStorageSensor._CACHE_TIME < self.ttl_sec):
             return WindowsStorageSensor._CACHE_SNAPSHOT
 
-        if sync:
+        if sync or force_refresh or not WindowsStorageSensor._CACHE_SNAPSHOT:
             return self._perform_collection_and_cache()
 
-        # Запуск фонового обновления
+        # Запуск фонового обновления при наличии устаревшего кэша
         self.trigger_async_refresh()
 
         if WindowsStorageSensor._CACHE_SNAPSHOT:
@@ -409,6 +466,7 @@ class WindowsStorageSensor:
         physical_disks = _ensure_list(raw_data.get('physical_disks'))
         physical_storage = _ensure_list(raw_data.get('physical_storage'))
         storage_reliability = _ensure_list(raw_data.get('storage_reliability'))
+        smart_data = _ensure_list(raw_data.get('smart_data'))
         event_log = _ensure_list(raw_data.get('event_log'))
         performance_counters = _ensure_list(raw_data.get('performance_counters'))
 
@@ -434,6 +492,7 @@ class WindowsStorageSensor:
                 'disk_drives': _ensure_list(raw_data.get('disk_drives')),
                 'partitions': _ensure_list(raw_data.get('partitions')),
                 'storage_reliability': storage_reliability,
+                'smart_data': smart_data,
                 'performance_counters': performance_counters,
                 'event_log': event_log
             },
@@ -441,33 +500,57 @@ class WindowsStorageSensor:
                 'physical_disk_count': len(physical_disks),
                 'storage_disk_count': len(physical_storage),
                 'reliability_counter_count': len(storage_reliability),
+                'smart_device_count': len(smart_data),
                 'event_count': len(event_log)
             }
         }
         return snapshot
 
-    def get_physical_disks(self, force_refresh: bool = False) -> List[StorageDiskHealthInfo]:
+    def get_physical_disks(self, force_refresh: bool = False, sync: bool = False) -> List[StorageDiskHealthInfo]:
         """Извлекает детальные нормализованные сведения о каждом физическом накопителе.
 
-        Объединяет данные Win32_DiskDrive, MSFT_PhysicalDisk и StorageReliabilityCounter.
+        Объединяет данные Win32_DiskDrive, MSFT_PhysicalDisk, StorageReliabilityCounter и WMI SMART.
 
         Args:
             force_refresh: Принудительное обновление данных.
+            sync: Выполнить опрос синхронно.
 
         Returns:
             List[StorageDiskHealthInfo]: Список объектов StorageDiskHealthInfo.
         """
-        snapshot = self.collect_snapshot(force_refresh=force_refresh)
+        snapshot = self.collect_snapshot(force_refresh=force_refresh, sync=sync)
         sources = snapshot.get('sources', {})
         storage_disks = sources.get('physical_storage', [])
         wmi_disks = sources.get('physical_disks', [])
         reliabilities = sources.get('storage_reliability', [])
+        raw_smart = sources.get('smart_data', [])
 
         reliability_map: Dict[str, Dict[str, Any]] = {}
         for r in reliabilities:
             dev_id = str(r.get('DeviceId', '') or r.get('DeviceID', '') or '')
             if dev_id:
                 reliability_map[dev_id] = r
+
+        # Разбор WMI SMART данных
+        smart_by_pnp: Dict[str, Dict[int, Dict[str, Any]]] = {}
+        for s in raw_smart:
+            inst = str(s.get('InstanceName', '') or '').strip()
+            b64 = s.get('VendorSpecificB64', '')
+            if b64:
+                parsed = parse_smart_vendor_data(b64)
+                if parsed:
+                    norm_inst = inst.rstrip('_0').lower()
+                    smart_by_pnp[norm_inst] = parsed
+
+        wmi_by_index: Dict[str, Dict[str, Any]] = {}
+        wmi_by_serial: Dict[str, Dict[str, Any]] = {}
+        for w in wmi_disks:
+            idx_str = str(w.get('Index', ''))
+            if idx_str:
+                wmi_by_index[idx_str] = w
+            sn = str(w.get('SerialNumber', '') or '').strip().lower()
+            if sn and sn != 'n/a':
+                wmi_by_serial[sn] = w
 
         bus_type_map = {
             0: 'Unknown', 1: 'SCSI', 2: 'ATAPI', 3: 'ATA', 4: '1394', 5: 'SSA',
@@ -491,6 +574,22 @@ class WindowsStorageSensor:
                 bus_type = bus_type_map.get(raw_bus, str(raw_bus or 'Unknown'))
                 raw_media = s_disk.get('MediaType')
                 media_type = media_type_map.get(raw_media, 'SSD' if 'nvme' in model.lower() or 'ssd' in model.lower() else 'HDD')
+                
+                # Уточнение типа и интерфейса
+                model_lower = model.lower()
+                if bus_type == 'RAID':
+                    if any(kw in model_lower for kw in ('nvme', '990', '980', '970', 'pcie')):
+                        bus_type = 'NVMe'
+                    elif any(kw in model_lower for kw in ('mx500', 'sata', 'hdwd', 'wd20', 'barracuda')):
+                        bus_type = 'SATA'
+                if media_type == 'Unspecified':
+                    if bus_type == 'USB':
+                        media_type = 'External'
+                    elif any(kw in model_lower for kw in ('ssd', 'nvme')):
+                        media_type = 'SSD'
+                    else:
+                        media_type = 'HDD'
+                        
                 raw_health = s_disk.get('HealthStatus')
                 health_str = health_status_map.get(raw_health, 'Healthy' if raw_health == 0 else 'Warning')
                 op_status = str(s_disk.get('OperationalStatus', 'OK'))
@@ -508,6 +607,48 @@ class WindowsStorageSensor:
                 write_bytes = int(rel.get('BytesWritten') or rel.get('DataUnitsWritten') or 0)
                 read_tb = round(float(read_bytes) / (1024 ** 4), 2) if read_bytes else 0.0
                 write_tb = round(float(write_bytes) / (1024 ** 4), 2) if write_bytes else 0.0
+
+                # Поиск соответствующих SMART-атрибутов
+                smart_attrs: Dict[int, Dict[str, Any]] = {}
+                w_disk = wmi_by_index.get(dev_id)
+                if not w_disk and serial and serial != 'N/A':
+                    w_disk = wmi_by_serial.get(serial.lower())
+
+                if w_disk:
+                    pnp = str(w_disk.get('PNPDeviceID') or '').lower()
+                    for norm_inst, attrs in smart_by_pnp.items():
+                        if norm_inst in pnp or pnp in norm_inst or any(part in norm_inst for part in pnp.split('\\') if len(part) > 6):
+                            smart_attrs = attrs
+                            break
+
+                if not smart_attrs and model:
+                    for norm_inst, attrs in smart_by_pnp.items():
+                        if any(w.lower() in norm_inst for w in model.split() if len(w) > 3):
+                            smart_attrs = attrs
+                            break
+
+                # Дополнение метрик из SMART если Get-StorageReliabilityCounter вернул 0/None
+                if (poh == 0 or poh is None) and smart_attrs:
+                    if 9 in smart_attrs:
+                        poh = int(smart_attrs[9]['raw'])
+
+                if (temp_c == 0.0 or temp_c is None) and smart_attrs:
+                    if 194 in smart_attrs:
+                        temp_c = float(smart_attrs[194]['raw'] & 0xFF)
+                    elif 190 in smart_attrs:
+                        temp_c = float(smart_attrs[190]['raw'] & 0xFF)
+
+                if (wear == 0.0 or wear is None) and smart_attrs:
+                    if 202 in smart_attrs:  # Percentage used / remaining
+                        wear = max(0.0, min(100.0, 100.0 - float(smart_attrs[202]['val'])))
+                    elif 231 in smart_attrs:  # SSD Life Left
+                        wear = max(0.0, min(100.0, 100.0 - float(smart_attrs[231]['val'])))
+                    elif 232 in smart_attrs:  # Available Spare
+                        wear = max(0.0, min(100.0, 100.0 - float(smart_attrs[232]['val'])))
+
+                if (read_errors == 0 or read_errors is None) and smart_attrs:
+                    if 5 in smart_attrs:
+                        read_errors = int(smart_attrs[5]['raw'])
 
                 result_disks.append(StorageDiskHealthInfo(
                     device_id=f'Disk{dev_id}' if dev_id else 'Disk',
@@ -549,6 +690,38 @@ class WindowsStorageSensor:
                 write_bytes = int(rel.get('BytesWritten') or rel.get('DataUnitsWritten') or 0)
                 read_tb = round(float(read_bytes) / (1024 ** 4), 2) if read_bytes else 0.0
                 write_tb = round(float(write_bytes) / (1024 ** 4), 2) if write_bytes else 0.0
+
+                # Поиск соответствующих SMART-атрибутов
+                smart_attrs = {}
+                pnp = str(w_disk.get('PNPDeviceID') or '').lower()
+                for norm_inst, attrs in smart_by_pnp.items():
+                    if norm_inst in pnp or pnp in norm_inst or any(part in norm_inst for part in pnp.split('\\') if len(part) > 6):
+                        smart_attrs = attrs
+                        break
+
+                if not smart_attrs and model:
+                    for norm_inst, attrs in smart_by_pnp.items():
+                        if any(w.lower() in norm_inst for w in model.split() if len(w) > 3):
+                            smart_attrs = attrs
+                            break
+
+                if (poh == 0 or poh is None) and smart_attrs:
+                    if 9 in smart_attrs:
+                        poh = int(smart_attrs[9]['raw'])
+
+                if (temp_c == 0.0 or temp_c is None) and smart_attrs:
+                    if 194 in smart_attrs:
+                        temp_c = float(smart_attrs[194]['raw'] & 0xFF)
+                    elif 190 in smart_attrs:
+                        temp_c = float(smart_attrs[190]['raw'] & 0xFF)
+
+                if (wear == 0.0 or wear is None) and smart_attrs:
+                    if 202 in smart_attrs:
+                        wear = max(0.0, min(100.0, 100.0 - float(smart_attrs[202]['val'])))
+                    elif 231 in smart_attrs:
+                        wear = max(0.0, min(100.0, 100.0 - float(smart_attrs[231]['val'])))
+                    elif 232 in smart_attrs:
+                        wear = max(0.0, min(100.0, 100.0 - float(smart_attrs[232]['val'])))
 
                 result_disks.append(StorageDiskHealthInfo(
                     device_id=str(w_disk.get('DeviceID', f'\\\\.\\PHYSICALDRIVE{dev_id}')),

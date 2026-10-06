@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 03:35:00
+ * Updated: 2026-10-06 06:10:00
  * =============================================================================
  */
 
@@ -385,6 +385,12 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-system-control' && typeof window.initSystemControlTab === 'function') {
     console.log('[AdminInterface] Switching to system control tab...');
     window.initSystemControlTab();
+  } else if (cleanId === 'tab-post-install-wizard' && typeof window.initPostInstallWizardTab === 'function') {
+    console.log('[AdminInterface] Switching to post-install wizard tab...');
+    window.initPostInstallWizardTab();
+  } else if (cleanId === 'tab-maintenance-recovery' && typeof window.initMaintenanceRecoveryTab === 'function') {
+    console.log('[AdminInterface] Switching to maintenance recovery tab...');
+    window.initMaintenanceRecoveryTab();
   } else if (cleanId === 'tab-news' && typeof window.initNewsTab === 'function') {
     console.log('[AdminInterface] Switching to news tab...');
     window.initNewsTab();
@@ -612,7 +618,7 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261004_v6', js: '/html/about_system_tab/main.js?v=20261004_v6' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261006_v3', js: '/html/about_system_tab/main.js?v=20261006_v3' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
     { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v2', js: '/html/system_inspector_tab/main.js?v=20261006_v2' },

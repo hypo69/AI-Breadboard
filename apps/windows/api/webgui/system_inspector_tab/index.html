@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/system_inspector_tab
 Author: hypo69
 Copyright: © 2026 hypo69
- * Updated: 2026-10-06 05:05:00
+ * Updated: 2026-10-06 06:35:00
  =============================================================================
 -->
 
@@ -348,6 +348,61 @@ Copyright: © 2026 hypo69
     box-shadow: 0 4px 16px rgba(13, 202, 240, 0.3) !important;
     transform: translateY(-1px);
   }
+  /* Сворачиваемая интерактивная плашка детализации CPU */
+  .sys-cpu-details-accordion-btn {
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 14px;
+    background: linear-gradient(90deg, rgba(13, 202, 240, 0.09) 0%, rgba(99, 102, 241, 0.07) 100%);
+    border-radius: 8px;
+    border: 1.5px solid rgba(13, 202, 240, 0.35);
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+  .sys-cpu-details-accordion-btn:hover {
+    background: linear-gradient(90deg, rgba(13, 202, 240, 0.18) 0%, rgba(99, 102, 241, 0.14) 100%);
+    border-color: #38bdf8;
+    box-shadow: 0 4px 16px rgba(13, 202, 240, 0.35);
+    transform: translateY(-1px);
+  }
+  .sys-cpu-details-accordion-btn.expanded {
+    background: linear-gradient(90deg, rgba(13, 202, 240, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
+    border-color: #38bdf8;
+  }
+  /* Спецификации GPU: интерактивная карточка */
+  .sys-gpu-specs-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+  }
+  .sys-gpu-specs-card:hover {
+    border-color: #f59e0b !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3) !important;
+    transform: translateY(-1px);
+  }
+  /* Сворачиваемая интерактивная плашка детализации GPU */
+  .sys-gpu-details-accordion-btn {
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 14px;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.09) 0%, rgba(239, 68, 68, 0.07) 100%);
+    border-radius: 8px;
+    border: 1.5px solid rgba(245, 158, 11, 0.35);
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+  .sys-gpu-details-accordion-btn:hover {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(239, 68, 68, 0.14) 100%);
+    border-color: #f59e0b;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+    transform: translateY(-1px);
+  }
+  .sys-gpu-details-accordion-btn.expanded {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(239, 68, 68, 0.15) 100%);
+    border-color: #f59e0b;
+  }
   /* Сенсорные виджеты */
   .sys-sensor-widget-item {
     background: #0f172a !important;
@@ -441,20 +496,48 @@ Copyright: © 2026 hypo69
             </div>
           </div>
         </div>
-        <!-- Сворачиваемый блок детализации CPU: Ядра, потоки и датчики системы (скрыт по умолчанию) -->
+
+        <!-- График истории CPU (Загрузка %, Температура °C, Мощность W) с логарифмической/линейной шкалой -->
+        <div class="p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
+          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История CPU</span>
+              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
+                <button type="button" class="btn btn-xs btn-outline-info active py-0 px-2 fw-bold" id="btn-cpu-spark-log" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('log')">Лог. шкала (Log)</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-cpu-spark-lin" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('linear')">Линейная (Lin)</button>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
+              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);" title="Основная шкала: Загрузка ядер CPU (0-100%)">● Нагрузка %</span>
+              <span class="text-danger" style="text-shadow: 0 0 8px rgba(239,68,68,0.5);" title="Компактная шкала: Температура пакета CPU (°C)">● Температура °C</span>
+              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);" title="Компактная шкала: Энергопотребление пакета CPU (W)">● Мощность W</span>
+              <span class="text-muted font-monospace ms-2" id="sys-cpu-spark-live-cursor" style="font-size: 0.70rem;">Live</span>
+            </div>
+          </div>
+          <!-- Контейнер графика и интерактивного тултипа -->
+          <div style="position: relative; width: 100%; height: 90px;" id="sys-cpu-spark-container">
+            <div id="sys-cpu-spark" style="width: 100%; height: 100%;"></div>
+            <div id="sys-cpu-spark-tooltip" style="display: none; position: absolute; top: 6px; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 4px 8px; font-size: 0.70rem; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.6); white-space: nowrap;"></div>
+          </div>
+        </div>
+
+        <!-- Сворачиваемый блок детализации CPU: Ядра, потоки и датчики системы (расположен под графиком истории) -->
         <div class="sys-detailed-sensors mt-2">
-          <div class="sys-core-section-title d-flex justify-content-between align-items-center" 
+          <div class="sys-cpu-details-accordion-btn d-flex justify-content-between align-items-center flex-wrap gap-2" 
                id="sys-cpu-details-toggle-btn"
-               style="cursor: pointer; user-select: none; padding: 6px 10px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);"
                title="Нажмите, чтобы развернуть или скрыть детализацию по ядрам, потокам и сенсорам CPU"
                onclick="window.toggleSysCpuDetails && window.toggleSysCpuDetails()">
-            <div class="d-flex align-items-center gap-1.5">
-              <i class="bi bi-chevron-right text-info" id="sys-cpu-details-toggle-icon" style="transition: transform 0.2s ease;"></i>
-              <span class="fw-bold"><i class="bi bi-grid-3x3-gap-fill text-info me-1.5"></i>Показатели по ядрам, потокам и сенсорам CPU</span>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="text-info" style="font-size: 1rem;"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+              <span class="fw-bold text-white" style="font-size: 0.88rem;">Детализация: Ядра, потоки и сенсоры CPU</span>
+              <span class="badge bg-dark border border-secondary text-info font-monospace ms-1" style="font-size: 0.72rem;" id="sys-cores-count-badge">0 ядер</span>
+              <span class="badge bg-dark border border-secondary text-warning font-monospace" style="font-size: 0.72rem;" id="sys-cpu-sensors-count-badge">0 параметров</span>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-cores-count-badge">0 ядер</span>
-              <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-cpu-sensors-count-badge">0 параметров</span>
+              <button class="btn btn-xs btn-outline-info rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5" id="sys-cpu-details-action-btn" type="button" style="pointer-events: none; font-size: 0.76rem;">
+                <i class="bi bi-chevron-down" id="sys-cpu-details-toggle-icon"></i>
+                <span id="sys-cpu-details-toggle-text">Развернуть детализацию</span>
+              </button>
             </div>
           </div>
 
@@ -479,30 +562,6 @@ Copyright: © 2026 hypo69
             </div>
           </div>
         </div>
-
-        <!-- График истории CPU (Загрузка %, Температура °C, Мощность W) с логарифмической шкалой -->
-        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
-          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История CPU</span>
-              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
-                <button type="button" class="btn btn-xs btn-outline-info active py-0 px-2 fw-bold" id="btn-cpu-spark-log" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('log')">Лог. шкала (Log)</button>
-                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-cpu-spark-lin" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('linear')">Линейная (Lin)</button>
-              </div>
-            </div>
-            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
-              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);">● Нагрузка %</span>
-              <span class="text-danger" style="text-shadow: 0 0 8px rgba(239,68,68,0.5);">● Температура °C</span>
-              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);">● Мощность W</span>
-              <span class="text-muted font-monospace ms-2" id="sys-cpu-spark-live-cursor" style="font-size: 0.70rem;">Live</span>
-            </div>
-          </div>
-          <!-- Контейнер графика и интерактивного тултипа -->
-          <div style="position: relative; width: 100%; height: 90px;" id="sys-cpu-spark-container">
-            <div id="sys-cpu-spark" style="width: 100%; height: 100%;"></div>
-            <div id="sys-cpu-spark-tooltip" style="display: none; position: absolute; top: 6px; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 4px 8px; font-size: 0.70rem; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.6); white-space: nowrap;"></div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -510,62 +569,9 @@ Copyright: © 2026 hypo69
   <!-- Четкий стильный разделитель панелей -->
   <div class="sys-section-divider"></div>
 
-  <!-- 2. Панель Загрузка GPU -->
-  <div class="row mb-3">
-    <div class="col-12">
-      <div class="sys-card sys-card-gpu h-100 p-3">
-        <div class="sys-card-header-bar">
-          <div class="d-flex align-items-center gap-2">
-            <span class="sys-label text-warning" style="font-size: 1.05rem; font-weight: 800;"><i class="bi bi-gpu-card text-warning me-1.5"></i>Загрузка GPU</span>
-          </div>
-          <span class="small text-truncate font-monospace badge bg-dark border border-secondary text-warning" style="font-size: 0.84rem; max-width: 260px;" id="sys-metric-gpu-sub">--</span>
-        </div>
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
-          <div class="d-flex align-items-center gap-3">
-            <div id="sys-metric-gpu-gauge" style="width: 130px; height: 74px;"></div>
-            <div>
-              <div class="sys-value text-warning" id="sys-metric-gpu-val" style="font-size: 2.2rem; line-height: 1; font-weight: 800;">0.0%</div>
-              <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-metric-gpu-core-temp">GPU: -- °C</div>
-            </div>
-          </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-warning" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model">NVIDIA GeForce GT 710</span>
-          </div>
-          <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 260px;">
-            <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-metric-gpu-vram-label">Температура GPU (LHM)</span>
-            <div id="sys-metric-gpu-temp-slider" style="width: 100%;"></div>
-          </div>
-        </div>
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-grid-3x3-gap-fill text-warning me-1.5"></i>Блоки и подсистемы GPU</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-gpu-engines-count-badge">0 блоков</span>
-        </div>
-        <div id="sys-metric-gpu-engines" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; font-size: 0.78rem;"></div>
-
-        <!-- Энергопотребление, напряжение, частоты и сенсоры GPU (Скрывается в компактном режиме) -->
-        <div class="sys-detailed-sensors">
-          <div class="sys-core-section-title d-flex justify-content-between align-items-center mt-3">
-            <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Энергопотребление, напряжение и частоты GPU</span>
-            <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-gpu-sensors-count-badge">0 параметров</span>
-          </div>
-          <div id="sys-metric-gpu-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
-            <div class="text-muted small text-center py-2 col-12">Опрос сенсоров GPU...</div>
-          </div>
-        </div>
-
-        <!-- График истории GPU (Загрузка ядра % · Температура GPU Core °C) -->
-        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-warning me-1"></i>История GPU (Загрузка % · Температура Core °C)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
-              <span class="text-warning">● Нагрузка Core %</span>
-              <span class="text-danger">● Температура °C</span>
-            </div>
-          </div>
-          <div id="sys-gpu-spark" style="height: 60px;"></div>
-        </div>
-      </div>
-    </div>
+  <!-- 2. Панели Загрузки GPU (Для каждого найденного GPU создается отдельная полноразмерная панель) -->
+  <div id="sys-gpu-panels-container" class="d-flex flex-column gap-3 mb-3">
+    <!-- GPU карточки динамически монтируются и обновляются из main.js -->
   </div>
 
   <!-- Четкий стильный разделитель панелей -->

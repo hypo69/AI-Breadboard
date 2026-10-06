@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:30:00
+# Updated: 2026-10-06 07:42:00
 # =============================================================================
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ import json
 import os
 import platform
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import psutil
@@ -218,6 +218,24 @@ def _get_latest_snapshot_dict(storage: TelemetryStorage) -> Dict[str, Any]:
             logger.debug(f"[router_about_system] Ошибка парсинга disks_json снимка: {err}")
 
     return snap_row
+
+
+def _get_cpu_brand_name() -> str:
+    """Получение коммерческого названия процессора (Brand Name) из реестра Windows или WMI."""
+    if os.name == "nt":
+        try:
+            import winreg
+
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as key:
+                val, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+                if val and val.strip():
+                    return val.strip()
+        except Exception:
+            pass
+    model = platform.processor() or ""
+    if not model or "Intel64" in model or "AMD64" in model:
+        return "Intel Core Processor" if "Intel" in model else "AMD Processor"
+    return model
 
 
 def query_about_system_from_db(storage: TelemetryStorage) -> AboutSystemPanelOverviewResponse:
@@ -457,7 +475,7 @@ def query_about_system_from_db(storage: TelemetryStorage) -> AboutSystemPanelOve
     cpu_freq = float((snap_row.get("cpu_frequency_mhz") if snap_row else 0.0) or 0.0)
     phys_cores = psutil.cpu_count(logical=False) or 6
     log_cores = psutil.cpu_count(logical=True) or 12
-    cpu_model = platform.processor() or "Intel Processor"
+    cpu_model = snap_row.get("cpu_model") or _get_cpu_brand_name()
 
     if cpu_freq <= 0.0:
         try:
@@ -751,13 +769,17 @@ async def query_system_summary_full(storage: TelemetryStorage, process_limit: in
         phys_c = psutil.cpu_count(logical=False) or 6
         log_c = psutil.cpu_count(logical=True) or 12
         snap["cpu"] = {
-            "model": platform.processor() or "Intel Processor",
+            "model": _get_cpu_brand_name(),
             "architecture": platform.machine() or "AMD64",
             "physical_cores": phys_c,
             "logical_cores": log_c,
             "total_percent": float(snap.get("cpu_total_percent") or 0.0),
             "frequency_mhz": float(snap.get("cpu_frequency_mhz") or 2900.0),
         }
+    else:
+        cur_model = str(snap["cpu"].get("model") or "")
+        if not cur_model or "Intel64" in cur_model or "AMD64" in cur_model or "GenuineIntel" in cur_model:
+            snap["cpu"]["model"] = _get_cpu_brand_name()
 
     # Memory
     if not snap.get("memory") or not isinstance(snap["memory"], dict):
@@ -896,14 +918,35 @@ async def query_system_summary_full(storage: TelemetryStorage, process_limit: in
 
 
 def query_storage_battery_from_db(storage: TelemetryStorage) -> Dict[str, Any]:
-    """Извлекает состояние износа дисков и аккумулятора из базы данных telemetry.db."""
+    """Извлекает состояние износа дисков и аккумулятора через DeepDiagnosticsEngine и telemetry.db."""
+    try:
+        from apps.windows.telemetry.deep_diagnostics import DeepDiagnosticsEngine
+        rep = DeepDiagnosticsEngine().collect_storage_battery_wear()
+        if rep and rep.disks_wear:
+            return {
+                "status": "ok",
+                "disks_wear": rep.disks_wear,
+                "battery_wear": rep.battery_wear,
+                "timestamp": rep.timestamp,
+            }
+    except Exception as ex:
+        logger.debug(f"Ошибка сбора износа накопителей через DeepDiagnosticsEngine: {ex}")
+
     snap = storage.get_latest_snapshot_full() or {}
     phys_disks = snap.get("physical_disks") or []
     disks_wear = []
 
     partitions = snap.get("disks") or []
-    c_part = next((p for p in partitions if str(p.get("device") or p.get("mountpoint") or "").upper().startswith("C")), None)
-    c_free = float(c_part.get("free_gb") or 0.0) if c_part else None
+    part_map: Dict[str, List[str]] = {}
+    part_free: Dict[str, float] = {}
+    for p in partitions:
+        if isinstance(p, dict):
+            dev = str(p.get("device") or p.get("mountpoint") or "").upper().rstrip("\\")
+            fs = p.get("fstype") or "NTFS"
+            free_g = float(p.get("free_gb") or 0.0)
+            if dev:
+                part_map.setdefault(dev, []).append(f"{dev} [{fs}]")
+                part_free[dev] = free_g
 
     disk_io = snap.get("disk_io") or {}
     bytes_r = float(disk_io.get("read_bytes_per_sec") or 0.0) * 3600
@@ -916,47 +959,28 @@ def query_storage_battery_from_db(storage: TelemetryStorage) -> Dict[str, Any]:
             m_type = str(d.get("media_type") or ("SSD" if "NVMe" in str(d.get("interface_type")) or "SSD" in model.upper() else "HDD"))
             bus_type = str(d.get("interface_type") or d.get("bus_type") or "NVMe")
             sz_gb = round(float(d.get("size_gb") or 0.0), 1)
-            poh = d.get("power_on_hours") or (1420 + idx * 300)
-            wear_pct = float(d.get("wear_percentage") or 1.0)
+            poh = d.get("power_on_hours")
+            wear_pct = float(d.get("wear_percentage") or 0.0)
             health_pct = max(0, min(100, int(100 - wear_pct)))
 
             disks_wear.append({
                 "name": model,
                 "model": model,
                 "device_id": dev_id,
-                "serial_number": str(d.get("serial_number") or f"SN-00{idx+1}-980PRO"),
+                "serial_number": str(d.get("serial_number")) if d.get("serial_number") and d.get("serial_number") != "N/A" else None,
                 "media_type": m_type,
                 "bus_type": bus_type,
-                "partitions": "C: [NTFS]" if idx == 0 else "—",
-                "total_gb": sz_gb if sz_gb > 0 else 512.0,
-                "free_gb": c_free if idx == 0 else None,
+                "partitions": "—",
+                "total_gb": sz_gb if sz_gb > 0 else 0.0,
+                "free_gb": None,
                 "health_pct": health_pct,
                 "status": str(d.get("health_status") or "OK"),
                 "power_on_hours": poh,
-                "first_power_on": "2024-03-15",
-                "bytes_written": int(bytes_w or (340 * 1024 * 1024 * 1024)),
-                "bytes_read": int(bytes_r or (890 * 1024 * 1024 * 1024)),
-                "temperature_c": float(d.get("temperature_celsius") or 38.0) if d.get("temperature_celsius") is not None else 38.0,
+                "first_power_on": (datetime.now(timezone.utc) - timedelta(hours=int(poh))).strftime('%Y-%m-%d') if poh and int(poh) > 0 else None,
+                "bytes_written": int(d.get("lifetime_write_bytes") or bytes_w),
+                "bytes_read": int(d.get("lifetime_read_bytes") or bytes_r),
+                "temperature_c": float(d.get("temperature_celsius")) if d.get("temperature_celsius") is not None else None,
             })
-    else:
-        disks_wear.append({
-            "name": "Samsung NVMe SSD 980 500GB",
-            "model": "Samsung SSD 980 500GB",
-            "device_id": "Disk 0",
-            "serial_number": "S647NX0T812345",
-            "media_type": "SSD",
-            "bus_type": "NVMe",
-            "partitions": "C: [NTFS]",
-            "total_gb": 465.8,
-            "free_gb": c_free or 184.2,
-            "health_pct": 99,
-            "status": "Healthy (OK)",
-            "power_on_hours": 1420,
-            "first_power_on": "2024-03-15",
-            "bytes_written": int(340 * 1024 * 1024 * 1024),
-            "bytes_read": int(890 * 1024 * 1024 * 1024),
-            "temperature_c": 38.0,
-        })
 
     batt = snap.get("battery") or {}
     has_bat = bool(batt.get("has_battery", False))
@@ -965,9 +989,9 @@ def query_storage_battery_from_db(storage: TelemetryStorage) -> Dict[str, Any]:
         "power_source": "AC Mains / Электросеть" if not has_bat else "Battery (Аккумулятор)",
         "percent": int(batt.get("percent") or 100) if has_bat else 100,
         "is_charging": bool(batt.get("power_plugged", True)),
-        "design_capacity_mwh": 56000 if has_bat else None,
-        "full_charge_capacity_mwh": 53200 if has_bat else None,
-        "wear_level_pct": 5 if has_bat else 0,
+        "design_capacity_mwh": batt.get("design_capacity_mwh"),
+        "full_charge_capacity_mwh": batt.get("full_charge_capacity_mwh"),
+        "wear_level_pct": batt.get("wear_level_pct") or 0,
     }
 
     return {

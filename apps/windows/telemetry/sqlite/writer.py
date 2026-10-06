@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:25:00
+# Updated: 2026-10-06 06:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -924,10 +924,21 @@ class TelemetryWriter:
             gpus_list = getattr(snapshot, 'gpus', None) or snap_data.get('gpus') or []
             for g_idx, g_item in enumerate(gpus_list):
                 g_dict = g_item if isinstance(g_item, dict) else (g_item.model_dump() if hasattr(g_item, 'model_dump') else vars(g_item))
+                g_name = g_dict.get('name', f'GPU {g_idx}')
+                name_l = g_name.lower()
+                if 'nvidia' in name_l or 'geforce' in name_l or g_dict.get('has_cuda'):
+                    vendor = 'NVIDIA'
+                elif 'amd' in name_l or 'radeon' in name_l:
+                    vendor = 'AMD'
+                elif 'intel' in name_l or 'arc' in name_l or 'uhd' in name_l or 'hd graphics' in name_l:
+                    vendor = 'Intel'
+                else:
+                    vendor = g_dict.get('vendor') or 'Generic'
+
                 self.upsert_gpu_inventory(cursor, {
                     'gpu_id': g_idx,
-                    'name': g_dict.get('name', f'GPU {g_idx}'),
-                    'vendor': 'NVIDIA' if g_dict.get('has_cuda') else ('AMD' if 'amd' in g_dict.get('name', '').lower() else 'Intel'),
+                    'name': g_name,
+                    'vendor': vendor,
                     'vram_gb': g_dict.get('memory_total_gb', 0.0),
                     'directml_supported': bool(g_dict.get('has_directml', True)),
                 })

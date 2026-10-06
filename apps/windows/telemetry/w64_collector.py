@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 04:48:00
+# Updated: 2026-10-06 07:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -35,33 +35,6 @@ from logger import logger
 from .models import W64CollectorStatus, W64SystemEvent
 from .sqlite import TelemetryStorage
 
-_file_write_lock = threading.Lock()
-
-def _append_jsonl_safely(file_path: Path, data: Dict[str, Any], retries: int = 4, retry_delay: float = 0.05) -> bool:
-    """Безопасная запись JSONL строки с повторными попытками при блокировке файла.
-
-    Args:
-        file_path: Путь к целевому файлу JSONL.
-        data: Словарь с данными для сериализации в JSON.
-        retries: Количество попыток записи при ошибке доступа.
-        retry_delay: Задержка между попытками (сек).
-
-    Returns:
-        bool: True если запись успешна, иначе исключение.
-    """
-    line = json.dumps(data, ensure_ascii=False) + '\n'
-    for attempt in range(retries):
-        try:
-            with _file_write_lock:
-                with open(file_path, 'a', encoding='utf-8') as f:
-                    f.write(line)
-            return True
-        except (PermissionError, OSError) as ex:
-            if attempt < retries - 1:
-                time.sleep(retry_delay * (attempt + 1))
-            else:
-                raise ex
-    return False
 
 class AIW64Collector:
     """Максимально детальный сборщик событий Windows 64-bit для подсистемы телеметрии.
@@ -75,7 +48,6 @@ class AIW64Collector:
 
     def __init__(
         self,
-        log_dir: Optional[str] = None,
         enable_file_monitoring: bool = True,
         enable_process_monitoring: bool = True,
         enable_registry_monitoring: bool = True,
@@ -85,11 +57,11 @@ class AIW64Collector:
         poll_interval_sec: float = 1.0,
         storage: Optional[TelemetryStorage] = None,
         on_event_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        **kwargs: Any,
     ) -> None:
         """Инициализация сборщика системных событий W64.
 
         Args:
-            log_dir: Директория для сохранения JSONL логов (по умолчанию logs/ai_w64_logs).
             enable_file_monitoring: Флаг мониторинга изменений файлов.
             enable_process_monitoring: Флаг мониторинга процессов.
             enable_registry_monitoring: Флаг мониторинга реестра.
@@ -97,16 +69,10 @@ class AIW64Collector:
             enable_event_log_monitoring: Флаг мониторинга журналов Windows.
             monitored_paths: Список путей файловой системы для отслеживания.
             poll_interval_sec: Интервал между циклами сканирования изменений (сек).
-            storage: Экземпляр хранилища TelemetryStorage для сохранения в SQLite.
+            storage: Экземпляр хранилища TelemetryStorage для сохранения в SQLite через буфер.
             on_event_callback: Опциональный callback-обработчик каждого зафиксированного события.
+            **kwargs: Дополнительные параметры конфигурации.
         """
-        if log_dir is None:
-            appdata = os.environ.get('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local'))
-            self.log_dir = str(Path(appdata) / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs' / 'w64')
-        else:
-            self.log_dir = log_dir
-
-        Path(self.log_dir).mkdir(parents=True, exist_ok=True)
         self.enable_file_monitoring = enable_file_monitoring
         self.enable_process_monitoring = enable_process_monitoring
         self.enable_registry_monitoring = enable_registry_monitoring
@@ -132,22 +98,10 @@ class AIW64Collector:
         self._event_counter = 0
         self._last_event_time: Optional[str] = None
         self._last_baseline: Dict[str, Any] = {}
-        logger.debug(f'AIW64Collector инициализирован. Директория логов: {self.log_dir}')
-
-    def _get_log_file(self, event_type: str) -> Path:
-        """Получить путь к файлу ротации лога для типа события.
-
-        Args:
-            event_type: Название категории/типа события.
-
-        Returns:
-            Path: Путь к JSONL файлу.
-        """
-        date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-        return Path(self.log_dir) / f'{event_type}_{date_str}.jsonl'
+        logger.debug('AIW64Collector инициализирован (буферизация в оперативной памяти)')
 
     def _log_event(self, event_type: str, event_data: Dict[str, Any]) -> None:
-        """Записать событие в потоковый JSONL файл и базу данных SQLite.
+        """Зафиксировать событие телеметрии в оперативной памяти с пакетным сбросом в SQLite.
 
         Args:
             event_type: Тип события.
@@ -160,21 +114,14 @@ class AIW64Collector:
         event_data['event_type'] = event_type
         self._last_event_time = now_iso
 
-        # 1. Запись в JSONL
-        try:
-            log_file = self._get_log_file(event_type)
-            _append_jsonl_safely(log_file, event_data)
-        except Exception as ex:
-            logger.debug(f'Не удалось записать JSONL лог события {event_type}: {ex}')
-
-        # 2. Сохранение в SQLite TelemetryStorage
+        # 1. Сохранение в буфер памяти TelemetryStorage
         if self.storage:
             try:
                 self.storage.save_w64_event(event_data, provider='w64_collector')
             except Exception as ex:
                 logger.debug(f'Ошибка сохранения W64 события в БД: {ex}')
 
-        # 3. Передача в callback при наличии
+        # 2. Передача в callback при наличии
         if self.on_event_callback:
             try:
                 self.on_event_callback(event_data)
@@ -419,13 +366,12 @@ class AIW64Collector:
         status = W64CollectorStatus(
             running=self._running,
             events_count=self._event_counter,
-            log_dir=self.log_dir,
             last_event_time=self._last_event_time,
         )
         return status.model_dump()
 
     def get_events(self, event_type: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
-        """Получить список последних событий из SQLite хранилища или JSONL файлов.
+        """Получить список последних событий из SQLite хранилища телеметрии.
 
         Args:
             event_type: Фильтр по типу события.

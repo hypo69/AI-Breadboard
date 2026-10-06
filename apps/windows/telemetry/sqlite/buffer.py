@@ -52,13 +52,14 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 00:02:00
+# Updated: 2026-10-06 06:28:30
 # =============================================================================
 
 from __future__ import annotations
 
 import json
 import os
+import sys
 import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -74,7 +75,7 @@ except ImportError:
 
 
 class TelemetryBuffer:
-    """Управляет буферизацией событий телеметрии в памяти и аварийном JSONL файле."""
+    """Управляет буферизацией событий телеметрии в памяти и аварийном JSONL файле с контролем лимитов RAM."""
 
     def __init__(
         self,
@@ -85,6 +86,7 @@ class TelemetryBuffer:
         flush_interval_seconds: float = 30.0,
         buffer_file_path: Optional[Union[str, Path]] = None,
         auto_flush: bool = True,
+        max_buffer_bytes: int = 32 * 1024 * 1024,
     ) -> None:
         """Инициализирует буфер сброса телеметрии.
 
@@ -96,11 +98,14 @@ class TelemetryBuffer:
             flush_interval_seconds: Интервал таймера сброса в секундах.
             buffer_file_path: Путь к файлу аварийного буфера.
             auto_flush: Флаг автоматического запуска таймера сброса.
+            max_buffer_bytes: Максимальный лимит памяти для записей буфера в байтах (по умолчанию 32 МБ).
         """
         self._cm = connection_manager
         self._writer = writer
         self._buffer_mode = buffer_mode.lower() if buffer_mode in ('memory', 'file', 'direct') else 'memory'
         self._buffer_size = max(1, int(buffer_size))
+        self._max_buffer_bytes = max(1024 * 1024, int(max_buffer_bytes))
+        self._current_buffer_bytes: int = 0
         self._flush_interval_seconds = max(0.5, float(flush_interval_seconds))
         self._auto_flush = bool(auto_flush) and not self._cm.read_only
 
@@ -129,8 +134,19 @@ class TelemetryBuffer:
 
     @property
     def buffer_size(self) -> int:
-        """Максимальный размер буфера."""
+        """Максимальный размер буфера в количестве записей."""
         return self._buffer_size
+
+    @property
+    def max_buffer_bytes(self) -> int:
+        """Максимальный лимит памяти буфера в байтах."""
+        return self._max_buffer_bytes
+
+    @property
+    def current_buffer_bytes(self) -> int:
+        """Текущий объем занимаемой памяти буфера в байтах."""
+        with self._cm.lock:
+            return self._current_buffer_bytes
 
     @property
     def flush_interval_seconds(self) -> float:
@@ -141,6 +157,13 @@ class TelemetryBuffer:
     def buffer_file_path(self) -> Path:
         """Путь к файлу аварийного JSONL буфера."""
         return self._buffer_file_path
+
+    def _estimate_size(self, record: Dict[str, Any]) -> int:
+        """Оценивает объем памяти записи в байтах."""
+        try:
+            return len(json.dumps(record, ensure_ascii=False, default=str).encode('utf-8')) + 128
+        except Exception:
+            return sys.getsizeof(record) + 256
 
     def set_flush_interval_seconds(self, interval: float) -> None:
         """Динамически изменяет интервал периодического сброса буфера в SQLite."""
@@ -218,6 +241,7 @@ class TelemetryBuffer:
             logger.warning('Попытка добавления записи в буфер в режиме Read-Only')
             return
 
+        rec_size = self._estimate_size(record)
         with self._cm.lock:
             if self._buffer_mode == 'file':
                 try:
@@ -230,12 +254,14 @@ class TelemetryBuffer:
                 except Exception as ex:
                     logger.error(f'Ошибка записи в файл буфера телеметрии: {ex}')
                     self._buffer.append(record)
+                    self._current_buffer_bytes += rec_size
 
-                if self._file_buffer_count >= self._buffer_size:
+                if self._file_buffer_count >= self._buffer_size or self._current_buffer_bytes >= self._max_buffer_bytes:
                     self.flush()
             else:
                 self._buffer.append(record)
-                if len(self._buffer) >= self._buffer_size:
+                self._current_buffer_bytes += rec_size
+                if len(self._buffer) >= self._buffer_size or self._current_buffer_bytes >= self._max_buffer_bytes:
                     self.flush()
 
     def flush(self) -> int:
@@ -262,6 +288,7 @@ class TelemetryBuffer:
             if self._buffer:
                 records_to_save.extend(self._buffer)
                 self._buffer = []
+                self._current_buffer_bytes = 0
 
             if not records_to_save:
                 return 0
@@ -277,7 +304,7 @@ class TelemetryBuffer:
                     logger.warning(f'Ошибка усечения файла буфера: {trunc_err}')
 
             if inserted_count > 0:
-                logger.info(f'💾 [Хранилище SQLite] Пакетный сброс буфера: {inserted_count} записей зафиксировано в {self._cm.db_path.name}')
+                logger.debug(f'💾 [Хранилище SQLite] Пакетный сброс буфера: {inserted_count} записей зафиксировано в {self._cm.db_path.name}')
 
             return inserted_count
 

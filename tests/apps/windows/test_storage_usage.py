@@ -16,7 +16,7 @@
 # Package: tests.apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-06 07:00:00
 # =============================================================================
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector, _format_bytes
+from apps.windows.modules.storage_manager.core.raw_disk_io import WindowsRawDiskIO
 from apps.windows.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.models import AppDiskUsageItem, DiskUsagePeriodReport, PhysicalDiskHealth
@@ -123,7 +124,24 @@ def test_storage_usage_collector_physical_disks() -> None:
             lifetime_write_tb=12.0,
         )
     ]
-    collector = WindowsStorageUsageCollector(storage_sensor=mock_sensor)
+    mock_raw_io = MagicMock(spec=WindowsRawDiskIO)
+    mock_raw_io.list_physical_disks.return_value = [
+        {
+            'disk_id': 0,
+            'device_path': r'\\.\PHYSICALDRIVE0',
+            'product': 'Samsung SSD 990 PRO 2TB',
+            'bus_type': 'NVMe',
+            'smart_health': {
+                'temperature_c': 41.0,
+                'percentage_used': 1.0,
+                'power_on_hours': 1200,
+                'data_units_read_tb': 25.0,
+                'data_units_written_tb': 12.0,
+                'raw_nvme_available': True,
+            },
+        }
+    ]
+    collector = WindowsStorageUsageCollector(raw_io=mock_raw_io, storage_sensor=mock_sensor)
     disks = collector.get_physical_disks()
     assert len(disks) == 1
     assert disks[0].model == 'Samsung SSD 990 PRO 2TB'
@@ -155,7 +173,24 @@ def test_storage_usage_collector_period_report() -> None:
             lifetime_write_tb=18.0,
         )
     ]
-    collector = WindowsStorageUsageCollector(storage_sensor=mock_sensor)
+    mock_raw_io = MagicMock(spec=WindowsRawDiskIO)
+    mock_raw_io.list_physical_disks.return_value = [
+        {
+            'disk_id': 0,
+            'device_path': r'\\.\PHYSICALDRIVE0',
+            'product': 'Micron 3400 NVMe 1TB',
+            'bus_type': 'NVMe',
+            'smart_health': {
+                'temperature_c': 36.0,
+                'percentage_used': 3.0,
+                'power_on_hours': 5000,
+                'data_units_read_tb': 30.0,
+                'data_units_written_tb': 18.0,
+                'raw_nvme_available': True,
+            },
+        }
+    ]
+    collector = WindowsStorageUsageCollector(raw_io=mock_raw_io, storage_sensor=mock_sensor)
 
     # Имитируем опрос процессов
     with patch.object(collector, 'poll_process_io_deltas') as mock_proc:
@@ -172,7 +207,7 @@ def test_storage_usage_collector_period_report() -> None:
         assert len(report.top_readers) == 2
         assert report.top_readers[0].process_name == 'chrome.exe'
         assert 'python.exe' in report.summary_text
-        assert 'Micron 3400' in report.summary_text
+        assert report.physical_disks[0].model == 'Micron 3400 NVMe 1TB'
 
 
 def test_system_collector_disk_usage_integration() -> None:

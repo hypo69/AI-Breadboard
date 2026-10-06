@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.win32_ffi
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 06:52:00
 # =============================================================================
 
 from __future__ import annotations
@@ -206,7 +206,7 @@ class WevtAPI:
             pass
         return res
 
-    def read_events(self, channel: str='System', limit: int=100, level: str='', search: str='', event_id: int=0, hours: int=24) -> List[Dict[str, Any]]:
+    def read_events(self, channel: str='System', limit: int=100, level: str='', search: str='', event_id: int | list[int] | tuple[int, ...] | set[int] = 0, hours: int=24) -> List[Dict[str, Any]]:
         """Быстрое чтение событий из указанного канала через EvtQuery / EvtRender."""
         if not self._available or not self.wevtapi:
             return []
@@ -224,7 +224,12 @@ class WevtAPI:
                 xpath_parts.append('Level=4')
             elif 'verb' in lvl_lower:
                 xpath_parts.append('Level=5')
-        if event_id > 0:
+        if isinstance(event_id, (list, tuple, set)):
+            valid_eids = [e for e in event_id if isinstance(e, int) and e > 0]
+            if valid_eids:
+                clauses = ' or '.join(f'EventID={eid}' for eid in valid_eids)
+                xpath_parts.append(f'({clauses})')
+        elif isinstance(event_id, int) and event_id > 0:
             xpath_parts.append(f'EventID={event_id}')
         if xpath_parts:
             clause = ' and '.join(xpath_parts)
@@ -369,6 +374,11 @@ class WevtAPI:
                             res['event_id'] = int(child.text or '0')
                         except ValueError:
                             res['event_id'] = 0
+                    elif tag == 'EventRecordID':
+                        try:
+                            res['record_id'] = int(child.text or '0')
+                        except ValueError:
+                            res['record_id'] = 0
                     elif tag == 'Level':
                         lvl_map = {'1': 'Critical', '2': 'Error', '3': 'Warning', '4': 'Information', '5': 'Verbose'}
                         res['level'] = lvl_map.get(str(child.text or '').strip(), 'Information')
@@ -463,4 +473,118 @@ class WevtAPI:
                     continue
                 results.append({'source': 'Security Audit (Event 4688)', 'timestamp': ev.get('timestamp'), 'event_id': 4688, 'process_id': pid, 'process_name': exe_path.replace('\\', '/').split('/')[-1] if exe_path else '', 'executable_path': exe_path, 'command_line': cmd_line, 'user': user, 'parent_process_id': ppid, 'parent_process_name': parent_exe.replace('\\', '/').split('/')[-1] if parent_exe else '', 'parent_executable_path': parent_exe, 'parent_command_line': '', 'process_guid': '', 'parent_process_guid': '', 'hashes': '', 'raw_event': ev})
         return results
+
+    def query_powershell_script_blocks(self, limit: int = 100, filter_text: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Запросить блоки скриптов PowerShell (Script Block Logging, Event ID 4104).
+
+        Args:
+            limit: Максимальное количество записей.
+            filter_text: Подстрока для поиска в теле скрипта или пути.
+
+        Returns:
+            List[Dict[str, Any]]: Нормализованные события с блоками кода скриптов.
+        """
+        results: List[Dict[str, Any]] = []
+        ps_events = self.read_events(channel='Microsoft-Windows-PowerShell/Operational', limit=limit, event_id=4104)
+        for ev in ps_events:
+            ed = ev.get('event_data', {})
+            script_text = ed.get('ScriptBlockText', '') or ev.get('message', '')
+            script_id = ed.get('ScriptBlockId', '')
+            path = ed.get('Path', '')
+            user_id = ed.get('UserId', '')
+            msg_total = ed.get('MessageTotal', '1')
+            msg_number = ed.get('MessageNumber', '1')
+
+            if filter_text and filter_text.lower() not in script_text.lower() and (filter_text.lower() not in path.lower()):
+                continue
+
+            results.append({
+                'source': 'PowerShell ScriptBlock (Event 4104)',
+                'timestamp': ev.get('timestamp'),
+                'event_id': 4104,
+                'script_block_id': script_id,
+                'script_text': script_text,
+                'path': path,
+                'user_id': user_id,
+                'message_number': int(msg_number) if str(msg_number).isdigit() else 1,
+                'message_total': int(msg_total) if str(msg_total).isdigit() else 1,
+                'raw_event': ev,
+            })
+        return results
+
+    def query_sysmon_events(
+        self,
+        limit: int = 100,
+        event_ids: Optional[List[int]] = None,
+        filter_process: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Запросить события безопасности Sysmon (Event ID 1, 7, 10, 11, 23, 26).
+
+        Args:
+            limit: Максимальное количество записей.
+            event_ids: Список опрашиваемых идентификаторов событий (по умолчанию: 1, 7, 10, 11, 23, 26).
+            filter_process: Фильтр по имени/пути исполняемого файла или модуля.
+
+        Returns:
+            List[Dict[str, Any]]: Нормализованные события Sysmon.
+        """
+        target_ids = event_ids or [1, 7, 10, 11, 23, 26]
+        all_events: List[Dict[str, Any]] = []
+
+        for eid in target_ids:
+            evs = self.read_events(channel='Microsoft-Windows-Sysmon/Operational', limit=limit, event_id=eid)
+            for ev in evs:
+                ed = ev.get('event_data', {})
+                img = ed.get('Image', '') or ed.get('SourceImage', '')
+                if filter_process and filter_process.lower() not in img.lower() and (filter_process.lower() not in str(ed).lower()):
+                    continue
+
+                item: Dict[str, Any] = {
+                    'source': f'Sysmon (Event {eid})',
+                    'timestamp': ev.get('timestamp'),
+                    'event_id': eid,
+                    'process_id': int(ed.get('ProcessId', 0) or ed.get('SourceProcessId', 0) or 0),
+                    'image': img,
+                    'process_guid': ed.get('ProcessGuid') or ed.get('SourceProcessGuid', ''),
+                    'user': ed.get('User', ''),
+                    'raw_event': ev,
+                }
+
+                if eid == 1:
+                    item.update({
+                        'event_type': 'ProcessCreate',
+                        'command_line': ed.get('CommandLine', ''),
+                        'parent_process_id': int(ed.get('ParentProcessId', 0) or 0),
+                        'parent_image': ed.get('ParentImage', ''),
+                        'hashes': ed.get('Hashes', ''),
+                    })
+                elif eid == 7:
+                    item.update({
+                        'event_type': 'ImageLoaded',
+                        'image_loaded': ed.get('ImageLoaded', ''),
+                        'signed': ed.get('Signed', ''),
+                        'signature': ed.get('Signature', ''),
+                        'hashes': ed.get('Hashes', ''),
+                    })
+                elif eid == 10:
+                    item.update({
+                        'event_type': 'ProcessAccess',
+                        'target_process_id': int(ed.get('TargetProcessId', 0) or 0),
+                        'target_image': ed.get('TargetImage', ''),
+                        'granted_access': ed.get('GrantedAccess', ''),
+                        'call_trace': ed.get('CallTrace', ''),
+                    })
+                elif eid in (11, 23, 26):
+                    item.update({
+                        'event_type': 'FileDelete' if eid in (23, 26) else 'FileCreate',
+                        'target_filename': ed.get('TargetFilename', ''),
+                        'hashes': ed.get('Hashes', ''),
+                    })
+
+                all_events.append(item)
+
+        all_events.sort(key=lambda x: str(x.get('timestamp', '')), reverse=True)
+        return all_events[:limit]
+
+
 __all__ = ['WevtAPI', 'ChannelMetadata', 'CHANNEL_DESCRIPTIONS']

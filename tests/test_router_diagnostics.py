@@ -163,3 +163,28 @@ def test_explain_cpu_item() -> None:
     assert 'summary' in data
     assert 'security_verdict' in data
     assert len(data['action_steps']) > 0
+
+def test_explain_gpu_item() -> None:
+    """Проверка AI-объяснения для характеристик и телеметрии видеокарты (GPU Audit)."""
+    client = get_test_client()
+    payload = {
+        'table_type': 'gpu',
+        'title': 'NVIDIA GeForce RTX 4080',
+        'subtitle': 'NVIDIA · PCIe x16 Gen4 · DirectX 12',
+        'metadata': {
+            'Производитель': 'NVIDIA',
+            'VRAM Объем': '16.0 GB',
+            'Использование VRAM': '4.0 / 16.0 GB (25%)',
+            'Частота ядра': '2550 MHz',
+            'Частота памяти': '11200 MHz',
+            'Версия драйвера': '560.94',
+            'DirectX API': 'DirectX 12'
+        },
+        'raw_data': '{"name": "NVIDIA GeForce RTX 4080", "vram_gb": 16.0, "cuda_cores": 9728}'
+    }
+    res = client.post('/api/v1/diagnostics/explain', json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert 'summary' in data
+    assert 'security_verdict' in data
+    assert len(data['action_steps']) > 0

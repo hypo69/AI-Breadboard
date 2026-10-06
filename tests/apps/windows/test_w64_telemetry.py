@@ -16,7 +16,7 @@
 # Package: tests.apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-06 07:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -79,7 +79,6 @@ def test_w64_models() -> None:
     status = W64CollectorStatus(
         running=True,
         events_count=42,
-        log_dir="C:\\logs",
         last_event_time="2026-09-30T19:05:00Z",
     )
     assert status.running is True
@@ -125,8 +124,7 @@ def test_w64_storage_integration(tmp_path: Path) -> None:
 
 
 def test_w64_collector_lifecycle_and_callback(tmp_path: Path) -> None:
-    """Тестирование жизненного цикла сборщика AIW64Collector, JSONL логов и callback."""
-    log_dir = tmp_path / "w64_logs"
+    """Тестирование жизненного цикла сборщика AIW64Collector, буферизации памяти и callback."""
     db_file = tmp_path / "telemetry.db"
     storage = TelemetryStorage(db_path=db_file, buffer_mode="direct")
 
@@ -136,7 +134,6 @@ def test_w64_collector_lifecycle_and_callback(tmp_path: Path) -> None:
         collected_events.append(evt)
 
     collector = AIW64Collector(
-        log_dir=str(log_dir),
         poll_interval_sec=0.1,
         storage=storage,
         on_event_callback=on_event,
@@ -158,24 +155,19 @@ def test_w64_collector_lifecycle_and_callback(tmp_path: Path) -> None:
     assert collector.stop() is True
     assert collector.get_status()["running"] is False
 
-    # Проверяем, что создался JSONL лог
-    jsonl_files = list(log_dir.glob("*.jsonl"))
-    assert len(jsonl_files) >= 1
-
-    # Проверяем события в хранилище
+    # Проверяем события в хранилище (буферизация в памяти / запись в SQLite)
     stored = collector.get_events(limit=10)
     assert len(stored) >= 1
+    assert stored[0]["pid"] == 9999
 
 
 def test_w64_etw_collector_lifecycle(tmp_path: Path) -> None:
     """Тестирование жизненного цикла AIW64ETWCollector."""
-    log_dir = tmp_path / "etw_logs"
     db_file = tmp_path / "telemetry.db"
     storage = TelemetryStorage(db_path=db_file, buffer_mode="direct")
 
     emitted = []
     etw = AIW64ETWCollector(
-        log_dir=str(log_dir),
         poll_interval_sec=0.1,
         storage=storage,
         on_event_callback=lambda e: emitted.append(e),

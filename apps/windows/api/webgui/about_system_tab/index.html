@@ -17,7 +17,7 @@ Usage Examples:
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-06 06:27:00
  * =============================================================================
 -->
 
@@ -287,55 +287,6 @@ Usage Examples:
 </style>
 
 <div class="about-sys-wrapper">
-  <!-- Top Navigation / Refresh & Status Bar -->
-  <div class="about-sys-top-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <span class="fs-5">ℹ️</span>
-      <h6 class="mb-0 fw-bold" style="font-size: 1rem; color: #38bdf8;">О Системе (System Specification & Telemetry)</h6>
-      <span class="badge rounded-pill bg-info-subtle text-info border border-info px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-live-badge">
-        ● Live Host Telemetry
-      </span>
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-cache-badge" title="Состояние кеша вкладки">
-        💾 Cache: Ready
-      </span>
-      <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-privilege-badge">
-        🔍 Privilege Check
-      </span>
-    </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <!-- Button to Open History Modal -->
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 d-flex align-items-center gap-1.5"
-              id="btn-open-about-history-modal"
-              type="button"
-              data-bs-toggle="modal"
-              data-bs-target="#aboutSystemHistoryModal"
-              title="Открыть историю значений из базы данных telemetry.db">
-        <i class="bi bi-clock-history"></i>
-        <span>История (DB)</span>
-      </button>
-      <!-- Button to Open AI Diagnostics Modal -->
-      <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1.5"
-              id="btn-open-about-ai-modal"
-              type="button"
-              data-bs-toggle="modal"
-              data-bs-target="#aboutAiDiagnosticsModal"
-              title="Открыть AI Copilot: Диагностика сенсоров и оборудования">
-        <i class="bi bi-robot"></i>
-        <span>AI Диагностика</span>
-        <span class="badge bg-dark text-info border border-info font-monospace ms-1" id="about-ai-health-badge-btn">Health: 100/100</span>
-      </button>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" id="btn-about-sys-refresh" title="Обновить всю информацию">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
-      </button>
-      <button class="btn btn-sm btn-outline-warning rounded-pill px-2.5 py-1" id="btn-about-sys-clear-cache" title="Очистить кеш вкладки и обновить">
-        <i class="bi bi-trash3 me-1"></i> Очистить кеш
-      </button>
-      <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" id="btn-about-sys-live-toggle" title="Приостановить или возобновить поток">
-        <i class="bi bi-pause-fill me-1" id="icon-about-sys-live"></i> <span id="txt-about-sys-live">Пауза</span>
-      </button>
-    </div>
-  </div>
-
   <!-- History Telemetry Modal Dialog -->
   <div class="modal fade" id="aboutSystemHistoryModal" tabindex="-1" aria-labelledby="aboutSystemHistoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" style="max-width: 95vw; width: 95vw; height: 90vh; margin: 2vh auto;">

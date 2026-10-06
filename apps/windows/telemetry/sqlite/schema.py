@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:25:00
+# Updated: 2026-10-06 05:32:00
 # =============================================================================
 
 from __future__ import annotations
@@ -871,16 +871,20 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
     # Индексы для ускорения выборок
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_created_at ON system_snapshots(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_timestamp ON system_snapshots(timestamp);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_created_host ON system_snapshots(created_at, hostname);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_polls_sensor_time ON sensor_polls(sensor_id, created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_polls_category ON sensor_polls(sensor_category, created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_processes_snapshot_id ON process_snapshots(snapshot_id);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_processes_name_pid ON process_snapshots(name, pid);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_snap_snapshot_cpu ON process_snapshots(snapshot_id, cpu_percent DESC);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_aggregates_sensor_time ON sensor_aggregates_hourly(sensor_id, period_start);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_rollups_daily_date ON process_rollups_daily(date, name);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_rollups_tier_start_end ON telemetry_rollups(tier, period_start_epoch, period_end_epoch);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_hardware_audits_archive_id ON hardware_audits(archive_id);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_reboot_history_boot_time ON reboot_history(boot_time);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_incidents_created_at ON incidents(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_incidents_trigger ON incidents(trigger_type);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_incidents_sev_time ON incidents(severity, created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_guid ON process_provenance_events(process_guid);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_created_at ON process_provenance_events(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_name_pid ON process_provenance_events(name, pid);')
@@ -890,10 +894,15 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_process_outliers_created_at ON process_outliers(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_extended_audits_created_at ON system_extended_audits(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_hourly_time ON telemetry_hourly(bucket_start);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_hourly_sensor ON telemetry_hourly(sensor_id, bucket_start);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_daily_time ON telemetry_daily(bucket_start);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_daily_sensor ON telemetry_daily(sensor_id, bucket_start);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_weekly_time ON telemetry_weekly(bucket_start);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_weekly_sensor ON telemetry_weekly(sensor_id, bucket_start);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_monthly_time ON telemetry_monthly(bucket_start);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_monthly_sensor ON telemetry_monthly(sensor_id, bucket_start);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_yearly_time ON telemetry_yearly(bucket_start);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_yearly_sensor ON telemetry_yearly(sensor_id, bucket_start);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_spikes_time ON telemetry_spikes(created_at, sensor_id);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_disk_io_pid_time ON disk_io_events(pid, created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_disk_io_disk_time ON disk_io_events(disk_id, created_at);')

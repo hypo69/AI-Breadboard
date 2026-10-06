@@ -21,8 +21,8 @@
       },
       {
         "id": "system_control_center",
-        "label": "System Control",
-        "icon": "bi-tools",
+        "label": "System Logs & Activity",
+        "icon": "bi-journal-text",
         "tab": "tab-system-control",
         "order": 3,
         "visible": true
@@ -434,6 +434,22 @@
         "icon": "📦",
         "tab": "tab-software-manager",
         "order": 45,
+        "visible": true
+      },
+      {
+        "id": "post_install_wizard",
+        "label": "Post-Install Wizard",
+        "icon": "⚡",
+        "tab": "tab-post-install-wizard",
+        "order": 46,
+        "visible": true
+      },
+      {
+        "id": "maintenance_recovery",
+        "label": "Maintenance & Recovery",
+        "icon": "🛠️",
+        "tab": "tab-maintenance-recovery",
+        "order": 47,
         "visible": true
       }
     ]

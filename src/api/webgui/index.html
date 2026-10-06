@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 02:30:00
+Updated: 2026-10-06 07:22:00
 =============================================================================
 -->
 
@@ -29,7 +29,7 @@ Updated: 2026-10-06 02:30:00
   <title>AI Assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20261004_v17" rel="stylesheet">
+  <link href="/html/css/main.css?v=20261006_v2" rel="stylesheet">
   <script src="/html/js/toast.js?v=20261004_v17"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -298,8 +298,16 @@ Updated: 2026-10-06 02:30:00
           </div>
           <div class="list-group list-group-flush rounded border">
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-system-control" data-bs-target="#tab-system-control" type="button">
+              <span class="fs-6">📜</span>
+              <span class="fw-medium">System Logs & Activity</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-post-install-wizard" data-bs-target="#tab-post-install-wizard" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium">Post-Install Wizard</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-maintenance-recovery" data-bs-target="#tab-maintenance-recovery" type="button">
               <span class="fs-6">🛠️</span>
-              <span class="fw-medium">System Control</span>
+              <span class="fw-medium">Maintenance & Recovery</span>
             </button>
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-windows-admin" data-bs-target="#tab-windows-admin" type="button">
               <span class="fs-6">🖥️</span>
@@ -474,6 +482,8 @@ Updated: 2026-10-06 02:30:00
     <div id="tab-peripherals" class="tab-pane fade"></div>
     <div id="tab-software-transparency" class="tab-pane fade"></div>
     <div id="tab-system-control" class="tab-pane fade"></div>
+    <div id="tab-post-install-wizard" class="tab-pane fade"></div>
+    <div id="tab-maintenance-recovery" class="tab-pane fade"></div>
     <div id="tab-windows-admin" class="tab-pane fade"></div>
     <div id="tab-startup-auditor" class="tab-pane fade"></div>
     <div id="tab-services-manager" class="tab-pane fade"></div>

@@ -400,6 +400,12 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-system-control' && typeof window.initSystemControlTab === 'function') {
     console.log('[AdminInterface] Switching to system control tab...');
     window.initSystemControlTab();
+  } else if (cleanId === 'tab-post-install-wizard' && typeof window.initPostInstallWizardTab === 'function') {
+    console.log('[AdminInterface] Switching to post-install wizard tab...');
+    window.initPostInstallWizardTab();
+  } else if (cleanId === 'tab-maintenance-recovery' && typeof window.initMaintenanceRecoveryTab === 'function') {
+    console.log('[AdminInterface] Switching to maintenance recovery tab...');
+    window.initMaintenanceRecoveryTab();
   } else if (cleanId === 'tab-news' && typeof window.initNewsTab === 'function') {
     console.log('[AdminInterface] Switching to news tab...');
     window.initNewsTab();

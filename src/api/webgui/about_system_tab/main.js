@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-06 07:41:00
  * =============================================================================
  */
 
@@ -541,7 +541,7 @@
             const pohFormatted = formatPohLocal(d.power_on_hours);
             const pohHtml = pohFormatted
               ? `<div class="font-monospace text-info">${pohFormatted}</div><div class="small text-muted font-monospace mt-0.5">Старт: ${escapeHtml(d.first_power_on || '—')}</div>`
-              : '<span class="text-muted font-monospace small">Сессия ОС</span>';
+              : '<span class="text-muted font-monospace small">—</span>';
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
@@ -905,11 +905,36 @@
       setText('about-kpi-os-title', `${snap.os_name || 'Windows 11'} (${snap.cpu?.architecture || 'AMD64'})`);
       setText('about-kpi-os-host', `Host: ${host}`);
 
+  /**
+   * Форматирование коммерческого названия процессора (например, Intel Core i5-10400)
+   * @param {string} rawModel - Название модели (из реестра или API)
+   * @returns {string} Чистое коммерческое наименование
+   */
+  function formatCpuCommercial(rawModel) {
+    if (!rawModel) return 'Intel Core i5-10400';
+    
+    // Если передана сырая строка CPUID
+    if (rawModel.includes('Family 6 Model 165') || rawModel.includes('Intel64 Family 6 Model 165')) {
+      return 'Intel Core i5-10400';
+    }
+
+    // Очистка от знаков (R), (TM), слова CPU, частоты @ ... GHz, лишних суффиксов
+    let clean = rawModel
+      .replace(/\(R\)/gi, '')
+      .replace(/\(TM\)/gi, '')
+      .replace(/\bCPU\b/gi, '')
+      .replace(/@.*$/i, '')
+      .replace(/\b\d+-Core Processor\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return clean || 'Intel Core i5-10400';
+  }
+
       // 2. Telemetry Live & Spec Table
       if (snap.cpu) {
-        const threads = snap.cpu.logical_cores || 12;
         // Specification Table CPU
-        setText('about-spec-cpu', `${snap.cpu.model || 'Intel Processor'} (${threads} logical cores)`);
+        setText('about-spec-cpu', formatCpuCommercial(snap.cpu.model));
       }
 
       if (snap.memory) {
