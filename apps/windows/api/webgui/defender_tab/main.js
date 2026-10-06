@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/defender_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 14:10:00
  * =============================================================================
  */
 
@@ -399,19 +399,83 @@
     }
   }
 
+  const activeTaskPollers = {};
+
+  async function pollTask(taskId, taskLabel, triggerBtn) {
+    if (!taskId) return;
+    if (activeTaskPollers[taskId]) return;
+
+    if (triggerBtn) {
+      triggerBtn.disabled = true;
+      triggerBtn.dataset.originalHtml = triggerBtn.innerHTML;
+      triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ${taskLabel}...`;
+    }
+
+    showAlert(`⏳ Запущен фоновый процесс: ${taskLabel} (ID: ${taskId})`);
+
+    const interval = 2500;
+    const maxAttempts = 240; // до 10 минут
+    let attempts = 0;
+
+    activeTaskPollers[taskId] = setInterval(async () => {
+      attempts++;
+      try {
+        const task = await fetchJSON(`/api/v1/defender/tasks/${taskId}`);
+        if (!task || task.status === 'running' || task.status === 'pending') {
+          if (attempts >= maxAttempts) {
+            clearInterval(activeTaskPollers[taskId]);
+            delete activeTaskPollers[taskId];
+            if (triggerBtn && triggerBtn.dataset.originalHtml) {
+              triggerBtn.innerHTML = triggerBtn.dataset.originalHtml;
+              triggerBtn.disabled = false;
+            }
+            showAlert(`Таймаут ожидания задачи ${taskLabel} (фоновый процесс продолжается в Windows).`, true);
+          }
+          return;
+        }
+
+        clearInterval(activeTaskPollers[taskId]);
+        delete activeTaskPollers[taskId];
+
+        if (triggerBtn && triggerBtn.dataset.originalHtml) {
+          triggerBtn.innerHTML = triggerBtn.dataset.originalHtml;
+          triggerBtn.disabled = false;
+        }
+
+        const durationInfo = task.duration_seconds ? ` [${task.duration_seconds}с]` : '';
+        if (task.status === 'completed' && task.success) {
+          let extraMsg = '';
+          if (task.windows_event) {
+            extraMsg = ` (Windows Event ${task.windows_event.event_id}: ${task.windows_event.category})`;
+          }
+          showAlert(`✅ ${taskLabel} успешно завершено${durationInfo}! ${task.message || ''}${extraMsg}`);
+        } else {
+          showAlert(`❌ ${taskLabel} завершилось ошибкой${durationInfo}: ${task.error || task.message || 'Сбой выполнения'}`, true);
+        }
+
+        await refreshAll();
+      } catch (err) {
+        console.error(`[DefenderTab] Polling error for task ${taskId}:`, err);
+      }
+    }, interval);
+  }
+
   function setupActions() {
     const btnQuick = document.getElementById('btn-def-quick-scan');
     if (btnQuick) {
       btnQuick.onclick = async () => {
         try {
-          showAlert('Запуск быстрого сканирования Defender...');
           const res = await fetchJSON('/api/v1/defender/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ scan_type: 'quick' }),
           });
-          showAlert(`Быстрое сканирование: ${res.message}`);
-          await loadDefenderStatus();
+          if (res && res.task_id) {
+            pollTask(res.task_id, 'Быстрое сканирование', btnQuick);
+          } else {
+            showAlert(`Быстрое сканирование: ${res.message || 'Запущено'}`);
+            await loadDefenderStatus();
+          }
         } catch (err) {
           showAlert(`Ошибка запуска сканирования: ${err.message}`, true);
         }
@@ -422,13 +486,16 @@
     if (btnFull) {
       btnFull.onclick = async () => {
         try {
-          showAlert('Запуск полного сканирования системы (фоновый процесс Defender)...');
           const res = await fetchJSON('/api/v1/defender/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ scan_type: 'full' }),
           });
-          showAlert(`Полное сканирование: ${res.message}`);
+          if (res && res.task_id) {
+            pollTask(res.task_id, 'Полное сканирование системы', btnFull);
+          } else {
+            showAlert(`Полное сканирование: ${res.message || 'Запущено'}`);
+          }
         } catch (err) {
           showAlert(`Ошибка полного сканирования: ${err.message}`, true);
         }
@@ -439,10 +506,13 @@
     if (btnUpdate) {
       btnUpdate.onclick = async () => {
         try {
-          showAlert('Обновление баз сигнатур Defender...');
           const res = await fetchJSON('/api/v1/defender/update-signatures', { method: 'POST' });
-          showAlert(`Обновление сигнатур: ${res.message}`);
-          await loadDefenderStatus();
+          if (res && res.task_id) {
+            pollTask(res.task_id, 'Обновление баз сигнатур Defender', btnUpdate);
+          } else {
+            showAlert(`Обновление сигнатур: ${res.message || 'Запущено'}`);
+            await loadDefenderStatus();
+          }
         } catch (err) {
           showAlert(`Ошибка обновления баз: ${err.message}`, true);
         }
@@ -485,6 +555,11 @@
   window.initDefenderTab = async function() {
     console.log('[DefenderTab] Initializing Defender Security Center Tab...');
     setupActions();
+    await refreshAll();
+  };
+
+  window.activateDefenderTab = async function() {
+    console.log('[DefenderTab] Activating Defender Security Center Tab...');
     await refreshAll();
   };
 

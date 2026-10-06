@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 02:28:00
+# Updated: 2026-10-06 13:32:00
 # =============================================================================
 
 from __future__ import annotations
@@ -92,11 +92,15 @@ async def get_events(
     limit: int = Query(100, ge=1, le=1000, description='Лимит записей'),
     level: str = Query('', description='Фильтр по уровню'),
     search: str = Query('', description='Поиск по тексту'),
+    query: str = Query('', description='Поиск по тексту (алиас search)'),
     hours: int = Query(24, ge=1, le=720, description='Часы выборки'),
     event_id: int = Query(0, description='Event ID фильтр'),
     file_path: str = Query('', description='Путь к лог-файлу (если файловый источник)'),
 ) -> Dict[str, Any]:
     """Получение потока событий из канала или лог-файла."""
+    search_query = (query or search).strip()
+    clean_channel = re.sub(r'^evt:', '', (channel or 'System').split(' (')[0]).strip()
+
     def _fetch():
         entries: List[Dict[str, Any]] = []
         if file_path and Path(file_path).is_file():
@@ -108,7 +112,7 @@ async def get_events(
                     line_clean = line.strip()
                     if not line_clean:
                         continue
-                    if search and search.lower() not in line_clean.lower():
+                    if search_query and search_query.lower() not in line_clean.lower():
                         continue
                     lvl = 'Information'
                     if 'error' in line_clean.lower() or 'fail' in line_clean.lower():
@@ -129,13 +133,13 @@ async def get_events(
                 logger.debug(f'[router_system_logs] Чтение файла {file_path}: {e}')
         else:
             try:
-                raw = _wevtapi.read_events(channel=channel, limit=limit, level=level, hours=hours)
+                raw = _wevtapi.read_events(channel=clean_channel, limit=limit, level=level, hours=hours, search=search_query)
                 for r in raw:
                     eid = int(r.get('event_id', 0))
                     if event_id > 0 and eid != event_id:
                         continue
                     msg = r.get('message', '')
-                    if search and search.lower() not in msg.lower():
+                    if search_query and search_query.lower() not in msg.lower():
                         continue
                     entries.append({
                         'timestamp': r.get('timestamp', '') or r.get('time_created', ''),
@@ -148,7 +152,7 @@ async def get_events(
                         'raw_data': r.get('raw_data', msg),
                     })
             except Exception as e:
-                logger.debug(f'[router_system_logs] Чтение событий {channel}: {e}')
+                logger.debug(f'[router_system_logs] Чтение событий {clean_channel}: {e}')
 
         if not entries:
             now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -174,7 +178,14 @@ async def get_events(
                     'raw_data': 'EventID 7036 BITS stopped',
                 },
             ]
-        return {'channel': channel, 'entries': entries[:limit]}
+        return {
+            'channel': clean_channel,
+            'entries': entries[:limit],
+            'events': entries[:limit],
+            'total': len(entries),
+        }
+
+    return await asyncio.to_thread(_fetch)
 
     return await asyncio.to_thread(_fetch)
 

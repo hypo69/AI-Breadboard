@@ -16,15 +16,16 @@
 # Package: apps.windows.modules.startup.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 13:55:00
 # =============================================================================
 
 from __future__ import annotations
 """Модели данных для приложения Windows Startup & Autorun Auditor."""
 
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class StartupLocationType(str, Enum):
     """Типы расположений автозагрузки в Windows."""
@@ -156,3 +157,34 @@ class StartupExplainResponse(BaseModel):
     boot_impact_analysis: str = Field(description='Анализ влияния на скорость загрузки и ресурсы')
     startup_recommendation: str = Field(description='Рекомендация по автозагрузке (оставить/отключить/удалить)')
     action_steps: List[str] = Field(default_factory=list, description='Рекомендуемые действия для пользователя')
+
+class StartupChangeItem(BaseModel):
+    """Зафиксированное изменение в автозагрузке между снимками телеметрии."""
+    change_type: str = Field(..., description='Тип изменения: added, removed, state_changed, path_changed, risk_changed, impact_changed')
+    entry_id: str = Field(..., description='Идентификатор элемента автозапуска')
+    name: str = Field(..., description='Имя программы / записи автозапуска')
+    description: str = Field(..., description='Подробное описание изменения на русском языке')
+    previous_value: Optional[Dict[str, Any]] = Field(default=None, description='Предыдущее состояние элемента')
+    current_value: Optional[Dict[str, Any]] = Field(default=None, description='Новое состояние элемента')
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Временная метка обнаружения изменения')
+
+class StartupArchiveEntry(BaseModel):
+    """Запись архивного снимка автозапуска в телеметрии."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    archive_id: str = Field(..., description='Уникальный идентификатор архивного снимка')
+    timestamp: str = Field(..., description='Время создания архивного снимка')
+    total_entries: int = Field(default=0, description='Общее количество элементов автозапуска')
+    health_score: int = Field(default=100, description='Индекс чистоты и безопасности')
+    changes_count: int = Field(default=0, description='Количество зафиксированных изменений по сравнению с прошлым снимком')
+    changes: List[StartupChangeItem] = Field(default_factory=list, description='Список зафиксированных изменений')
+    report: Any = Field(..., description='Полный отчет аудита автозапуска')
+
+class StartupRefreshResponse(BaseModel):
+    """Ответ на асинхронный перезапуск сбора автозапуска и сохранение в телеметрию."""
+    success: bool = Field(default=True, description='Успешность операции')
+    archive_id: str = Field(default='', description='Идентификатор сохраненного снимка')
+    timestamp: str = Field(default='', description='Время создания снимка')
+    changes_count: int = Field(default=0, description='Количество обнаруженных изменений')
+    changes: List[StartupChangeItem] = Field(default_factory=list, description='Список обнаруженных изменений')
+    report: AuditReport = Field(..., description='Свежий отчет аудита автозапуска')
+    message: str = Field(default='Снимок телеметрии успешно обновлен', description='Статусное сообщение')

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 09:20:00
+# Updated: 2026-10-06 13:58:00
 # =============================================================================
 
 from __future__ import annotations
@@ -39,7 +39,6 @@ except ImportError:
     psutil = None
     PSUTIL_AVAILABLE = False
 from logger import logger
-# Updated: 2026-10-04 01:50:00
 from .models import (
     AnomalyItem,
     BatteryMetrics,
@@ -67,6 +66,8 @@ from .models import (
     ProcessProvenanceInfo,
     ProcessProvenanceReport,
     RamStickInfo,
+    StartupArchiveEntry,
+    StartupChangeItem,
     SystemCoreMetrics,
     SystemHardwareQuick,
     SystemHealthAlerts,
@@ -76,14 +77,21 @@ from .models import (
 from .sensors import get_hardware_sensors
 from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
 from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
+from apps.windows.telemetry_research.startup_history_manager import StartupHistoryManager
 from .process_token_collector import ProcessTokenCollector
 from .sqlite import TelemetryStorage
 
 class SystemCollector:
     """Telemetry collector for system load, hardware devices, and processes."""
 
-    def __init__(self, auditor: Optional[HardwareAuditor]=None, history_manager: Optional[HardwareHistoryManager]=None, storage: Optional[TelemetryStorage]=None) -> None:
-        """Initialize telemetry collector with timing, I/O baseline, hardware auditor, and storage."""
+    def __init__(
+        self,
+        auditor: Optional[HardwareAuditor] = None,
+        history_manager: Optional[HardwareHistoryManager] = None,
+        startup_history_manager: Optional[StartupHistoryManager] = None,
+        storage: Optional[TelemetryStorage] = None,
+    ) -> None:
+        """Initialize telemetry collector with timing, I/O baseline, hardware auditor, startup history, and storage."""
         self._last_disk_io = psutil.disk_io_counters() if PSUTIL_AVAILABLE else None
         self._last_net_io = psutil.net_io_counters(pernic=True) if PSUTIL_AVAILABLE else None
         self._last_proc_net_io: Dict[int, Tuple[float, float, float]] = {}
@@ -100,6 +108,7 @@ class SystemCollector:
         self.storage = storage or TelemetryStorage.get_instance()
         self.auditor = auditor or HardwareAuditor(storage=self.storage)
         self.history_manager = history_manager or HardwareHistoryManager()
+        self.startup_history_manager = startup_history_manager or StartupHistoryManager()
 
     def get_system_identity(self) -> Dict[str, Any]:
         """Collect host identity, current user, system language, and locale parameters.
@@ -1913,6 +1922,85 @@ class SystemCollector:
             List[HardwareChangeItem]: Historical changes timeline.
         """
         return self.history_manager.get_change_timeline(limit=limit)
+
+    def get_startup_audit(self) -> Any:
+        """Collect deep Windows startup and autoruns audit report.
+
+        Returns:
+            AuditReport: Complete startup audit report with risk ratings.
+        """
+        from apps.windows.modules.startup.core.auditor import StartupAuditor
+        return StartupAuditor().run_audit()
+
+    def archive_startup_state(self, auto_diff: bool = True) -> StartupArchiveEntry:
+        """Capture current Windows startup state, compute changes diff, and save snapshot to storage.
+
+        Args:
+            auto_diff: Automatically compute diff with previous archive snapshot.
+
+        Returns:
+            StartupArchiveEntry: Persisted archive entry with detected changes.
+        """
+        report = self.get_startup_audit()
+        entry = self.startup_history_manager.archive_report(report, auto_diff=auto_diff)
+        if self.storage:
+            try:
+                self.storage.save_startup_archive(entry)
+            except Exception as ex:
+                logger.debug(f'Не удалось сохранить снимок автозапуска в БД: {ex}')
+        return entry
+
+    def get_startup_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieve historical startup archive snapshots metadata.
+
+        Args:
+            limit: Maximum count of archive entries.
+
+        Returns:
+            List[Dict[str, Any]]: Chronological list of startup archive entries.
+        """
+        if self.storage:
+            try:
+                db_history = self.storage.get_startup_archives(limit=limit)
+                if db_history:
+                    return db_history
+            except Exception:
+                pass
+        return self.startup_history_manager.get_history(limit=limit)
+
+    def get_startup_changes(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """Retrieve historical timeline of all startup configuration changes.
+
+        Args:
+            limit: Maximum count of changes to return.
+
+        Returns:
+            List[Dict[str, Any]]: Historical changes timeline.
+        """
+        if self.storage:
+            try:
+                db_changes = self.storage.get_startup_changes(limit=limit)
+                if db_changes:
+                    return db_changes
+            except Exception:
+                pass
+        return [c.model_dump(mode='json') for c in self.startup_history_manager.get_change_timeline(limit=limit)]
+
+    def get_latest_startup_audit(self) -> Optional[Dict[str, Any]]:
+        """Retrieve latest recorded startup audit snapshot from telemetry storage.
+
+        Returns:
+            Optional[Dict[str, Any]]: Startup audit dict or None.
+        """
+        if self.storage:
+            try:
+                latest = self.storage.get_latest_startup_archive()
+                if latest:
+                    return latest
+            except Exception:
+                pass
+        latest_archive = self.startup_history_manager.get_latest_archive()
+        return latest_archive.model_dump(mode='json') if latest_archive else None
 
     def save_snapshot_to_db(self, snapshot: Optional[SystemSnapshot]=None, top_n: int=20) -> int:
         """Collect and save system telemetry snapshot directly into SQLite database.

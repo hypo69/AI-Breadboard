@@ -16,7 +16,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 11:15:30
+# Updated: 2026-10-06 14:04:00
 # =============================================================================
 
 """Минимальный роутер для чата с необходимыми эндпоинтами, используемый в тестах."""
@@ -49,26 +49,41 @@ class TestModelRequest(BaseModel):
     system_instruction: Optional[str] = Field(None, description="Системная инструкция (необязательно)")
 
 
-def get_chat_model(model_name: str) -> Any:
-    """Вернуть объект модели чата.
+def get_chat_model(model_name: str = "default", system_instruction: Optional[str] = None) -> Any:
+    """Вернуть объект модели чата, поддерживая системную инструкцию.
 
-    В тестах функция может быть замокана, поэтому просто возвращаем глобальную модель, если она задана.
+    В тестах функция может быть замокана, поэтому возвращаем глобальную модель, если уже инициализирована.
+    При необходимости обновляем системную инструкцию у модели.
     """
+    # Поддержка Ollama с системной инструкцией (заглушка)
     if model_name.startswith('ollama:'):
         base_url = getattr(ai_cfg, 'ollama_base_url', 'http://localhost:11434')
         class DummyOllamaModel:
-            def __init__(self, url: str):
+            def __init__(self, url: str, system_instruction: Optional[str] = None):
                 self._api_url = url
+                self.system_instruction = system_instruction
             async def ask(self, *args, **kwargs):
+                # В заглушке игнорируем системную инструкцию
                 return "ollama response"
-        return DummyOllamaModel(base_url)
+        return DummyOllamaModel(base_url, system_instruction)
 
+    # Если уже есть инициализированная модель, обновляем её инструкцию, если поддерживается
     if _chat_model is not None:
+        if system_instruction is not None and hasattr(_chat_model, 'system_instruction'):
+            try:
+                _chat_model.system_instruction = system_instruction
+            except Exception:
+                pass
         return _chat_model
+
+    # Создаём простую заглушку модели с поддержкой system_instruction
     class DummyModel:
+        def __init__(self, system_instruction: Optional[str] = None):
+            self.system_instruction = system_instruction
         async def ask(self, *args, **kwargs):
+            # system_instruction может быть передана в kwargs, но в заглушке игнорируем её
             return "dummy response"
-    return DummyModel()
+    return DummyModel(system_instruction)
 
 
 @router.get('/ping')
@@ -82,7 +97,7 @@ async def test_model(req: TestModelRequest) -> dict:
     """Эндпоинт, проверяющий возможность обращения к модели."""
     model_name = req.model or 'gemini-2.5-flash'
     provider = req.provider or 'gemini'
-    model = get_chat_model(model_name)
+    model = get_chat_model(model_name, system_instruction=req.system_instruction)
     try:
         answer = await model.ask(req.message, system_instruction=req.system_instruction)
     except Exception as exc:

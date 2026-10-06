@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 11:04:00
+ * Updated: 2026-10-06 14:19:00
  * =============================================================================
  */
 
@@ -186,6 +186,7 @@
     bindHistoryEvents();
     bindRegionalEvents();
     updateLocalClock();
+    updatePowerDisplay();
     
     // Проверка доступности кеша
     await updateCacheStatus();
@@ -722,6 +723,53 @@
     }
   }
 
+  /**
+   * Обновление панели "Питание и Энергия" в таблице спецификации оборудования и ОС.
+   * @param {Object} [batteryWear] - Объект телеметрии батареи/питания
+   * @param {string} [powerProfileName] - Название активной схемы электропитания
+   */
+  function updatePowerDisplay(batteryWear = null, powerProfileName = '') {
+    const badgeEl = document.getElementById('about-spec-power-badge');
+    const sourceEl = document.getElementById('about-spec-power-source');
+    const profileEl = document.getElementById('about-spec-power-profile');
+    const legacyEl = document.getElementById('about-spec-power');
+
+    let badgeText = 'AC Mains';
+    let badgeClass = 'bg-secondary';
+    let sourceText = 'Питание: Стационарная электросеть 220V';
+    let profileText = powerProfileName ? `Профиль: ${powerProfileName}` : 'Профиль: AC Mains / Desktop';
+
+    if (batteryWear) {
+      if (batteryWear.has_battery) {
+        badgeText = batteryWear.is_charging ? 'AC Adapter' : 'Battery';
+        badgeClass = batteryWear.is_charging ? 'bg-success' : (batteryWear.percent < 20 ? 'bg-danger' : 'bg-warning text-dark');
+        sourceText = `Батарея: ${batteryWear.percent}% (${batteryWear.is_charging ? 'Заряжается' : 'Работа от батареи'})`;
+      } else {
+        badgeText = batteryWear.power_source ? (batteryWear.power_source.includes('AC') ? 'AC Mains' : batteryWear.power_source) : 'AC Mains';
+        badgeClass = 'bg-secondary';
+        sourceText = 'Питание: Стационарная электросеть 220V';
+      }
+    }
+
+    if (badgeEl) {
+      badgeEl.textContent = badgeText;
+      badgeEl.className = `badge ${badgeClass} font-monospace`;
+    }
+    if (sourceEl) {
+      sourceEl.textContent = sourceText;
+    }
+    if (profileEl) {
+      if (powerProfileName) {
+        profileEl.textContent = `Профиль: ${powerProfileName}`;
+      } else if (!profileEl.textContent || profileEl.textContent.trim() === '' || profileEl.textContent === 'Профиль: --') {
+        profileEl.textContent = profileText;
+      }
+    }
+    if (legacyEl) {
+      legacyEl.textContent = `${sourceText} | ${profileText}`;
+    }
+  }
+
   async function fetchStorageBatteryWear(forceNetwork = false) {
     try {
       const config = CACHE_STRATEGY.STORAGE_BATTERY;
@@ -821,6 +869,7 @@
       const batSourceBadge = document.getElementById('diag-battery-source-badge');
       if (batContainer && data.battery_wear) {
         const b = data.battery_wear;
+        updatePowerDisplay(b);
         if (batSourceBadge) {
           batSourceBadge.textContent = b.power_source || 'AC Mains';
         }
@@ -1271,6 +1320,13 @@
         setText('about-ident-onedrive', 'Не настроено');
       }
 
+      // 5.3 Power & Energy Block
+      if (snap.battery) {
+        updatePowerDisplay(snap.battery, snap.power_profile || snap.battery.power_profile);
+      } else {
+        updatePowerDisplay(null, snap.power_profile);
+      }
+
       // 6. Processes Table
       if (Array.isArray(snap.top_processes)) {
         currentProcesses = snap.top_processes;
@@ -1349,7 +1405,9 @@
       setStatusText('about-sec-uac', uacOk, 'Enabled', 'Disabled');
 
       // Power Scheme & Updates
-      if (pwr.active_plan_name) setText('about-spec-power', pwr.active_plan_name);
+      if (pwr.active_plan_name) {
+        updatePowerDisplay(null, pwr.active_plan_name);
+      }
       if (upd.status) {
         const kbCount = upd.recent_hotfixes_count ? ` (${upd.recent_hotfixes_count} KBs installed)` : '';
         const updTxt = `${upd.status}${kbCount}`;

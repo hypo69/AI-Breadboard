@@ -16,31 +16,55 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 12:15:00
 # =============================================================================
 
 from __future__ import annotations
 """Модуль взаимодействия с Microsoft Defender Antivirus и утилитой MpCmdRun.exe."""
 
+import asyncio
 import glob
 import json
 import os
 import platform
 import subprocess
+import threading
+import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import psutil
 from logger import logger
-from apps.windows.defender.core.models import DefenderStatus, ScanRequest, ScanResponse, ScanType, ServiceStatus
+from apps.windows.defender.core.event_correlator import EventCorrelator
+from apps.windows.defender.core.models import (
+    DefenderEventRecord,
+    DefenderStatus,
+    DefenderTaskInfo,
+    DefenderTaskStatus,
+    DefenderTaskType,
+    ScanRequest,
+    ScanResponse,
+    ScanType,
+    ServiceStatus,
+)
 
 class DefenderService:
     """Сервис для сбора состояния и выполнения операций Microsoft Defender Antivirus."""
-    DEFENDER_PROCESS_MAP = {'MsMpEng.exe': ('Antimalware Service Executable', 'Основная служба защиты и сканирования'), 'MpDefenderCoreService.exe': ('Microsoft Defender Core Service', 'Ядро подсистемы безопасности'), 'NisSrv.exe': ('Microsoft Network Realtime Inspection', 'Служба инспекции сетевого трафика'), 'MpCmdRun.exe': ('Microsoft Defender Command Line', 'Консольная утилита управления'), 'SecurityHealthService.exe': ('Windows Security Health Service', 'Служба интеграции центра безопасности')}
+    DEFENDER_PROCESS_MAP = {
+        'MsMpEng.exe': ('Antimalware Service Executable', 'Основная служба защиты и сканирования'),
+        'MpDefenderCoreService.exe': ('Microsoft Defender Core Service', 'Ядро подсистемы безопасности'),
+        'NisSrv.exe': ('Microsoft Network Realtime Inspection', 'Служба инспекции сетевого трафика'),
+        'MpCmdRun.exe': ('Microsoft Defender Command Line', 'Консольная утилита управления'),
+        'SecurityHealthService.exe': ('Windows Security Health Service', 'Служба интеграции центра безопасности')
+    }
 
-    def __init__(self) -> None:
+    def __init__(self, event_correlator: Optional[EventCorrelator] = None) -> None:
         """Инициализация сервиса Defender."""
         self._mpcmdrun_path: Optional[Path] = self._locate_mpcmdrun()
+        self._correlator: EventCorrelator = event_correlator or EventCorrelator()
+        self._tasks: Dict[str, DefenderTaskInfo] = {}
+        self._task_lock = threading.Lock()
 
     def _locate_mpcmdrun(self) -> Optional[Path]:
         """Поиск исполняемого файла MpCmdRun.exe в системе.
@@ -223,3 +247,247 @@ class DefenderService:
             return ScanResponse(success=res.returncode == 0, scan_type=ScanType.QUICK, message='Обновление через Update-MpSignature завершено.' if res.returncode == 0 else 'Ошибка обновления.', output=(res.stdout + '\n' + res.stderr).strip())
         except Exception as e:
             return ScanResponse(success=False, scan_type=ScanType.QUICK, message=f'Ошибка обновления сигнатур: {e}')
+
+    def _record_telemetry_event(self, event_type: str, details: Dict[str, Any], severity: str = 'info') -> None:
+        """Регистрация события Defender в базе телеметрии telemetry.db.
+
+        Args:
+            event_type: Тип события (например, defender_scan_started).
+            details: Структурированные параметры события.
+            severity: Уровень важности события (info, warning, error).
+        """
+        try:
+            from apps.windows.telemetry.sqlite.storage import TelemetryStorage
+            storage = TelemetryStorage()
+            storage.save_event(event_type=event_type, event_details=details, severity=severity)
+        except Exception as e:
+            logger.debug(f'Не удалось записать событие Defender в телеметрию: {e}')
+
+    def start_scan_task(self, req: ScanRequest) -> DefenderTaskInfo:
+        """Инициализация и запуск асинхронной задачи сканирования Defender.
+
+        Args:
+            req: Параметры запроса сканирования.
+
+        Returns:
+            DefenderTaskInfo: Метаданные запущенной фоновой задачи.
+        """
+        task_id = f'def-scan-{uuid.uuid4().hex[:8]}'
+        task_type_map = {
+            ScanType.QUICK: DefenderTaskType.QUICK_SCAN,
+            ScanType.FULL: DefenderTaskType.FULL_SCAN,
+            ScanType.CUSTOM: DefenderTaskType.CUSTOM_SCAN,
+            ScanType.OFFLINE: DefenderTaskType.OFFLINE_SCAN,
+        }
+        task_type = task_type_map.get(req.scan_type, DefenderTaskType.QUICK_SCAN)
+        task_info = DefenderTaskInfo(
+            task_id=task_id,
+            task_type=task_type,
+            status=DefenderTaskStatus.RUNNING,
+            message=f'Запущено сканирование Defender ({req.scan_type.value}) в фоновом режиме',
+            target_path=req.target_path,
+        )
+        with self._task_lock:
+            self._tasks[task_id] = task_info
+
+        self._record_telemetry_event(
+            'defender_scan_started',
+            {'task_id': task_id, 'scan_type': req.scan_type.value, 'target_path': req.target_path, 'started_at': task_info.started_at}
+        )
+
+        self._spawn_worker(self._run_scan_worker(task_id, req))
+        return task_info
+
+    def start_update_task(self) -> DefenderTaskInfo:
+        """Инициализация и запуск асинхронной задачи обновления сигнатур Defender.
+
+        Returns:
+            DefenderTaskInfo: Метаданные запущенной фоновой задачи.
+        """
+        task_id = f'def-sig-{uuid.uuid4().hex[:8]}'
+        task_info = DefenderTaskInfo(
+            task_id=task_id,
+            task_type=DefenderTaskType.SIGNATURE_UPDATE,
+            status=DefenderTaskStatus.RUNNING,
+            message='Запущено обновление антивирусных баз сигнатур Defender в фоновом режиме',
+        )
+        with self._task_lock:
+            self._tasks[task_id] = task_info
+
+        self._record_telemetry_event(
+            'defender_update_started',
+            {'task_id': task_id, 'started_at': task_info.started_at}
+        )
+
+        self._spawn_worker(self._run_update_worker(task_id))
+        return task_info
+
+    def _spawn_worker(self, coro: Any) -> None:
+        """Запуск корутины в текущем цикле событий или отдельном потоке.
+
+        Args:
+            coro: Корутина для асинхронного выполнения.
+        """
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(coro)
+        except RuntimeError:
+            threading.Thread(target=lambda: asyncio.run(coro), daemon=True).start()
+
+    async def _run_scan_worker(self, task_id: str, req: ScanRequest) -> None:
+        """Фоновый воркер выполнения сканирования.
+
+        Args:
+            task_id: Идентификатор задачи.
+            req: Параметры сканирования.
+        """
+        start_ts = time.time()
+        start_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        logger.info(f'Фоновая задача Defender {task_id}: старт сканирования {req.scan_type.value}')
+        try:
+            res: ScanResponse = await asyncio.to_thread(self.trigger_scan, req)
+            duration = round(time.time() - start_ts, 2)
+            completed_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            # Синхронизация с системным журналом Windows Defender Operational
+            win_event = await asyncio.to_thread(
+                self._correlator.find_latest_event_for_task,
+                [1001, 1002, 1005, 1000],
+                start_str
+            )
+
+            with self._task_lock:
+                task = self._tasks.get(task_id)
+                if task:
+                    task.status = DefenderTaskStatus.COMPLETED if res.success else DefenderTaskStatus.FAILED
+                    task.completed_at = completed_str
+                    task.duration_seconds = duration
+                    task.success = res.success
+                    task.output = res.output
+                    task.message = res.message
+                    task.windows_event = win_event
+
+            # Регистрация завершения в телеметрии
+            self._record_telemetry_event(
+                'defender_scan_completed',
+                {
+                    'task_id': task_id,
+                    'scan_type': req.scan_type.value,
+                    'success': res.success,
+                    'duration_seconds': duration,
+                    'completed_at': completed_str,
+                    'windows_event_id': win_event.event_id if win_event else None,
+                    'message': res.message,
+                },
+                severity='info' if res.success else 'error'
+            )
+            logger.info(f'Фоновая задача Defender {task_id} завершена: success={res.success}, duration={duration}с')
+        except Exception as exc:
+            duration = round(time.time() - start_ts, 2)
+            completed_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            logger.error(f'Исключение в фоновой задаче Defender {task_id}: {exc}')
+            with self._task_lock:
+                task = self._tasks.get(task_id)
+                if task:
+                    task.status = DefenderTaskStatus.FAILED
+                    task.completed_at = completed_str
+                    task.duration_seconds = duration
+                    task.success = False
+                    task.error = str(exc)
+                    task.message = f'Ошибка сканирования: {exc}'
+            self._record_telemetry_event(
+                'defender_scan_failed',
+                {'task_id': task_id, 'scan_type': req.scan_type.value, 'error': str(exc), 'duration_seconds': duration},
+                severity='error'
+            )
+
+    async def _run_update_worker(self, task_id: str) -> None:
+        """Фоновый воркер выполнения обновления сигнатур.
+
+        Args:
+            task_id: Идентификатор задачи.
+        """
+        start_ts = time.time()
+        start_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        logger.info(f'Фоновая задача Defender {task_id}: старт обновления сигнатур')
+        try:
+            res: ScanResponse = await asyncio.to_thread(self.update_signatures)
+            duration = round(time.time() - start_ts, 2)
+            completed_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            # Синхронизация с системным журналом Windows Defender Operational
+            win_event = await asyncio.to_thread(
+                self._correlator.find_latest_event_for_task,
+                [2000, 2001, 2002, 2003],
+                start_str
+            )
+
+            with self._task_lock:
+                task = self._tasks.get(task_id)
+                if task:
+                    task.status = DefenderTaskStatus.COMPLETED if res.success else DefenderTaskStatus.FAILED
+                    task.completed_at = completed_str
+                    task.duration_seconds = duration
+                    task.success = res.success
+                    task.output = res.output
+                    task.message = res.message
+                    task.windows_event = win_event
+
+            # Регистрация завершения в телеметрии
+            self._record_telemetry_event(
+                'defender_update_completed',
+                {
+                    'task_id': task_id,
+                    'success': res.success,
+                    'duration_seconds': duration,
+                    'completed_at': completed_str,
+                    'windows_event_id': win_event.event_id if win_event else None,
+                    'message': res.message,
+                },
+                severity='info' if res.success else 'error'
+            )
+            logger.info(f'Фоновая задача Defender {task_id} обновления баз завершена: success={res.success}, duration={duration}с')
+        except Exception as exc:
+            duration = round(time.time() - start_ts, 2)
+            completed_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            logger.error(f'Исключение в фоновой задаче обновления сигнатур {task_id}: {exc}')
+            with self._task_lock:
+                task = self._tasks.get(task_id)
+                if task:
+                    task.status = DefenderTaskStatus.FAILED
+                    task.completed_at = completed_str
+                    task.duration_seconds = duration
+                    task.success = False
+                    task.error = str(exc)
+                    task.message = f'Ошибка обновления: {exc}'
+            self._record_telemetry_event(
+                'defender_update_failed',
+                {'task_id': task_id, 'error': str(exc), 'duration_seconds': duration},
+                severity='error'
+            )
+
+    def get_task(self, task_id: str) -> Optional[DefenderTaskInfo]:
+        """Получение статуса задачи по ее идентификатору.
+
+        Args:
+            task_id: Идентификатор задачи.
+
+        Returns:
+            Optional[DefenderTaskInfo]: Информация о задаче или None.
+        """
+        with self._task_lock:
+            return self._tasks.get(task_id)
+
+    def list_tasks(self, limit: int = 20) -> List[DefenderTaskInfo]:
+        """Получение списка последних задач Defender.
+
+        Args:
+            limit: Максимальное количество возвращаемых задач.
+
+        Returns:
+            List[DefenderTaskInfo]: Список задач.
+        """
+        with self._task_lock:
+            tasks = list(self._tasks.values())
+            tasks.sort(key=lambda t: t.started_at, reverse=True)
+            return tasks[:limit]

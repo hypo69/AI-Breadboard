@@ -17,7 +17,7 @@ Usage Examples:
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 10:55:00
+ * Updated: 2026-10-06 15:30:00
  * =============================================================================
 -->
 
@@ -85,7 +85,7 @@ Usage Examples:
   }
   .about-sys-tree-node {
     margin-bottom: 6px;
-    background: var(--surface-2, #1e293b);
+    background: var(--surface-1, transparent);
     border: 1px solid var(--border-color, #334155);
     border-radius: 6px;
     overflow: hidden;
@@ -95,7 +95,7 @@ Usage Examples:
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    background: transparent;
+    background: var(--surface-2, rgba(255, 255, 255, 0.03));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -108,8 +108,8 @@ Usage Examples:
   .about-sys-tree-body {
     padding: 8px 12px;
     font-size: 0.80rem;
-    border-top: 1px solid var(--border-color, #334155);
-    background: rgba(15, 23, 42, 0.45);
+    border-top: 1px solid var(--border-subtle, var(--border-color, #334155));
+    background: transparent;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 4px 16px;
@@ -119,16 +119,16 @@ Usage Examples:
     align-items: baseline;
     gap: 6px;
     padding: 4px 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
     border-radius: 4px;
     transition: background 0.12s ease;
     min-width: 0;
   }
   .about-sys-prop-row:hover {
-    background: rgba(56, 189, 248, 0.05);
+    background: rgba(56, 189, 248, 0.04);
   }
   .about-sys-prop-row:last-child {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
   }
   .about-sys-prop-key {
     color: var(--text-muted, #94a3b8);
@@ -959,8 +959,14 @@ Usage Examples:
               <td class="about-sys-spec-val text-truncate" id="about-spec-monitors">1920x1080 @ 60Hz</td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key"><i class="bi bi-lightning-charge me-1.5 text-success"></i>Схема питания</td>
-              <td class="about-sys-spec-val" id="about-spec-power">Balanced (Сбалансированная)</td>
+              <td class="about-sys-spec-key"><i class="bi bi-battery-charging me-1.5 text-warning"></i>Питание и Энергия</td>
+              <td class="about-sys-spec-val" id="about-spec-power-container">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                  <span class="badge bg-secondary font-monospace" style="font-size: 0.72rem;" id="about-spec-power-badge">AC Mains</span>
+                  <span id="about-spec-power-source">Питание: Стационарная электросеть 220V</span>
+                </div>
+                <div class="small text-muted font-monospace mt-0.5" style="font-size: 0.72rem;" id="about-spec-power-profile">Профиль: AC Mains / Desktop</div>
+              </td>
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-layers me-1.5 text-info"></i>Сборка ОС</td>

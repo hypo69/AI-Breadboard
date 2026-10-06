@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.startup
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 14:00:00
 # =============================================================================
 
 from __future__ import annotations
@@ -29,10 +29,24 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
 from logger import logger
-from apps.windows.startup.core.auditor import StartupAuditor
-from apps.windows.startup.core.manager import StartupManager
-from apps.windows.startup.core.models import AuditReport, AuditSummary, LocationInfo, RiskLevel, StartupEntry, StartupExplainRequest, StartupExplainResponse, StartupLocationType, ToggleRequest, ToggleResponse
-from apps.windows.startup.core.scanner import StartupScanner
+from apps.windows.modules.startup.core.auditor import StartupAuditor
+from apps.windows.modules.startup.core.manager import StartupManager
+from apps.windows.modules.startup.core.models import (
+    AuditReport,
+    AuditSummary,
+    LocationInfo,
+    RiskLevel,
+    StartupArchiveEntry,
+    StartupChangeItem,
+    StartupEntry,
+    StartupExplainRequest,
+    StartupExplainResponse,
+    StartupLocationType,
+    StartupRefreshResponse,
+    ToggleRequest,
+    ToggleResponse,
+)
+from apps.windows.modules.startup.core.scanner import StartupScanner
 
 def init_router() -> APIRouter:
     """Инициализирует и настраивает FastAPI роутер для Startup Auditor.
@@ -56,13 +70,75 @@ def init_router() -> APIRouter:
         return scanner.get_monitored_locations()
 
     @router.get('/audit', response_model=AuditReport)
-    async def run_full_audit() -> AuditReport:
+    async def run_full_audit(sync_telemetry: bool = Query(default=False, description='Синхронизировать снимок с телеметрией')) -> AuditReport:
         """Запускает полный аудит автозапуска и возвращает структурированный отчет."""
         try:
+            if sync_telemetry:
+                try:
+                    from apps.windows.telemetry import SystemCollector
+                    collector = SystemCollector()
+                    archive_entry = await asyncio.to_thread(collector.archive_startup_state, True)
+                    return archive_entry.report
+                except Exception as tel_err:
+                    logger.debug(f'Не удалось синхронизировать снимок с телеметрией: {tel_err}')
             return auditor.run_audit()
         except Exception as e:
             logger.error(f'Ошибка при выполнении аудита автозагрузки: {e}')
             raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post('/refresh', response_model=StartupRefreshResponse)
+    @router.post('/rescan', response_model=StartupRefreshResponse)
+    async def refresh_and_sync_telemetry() -> StartupRefreshResponse:
+        """Асинхронно перезапускает сбор данных автозапуска, фиксирует снимок и сохраняет отличия в телеметрии."""
+        try:
+            from apps.windows.telemetry import SystemCollector
+            collector = SystemCollector()
+            archive_entry = await asyncio.to_thread(collector.archive_startup_state, True)
+            return StartupRefreshResponse(
+                success=True,
+                archive_id=archive_entry.archive_id,
+                timestamp=archive_entry.timestamp,
+                changes_count=archive_entry.changes_count,
+                changes=archive_entry.changes,
+                report=archive_entry.report,
+                message=f"Снимок телеметрии успешно сохранен. Зафиксировано изменений: {archive_entry.changes_count}",
+            )
+        except Exception as e:
+            logger.error(f'Ошибка при обновлении телеметрии автозапуска: {e}')
+            rep = auditor.run_audit()
+            return StartupRefreshResponse(
+                success=False,
+                archive_id='',
+                timestamp=rep.timestamp,
+                changes_count=0,
+                changes=[],
+                report=rep,
+                message=f"Ошибка синхронизации телеметрии: {e}",
+            )
+
+    @router.get('/changes')
+    async def get_startup_changes(limit: int = Query(default=100, description='Лимит возвращаемых изменений')) -> Dict[str, Any]:
+        """Возвращает историю изменений в автозапуске, зафиксированных телеметрией."""
+        try:
+            from apps.windows.telemetry import SystemCollector
+            collector = SystemCollector()
+            changes_data = collector.get_startup_changes(limit=limit)
+            items = [StartupChangeItem.model_validate(c) if isinstance(c, dict) else c for c in changes_data]
+            return {'success': True, 'changes': items}
+        except Exception as e:
+            logger.debug(f'Не удалось получить историю изменений автозапуска: {e}')
+            return {'success': False, 'changes': [], 'error': str(e)}
+
+    @router.get('/history')
+    async def get_startup_history(limit: int = Query(default=50, description='Лимит архивных снимков')) -> Dict[str, Any]:
+        """Возвращает метаданные сохраненных архивных снимков автозапуска из телеметрии."""
+        try:
+            from apps.windows.telemetry import SystemCollector
+            collector = SystemCollector()
+            return {'success': True, 'history': collector.get_startup_history(limit=limit)}
+        except Exception as e:
+            logger.debug(f'Не удалось получить историю архивов автозапуска: {e}')
+            return {'success': False, 'history': [], 'error': str(e)}
 
     @router.get('/summary', response_model=AuditSummary)
     async def get_summary() -> AuditSummary:

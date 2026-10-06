@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/apps
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 01:12:00
+ * Updated: 2026-10-06 14:10:00
  * =============================================================================
  */
 
@@ -221,7 +221,7 @@ async function buildMenu(appsMap = {}, customCfg = null) {
   }
 
   // Обновление активного состояния кнопок вкладок
-  const activePane = document.querySelector('#mainTabContent .tab-pane.active') || document.querySelector('.tab-pane.active');
+  const activePane = document.querySelector('#mainTabContent > .tab-pane.active') || document.querySelector('.tab-pane.active');
   const activeTabId = activePane ? activePane.id : null;
   if (activeTabId) {
     document.querySelectorAll('[data-tab]').forEach(btn => {
@@ -452,7 +452,7 @@ function initMenuEditor(cfg, appsMap = {}) {
       }
 
       // Проверяем, активна ли ещё текущая вкладка, если нет — переключаемся на первую доступную
-      const currentTabEl = document.querySelector('.tab-pane.active');
+      const currentTabEl = document.querySelector('#mainTabContent > .tab-pane.active') || document.querySelector('.tab-pane.active');
       const activeTabId = currentTabEl ? currentTabEl.id : '';
       const isStillInMenu = document.querySelector(`[data-tab="${activeTabId}"]`);
       if (!isStillInMenu) {

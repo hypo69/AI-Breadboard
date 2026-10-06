@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:56:00
+# Updated: 2026-10-06 13:57:00
 # =============================================================================
 
 from __future__ import annotations
@@ -824,6 +824,63 @@ class TelemetryReader:
         """Возвращает самый последний сохраненный аудит аппаратного обеспечения."""
         audits = self.get_hardware_audits(limit=1)
         return audits[0] if audits else None
+
+    def get_startup_archives(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Возвращает историю архивных снимков автозапуска из таблицы startup_audit_archives."""
+        results: List[Dict[str, Any]] = []
+        try:
+            with self._cm.lock, self._cm.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM startup_audit_archives ORDER BY created_at DESC LIMIT ?', (limit,))
+                for row in cursor.fetchall():
+                    item = dict(row)
+                    if item.get('raw_json'):
+                        try:
+                            item['data'] = json.loads(item['raw_json'])
+                        except Exception:
+                            pass
+                    results.append(item)
+        except Exception as ex:
+            logger.error(f'Ошибка извлечения архивов автозапуска: {ex}')
+        return results
+
+    def get_latest_startup_archive(self) -> Optional[Dict[str, Any]]:
+        """Возвращает самый последний сохраненный снимок автозапуска."""
+        audits = self.get_startup_archives(limit=1)
+        return audits[0] if audits else None
+
+    def get_startup_changes(self, limit: int = 100, archive_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Возвращает историю зафиксированных отличий/изменений в автозапуске."""
+        results: List[Dict[str, Any]] = []
+        try:
+            with self._cm.lock, self._cm.get_connection() as conn:
+                cursor = conn.cursor()
+                if archive_id:
+                    cursor.execute(
+                        'SELECT * FROM startup_changes WHERE archive_id = ? ORDER BY created_at DESC, id DESC LIMIT ?',
+                        (archive_id, limit)
+                    )
+                else:
+                    cursor.execute(
+                        'SELECT * FROM startup_changes ORDER BY created_at DESC, id DESC LIMIT ?',
+                        (limit,)
+                    )
+                for row in cursor.fetchall():
+                    item = dict(row)
+                    if item.get('previous_value'):
+                        try:
+                            item['previous_value'] = json.loads(item['previous_value'])
+                        except Exception:
+                            pass
+                    if item.get('current_value'):
+                        try:
+                            item['current_value'] = json.loads(item['current_value'])
+                        except Exception:
+                            pass
+                    results.append(item)
+        except Exception as ex:
+            logger.error(f'Ошибка извлечения изменений автозапуска: {ex}')
+        return results
 
     def get_process_provenance_history(
         self,

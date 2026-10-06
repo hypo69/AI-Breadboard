@@ -3,7 +3,7 @@
 # Process Name: AI-Breadboard Apps Windows Modules Task_Scheduler Core - Models
 # =============================================================================
 # Description:
-#   # Description:
+#   Модели данных для модуля планировщика задач Windows (Task Scheduler).
 #
 # Usage Examples:
 #   Python API:
@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.task_scheduler.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 12:35:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""Модели данных для модуля планировщика задач Windows (Task Scheduler)."""
 
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
@@ -28,14 +28,18 @@ from pydantic import BaseModel, Field
 
 class ScheduledTaskItem(BaseModel):
     """Информация о запланированном задании."""
-    task_path: str
-    task_name: str
-    state: str = 'Ready'  # Ready, Running, Disabled
+    task_path: str = ''
+    task_name: str = ''
+    name: str = ''
+    state: str = 'Ready'  # Ready, Running, Disabled, Queued, Unknown
+    status: str = 'Ready'
+    enabled: bool = True
     next_run_time: Optional[str] = None
     last_run_time: Optional[str] = None
     last_task_result: int = 0
     author: str = ''
     action: str = ''
+    schedule_type: str = 'Custom'
 
 
 class TaskSchedulerReport(BaseModel):
@@ -50,10 +54,11 @@ class TaskSchedulerReport(BaseModel):
 
 class TaskActionRequest(BaseModel):
     """Запрос на управление заданием планировщика."""
-    task_path: str
-    action: str  # run, stop, enable, disable, delete
-    dry_run: bool = True
-    confirmed_by_user: bool = False
+    task_path: Optional[str] = None
+    task_name: Optional[str] = None
+    action: str  # run, stop, enable, disable, delete, schtasks_run, etc.
+    dry_run: bool = False
+    confirmed_by_user: bool = True
 
 
 __all__ = [

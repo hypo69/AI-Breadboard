@@ -4,18 +4,18 @@
  * =============================================================================
  * Description:
  *   Клиентский веб-скрипт модуля журналов событий и активности системы Windows.
- *   Полная поддержка светлой и тёмной темы с надежным парсингом каналов и событий.
+ *   Полная поддержка интернационализации (i18n), светлой и тёмной темы.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/html/system_control_tab/main.js?v=20261006_v12" type="module"></script>
+ *     <script src="/html/system_control_tab/main.js?v=20261006_v14" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/system_control_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 10:56:00
+ * Updated: 2026-10-06 13:30:00
  * =============================================================================
  */
 
@@ -34,6 +34,21 @@
   let liveIntervalTimer = null;
   let isLogRequestInProgress = false;
   let globalTooltipEl = null;
+
+  /**
+   * Локализация строки через i18next с fallback.
+   *
+   * @param {string} key - Ключ локализации.
+   * @param {string} fallback - Значение по умолчанию.
+   * @returns {string} Локализованная строка.
+   */
+  function t(key, fallback) {
+    if (window.i18next && typeof window.i18next.t === 'function' && window.i18next.isInitialized) {
+      const res = window.i18next.t(key);
+      if (res && res !== key) return res;
+    }
+    return fallback !== undefined ? fallback : key;
+  }
 
   /**
    * Экранирование HTML-символов для защиты от XSS.
@@ -94,10 +109,10 @@
       if (elevBadge) {
         if (data.is_elevated) {
           elevBadge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-          elevBadge.innerHTML = '🛡️ Режим: Администратор (Полный доступ)';
+          elevBadge.innerHTML = t('systemControl.elevAdmin', '🛡️ Режим: Администратор (Полный доступ)');
         } else {
           elevBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
-          elevBadge.innerHTML = '👁️ Режим: Обычный пользователь (Ограничено)';
+          elevBadge.innerHTML = t('systemControl.elevUser', '👁️ Режим: Обычный пользователь (Ограничено)');
         }
       }
     } catch (e) {
@@ -120,7 +135,7 @@
       const logs = data.logs || [];
 
       if (logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">Журнал операций пуст.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted p-3">${t('systemControl.emptyActivity', 'Журнал операций пуст.')}</td></tr>`;
         return;
       }
 
@@ -154,8 +169,9 @@
     if (!globalTooltipEl) createGlobalChannelTooltip();
     const isFile = !!(channelData.file_path || channelData.location || (channelData.source_type && channelData.source_type !== 'channel'));
     const icon = isFile ? '📄' : '📁';
-    const chanTitle = channelData.display_name || channelData.channel_name || channelData.name || 'Журнал';
-    const typeLabel = channelData.source_type === 'channel' || !isFile ? 'Live Windows Channel' : 'EVTX File Archive';
+    const rawTitle = channelData.display_name || channelData.channel_name || channelData.name || 'Channel';
+    const chanTitle = rawTitle.replace(/^evt:/, '');
+    const typeLabel = (channelData.source_type === 'channel' || !isFile) ? t('systemControl.tooltipTypeLive', 'Live Windows Channel') : t('systemControl.tooltipTypeArchive', 'EVTX File Archive');
     const countVal = channelData.record_count !== undefined ? channelData.record_count : (channelData.records || 'N/A');
     const recCount = typeof countVal === 'number' ? countVal.toLocaleString() : String(countVal);
     const sizeStr = channelData.file_size_mb ? `${channelData.file_size_mb} MB` : (channelData.size_bytes ? `${(channelData.size_bytes / 1024 / 1024).toFixed(1)} MB` : 'N/A');
@@ -166,15 +182,15 @@
         <span class="text-truncate">${escapeHtml(chanTitle)}</span>
       </div>
       <div class="mb-2" style="font-size: 0.76rem; color: var(--text-muted) !important;">
-        ${escapeHtml(channelData.description || 'Стандартный системный канал событий Windows.')}
+        ${escapeHtml(channelData.description || t('systemControl.tooltipDefaultDesc', 'Стандартный системный канал событий Windows.'))}
       </div>
       <div class="d-flex justify-content-between align-items-center pt-1 border-top" style="border-color: var(--border-color) !important; font-size: 0.74rem;">
-        <span class="text-muted">Тип: <strong style="color: var(--text-color);">${typeLabel}</strong></span>
-        <span class="text-muted">Записей: <strong class="text-info">${recCount}</strong></span>
+        <span class="text-muted">${t('systemControl.tooltipType', 'Тип:')} <strong style="color: var(--text-color);">${typeLabel}</strong></span>
+        <span class="text-muted">${t('systemControl.tooltipRecords', 'Записей:')} <strong class="text-info">${recCount}</strong></span>
       </div>
       <div class="d-flex justify-content-between align-items-center pt-1" style="font-size: 0.74rem;">
-        <span class="text-muted">Размер: <strong style="color: var(--text-color);">${sizeStr}</strong></span>
-        <span class="text-success fw-bold">Доступен</span>
+        <span class="text-muted">${t('systemControl.tooltipSize', 'Размер:')} <strong style="color: var(--text-color);">${sizeStr}</strong></span>
+        <span class="text-success fw-bold">${t('systemControl.tooltipAvailable', 'Доступен')}</span>
       </div>
     `;
 
@@ -201,30 +217,42 @@
     const sourcesStat = document.getElementById('slc-stat-sources');
 
     if (treeEl && (!cachedChannels || cachedChannels.length === 0)) {
-      treeEl.innerHTML = '<div class="text-muted p-2 small"><div class="spinner-border spinner-border-sm text-info me-1"></div>Поиск каналов...</div>';
+      treeEl.innerHTML = `<div class="text-muted p-2 small"><div class="spinner-border spinner-border-sm text-info me-1"></div>${t('systemControl.searchingChannels', 'Поиск каналов...')}</div>`;
     }
 
     try {
       const response = await fetch(`/api/v1/system_logs/scan?force=${force}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      cachedChannels = data.channels || [];
+      const rawChannels = data.channels || [];
+      // Оставляем только непустые каналы и файлы журналов
+      cachedChannels = rawChannels.filter(c => {
+        const records = Number(c.record_count) || 0;
+        const sizeBytes = Number(c.size_bytes) || 0;
+        const sizeMb = Number(c.file_size_mb) || 0;
+        return records > 0 || sizeBytes > 0 || sizeMb > 0;
+      });
 
       if (countBadge) countBadge.textContent = cachedChannels.length;
       if (sourcesStat) sourcesStat.textContent = cachedChannels.length.toLocaleString();
 
       renderChannelTree(cachedChannels);
     } catch (err) {
-      if (treeEl) treeEl.innerHTML = `<div class="text-danger p-2 small">Ошибка сканирования каналов: ${escapeHtml(err.message)}</div>`;
+      if (treeEl) treeEl.innerHTML = `<div class="text-danger p-2 small">${t('systemControl.errorScanning', 'Ошибка сканирования каналов:')} ${escapeHtml(err.message)}</div>`;
     }
   }
 
   function renderChannelTree(channels) {
     const treeEl = document.getElementById('slc-channel-tree-container');
+    const countBadge = document.getElementById('slc-channel-count-badge');
     if (!treeEl) return;
 
+    if (countBadge && channels) {
+      countBadge.textContent = channels.length;
+    }
+
     if (!channels || channels.length === 0) {
-      treeEl.innerHTML = '<div class="text-muted p-2 small">Каналы не найдены.</div>';
+      treeEl.innerHTML = `<div class="text-muted p-2 small">${t('systemControl.noChannels', 'Каналы не найдены.')}</div>`;
       return;
     }
 
@@ -232,9 +260,10 @@
 
     treeEl.innerHTML = channels.map(ch => {
       const isFile = !!(ch.file_path || (ch.source_type && ch.source_type !== 'channel'));
-      const chName = ch.channel_name || ch.display_name || ch.name || 'Channel';
+      const sysName = (ch.channel_name || ch.name || ch.source_id || 'System').replace(/^evt:/, '');
+      const dispName = (ch.display_name || ch.channel_name || ch.name || 'Channel').replace(/^evt:/, '');
       const chPath = ch.location || ch.file_path || '';
-      const isActive = isFile ? (currentFilePath === chPath) : (currentChannel === chName && !currentFilePath);
+      const isActive = isFile ? (currentFilePath === chPath) : (currentChannel === sysName && !currentFilePath);
       const icon = isFile ? 'bi-file-earmark-text text-secondary' : 'bi-folder-fill text-warning';
       
       let sizeBadge = '';
@@ -246,10 +275,10 @@
       }
 
       return `
-        <div class="slc-tree-item ${isActive ? 'active' : ''}" data-name="${escapeHtml(chName)}" data-path="${escapeHtml(chPath)}">
+        <div class="slc-tree-item ${isActive ? 'active' : ''}" data-channel="${escapeHtml(sysName)}" data-display-name="${escapeHtml(dispName)}" data-path="${escapeHtml(chPath)}">
           <div class="d-flex align-items-center gap-2 text-truncate me-2" style="min-width: 0; flex: 1 1 auto;">
             <i class="bi ${icon} flex-shrink-0"></i>
-            <span class="text-truncate fw-medium" title="${escapeHtml(chName)}">${escapeHtml(chName)}</span>
+            <span class="text-truncate fw-medium" title="${escapeHtml(dispName)}">${escapeHtml(dispName)}</span>
           </div>
           <div class="d-flex align-items-center flex-shrink-0">
             ${sizeBadge}
@@ -275,14 +304,15 @@
         treeEl.querySelectorAll('.slc-tree-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
 
-        currentChannel = el.getAttribute('data-name') || 'System';
+        currentChannel = (el.getAttribute('data-channel') || el.getAttribute('data-name') || 'System').replace(/^evt:/, '').split(' (')[0].trim();
         currentFilePath = el.getAttribute('data-path') || '';
+        const dispName = el.getAttribute('data-display-name') || currentChannel;
 
         const statChan = document.getElementById('slc-stat-channel');
-        if (statChan) statChan.textContent = currentChannel;
+        if (statChan) statChan.textContent = dispName;
 
         const mainTitle = document.getElementById('slc-main-view-title');
-        if (mainTitle) mainTitle.innerHTML = `<i class="bi bi-list-columns-reverse me-2 text-primary"></i>События канала: <span class="text-info">${escapeHtml(currentChannel)}</span>`;
+        if (mainTitle) mainTitle.innerHTML = `<i class="bi bi-list-columns-reverse me-2 text-primary"></i>${t('systemControl.channelEventsTitle', 'События канала:')} <span class="text-info">${escapeHtml(dispName)}</span>`;
 
         loadEvents();
       });
@@ -310,13 +340,17 @@
     const limit = limitSelect ? limitSelect.value : '100';
     const eventId = eventIdInput ? eventIdInput.value.trim() : '';
 
+    const cleanChan = currentChannel.replace(/^evt:/, '').split(' (')[0].trim();
     const params = new URLSearchParams({
-      channel: currentChannel,
+      channel: cleanChan,
       limit: limit,
       hours: hours,
     });
 
-    if (query) params.append('query', query);
+    if (query) {
+      params.append('search', query);
+      params.append('query', query);
+    }
     if (level) params.append('level', level);
     if (eventId) params.append('event_id', eventId);
     if (currentFilePath) params.append('file_path', currentFilePath);
@@ -331,10 +365,10 @@
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      cachedEvents = data.events || [];
+      cachedEvents = data.events || data.entries || [];
 
       if (statEvents) statEvents.textContent = cachedEvents.length.toLocaleString();
-      if (streamBadge) streamBadge.textContent = `${cachedEvents.length} записей`;
+      if (streamBadge) streamBadge.textContent = `${cachedEvents.length} ${t('systemControl.records', 'записей')}`;
 
       const faults = cachedEvents.filter(e => {
         const l = (e.level || '').toLowerCase();
@@ -344,7 +378,7 @@
 
       renderEventsTable(cachedEvents);
     } catch (err) {
-      if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Ошибка загрузки событий: ${escapeHtml(err.message)}</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${t('systemControl.errorLoadingEvents', 'Ошибка загрузки событий:')} ${escapeHtml(err.message)}</td></tr>`;
     } finally {
       isLogRequestInProgress = false;
     }
@@ -355,7 +389,7 @@
     if (!tbody) return;
 
     if (!events || events.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Нет записей, удовлетворяющих заданным фильтрам.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">${t('systemControl.noEvents', 'Нет записей, удовлетворяющих заданным фильтрам.')}</td></tr>`;
       return;
     }
 
@@ -397,12 +431,13 @@
   async function loadAuditDigest() {
     const contentEl = document.getElementById('slc-audit-content');
     if (!contentEl) return;
-    contentEl.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>Формирование сводки аудита и дедупликации...</div>';
+    contentEl.innerHTML = `<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>${escapeHtml(t('systemControl.auditSummaryGenerating', 'Формирование сводки аудита и дедупликации...'))}</div>`;
 
     try {
       const hoursSelect = document.getElementById('slc-hours-select');
       const hours = hoursSelect ? hoursSelect.value : '24';
-      const res = await fetch(`/api/v1/system_logs/audit?channel=${encodeURIComponent(currentChannel)}&hours=${hours}&limit=300&file_path=${encodeURIComponent(currentFilePath)}`);
+      const cleanChan = currentChannel.replace(/^evt:/i, '');
+      const res = await fetch(`/api/v1/system_logs/audit?channel=${encodeURIComponent(cleanChan)}&hours=${hours}&limit=300&file_path=${encodeURIComponent(currentFilePath)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
@@ -411,12 +446,12 @@
       const errSum = data.severity_summary?.Error || 0;
       const warnSum = data.severity_summary?.Warning || 0;
 
-      let anomaliesHtml = '<div class="text-muted small">Аномалий и резких всплесков частоты ошибок не обнаружено.</div>';
+      let anomaliesHtml = `<div class="text-muted small">${escapeHtml(t('systemControl.noAnomalies', 'Аномалий и резких всплесков частоты ошибок не обнаружено.'))}</div>`;
       if (data.anomalies && data.anomalies.length > 0) {
         anomaliesHtml = data.anomalies.map(a => `
           <div class="alert alert-warning py-1 px-2 mb-1.5 small d-flex justify-content-between align-items-center">
-            <div><strong class="text-danger">[Аномалия]</strong> ${escapeHtml(a.description || a.message)}</div>
-            <span class="badge bg-danger font-monospace">${a.count || ''} событий</span>
+            <div><strong class="text-danger">[${escapeHtml(t('systemControl.anomaliesTitle', 'Аномалия'))}]</strong> ${escapeHtml(a.description || a.message)}</div>
+            <span class="badge bg-danger font-monospace">${a.count || ''} ${escapeHtml(t('systemControl.eventsCountBadge', 'событий').replace('{{count}}', '').trim())}</span>
           </div>
         `).join('');
       }
@@ -435,32 +470,32 @@
           </tr>
         `).join('');
       } else {
-        clustersHtml = '<tr><td colspan="7" class="text-center text-muted py-3">Кластеры не сформированы.</td></tr>';
+        clustersHtml = `<tr><td colspan="7" class="text-center text-muted py-3">${escapeHtml(t('systemControl.noClusters', 'Кластеры не сформированы.'))}</td></tr>`;
       }
 
       contentEl.innerHTML = `
         <div class="row g-2 mb-3">
           <div class="col-sm-3 col-6">
             <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
-              <div class="small text-muted" style="font-size: 0.72rem;">Всего проанализировано</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">${escapeHtml(t('systemControl.totalAnalyzed', 'Всего проанализировано'))}</div>
               <div class="fs-5 fw-bold text-info font-monospace">${totalEvents}</div>
             </div>
           </div>
           <div class="col-sm-3 col-6">
             <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
-              <div class="small text-muted" style="font-size: 0.72rem;">Критических сбоев</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">${escapeHtml(t('systemControl.critFaults', 'Критических сбоев'))}</div>
               <div class="fs-5 fw-bold text-danger font-monospace">${critSum}</div>
             </div>
           </div>
           <div class="col-sm-3 col-6">
             <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
-              <div class="small text-muted" style="font-size: 0.72rem;">Ошибок</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">${escapeHtml(t('systemControl.errorsCount', 'Ошибок'))}</div>
               <div class="fs-5 fw-bold text-danger font-monospace">${errSum}</div>
             </div>
           </div>
           <div class="col-sm-3 col-6">
             <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
-              <div class="small text-muted" style="font-size: 0.72rem;">Предупреждений</div>
+              <div class="small text-muted" style="font-size: 0.72rem;">${escapeHtml(t('systemControl.warningsCount', 'Предупреждений'))}</div>
               <div class="fs-5 fw-bold text-warning font-monospace">${warnSum}</div>
             </div>
           </div>
@@ -468,7 +503,7 @@
 
         <div class="slc-card mb-2 shadow-sm">
           <div class="slc-card-header text-warning fw-bold py-1.5 px-3 small">
-            <i class="bi bi-exclamation-triangle me-1"></i>Обнаруженные аномалии и всплески
+            <i class="bi bi-exclamation-triangle me-1"></i>${escapeHtml(t('systemControl.anomaliesTitle', 'Обнаруженные аномалии и всплески'))}
           </div>
           <div class="p-2">
             ${anomaliesHtml}
@@ -477,20 +512,20 @@
 
         <div class="slc-card shadow-sm">
           <div class="slc-card-header fw-bold d-flex justify-content-between align-items-center py-1.5 px-3">
-            <span><i class="bi bi-collection me-2 text-primary"></i>Топ шаблонов событий (Дедупликация)</span>
-            <span class="small text-muted">Топ 15 кластеров</span>
+            <span><i class="bi bi-collection me-2 text-primary"></i>${escapeHtml(t('systemControl.patternsTitle', 'Топ шаблонов событий (Дедупликация)'))}</span>
+            <span class="small text-muted">${escapeHtml(t('systemControl.top15', 'Топ 15 кластеров'))}</span>
           </div>
           <div class="table-responsive">
             <table class="slc-table mb-0">
               <thead>
                 <tr>
-                  <th style="width: 40px;">#</th>
-                  <th style="width: 80px;">Уровень</th>
-                  <th style="width: 140px;">Поставщик</th>
-                  <th style="width: 60px;">ID</th>
-                  <th>Шаблон сообщения (Masked)</th>
-                  <th style="width: 70px;" class="text-center">Кол-во</th>
-                  <th style="width: 140px;">Впервые</th>
+                  <th style="width: 40px;">${escapeHtml(t('systemControl.colNum', '#'))}</th>
+                  <th style="width: 80px;">${escapeHtml(t('systemControl.colLevel', 'Уровень'))}</th>
+                  <th style="width: 140px;">${escapeHtml(t('systemControl.colProvider', 'Поставщик'))}</th>
+                  <th style="width: 60px;">${escapeHtml(t('systemControl.colId', 'ID'))}</th>
+                  <th>${escapeHtml(t('systemControl.colPattern', 'Шаблон сообщения (Masked)'))}</th>
+                  <th style="width: 70px;" class="text-center">${escapeHtml(t('systemControl.colCount', 'Кол-во'))}</th>
+                  <th style="width: 140px;">${escapeHtml(t('systemControl.colFirstSeen', 'Впервые'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -501,7 +536,7 @@
         </div>
       `;
     } catch (err) {
-      contentEl.innerHTML = `<div class="alert alert-danger">Ошибка проведения аудита: ${escapeHtml(err.message)}</div>`;
+      contentEl.innerHTML = `<div class="alert alert-danger">${escapeHtml(t('systemControl.errorAudit', 'Ошибка проведения аудита:'))} ${escapeHtml(err.message)}</div>`;
     }
   }
 
@@ -512,20 +547,21 @@
     const query = inputEl.value.trim();
     if (!query) return;
 
-    resultsEl.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>Семантический поиск по RAG-индексу...</div>';
+    resultsEl.innerHTML = `<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>${escapeHtml(t('systemControl.ragSearching', 'Семантический поиск по RAG-индексу...'))}</div>`;
 
     try {
+      const cleanChan = currentChannel.replace(/^evt:/i, '');
       const res = await fetch('/api/v1/system_logs/rag/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query, channel: currentChannel, top_k: 8 }),
+        body: JSON.stringify({ query: query, channel: cleanChan, top_k: 8 }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const chunks = data.results || [];
 
       if (chunks.length === 0) {
-        resultsEl.innerHTML = '<div class="slc-card p-3 text-center text-muted">По вашему запросу совпадений в RAG-индексе не найдено. Попробуйте нажать «Перестроить RAG-индекс».</div>';
+        resultsEl.innerHTML = `<div class="slc-card p-3 text-center text-muted">${escapeHtml(t('systemControl.ragNoMatches', 'По вашему запросу совпадений в RAG-индексе не найдено. Попробуйте нажать «Перестроить RAG-индекс».'))}</div>`;
         return;
       }
 
@@ -539,32 +575,36 @@
         </div>
       `).join('');
     } catch (err) {
-      resultsEl.innerHTML = `<div class="alert alert-danger">Ошибка поиска RAG: ${escapeHtml(err.message)}</div>`;
+      resultsEl.innerHTML = `<div class="alert alert-danger">${escapeHtml(t('systemControl.errorRagSearch', 'Ошибка поиска RAG:'))} ${escapeHtml(err.message)}</div>`;
     }
   }
 
   async function rebuildRagIndex() {
     const resultsEl = document.getElementById('slc-rag-results');
     if (!resultsEl) return;
-    resultsEl.innerHTML = '<div class="text-center text-info py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>Перестроение семантического RAG-индекса...</div>';
+    resultsEl.innerHTML = `<div class="text-center text-info py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>${escapeHtml(t('systemControl.ragRebuilding', 'Перестроение семантического RAG-индекса...'))}</div>`;
 
     try {
-      const res = await fetch(`/api/v1/system_logs/rag/build?channel=${encodeURIComponent(currentChannel)}&limit=500&hours=24&file_path=${encodeURIComponent(currentFilePath)}`, {
+      const cleanChan = currentChannel.replace(/^evt:/i, '');
+      const res = await fetch(`/api/v1/system_logs/rag/build?channel=${encodeURIComponent(cleanChan)}&limit=500&hours=24&file_path=${encodeURIComponent(currentFilePath)}`, {
         method: 'POST',
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      const summaryMsg = t('systemControl.ragAddedChunks', 'Добавлено {{added}} чанков (Всего в индексе: {{total}}).')
+        .replace('{{added}}', String(data.chunks_added ?? 0))
+        .replace('{{total}}', String(data.total_index_chunks ?? 0));
       resultsEl.innerHTML = `
         <div class="alert alert-success d-flex align-items-center gap-2">
           <i class="bi bi-check-circle-fill fs-5"></i>
           <div>
-            <strong>RAG-индекс успешно обновлен!</strong> Добавлено ${data.chunks_added} чанков (Всего в индексе: ${data.total_index_chunks}).
+            <strong>${escapeHtml(t('systemControl.ragRebuildSuccess', 'RAG-индекс успешно обновлен!'))}</strong> ${escapeHtml(summaryMsg)}
             <div class="small mt-1 text-muted">${escapeHtml(data.executive_summary || '')}</div>
           </div>
         </div>
       `;
     } catch (err) {
-      resultsEl.innerHTML = `<div class="alert alert-danger">Ошибка обновления RAG: ${escapeHtml(err.message)}</div>`;
+      resultsEl.innerHTML = `<div class="alert alert-danger">${escapeHtml(t('systemControl.errorRagRebuild', 'Ошибка обновления RAG:'))} ${escapeHtml(err.message)}</div>`;
     }
   }
 
@@ -585,45 +625,46 @@
     setElTxt('slc-modal-provider', entry.provider || entry.source || '-');
     setElTxt('slc-modal-computer', entry.computer || '-');
     setElTxt('slc-modal-pid', entry.process_id > 0 ? String(entry.process_id) : '-');
-    setElTxt('slc-modal-channel', entry.channel || currentChannel);
+    setElTxt('slc-modal-channel', (entry.channel || currentChannel).replace(/^evt:/i, ''));
     setElTxt('slc-modal-message', entry.message);
 
     const aiExplanation = document.getElementById('slc-modal-ai-explanation');
     if (aiExplanation) {
-      aiExplanation.innerHTML = `Нажмите «Анализ контекста», чтобы провести диагностику выбранной записи и сопутствующих событий.`;
+      aiExplanation.innerHTML = escapeHtml(t('systemControl.modalAiPrompt', 'Нажмите «Анализ контекста», чтобы провести диагностику выбранной записи.'));
     }
 
     const diagnoseBtn = document.getElementById('btn-slc-modal-diagnose');
     if (diagnoseBtn) {
       diagnoseBtn.onclick = async () => {
-        aiExplanation.innerHTML = `<div class="spinner-border spinner-border-sm text-info me-2"></div>Анализ выбранной записи...`;
+        aiExplanation.innerHTML = `<div class="spinner-border spinner-border-sm text-info me-2"></div>${escapeHtml(t('systemControl.modalAiAnalyzing', 'Анализ выбранной записи...'))}`;
         try {
+          const cleanChan = (entry.channel || currentChannel).replace(/^evt:/i, '');
           const res = await fetch('/api/v1/system_logs/explain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              channel: entry.channel || currentChannel,
+              channel: cleanChan,
               timestamp: entry.timestamp,
               event_id: entry.event_id || 0,
               provider: entry.provider || entry.source || '',
               level: entry.level || '',
               message: entry.message || '',
               target_entry: entry,
-              query_text: `Диагностика события ${entry.provider || entry.source} (ID ${entry.event_id || 0}): ${entry.message || ''}`,
+              query_text: `Event diagnostic ${entry.provider || entry.source} (ID ${entry.event_id || 0}): ${entry.message || ''}`,
             }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const report = await res.json();
           aiExplanation.innerHTML = `
-            <div class="mb-2"><strong class="text-info">Сводка:</strong> ${escapeHtml(report.summary)}</div>
-            <div class="mb-2"><strong class="text-warning">Причина / Анализ:</strong> ${escapeHtml(report.root_cause)}</div>
-            <h6 class="small text-uppercase text-muted fw-bold mb-1">Рекомендации:</h6>
+            <div class="mb-2"><strong class="text-info">${escapeHtml(t('systemControl.modalAiSummary', 'Сводка:'))}</strong> ${escapeHtml(report.summary)}</div>
+            <div class="mb-2"><strong class="text-warning">${escapeHtml(t('systemControl.modalAiRootCause', 'Причина / Анализ:'))}</strong> ${escapeHtml(report.root_cause)}</div>
+            <h6 class="small text-uppercase text-muted fw-bold mb-1">${escapeHtml(t('systemControl.modalAiRecs', 'Рекомендации:'))}</h6>
             <ul class="mb-0 ps-3">
               ${(report.recommendations || []).map(r => `<li>${escapeHtml(r)}</li>`).join('')}
             </ul>
           `;
         } catch (e) {
-          aiExplanation.innerHTML = `<div class="text-danger">Ошибка диагностики: ${escapeHtml(e.message)}</div>`;
+          aiExplanation.innerHTML = `<div class="text-danger">${escapeHtml(t('systemControl.errorDiagnose', 'Ошибка диагностики:'))} ${escapeHtml(e.message)}</div>`;
         }
       };
     }
@@ -637,7 +678,7 @@
   async function loadIncidents() {
     const listEl = document.getElementById('slc-incidents-list');
     if (!listEl) return;
-    listEl.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>Группировка инцидентов...</div>';
+    listEl.innerHTML = `<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>${escapeHtml(t('systemControl.groupingIncidents', 'Группировка инцидентов...'))}</div>`;
 
     try {
       const res = await fetch('/api/v1/system_logs/incidents?window_seconds=25.0');
@@ -646,31 +687,31 @@
       const incidents = data.incidents || [];
 
       if (incidents.length === 0) {
-        listEl.innerHTML = '<div class="slc-card p-3 text-center text-muted">Связанных цепочек инцидентов и каскадных сбоев не обнаружено.</div>';
+        listEl.innerHTML = `<div class="slc-card p-3 text-center text-muted">${escapeHtml(t('systemControl.noIncidents', 'Связанных цепочек инцидентов и каскадных сбоев не обнаружено.'))}</div>`;
         return;
       }
 
       listEl.innerHTML = incidents.map(inc => `
         <div class="slc-card mb-2 shadow-sm border-danger">
           <div class="slc-card-header text-danger d-flex justify-content-between align-items-center py-1.5 px-3">
-            <strong>${escapeHtml(inc.incident_title || 'Каскадный сбой')}</strong>
-            <span class="badge bg-danger">${inc.events_count} событий</span>
+            <strong>${escapeHtml(inc.incident_title || t('systemControl.cascadeFailure', 'Каскадный сбой'))}</strong>
+            <span class="badge bg-danger">${inc.events_count} ${escapeHtml(t('systemControl.eventsCountBadge', 'событий').replace('{{count}}', '').trim())}</span>
           </div>
           <div class="p-2.5">
             <p class="small mb-1">${escapeHtml(inc.summary || '')}</p>
-            <div class="small font-monospace text-muted">Временное окно: ${escapeHtml(inc.time_window || '')}</div>
+            <div class="small font-monospace text-muted">${escapeHtml(t('systemControl.timeWindow', 'Временное окно:'))} ${escapeHtml(inc.time_window || '')}</div>
           </div>
         </div>
       `).join('');
     } catch (e) {
-      listEl.innerHTML = `<div class="alert alert-danger">Ошибка загрузки инцидентов: ${escapeHtml(e.message)}</div>`;
+      listEl.innerHTML = `<div class="alert alert-danger">${escapeHtml(t('systemControl.errorIncidents', 'Ошибка загрузки инцидентов:'))} ${escapeHtml(e.message)}</div>`;
     }
   }
 
   async function loadTimeline() {
     const listEl = document.getElementById('slc-timeline-list');
     if (!listEl) return;
-    listEl.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>Формирование временной шкалы...</div>';
+    listEl.innerHTML = `<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div>${escapeHtml(t('systemControl.formingTimeline', 'Формирование временной шкалы...'))}</div>`;
 
     try {
       const res = await fetch('/api/v1/system_logs/timeline');
@@ -679,7 +720,7 @@
       const points = data.timeline || [];
 
       if (points.length === 0) {
-        listEl.innerHTML = '<div class="slc-card p-3 text-center text-muted">Данные временной шкалы отсутствуют.</div>';
+        listEl.innerHTML = `<div class="slc-card p-3 text-center text-muted">${escapeHtml(t('systemControl.noTimeline', 'Данные временной шкалы отсутствуют.'))}</div>`;
         return;
       }
 
@@ -693,7 +734,7 @@
         </div>
       `).join('');
     } catch (e) {
-      listEl.innerHTML = `<div class="alert alert-danger">Ошибка таймлайна: ${escapeHtml(e.message)}</div>`;
+      listEl.innerHTML = `<div class="alert alert-danger">${escapeHtml(t('systemControl.errorTimeline', 'Ошибка таймлайна:'))} ${escapeHtml(e.message)}</div>`;
     }
   }
 
@@ -751,7 +792,12 @@
    */
   function exportEvents(format = 'json') {
     if (!cachedEvents || cachedEvents.length === 0) {
-      if (window.toast) window.toast.warning('Экспорт событий', 'Нет загруженных событий для экспорта.');
+      if (window.toast) {
+        window.toast.warning(
+          t('systemControl.btnExport', 'Экспорт'),
+          t('systemControl.exportNoEvents', 'Нет загруженных событий для экспорта.')
+        );
+      }
       return;
     }
     let content = '';
@@ -768,11 +814,12 @@
       content = [headers.join(','), ...rows].join('\n');
     }
 
+    const cleanChan = currentChannel.replace(/^evt:/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
     const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `system_logs_${currentChannel}_${Date.now()}.${ext}`;
+    a.download = `system_logs_${cleanChan}_${Date.now()}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -781,6 +828,7 @@
    * Инициализация вкладки System Logs & Activity Center.
    */
   function initSystemControlTab() {
+    window.applyTranslations?.();
     fetchStatus();
     scanChannels();
     loadEvents();
@@ -788,6 +836,22 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-system-control_logs', loadEvents, 4000, { immediate: true });
     }
+
+    // Слушатель глобального изменения языка в приложении
+    window.addEventListener('languageChanged', () => {
+      window.applyTranslations?.();
+      fetchStatus();
+      if (cachedChannels.length > 0) {
+        renderChannelTree(cachedChannels);
+      }
+      if (cachedEvents.length > 0) {
+        renderEvents(cachedEvents);
+      }
+      if (currentMode === 'audit') loadAuditDigest();
+      else if (currentMode === 'incidents') loadIncidents();
+      else if (currentMode === 'timeline') loadTimeline();
+      else if (currentMode === 'activity') loadSccActivityLogs();
+    });
 
     if (isSCCInitialized) return;
     isSCCInitialized = true;
@@ -925,11 +989,15 @@
     if (askAiBtn) {
       askAiBtn.onclick = () => {
         const topEvents = cachedEvents.slice(0, 10).map(e => `[${e.level}] ${e.provider}: ${e.message}`).join('\n');
-        const prompt = `Проведи диагностику следующих системных логов Windows (Канал: ${currentChannel}):\n${topEvents}`;
+        const cleanChan = currentChannel.replace(/^evt:/i, '');
+        const prompt = `${t('systemControl.headerTitle', 'Windows System Logs')} (${cleanChan}):\n${topEvents}`;
         if (window.sendChatMessage) {
           window.sendChatMessage(prompt);
         } else if (window.toast) {
-          window.toast.info('ИИ Анализ', 'Запрос направлен в чат-ассистент.');
+          window.toast.info(
+            t('systemControl.aiToastTitle', 'ИИ Анализ'),
+            t('systemControl.aiToastBody', 'Запрос направлен в чат-ассистент.')
+          );
         }
       };
     }

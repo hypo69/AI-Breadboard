@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 12:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,6 +26,37 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+
+class DefenderTaskStatus(str, Enum):
+    """Статус выполнения фоновой задачи Defender."""
+    PENDING = 'pending'
+    RUNNING = 'running'
+    COMPLETED = 'completed'
+    FAILED = 'failed'
+    CANCELLED = 'cancelled'
+
+class DefenderTaskType(str, Enum):
+    """Тип фоновой операции Defender."""
+    QUICK_SCAN = 'quick_scan'
+    FULL_SCAN = 'full_scan'
+    CUSTOM_SCAN = 'custom_scan'
+    OFFLINE_SCAN = 'offline_scan'
+    SIGNATURE_UPDATE = 'signature_update'
+
+class DefenderTaskInfo(BaseModel):
+    """Информация о фоновой задаче сканирования или обновления."""
+    task_id: str = Field(..., description='Уникальный идентификатор задачи')
+    task_type: DefenderTaskType = Field(..., description='Тип выполняемой задачи')
+    status: DefenderTaskStatus = Field(DefenderTaskStatus.RUNNING, description='Текущий статус выполнения')
+    message: str = Field('', description='Информационное сообщение о задаче')
+    started_at: str = Field(default_factory=lambda: datetime.now().strftime('%Y-%m-%d %H:%M:%S'), description='Время старта')
+    completed_at: Optional[str] = Field(None, description='Время завершения')
+    duration_seconds: Optional[float] = Field(None, description='Длительность выполнения в секундах')
+    success: Optional[bool] = Field(None, description='Результат выполнения')
+    output: str = Field('', description='Консольный вывод MpCmdRun/PowerShell')
+    error: Optional[str] = Field(None, description='Текст ошибки при сбое')
+    target_path: Optional[str] = Field(None, description='Целевой путь для custom-сканирования')
+    windows_event: Optional[DefenderEventRecord] = Field(None, description='Связанное событие из журнала Windows Event Log')
 
 class ProtectionState(str, Enum):
     """Состояние компонента защиты."""

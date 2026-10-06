@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/process_leaks_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-06 12:19:00
  * =============================================================================
  */
 
@@ -24,6 +24,7 @@
   let rawLeakProcesses = [];
   let leakFilter = 'all';
   let autoRefreshTimer = null;
+  const POLL_ID = 'process_leaks';
 
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -125,31 +126,6 @@
     }).join('');
   }
 
-  function bindEvents() {
-    const leakFilters = document.getElementById('diag-leaks-filter-group');
-    if (leakFilters) {
-      leakFilters.querySelectorAll('button').forEach(btn => {
-        btn.onclick = () => {
-          leakFilters.querySelectorAll('button').forEach(b => {
-            b.classList.remove('active', 'btn-info', 'btn-danger');
-            b.classList.add('btn-outline-secondary');
-          });
-          const f = btn.getAttribute('data-filter') || 'all';
-          btn.classList.add('active', f === 'suspicious' ? 'btn-danger' : 'btn-info');
-          btn.classList.remove('btn-outline-secondary');
-          leakFilter = f;
-          renderProcessLeaksTable(rawLeakProcesses);
-        };
-      });
-    }
-
-    const leakSearch = document.getElementById('diag-leaks-search');
-    if (leakSearch) {
-      leakSearch.oninput = () => renderProcessLeaksTable(rawLeakProcesses);
-    }
-
-  const POLL_ID = 'process_leaks';
-
   function getFrequency() {
     try {
       const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
@@ -201,6 +177,28 @@
   }
 
   function bindEvents() {
+    const leakFilters = document.getElementById('diag-leaks-filter-group');
+    if (leakFilters) {
+      leakFilters.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+          leakFilters.querySelectorAll('button').forEach(b => {
+            b.classList.remove('active', 'btn-info', 'btn-danger');
+            b.classList.add('btn-outline-secondary');
+          });
+          const f = btn.getAttribute('data-filter') || 'all';
+          btn.classList.add('active', f === 'suspicious' ? 'btn-danger' : 'btn-info');
+          btn.classList.remove('btn-outline-secondary');
+          leakFilter = f;
+          renderProcessLeaksTable(rawLeakProcesses);
+        };
+      });
+    }
+
+    const leakSearch = document.getElementById('diag-leaks-search');
+    if (leakSearch) {
+      leakSearch.oninput = () => renderProcessLeaksTable(rawLeakProcesses);
+    }
+
     const btnLeaksRefresh = document.getElementById('btn-diag-leaks-refresh');
     if (btnLeaksRefresh) {
       btnLeaksRefresh.onclick = () => fetchProcessLeaks();

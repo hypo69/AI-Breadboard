@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.startup.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 14:05:00
 # =============================================================================
 
 """Тесты FastAPI роутера Startup Auditor."""
@@ -76,6 +76,38 @@ def test_audit_endpoint() -> None:
     assert 'summary' in data
     assert 'entries' in data
     assert 'recommendations' in data
+
+def test_refresh_endpoint() -> None:
+    """Проверка эндпоинта /api/v1/startup-auditor/refresh (синхронизация с телеметрией)."""
+    client = get_test_client()
+    response = client.post('/api/v1/startup-auditor/refresh')
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert 'archive_id' in data
+    assert 'report' in data
+    assert 'changes_count' in data
+    assert isinstance(data['changes'], list)
+
+def test_changes_endpoint() -> None:
+    """Проверка эндпоинта /api/v1/startup-auditor/changes."""
+    client = get_test_client()
+    response = client.get('/api/v1/startup-auditor/changes?limit=10')
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert 'changes' in data
+    assert isinstance(data['changes'], list)
+
+def test_history_endpoint() -> None:
+    """Проверка эндпоинта /api/v1/startup-auditor/history."""
+    client = get_test_client()
+    response = client.get('/api/v1/startup-auditor/history?limit=10')
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert 'history' in data
+    assert isinstance(data['history'], list)
 
 def test_export_endpoint() -> None:
     """Проверка экспорта в форматах json и csv."""

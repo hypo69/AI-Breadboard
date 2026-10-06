@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from logger import logger
-from apps.windows.startup.core.models import LocationInfo, StartupEntry, StartupLocationType
+from apps.windows.modules.startup.core.models import LocationInfo, StartupEntry, StartupLocationType
 try:
     import winreg
     HAS_WINREG = True

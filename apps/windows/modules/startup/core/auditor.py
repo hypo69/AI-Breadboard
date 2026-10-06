@@ -28,8 +28,8 @@ import time
 from datetime import datetime
 from typing import List, Tuple
 from logger import logger
-from apps.windows.startup.core.models import AuditReport, AuditSummary, ItemCategory, RiskLevel, StartupEntry, StartupLocationType
-from apps.windows.startup.core.scanner import StartupScanner
+from apps.windows.modules.startup.core.models import AuditReport, AuditSummary, ItemCategory, RiskLevel, StartupEntry, StartupLocationType
+from apps.windows.modules.startup.core.scanner import StartupScanner
 
 class StartupAuditor:
     """Аудитор безопасности и чистоты автозапуска Windows."""

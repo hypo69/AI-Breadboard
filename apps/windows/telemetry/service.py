@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 03:15:00
+# Updated: 2026-10-06 13:59:00
 # =============================================================================
 
 from __future__ import annotations
@@ -205,6 +205,14 @@ class TelemetryLoggerService:
             if self.w64_etw_collector:
                 self.w64_etw_collector.start()
 
+        # При каждом старте телеметрии фиксируем снимок автозапуска в хранилище
+        try:
+            startup_entry = self.collector.archive_startup_state(auto_diff=True)
+            if startup_entry:
+                self.storage.save_startup_archive(startup_entry)
+        except Exception as st_init_ex:
+            logger.debug(f'Фиксация снимка автозапуска при старте телеметрии: {st_init_ex}')
+
         self._thread = threading.Thread(target=self._worker_loop, name='TelemetryLoggerWorker', daemon=True)
         self._thread.start()
         logger.info(f'Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, аудит железа: {self.hardware_audit_interval_sec}с, W64: {self.enable_w64}, БД: {self.storage.db_path})')
@@ -290,6 +298,12 @@ class TelemetryLoggerService:
                             self.storage.save_hardware_archive(archive_entry)
                     except Exception as hw_ex:
                         logger.debug(f'Ошибка при периодическом аудите железа: {hw_ex}')
+                    try:
+                        startup_archive = self.collector.archive_startup_state(auto_diff=True)
+                        if startup_archive:
+                            self.storage.save_startup_archive(startup_archive)
+                    except Exception as st_ex:
+                        logger.debug(f'Ошибка при периодическом аудите автозапуска: {st_ex}')
                     try:
                         self.collector.get_extended_system_audit()
                     except Exception as ext_ex:

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 05:32:00
+# Updated: 2026-10-06 13:56:00
 # =============================================================================
 
 from __future__ import annotations
@@ -868,8 +868,45 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
         );
     ''')
 
+    # 41. Архивные снимки автозапуска Windows (startup_audit_archives)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS startup_audit_archives (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            archive_id TEXT UNIQUE NOT NULL,
+            timestamp TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            total_entries INTEGER DEFAULT 0,
+            active_entries INTEGER DEFAULT 0,
+            disabled_entries INTEGER DEFAULT 0,
+            broken_entries INTEGER DEFAULT 0,
+            health_score INTEGER DEFAULT 100,
+            changes_count INTEGER DEFAULT 0,
+            raw_json TEXT
+        );
+    ''')
+
+    # 42. Отличия и изменения в автозапуске между снимками (startup_changes)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS startup_changes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            archive_id TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            change_type TEXT NOT NULL,
+            entry_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            previous_value TEXT,
+            current_value TEXT
+        );
+    ''')
+
     # Индексы для ускорения выборок
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_created_at ON system_snapshots(created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_archives_created_at ON startup_audit_archives(created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_archives_archive_id ON startup_audit_archives(archive_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_changes_created_at ON startup_changes(created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_changes_archive_id ON startup_changes(archive_id);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_timestamp ON system_snapshots(timestamp);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_created_host ON system_snapshots(created_at, hostname);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_polls_sensor_time ON sensor_polls(sensor_id, created_at);')

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 08:25:45
+ * Updated: 2026-10-06 12:54:00
  * =============================================================================
  */
 
@@ -180,6 +180,7 @@ export async function cachedApiFetch(url, options = {}, cacheOptions = {}) {
   const currentTab = window.location.hash;
   const NO_CACHE_TABS = [
     '#tab-hardware-load-inspector',
+    '#tab-processes-load-inspector',
     '#tab-about-system',
   ];
   if (NO_CACHE_TABS.some(prefix => currentTab.startsWith(prefix))) {

@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:56:00
+# Updated: 2026-10-06 13:57:00
 # =============================================================================
 
 from __future__ import annotations
@@ -36,6 +36,7 @@ from ..models import (
     HardwareArchiveEntry,
     ProcessLifecycleEvent,
     ProcessProvenanceInfo,
+    StartupArchiveEntry,
     SystemMetricRollup,
     SystemSnapshot,
     TelemetryIncident,
@@ -107,6 +108,10 @@ class TelemetryWriter:
 
                 elif rec_type == 'hardware_archive':
                     self.insert_hardware_archive_row(cursor, item.get('data', {}))
+                    saved_total += 1
+
+                elif rec_type == 'startup_archive':
+                    self.insert_startup_archive_row(cursor, item.get('data', {}))
                     saved_total += 1
 
                 elif rec_type == 'event':
@@ -1009,6 +1014,84 @@ class TelemetryWriter:
                 problem_devices_count, outdated_drivers_count, changes_count, raw_json
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (archive_id, timestamp, now_epoch, devices_count, prob_count, outdated_count, changes_count, raw_json))
+        return cursor.lastrowid or 0
+
+    def insert_startup_archive_row(self, cursor: sqlite3.Cursor, data: Any) -> int:
+        """Сохранение снимка аудита автозапуска и зафиксированных изменений в БД."""
+        now_dt = datetime.now(timezone.utc)
+        if isinstance(data, StartupArchiveEntry):
+            raw_json = data.model_dump_json()
+            archive_id = data.archive_id
+            timestamp = data.timestamp
+            total_entries = data.total_entries
+            health_score = data.health_score
+            changes_count = data.changes_count
+            report = data.report
+            changes = data.changes
+            if hasattr(report, 'summary') and report.summary:
+                active_entries = report.summary.active_entries
+                disabled_entries = report.summary.disabled_entries
+                broken_entries = report.summary.broken_entries
+            else:
+                active_entries = 0
+                disabled_entries = 0
+                broken_entries = 0
+        else:
+            raw_json = json.dumps(data, ensure_ascii=False, default=str)
+            archive_id = data.get('archive_id', f'startup_{int(now_dt.timestamp())}')
+            timestamp = data.get('timestamp', now_dt.isoformat())
+            total_entries = data.get('total_entries', 0)
+            health_score = data.get('health_score', 100)
+            changes_count = data.get('changes_count', 0)
+            report = data.get('report', {})
+            summary = report.get('summary', {}) if isinstance(report, dict) else getattr(report, 'summary', None)
+            if isinstance(summary, dict):
+                active_entries = summary.get('active_entries', 0)
+                disabled_entries = summary.get('disabled_entries', 0)
+                broken_entries = summary.get('broken_entries', 0)
+            else:
+                active_entries = getattr(summary, 'active_entries', 0) if summary else 0
+                disabled_entries = getattr(summary, 'disabled_entries', 0) if summary else 0
+                broken_entries = getattr(summary, 'broken_entries', 0) if summary else 0
+            changes = data.get('changes', [])
+
+        try:
+            now_epoch = datetime.fromisoformat(timestamp).timestamp()
+        except Exception:
+            now_epoch = now_dt.timestamp()
+
+        cursor.execute('''
+            INSERT OR REPLACE INTO startup_audit_archives (
+                archive_id, timestamp, created_at, total_entries,
+                active_entries, disabled_entries, broken_entries,
+                health_score, changes_count, raw_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            archive_id, timestamp, now_epoch, total_entries,
+            active_entries, disabled_entries, broken_entries,
+            health_score, changes_count, raw_json
+        ))
+
+        if changes:
+            for ch in changes:
+                ch_dict = ch.model_dump(mode='json') if hasattr(ch, 'model_dump') else ch
+                cursor.execute('''
+                    INSERT INTO startup_changes (
+                        archive_id, timestamp, created_at, change_type,
+                        entry_id, name, description, previous_value, current_value
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    archive_id,
+                    ch_dict.get('timestamp', timestamp),
+                    now_epoch,
+                    ch_dict.get('change_type', 'modified'),
+                    ch_dict.get('entry_id', ''),
+                    ch_dict.get('name', ''),
+                    ch_dict.get('description', ''),
+                    json.dumps(ch_dict.get('previous_value'), ensure_ascii=False) if ch_dict.get('previous_value') is not None else None,
+                    json.dumps(ch_dict.get('current_value'), ensure_ascii=False) if ch_dict.get('current_value') is not None else None,
+                ))
+
         return cursor.lastrowid or 0
 
     def upsert_device_inventory(

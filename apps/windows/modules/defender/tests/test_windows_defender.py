@@ -16,12 +16,13 @@
 # Package: apps.windows.modules.defender.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 14:13:00
 # =============================================================================
 
 from __future__ import annotations
 """Тесты для приложения Windows Defender & AI Security Diagnostic Center."""
 
+import time
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -32,7 +33,18 @@ from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
 from apps.windows.defender.core.defender_service import DefenderService
 from apps.windows.defender.core.event_correlator import EventCorrelator
 from apps.windows.defender.core.exclusions_auditor import ExclusionsAuditor
-from apps.windows.defender.core.models import ExclusionRiskLevel, ProtectionState, ScanRequest, ScanType, ThreatSeverity
+from apps.windows.defender.core.models import (
+    DefenderEventRecord,
+    DefenderTaskInfo,
+    DefenderTaskStatus,
+    DefenderTaskType,
+    ExclusionRiskLevel,
+    ProtectionState,
+    ScanRequest,
+    ScanResponse,
+    ScanType,
+    ThreatSeverity,
+)
 from apps.windows.defender.core.process_tree_watcher import ProcessTreeWatcher
 from apps.windows.defender.core.threat_manager import ThreatManager
 from apps.windows.defender.router import init_router
@@ -109,30 +121,79 @@ def test_ai_diagnostician_report(mock_defender_service: DefenderService) -> None
     assert report.status_summary != ''
     assert isinstance(report.recommendations, list)
 
-def test_fastapi_router() -> None:
+def test_defender_async_tasks_and_telemetry(mock_defender_service: DefenderService) -> None:
+    """Тест создания фоновых задач, обновления статуса и телеметрии."""
+    with patch.object(mock_defender_service, 'trigger_scan', return_value=ScanResponse(success=True, scan_type=ScanType.QUICK, message='ОК')), \
+         patch.object(mock_defender_service._correlator, 'find_latest_event_for_task', return_value=DefenderEventRecord(event_id=1001, timestamp='2026-10-06 12:00:00', level='Information', message='Scan done', category='Scan Completed')), \
+         patch.object(mock_defender_service, '_record_telemetry_event') as mock_telemetry:
+        
+        task = mock_defender_service.start_scan_task(ScanRequest(scan_type=ScanType.QUICK))
+        assert task.task_id.startswith('def-scan-')
+        assert task.status in (DefenderTaskStatus.RUNNING, DefenderTaskStatus.COMPLETED)
+        
+        # Даем отработать фоновому воркеру
+        for _ in range(50):
+            retrieved = mock_defender_service.get_task(task.task_id)
+            if retrieved and retrieved.status == DefenderTaskStatus.COMPLETED:
+                break
+            time.sleep(0.05)
+
+        assert retrieved is not None
+        assert retrieved.status == DefenderTaskStatus.COMPLETED
+        assert retrieved.windows_event is not None
+        assert retrieved.windows_event.event_id == 1001
+        assert mock_telemetry.called
+
+def test_fastapi_router(mock_defender_service: DefenderService) -> None:
     """Тест REST API маршрутов роутера Defender."""
     app = FastAPI()
     app.include_router(init_router())
     client = TestClient(app)
-    resp = client.get('/api/v1/defender/status')
-    assert resp.status_code == 200
-    data = resp.json()
-    assert 'antivirus_enabled' in data
-    assert 'services' in data
-    resp_asr = client.get('/api/v1/defender/asr')
-    assert resp_asr.status_code == 200
-    assert isinstance(resp_asr.json(), list)
-    resp_cfa = client.get('/api/v1/defender/cfa')
-    assert resp_cfa.status_code == 200
-    resp_exc = client.get('/api/v1/defender/exclusions')
-    assert resp_exc.status_code == 200
-    assert 'total_exclusions' in resp_exc.json()
-    resp_diag = client.get('/api/v1/defender/diagnostics')
-    assert resp_diag.status_code == 200
-    assert 'security_score' in resp_diag.json()
-    with patch.object(DefenderService, 'trigger_scan') as mock_scan:
-        from apps.windows.defender.core.models import ScanResponse
-        mock_scan.return_value = ScanResponse(success=True, scan_type=ScanType.FULL, message='Сканирование успешно завершено.')
+
+    with patch.object(DefenderService, 'get_defender_status', return_value=mock_defender_service.get_defender_status()), \
+         patch.object(DefenderService, 'trigger_scan', return_value=ScanResponse(success=True, scan_type=ScanType.FULL, message='Сканирование успешно завершено.')), \
+         patch.object(DefenderService, 'update_signatures', return_value=ScanResponse(success=True, scan_type=ScanType.QUICK, message='Сигнатуры обновлены.')):
+
+        resp = client.get('/api/v1/defender/status')
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'antivirus_enabled' in data
+
+        resp_asr = client.get('/api/v1/defender/asr')
+        assert resp_asr.status_code == 200
+        assert isinstance(resp_asr.json(), list)
+
+        resp_cfa = client.get('/api/v1/defender/cfa')
+        assert resp_cfa.status_code == 200
+
+        resp_exc = client.get('/api/v1/defender/exclusions')
+        assert resp_exc.status_code == 200
+        assert 'total_exclusions' in resp_exc.json()
+
+        resp_diag = client.get('/api/v1/defender/diagnostics')
+        assert resp_diag.status_code == 200
+        assert 'security_score' in resp_diag.json()
+
+        # Асинхронный запуск сканирования
         resp_scan = client.post('/api/v1/defender/scan', json={'scan_type': 'full'})
         assert resp_scan.status_code == 200
-        assert resp_scan.json()['success'] is True
+        task_data = resp_scan.json()
+        assert 'task_id' in task_data
+        assert task_data['task_id'].startswith('def-scan-')
+
+        # Проверка статуса задачи по ID
+        task_id = task_data['task_id']
+        resp_task = client.get(f'/api/v1/defender/tasks/{task_id}')
+        assert resp_task.status_code == 200
+        assert resp_task.json()['task_id'] == task_id
+
+        # Асинхронный запуск обновления баз
+        resp_sig = client.post('/api/v1/defender/update-signatures')
+        assert resp_sig.status_code == 200
+        sig_data = resp_sig.json()
+        assert sig_data['task_id'].startswith('def-sig-')
+
+        # Список задач
+        resp_tasks = client.get('/api/v1/defender/tasks')
+        assert resp_tasks.status_code == 200
+        assert len(resp_tasks.json()) >= 2

@@ -14,7 +14,7 @@
  * Package: src/api/webgui/process_leaks_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-06 12:19:00
  * =============================================================================
  */
 
@@ -24,6 +24,7 @@
   let rawLeakProcesses = [];
   let leakFilter = 'all';
   let autoRefreshTimer = null;
+  const POLL_ID = 'process_leaks';
 
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -59,7 +60,19 @@
 
       if (data.top_handle_hogs && data.top_handle_hogs.length > 0) {
         const topH = data.top_handle_hogs[0];
-        setText('diag-leaks-peak-handlesi18n.t('auto__toph_handles_count_tolocalestring_settext__93ec28')diag-leaks-peak-handles-proci18n.t('auto__toph_name_pid_toph_pid_if_data_top_gdi_hogs_data_top_gdi_hogs_length_0_const_topg_data_top_gdi_hogs_0_settext__f9eaa6')diag-leaks-peak-gdii18n.t('auto__topg_gdi_objects_tolocalestring_settext__5c9497')diag-leaks-peak-gdi-proci18n.t('auto__topg_name_pid_topg_pid_rawleakprocesses_data_all_processes_renderprocessleakstable_rawleakprocesses_catch_err_console_warn__0df886')[ProcessLeaksTab] fetchProcessLeaks error:', err);
+        setText('diag-leaks-peak-handles', `${topH.handles_count.toLocaleString()} шт.`);
+        setText('diag-leaks-peak-handles-proc', `Процесс: ${topH.name} (PID ${topH.pid})`);
+      }
+      if (data.top_gdi_hogs && data.top_gdi_hogs.length > 0) {
+        const topG = data.top_gdi_hogs[0];
+        setText('diag-leaks-peak-gdi', `${topG.gdi_objects.toLocaleString()} шт.`);
+        setText('diag-leaks-peak-gdi-proc', `Процесс: ${topG.name} (PID ${topG.pid})`);
+      }
+
+      rawLeakProcesses = data.all_processes || [];
+      renderProcessLeaksTable(rawLeakProcesses);
+    } catch (err) {
+      console.warn('[ProcessLeaksTab] fetchProcessLeaks error:', err);
     }
   }
 
@@ -113,6 +126,56 @@
     }).join('');
   }
 
+  function getFrequency() {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${POLL_ID}`);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'manual';
+  }
+
+  function setFrequency(freq) {
+    try {
+      localStorage.setItem(`poll_freq_${POLL_ID}`, freq);
+    } catch (_) {}
+    applyPoller(freq, false);
+  }
+
+  function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(`tab-process-leaks_${POLL_ID}`);
+    }
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+  }
+
+  function applyPoller(freq, runInitial = false) {
+    stopPolling();
+    if (freq === 'start' || freq === 'manual') {
+      if (runInitial) fetchProcessLeaks();
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-process-leaks_${POLL_ID}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-process-leaks', fetchProcessLeaks, intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) fetchProcessLeaks();
+      autoRefreshTimer = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-process-leaks') : true) {
+          fetchProcessLeaks();
+        }
+      }, intervalMs);
+    }
+  }
+
   function bindEvents() {
     const leakFilters = document.getElementById('diag-leaks-filter-group');
     if (leakFilters) {
@@ -141,14 +204,17 @@
       btnLeaksRefresh.onclick = () => fetchProcessLeaks();
     }
 
-    const autoSwitch = document.getElementById('diag-leaks-auto-refresh');
-    if (autoSwitch) {
-      autoSwitch.onchange = (e) => {
-        if (e.target.checked) {
-          autoRefreshTimer = setInterval(fetchProcessLeaks, 5000);
-        } else if (autoRefreshTimer) {
-          clearInterval(autoRefreshTimer);
-          autoRefreshTimer = null;
+    const select = document.getElementById('diag-leaks-poll-freq');
+    if (select) {
+      select.onchange = (e) => {
+        const newFreq = e.target.value;
+        setFrequency(newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
+          fetchProcessLeaks();
+        }
+        if (window.showToast) {
+          const label = select.options[select.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса утечек: ${label}`, 'info');
         }
       };
     }
@@ -156,7 +222,10 @@
 
   async function init() {
     bindEvents();
-    await fetchProcessLeaks();
+    const currentFreq = getFrequency();
+    const select = document.getElementById('diag-leaks-poll-freq');
+    if (select) select.value = currentFreq;
+    applyPoller(currentFreq, true);
   }
 
   if (document.readyState === 'loading') {

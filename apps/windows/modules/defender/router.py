@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 12:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -31,7 +31,20 @@ from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
 from apps.windows.defender.core.defender_service import DefenderService
 from apps.windows.defender.core.event_correlator import EventCorrelator
 from apps.windows.defender.core.exclusions_auditor import ExclusionsAuditor
-from apps.windows.defender.core.models import ASRRuleInfo, ControlledFolderAccessInfo, DefenderDiagnosticReport, DefenderEventRecord, DefenderStatus, ExclusionsAuditReport, ScanRequest, ScanResponse, ScanType, SuspiciousProcessChain, ThreatRecord
+from apps.windows.defender.core.models import (
+    ASRRuleInfo,
+    ControlledFolderAccessInfo,
+    DefenderDiagnosticReport,
+    DefenderEventRecord,
+    DefenderStatus,
+    DefenderTaskInfo,
+    ExclusionsAuditReport,
+    ScanRequest,
+    ScanResponse,
+    ScanType,
+    SuspiciousProcessChain,
+    ThreatRecord,
+)
 from apps.windows.defender.core.process_tree_watcher import ProcessTreeWatcher
 from apps.windows.defender.core.threat_manager import ThreatManager
 
@@ -42,14 +55,22 @@ def init_router() -> APIRouter:
         APIRouter: Сконфигурированный роутер приложения.
     """
     router = APIRouter(prefix='/api/v1/defender', tags=['Windows Defender Security'])
-    defender_svc = DefenderService()
+    event_corr = EventCorrelator()
+    defender_svc = DefenderService(event_correlator=event_corr)
     asr_mgr = ASRManager(defender_svc)
     cfa_mgr = ControlledFolderAccessManager(defender_svc)
     exclusions_aud = ExclusionsAuditor(defender_svc)
     threat_mgr = ThreatManager(defender_svc)
-    event_corr = EventCorrelator()
     process_watch = ProcessTreeWatcher()
-    ai_diag = AIDiagnostician(defender_service=defender_svc, asr_manager=asr_mgr, cfa_manager=cfa_mgr, exclusions_auditor=exclusions_aud, threat_manager=threat_mgr, event_correlator=event_corr, process_watcher=process_watch)
+    ai_diag = AIDiagnostician(
+        defender_service=defender_svc,
+        asr_manager=asr_mgr,
+        cfa_manager=cfa_mgr,
+        exclusions_auditor=exclusions_aud,
+        threat_manager=threat_mgr,
+        event_correlator=event_corr,
+        process_watcher=process_watch
+    )
 
     @router.get('/status', response_model=DefenderStatus, summary='Получить статус Microsoft Defender')
     async def get_status() -> DefenderStatus:
@@ -60,23 +81,36 @@ def init_router() -> APIRouter:
             logger.error(f'Ошибка получения статуса Defender: {e}')
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Не удалось получить статус Defender: {e}')
 
-    @router.post('/scan', response_model=ScanResponse, summary='Запустить сканирование Defender')
-    async def run_scan(req: ScanRequest) -> ScanResponse:
-        """Запускает быстрое, полное или выборочное сканирование файловой системы через MpCmdRun / PowerShell."""
+    @router.post('/scan', response_model=DefenderTaskInfo, summary='Запустить асинхронное сканирование Defender')
+    async def run_scan(req: ScanRequest) -> DefenderTaskInfo:
+        """Инициирует быстрое, полное или выборочное сканирование файловой системы в фоновом режиме."""
         try:
-            return defender_svc.trigger_scan(req)
+            return defender_svc.start_scan_task(req)
         except Exception as e:
             logger.error(f'Ошибка запуска сканирования: {e}')
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Ошибка сканирования: {e}')
 
-    @router.post('/update-signatures', response_model=ScanResponse, summary='Обновить антивирусные базы')
-    async def update_signatures() -> ScanResponse:
-        """Инициирует загрузку и применение свежих баз сигнатур Defender."""
+    @router.post('/update-signatures', response_model=DefenderTaskInfo, summary='Обновить антивирусные базы')
+    async def update_signatures() -> DefenderTaskInfo:
+        """Инициирует фоновую загрузку и применение свежих баз сигнатур Defender."""
         try:
-            return defender_svc.update_signatures()
+            return defender_svc.start_update_task()
         except Exception as e:
             logger.error(f'Ошибка обновления сигнатур: {e}')
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Ошибка обновления баз: {e}')
+
+    @router.get('/tasks/{task_id}', response_model=DefenderTaskInfo, summary='Получить статус фоновой задачи Defender')
+    async def get_task_status(task_id: str) -> DefenderTaskInfo:
+        """Возвращает текущий статус, длительность, вывод и результат выполнения фоновой задачи Defender."""
+        task = defender_svc.get_task(task_id)
+        if not task:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Задача {task_id} не найдена')
+        return task
+
+    @router.get('/tasks', response_model=List[DefenderTaskInfo], summary='Список последних фоновых задач Defender')
+    async def list_tasks(limit: int = Query(20, ge=1, le=100)) -> List[DefenderTaskInfo]:
+        """Возвращает историю запущенных фоновых задач сканирования и обновления."""
+        return defender_svc.list_tasks(limit=limit)
 
     @router.get('/asr', response_model=List[ASRRuleInfo], summary='Аудит правил Attack Surface Reduction')
     async def get_asr_rules() -> List[ASRRuleInfo]:

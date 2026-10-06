@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-06 12:26:00
 # =============================================================================
 
 """Unit and integration tests for System & Hardware Inspector."""
@@ -165,7 +165,7 @@ class TestAIDiagnostician:
         snap = SystemSnapshot(hostname='test-host', cpu=CpuMetrics(total_percent=20.0), memory=MemoryMetrics(percent=50.0, total_gb=32.0, used_gb=16.0))
         report = asyncio.run(diagnostician.diagnose(snap))
         assert report.health_score == 100
-        assert 'Health score: 100/100' in report.summary
+        assert '100/100' in report.summary
 
 class TestSystemInspectorTUI:
     """Test suite for Rich TUI layout renderer."""

@@ -27,8 +27,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from apps.windows.startup.core.auditor import StartupAuditor
-from apps.windows.startup.core.models import AuditReport, RiskLevel, StartupEntry
+from apps.windows.modules.startup.core.auditor import StartupAuditor
+from apps.windows.modules.startup.core.models import AuditReport, RiskLevel, StartupEntry
 
 class StartupAuditorTUI:
     """Консольный рендерер аудита автозапуска."""

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 12:00:00
+# Updated: 2026-10-06 13:55:00
 # =============================================================================
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
+from apps.windows.modules.startup.core.models import StartupArchiveEntry, StartupChangeItem
 
 
 class CpuInventoryInfo(BaseModel):
@@ -927,7 +928,6 @@ class StartupTelemetrySummary(BaseModel):
     scheduled_tasks_count: int = Field(default=0, description='Задачи планировщика со стартом при входе')
     startup_services_count: int = Field(default=0, description='Службы Windows с автозапуском')
     entries: List[Dict[str, Any]] = Field(default_factory=list, description='Список записей автозапуска с параметрами')
-
 
 class VssTelemetrySummary(BaseModel):
     """Сводка состояния теневых копий томов VSS и точек восстановления."""

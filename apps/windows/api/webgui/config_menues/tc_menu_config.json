@@ -20,11 +20,20 @@
         "visible": true
       },
       {
+        "id": "processes_load_inspector",
+        "label": "Активность процессов",
+        "icon": "bi-activity",
+        "tab": "tab-processes-load-inspector",
+        "order": 3,
+        "visible": true
+      },
+      {
         "id": "system_control_center",
-        "label": "System Logs & Activity",
+        "label": "Журналы и активность",
+        "i18n": "tabs.systemControl",
         "icon": "bi-journal-text",
         "tab": "tab-system-control",
-        "order": 3,
+        "order": 4,
         "visible": true
       },
       {
@@ -32,7 +41,7 @@
         "label": "Defender Security",
         "icon": "bi-shield-lock",
         "tab": "tab-defender",
-        "order": 4,
+        "order": 5,
         "visible": true
       },
       {
@@ -40,7 +49,7 @@
         "label": "Windows Sysadmin",
         "icon": "bi-server",
         "tab": "tab-windows-admin",
-        "order": 5,
+        "order": 6,
         "visible": true
       },
       {
@@ -48,7 +57,7 @@
         "label": "История и графики",
         "icon": "bi-graph-up",
         "tab": "tab-telemetry-history",
-        "order": 6,
+        "order": 7,
         "visible": true
       },
       {
@@ -57,7 +66,16 @@
         "i18n": "tabs.scenarios",
         "icon": "💬",
         "tab": "tab-scenarios",
-        "order": 7,
+        "order": 8,
+        "visible": true
+      },
+      {
+        "id": "system32_commands",
+        "label": "Команды System32",
+        "i18n": "tabs.system32Commands",
+        "icon": "🛠️",
+        "tab": "tab-system32-commands",
+        "order": 9,
         "visible": true
       }
     ],

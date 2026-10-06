@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:58:00
+# Updated: 2026-10-06 13:58:00
 # =============================================================================
 
 from __future__ import annotations
@@ -42,6 +42,7 @@ from ..models import (
     HardwareArchiveEntry,
     ProcessLifecycleEvent,
     ProcessProvenanceInfo,
+    StartupArchiveEntry,
     SystemMetricRollup,
     SystemSnapshot,
     TelemetryIncident,
@@ -313,6 +314,14 @@ class TelemetryStorage:
         self._buffer.enqueue({'type': 'hardware_archive', 'data': entry_dict})
         return 1
 
+    def save_startup_archive(self, archive_entry: StartupArchiveEntry) -> int:
+        """Сохраняет снимок аудита автозапуска и зафиксированные изменения в БД."""
+        entry_dict = archive_entry if isinstance(archive_entry, dict) else (archive_entry.model_dump() if hasattr(archive_entry, 'model_dump') else (vars(archive_entry) if hasattr(archive_entry, '__dict__') else archive_entry))
+        if self._buffer.buffer_mode == 'direct':
+            return self._writer.batch_insert_records([{'type': 'startup_archive', 'data': entry_dict}])
+        self._buffer.enqueue({'type': 'startup_archive', 'data': entry_dict})
+        return 1
+
     def save_app_poll(self, app: str, poll_type: str, metric_name: str, value: Any, unit: str = '', status: str = 'OK', details: Any = '', timestamp: Optional[str] = None) -> int:
         rec = {'type': 'app_poll', 'app': app, 'poll_type': poll_type, 'metric_name': metric_name, 'value': value, 'unit': unit, 'status': status, 'details': details, 'timestamp': timestamp}
         if self._buffer.buffer_mode == 'direct':
@@ -552,6 +561,15 @@ class TelemetryStorage:
 
     def get_latest_hardware_audit(self) -> Optional[Dict[str, Any]]:
         return self._reader.get_latest_hardware_audit()
+
+    def get_startup_archives(self, limit: int = 50) -> List[Dict[str, Any]]:
+        return self._reader.get_startup_archives(limit=limit)
+
+    def get_latest_startup_archive(self) -> Optional[Dict[str, Any]]:
+        return self._reader.get_latest_startup_archive()
+
+    def get_startup_changes(self, limit: int = 100, archive_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        return self._reader.get_startup_changes(limit=limit, archive_id=archive_id)
 
     def get_telemetry_rollups(self, level: str = 'hourly', sensor_id: Optional[str] = None, start_epoch: Optional[float] = None, end_epoch: Optional[float] = None, limit: int = 100) -> List[Dict[str, Any]]:
         return self._reader.get_telemetry_rollups(level=level, sensor_id=sensor_id, start_epoch=start_epoch, end_epoch=end_epoch, limit=limit)

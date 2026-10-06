@@ -3,18 +3,20 @@
  * Process Name: Windows Startup Auditor Tab - Main Script
  * =============================================================================
  * Description:
- *   Клиентский скрипт управления интерфейсом модуля main.
+ *   Клиентский скрипт управления интерфейсом модуля main (Startup Auditor).
+ *   Обеспечивает загрузку, фильтрацию, переключение состояния, AI-диагностику,
+ *   асинхронное обновление снимков телеметрии и аудит дифференциальных изменений.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/startup_auditor_tab/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/startup_auditor_tab/main.js?v=20261006_v15" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/startup_auditor_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 14:05:00
  * =============================================================================
  */
 
@@ -27,12 +29,28 @@
     console.log('[StartupAuditor] Initializing tab...');
     bindEvents();
     await loadAuditData();
+    checkRecentChangesBadge().catch(() => {});
   }
 
   function bindEvents() {
-    const btnRefresh = document.getElementById('sa-btn-refresh');
-    if (btnRefresh) {
-      btnRefresh.onclick = () => loadAuditData();
+    const btnRefreshTelemetry = document.getElementById('sa-btn-refresh-telemetry');
+    if (btnRefreshTelemetry) {
+      btnRefreshTelemetry.onclick = () => refreshStartupTelemetry();
+    }
+
+    const btnRefreshLegacy = document.getElementById('sa-btn-refresh');
+    if (btnRefreshLegacy) {
+      btnRefreshLegacy.onclick = () => refreshStartupTelemetry();
+    }
+
+    const btnViewChanges = document.getElementById('sa-btn-view-changes');
+    if (btnViewChanges) {
+      btnViewChanges.onclick = () => showChangesModal();
+    }
+
+    const btnRefreshChangesModal = document.getElementById('sa-btn-refresh-changes-modal');
+    if (btnRefreshChangesModal) {
+      btnRefreshChangesModal.onclick = () => loadChangesData();
     }
 
     const searchInput = document.getElementById('sa-search-input');
@@ -67,6 +85,191 @@
       btnExportCsv.onclick = () => {
         window.open('/api/v1/startup-auditor/export?format=csv', '_blank');
       };
+    }
+  }
+
+  /**
+   * Асинхронно перезапускает сбор данных автозапуска через API телеметрии,
+   * регистрирует снимок в SQLite и сохраняет дифференциальные изменения.
+   */
+  async function refreshStartupTelemetry() {
+    const btn = document.getElementById('sa-btn-refresh-telemetry');
+    const spinner = document.getElementById('sa-refresh-spinner');
+    const statusText = document.getElementById('sa-telemetry-last-snap');
+
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.classList.add('spinner-border', 'spinner-border-sm');
+
+    try {
+      if (statusText) statusText.textContent = 'Телеметрия: сбор снимка...';
+
+      const res = await window.api.fetch('/api/v1/startup-auditor/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (res && res.report) {
+        allEntries = res.report.entries || [];
+        currentSummary = res.report.summary || {};
+        renderSummaryCards(res.report);
+        renderFilteredTable();
+      }
+
+      const count = res.changes_count || (res.changes ? res.changes.length : 0);
+      const timeStr = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      if (statusText) {
+        statusText.textContent = count > 0 
+          ? `Телеметрия: снимок ${timeStr} (изменений: ${count})`
+          : `Телеметрия: снимок ${timeStr} (без изменений)`;
+      }
+
+      const badge = document.getElementById('sa-changes-badge');
+      if (badge) {
+        if (count > 0) {
+          badge.textContent = count;
+          badge.classList.remove('d-none');
+        }
+      }
+
+      if (count > 0) {
+        window.showToast?.(`Снимок сохранен! Зафиксировано изменений: ${count}`, 'warning');
+      } else {
+        window.showToast?.('Снимок телеметрии успешно зафиксирован (изменений нет)', 'success');
+      }
+    } catch (err) {
+      console.error('[StartupAuditor] Error refreshing telemetry snapshot:', err);
+      if (statusText) statusText.textContent = 'Телеметрия: ошибка сбора';
+      window.showToast?.(`Ошибка обновления телеметрии: ${err.message}`, 'danger');
+    } finally {
+      if (btn) btn.disabled = false;
+      if (spinner) spinner.classList.remove('spinner-border', 'spinner-border-sm');
+    }
+  }
+
+  async function checkRecentChangesBadge() {
+    try {
+      const data = await window.api.fetch('/api/v1/startup-auditor/changes?limit=10');
+      const badge = document.getElementById('sa-changes-badge');
+      if (badge && data && data.changes && data.changes.length > 0) {
+        badge.textContent = data.changes.length;
+        badge.classList.remove('d-none');
+      }
+    } catch {
+      // Игнорируем фоновые ошибки бейджа
+    }
+  }
+
+  async function showChangesModal() {
+    const modalEl = document.getElementById('sa-changes-modal');
+    if (!modalEl) return;
+
+    if (window.bootstrap && window.bootstrap.Modal) {
+      const bsModal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+      bsModal.show();
+    }
+    await loadChangesData();
+  }
+
+  async function loadChangesData() {
+    const tbody = document.getElementById('sa-changes-table-body');
+    const countEl = document.getElementById('sa-changes-modal-count');
+
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+            Загрузка истории изменений автозапуска из телеметрии...
+          </td>
+        </tr>
+      `;
+    }
+
+    try {
+      const data = await window.api.fetch('/api/v1/startup-auditor/changes?limit=100');
+      const changes = data.changes || [];
+
+      if (countEl) {
+        countEl.textContent = `${changes.length} записей`;
+      }
+
+      if (changes.length === 0) {
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">
+                <i class="bi bi-shield-check text-success fs-4 d-block mb-1"></i>
+                Изменений в конфигурации автозапуска между снимками телеметрии не зафиксировано.
+              </td>
+            </tr>
+          `;
+        }
+        return;
+      }
+
+      if (tbody) {
+        tbody.innerHTML = changes.map(ch => {
+          const changeBadge = getChangeTypeBadge(ch.change_type);
+          const timeFormatted = ch.created_at ? ch.created_at.replace('T', ' ').substring(0, 19) : '-';
+          
+          let detailsHtml = '';
+          if (ch.change_type === 'added') {
+            detailsHtml = `<span class="font-monospace small text-success text-truncate d-block" style="max-width: 420px;" title="${escapeHtml(ch.new_value)}">+ ${escapeHtml(ch.new_value || ch.item_name)}</span>`;
+          } else if (ch.change_type === 'removed') {
+            detailsHtml = `<span class="font-monospace small text-danger text-truncate d-block" style="max-width: 420px;" title="${escapeHtml(ch.old_value)}">- ${escapeHtml(ch.old_value || ch.item_name)}</span>`;
+          } else if (ch.change_type === 'state_changed') {
+            detailsHtml = `<div class="small">Состояние: <strong class="text-danger">${escapeHtml(ch.old_value)}</strong> <i class="bi bi-arrow-right"></i> <strong class="text-success">${escapeHtml(ch.new_value)}</strong></div>`;
+          } else if (ch.change_type === 'risk_changed') {
+            detailsHtml = `<div class="small">Уровень риска: <strong>${escapeHtml(ch.old_value)}</strong> <i class="bi bi-arrow-right"></i> <strong class="text-warning">${escapeHtml(ch.new_value)}</strong></div>`;
+          } else {
+            detailsHtml = `
+              <div class="small font-monospace text-muted text-truncate" style="max-width: 420px;" title="Было: ${escapeHtml(ch.old_value)}">Было: ${escapeHtml(ch.old_value || '-')}</div>
+              <div class="small font-monospace text-primary text-truncate" style="max-width: 420px;" title="Стало: ${escapeHtml(ch.new_value)}">Стало: ${escapeHtml(ch.new_value || '-')}</div>
+            `;
+          }
+
+          return `
+            <tr>
+              <td class="font-monospace small text-muted">${timeFormatted}</td>
+              <td class="text-center">${changeBadge}</td>
+              <td>
+                <div class="fw-semibold text-truncate" style="max-width: 190px;" title="${escapeHtml(ch.item_name)}">${escapeHtml(ch.item_name)}</div>
+              </td>
+              <td><span class="sa-badge sa-badge-loc">${escapeHtml(ch.location_type || 'registry_run')}</span></td>
+              <td>${detailsHtml}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      console.error('[StartupAuditor] Error loading changes history:', err);
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-4 text-danger">
+              Ошибка загрузки истории изменений: ${escapeHtml(err.message)}
+            </td>
+          </tr>
+        `;
+      }
+    }
+  }
+
+  function getChangeTypeBadge(changeType) {
+    switch (changeType) {
+      case 'added':
+        return '<span class="sa-badge sa-badge-enabled"><i class="bi bi-plus-circle"></i> Добавлен</span>';
+      case 'removed':
+        return '<span class="sa-badge sa-badge-disabled"><i class="bi bi-dash-circle"></i> Удален</span>';
+      case 'state_changed':
+        return '<span class="sa-badge sa-risk-warning"><i class="bi bi-toggle2-on"></i> Статус</span>';
+      case 'path_changed':
+        return '<span class="sa-badge sa-risk-suspicious"><i class="bi bi-pencil"></i> Путь</span>';
+      case 'risk_changed':
+        return '<span class="sa-badge sa-risk-critical"><i class="bi bi-shield-exclamation"></i> Риск</span>';
+      default:
+        return `<span class="sa-badge sa-badge-cat">${escapeHtml(changeType)}</span>`;
     }
   }
 
@@ -177,7 +380,7 @@
     if (filtered.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="text-center py-5" style="color: #94a3b8;">
+          <td colspan="8" class="text-center py-5 text-muted">
             <div class="fs-4 mb-2">🔍</div>
             <div>Элементы автозапуска по заданным критериям не найдены</div>
           </td>
@@ -200,19 +403,19 @@
              <i class="bi bi-x-octagon-fill text-danger flex-shrink-0"></i>
              <span class="text-truncate fw-semibold" style="max-width: 480px;" title="${e.executable_path || e.command}">[Файл не найден] ${e.executable_path || e.command}</span>
            </div>`
-        : `<div class="font-monospace small text-truncate" style="max-width: 480px; color: #cbd5e1;" title="${e.command || e.executable_path}">
+        : `<div class="font-monospace small text-truncate" style="max-width: 480px; color: var(--text-color);" title="${e.command || e.executable_path}">
              ${e.executable_path || e.command}
            </div>`;
 
       const argsDisplay = e.arguments ? `
-        <div class="d-flex align-items-center gap-1 font-monospace text-truncate mt-1" style="max-width: 480px; font-size: 0.73rem; color: #94a3b8;" title="${e.arguments}">
+        <div class="d-flex align-items-center gap-1 font-monospace text-truncate mt-1 text-muted" style="max-width: 480px; font-size: 0.73rem;" title="${e.arguments}">
           <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary" style="font-size: 0.68rem; padding: 1px 4px;">ARG</span>
           <span class="text-truncate">${e.arguments}</span>
         </div>` : '';
 
       const toggleIcon = isEnabled
         ? '<i class="bi bi-toggle2-on text-success" style="font-size: 1.4rem;"></i>'
-        : '<i class="bi bi-toggle2-off" style="font-size: 1.4rem; color: #64748b;"></i>';
+        : '<i class="bi bi-toggle2-off text-muted" style="font-size: 1.4rem;"></i>';
       const toggleTitle = isEnabled ? 'Отключить элемент автозапуска' : 'Включить элемент автозапуска';
 
       let impactBadge = '';
@@ -230,8 +433,8 @@
         <tr class="sa-row-item" data-id="${e.id}" style="cursor: pointer;" title="Нажмите для подробного AI-аудита">
           <td class="text-center">${statusBadge}</td>
           <td>
-            <div class="fw-semibold text-truncate" style="max-width: 230px; color: #f8fafc;" title="${e.name}">${e.name}</div>
-            <div class="small text-truncate" style="max-width: 230px; color: #94a3b8; font-size: 0.73rem;" title="${e.publisher || 'Неизвестен'}">${e.publisher || 'Неизвестный издатель'}</div>
+            <div class="fw-semibold text-truncate" style="max-width: 230px; color: var(--text-color);" title="${e.name}">${e.name}</div>
+            <div class="small text-truncate text-muted" style="max-width: 230px; font-size: 0.73rem;" title="${e.publisher || 'Неизвестен'}">${e.publisher || 'Неизвестный издатель'}</div>
           </td>
           <td><span class="sa-badge sa-badge-loc">${e.location_type}</span></td>
           <td><span class="sa-badge sa-badge-cat">${e.category || 'Неизвестно'}</span></td>
@@ -337,7 +540,7 @@
     
     setHtml('sa-modal-is-signed', entry.is_signed
       ? '<span class="text-success"><i class="bi bi-patch-check me-1"></i>Подписан (Valid)</span>'
-      : '<span class="text-secondary"><i class="bi bi-patch-question me-1"></i>Без подписи / Неизвестно</span>'
+      : '<span class="text-muted"><i class="bi bi-patch-question me-1"></i>Без подписи / Неизвестно</span>'
     );
 
     setHtml('sa-modal-file-exists', entry.file_exists
@@ -360,7 +563,7 @@
     if (diagnoseBtn) {
       diagnoseBtn.onclick = async () => {
         aiExplanation.innerHTML = `
-          <div class="d-flex align-items-center gap-2 py-2 text-info">
+          <div class="d-flex align-items-center gap-2 py-2 text-primary">
             <div class="spinner-border spinner-border-sm" role="status"></div>
             <span>Генерация AI-диагностики и анализа рисков для программы «${escapeHtml(entry.name)}»...</span>
           </div>
@@ -393,11 +596,11 @@
           });
 
           aiExplanation.innerHTML = `
-            <div class="mb-2"><strong class="text-info"><i class="bi bi-card-text me-1"></i>Назначение:</strong> ${escapeHtml(res.summary)}</div>
-            <div class="mb-2"><strong class="text-secondary"><i class="bi bi-building me-1"></i>Разработчик / Категория:</strong> ${escapeHtml(res.developer || entry.publisher || 'Неизвестен')} (${escapeHtml(res.category || 'Приложение')})</div>
+            <div class="mb-2"><strong class="text-primary"><i class="bi bi-card-text me-1"></i>Назначение:</strong> ${escapeHtml(res.summary)}</div>
+            <div class="mb-2"><strong class="text-muted"><i class="bi bi-building me-1"></i>Разработчик / Категория:</strong> ${escapeHtml(res.developer || entry.publisher || 'Неизвестен')} (${escapeHtml(res.category || 'Приложение')})</div>
             <div class="mb-2"><strong class="text-warning"><i class="bi bi-shield-lock me-1"></i>Оценка безопасности:</strong> ${escapeHtml(res.security_verdict)}</div>
             <div class="mb-2"><strong class="text-info"><i class="bi bi-speedometer2 me-1"></i>Влияние на запуск:</strong> ${escapeHtml(res.boot_impact_analysis)}</div>
-            <div class="p-2 mb-2 rounded bg-dark-subtle border border-warning-subtle">
+            <div class="p-2 mb-2 rounded alert alert-warning">
               <strong class="text-warning"><i class="bi bi-lightbulb me-1"></i>Рекомендация:</strong> ${escapeHtml(res.startup_recommendation)}
             </div>
             ${res.action_steps && res.action_steps.length > 0 ? `

@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 02:55:00
+# Updated: 2026-10-06 12:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -37,6 +37,22 @@ except ImportError:
 
 from logger import logger
 from apps.windows.modules.hardware.lhm_service import LhmService
+from apps.windows.telemetry import SystemCollector
+from apps.windows.telemetry.models import ProcessNetworkActivity
+
+_collector: Optional[SystemCollector] = None
+
+
+def get_collector() -> SystemCollector:
+    """Получить или создать синглтон сборщика системной телеметрии.
+
+    Returns:
+        SystemCollector: Экземпляр системного коллектора.
+    """
+    global _collector
+    if _collector is None:
+        _collector = SystemCollector()
+    return _collector
 
 _last_net_io: Optional[Any] = psutil.net_io_counters() if psutil else None
 _last_net_time: float = time.time() if psutil else 0.0
@@ -267,14 +283,14 @@ def calculate_network_load() -> NetworkLoadResponse:
 
 
 def init_router() -> APIRouter:
-    """Создаёт роутер /api/v1/panel/network-load.
+    """Создаёт роутер сетевой телеметрии и активности процессов.
 
     Returns:
-        APIRouter: Роутер с эндпоинтом GET /api/v1/panel/network-load.
+        APIRouter: Роутер с эндпоинтами панели /api/v1/panel/network-load и /api/v1/system/network-activity.
     """
-    router = APIRouter(prefix="/api/v1/panel", tags=["Network Load Panel"])
+    router = APIRouter(tags=["Network Load Panel"])
 
-    @router.get("/network-load", response_model=NetworkLoadResponse)
+    @router.get("/api/v1/panel/network-load", response_model=NetworkLoadResponse)
     async def get_network_load() -> NetworkLoadResponse:
         """Возвращает текущие метрики нагрузки сети, Wi-Fi и Bluetooth."""
         try:
@@ -282,5 +298,28 @@ def init_router() -> APIRouter:
         except Exception as e:
             logger.error(f"[RouterNetworkLoad] Ошибка вычисления сетевой нагрузки: {e}", exc_info=True)
             return NetworkLoadResponse(status="error", meta={"error": str(e)})
+
+    @router.get("/api/v1/panel/network-activity", response_model=List[ProcessNetworkActivity])
+    @router.get("/api/v1/system/network-activity", response_model=List[ProcessNetworkActivity])
+    @router.get("/api/v1/tc/network-activity", response_model=List[ProcessNetworkActivity])
+    async def get_process_network_activity_endpoint(
+        limit: int = 100,
+        only_internet: bool = False,
+    ) -> List[ProcessNetworkActivity]:
+        """Возвращает список активных сетевых соединений программ и процессов.
+
+        Args:
+            limit: Максимальное число записей в выдаче.
+            only_internet: Фильтровать только внешние интернет-соединения.
+
+        Returns:
+            List[ProcessNetworkActivity]: Список объектов сетевой активности процессов.
+        """
+        try:
+            collector = get_collector()
+            return collector.get_process_network_activity(limit=limit, only_internet=only_internet)
+        except Exception as exc:
+            logger.error(f"[RouterNetworkLoad] Ошибка получения сетевой активности процессов: {exc}", exc_info=True)
+            return []
 
     return router

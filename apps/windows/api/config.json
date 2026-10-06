@@ -20,6 +20,13 @@
       "description": "Windows diagnostics & hardware (/api/windows/*)"
     },
     {
+      "module": "src.api.routers.core.router_system",
+      "factory": "init_router",
+      "enabled": true,
+      "inject_models": true,
+      "description": "Системная телеметрия и WebSocket поток (/api/v1/system/*)"
+    },
+    {
       "module": "apps.windows.api.routers.router_tc",
       "factory": "init_router",
       "enabled": true,
@@ -199,6 +206,18 @@
       "factory": "init_router",
       "enabled": true,
       "description": "Интеллектуальный просмотрщик системных журналов (/api/v1/system_logs/*)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_forensics",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Forensics data endpoint (/api/v1/system/diagnostics/forensics)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_system32_catalog",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Каталог системных возможностей и инструментов Windows System32 (/api/v1/system32/*)"
     }
   ]
 }

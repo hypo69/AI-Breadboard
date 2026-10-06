@@ -54,6 +54,7 @@ export const BUILTIN_THEMES = [
     iconColor: 'text-warning',
     description: 'Мягкая светлая тема в стиле NightView без слепящей белизны для комфортного чтения ночью',
     baseType: 'light',
+    tokens: { '--about-card-bg': 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' },
   },
   {
     id: 'brick',
@@ -64,6 +65,7 @@ export const BUILTIN_THEMES = [
     iconColor: 'text-danger',
     description: 'Теплая светлая тема в стиле клинкерного кирпича и обожженной глины',
     baseType: 'light',
+    tokens: { '--about-card-bg': 'linear-gradient(135deg, #f5e8d4 0%, #e2c8b8 100%)' },
   },
   {
     id: 'dark',

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 02:30:00
+ * Updated: 2026-10-06 14:10:00
  * =============================================================================
  */
 
@@ -216,7 +216,7 @@ export function switchTab(tabId) {
     btn.classList.toggle('active', btn.dataset.tab === id)
   );
 
-  document.querySelectorAll('#mainTabContent .tab-pane').forEach(pane => {
+  document.querySelectorAll('#mainTabContent > .tab-pane').forEach(pane => {
     const isTarget = (pane.id === id);
     pane.classList.toggle('show', isTarget);
     pane.classList.toggle('active', isTarget);
