@@ -4,17 +4,18 @@
  * =============================================================================
  * Description:
  *   Клиентский веб-скрипт модуля журналов событий и активности системы Windows.
+ *   Полная поддержка светлой и тёмной темы с надежным парсингом каналов и событий.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/html/system_control_tab/main.js?v=20261006_v2" type="module"></script>
+ *     <script src="/html/system_control_tab/main.js?v=20261006_v12" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/system_control_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 05:55:00
+ * Updated: 2026-10-06 10:56:00
  * =============================================================================
  */
 
@@ -125,11 +126,11 @@
 
       tbody.innerHTML = logs.map(l => `
         <tr>
-          <td class="font-monospace small text-muted">${escapeHtml(l.timestamp)}</td>
+          <td class="font-monospace small" style="color: var(--text-muted);">${escapeHtml(l.timestamp)}</td>
           <td><span class="badge bg-secondary font-monospace">${escapeHtml(l.action)}</span></td>
-          <td class="text-white">${escapeHtml(l.target)}</td>
+          <td style="color: var(--text-color);">${escapeHtml(l.target)}</td>
           <td><span class="badge ${l.status === 'SUCCESS' || l.status === 'OK' ? 'bg-success' : 'bg-warning text-dark'}">${escapeHtml(l.status)}</span></td>
-          <td class="small text-light text-truncate" style="max-width: 280px;" title="${escapeHtml(l.details)}">${escapeHtml(l.details)}</td>
+          <td class="small text-truncate" style="max-width: 280px; color: var(--text-muted);" title="${escapeHtml(l.details)}">${escapeHtml(l.details)}</td>
         </tr>
       `).join('');
     } catch (e) {
@@ -151,25 +152,29 @@
 
   function showChannelTooltip(channelData, mouseEvent) {
     if (!globalTooltipEl) createGlobalChannelTooltip();
-    const isFile = !!channelData.file_path;
+    const isFile = !!(channelData.file_path || channelData.location || (channelData.source_type && channelData.source_type !== 'channel'));
     const icon = isFile ? '📄' : '📁';
-    const typeLabel = isFile ? 'EVTX File Archive' : 'Live Windows Channel';
-    const sizeMb = channelData.file_size_mb ? `${channelData.file_size_mb} MB` : 'N/A';
-    const recCount = channelData.record_count ? channelData.record_count.toLocaleString() : 'N/A';
+    const chanTitle = channelData.display_name || channelData.channel_name || channelData.name || 'Журнал';
+    const typeLabel = channelData.source_type === 'channel' || !isFile ? 'Live Windows Channel' : 'EVTX File Archive';
+    const countVal = channelData.record_count !== undefined ? channelData.record_count : (channelData.records || 'N/A');
+    const recCount = typeof countVal === 'number' ? countVal.toLocaleString() : String(countVal);
+    const sizeStr = channelData.file_size_mb ? `${channelData.file_size_mb} MB` : (channelData.size_bytes ? `${(channelData.size_bytes / 1024 / 1024).toFixed(1)} MB` : 'N/A');
 
     globalTooltipEl.innerHTML = `
-      <div class="slc-tooltip-title">
+      <div class="fw-bold mb-1 d-flex align-items-center gap-1.5" style="color: var(--text-color);">
         <span>${icon}</span>
-        <span class="text-truncate" style="max-width: 250px;">${escapeHtml(channelData.name)}</span>
+        <span class="text-truncate">${escapeHtml(chanTitle)}</span>
       </div>
-      <div class="text-light mb-1">${escapeHtml(channelData.description || 'Стандартный системный канал событий Windows.')}</div>
-      <div class="slc-tooltip-meta">
-        <span>Тип: <strong class="text-white">${typeLabel}</strong></span>
-        <span>Записей: <strong class="text-info">${recCount}</strong></span>
+      <div class="mb-2" style="font-size: 0.76rem; color: var(--text-muted) !important;">
+        ${escapeHtml(channelData.description || 'Стандартный системный канал событий Windows.')}
       </div>
-      <div class="slc-tooltip-meta" style="border-top: none; padding-top: 0;">
-        <span>Размер: <strong class="text-white">${sizeMb}</strong></span>
-        <span>Состояние: <strong class="text-success">Доступен</strong></span>
+      <div class="d-flex justify-content-between align-items-center pt-1 border-top" style="border-color: var(--border-color) !important; font-size: 0.74rem;">
+        <span class="text-muted">Тип: <strong style="color: var(--text-color);">${typeLabel}</strong></span>
+        <span class="text-muted">Записей: <strong class="text-info">${recCount}</strong></span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center pt-1" style="font-size: 0.74rem;">
+        <span class="text-muted">Размер: <strong style="color: var(--text-color);">${sizeStr}</strong></span>
+        <span class="text-success fw-bold">Доступен</span>
       </div>
     `;
 
@@ -226,19 +231,28 @@
     createGlobalChannelTooltip();
 
     treeEl.innerHTML = channels.map(ch => {
-      const isFile = !!ch.file_path;
-      const isActive = isFile ? (currentFilePath === ch.file_path) : (currentChannel === ch.name && !currentFilePath);
+      const isFile = !!(ch.file_path || (ch.source_type && ch.source_type !== 'channel'));
+      const chName = ch.channel_name || ch.display_name || ch.name || 'Channel';
+      const chPath = ch.location || ch.file_path || '';
+      const isActive = isFile ? (currentFilePath === chPath) : (currentChannel === chName && !currentFilePath);
       const icon = isFile ? 'bi-file-earmark-text text-secondary' : 'bi-folder-fill text-warning';
-      const sizeStr = ch.file_size_mb ? `<span class="badge bg-secondary font-monospace" style="font-size: 0.65rem;">${ch.file_size_mb} MB</span>` : '';
+      
+      let sizeBadge = '';
+      if (ch.record_count !== undefined && ch.record_count > 0) {
+        const countText = ch.record_count >= 1000 ? `${(ch.record_count / 1000).toFixed(1)}k` : String(ch.record_count);
+        sizeBadge = `<span class="badge bg-secondary font-monospace" style="font-size: 0.68rem;">${countText}</span>`;
+      } else if (ch.file_size_mb) {
+        sizeBadge = `<span class="badge bg-secondary font-monospace" style="font-size: 0.68rem;">${ch.file_size_mb} MB</span>`;
+      }
 
       return `
-        <div class="slc-tree-item ${isActive ? 'active' : ''}" data-name="${escapeHtml(ch.name)}" data-path="${escapeHtml(ch.file_path || '')}">
-          <div class="d-flex align-items-center gap-1.5 text-truncate" style="max-width: 170px;">
-            <i class="bi ${icon}"></i>
-            <span class="text-truncate" title="${escapeHtml(ch.name)}">${escapeHtml(ch.name)}</span>
+        <div class="slc-tree-item ${isActive ? 'active' : ''}" data-name="${escapeHtml(chName)}" data-path="${escapeHtml(chPath)}">
+          <div class="d-flex align-items-center gap-2 text-truncate me-2" style="min-width: 0; flex: 1 1 auto;">
+            <i class="bi ${icon} flex-shrink-0"></i>
+            <span class="text-truncate fw-medium" title="${escapeHtml(chName)}">${escapeHtml(chName)}</span>
           </div>
-          <div class="d-flex align-items-center gap-1">
-            ${sizeStr}
+          <div class="d-flex align-items-center flex-shrink-0">
+            ${sizeBadge}
           </div>
         </div>
       `;
@@ -268,7 +282,7 @@
         if (statChan) statChan.textContent = currentChannel;
 
         const mainTitle = document.getElementById('slc-main-view-title');
-        if (mainTitle) mainTitle.innerHTML = `<i class="bi bi-list-columns-reverse me-2"></i>События канала: <span class="text-info">${escapeHtml(currentChannel)}</span>`;
+        if (mainTitle) mainTitle.innerHTML = `<i class="bi bi-list-columns-reverse me-2 text-primary"></i>События канала: <span class="text-info">${escapeHtml(currentChannel)}</span>`;
 
         loadEvents();
       });
@@ -348,15 +362,17 @@
     tbody.innerHTML = events.map((e, idx) => {
       const timeFormatted = formatTime(e.timestamp);
       const isErr = (e.level || '').toLowerCase().includes('err') || (e.level || '').toLowerCase().includes('crit');
+      const provName = e.provider || e.source || '-';
+      const msgText = e.message || e.raw_data || '-';
 
       return `
         <tr data-index="${idx}" class="${isErr ? 'table-danger-subtle' : ''}">
-          <td class="font-monospace small text-muted">${escapeHtml(timeFormatted)}</td>
+          <td class="font-monospace small" style="color: var(--text-muted);">${escapeHtml(timeFormatted)}</td>
           <td><span class="badge ${getSeverityClass(e.level)} text-uppercase" style="font-size: 0.68rem;">${escapeHtml(e.level || 'Info')}</span></td>
-          <td class="font-monospace small text-info fw-bold">${e.event_id > 0 ? e.event_id : '-'}</td>
-          <td class="text-truncate text-light small" style="max-width: 160px;" title="${escapeHtml(e.provider || e.source || '')}">${escapeHtml(e.provider || e.source || '-')}</td>
-          <td class="font-monospace small text-secondary">${e.process_id || '-'}</td>
-          <td class="text-truncate" style="max-width: 420px;" title="${escapeHtml(e.message)}">${escapeHtml(e.message)}</td>
+          <td class="font-monospace small fw-bold" style="color: #0284c7;">${e.event_id > 0 ? e.event_id : '-'}</td>
+          <td class="text-truncate small" style="max-width: 160px; color: var(--text-color);" title="${escapeHtml(provName)}">${escapeHtml(provName)}</td>
+          <td class="font-monospace small" style="color: var(--text-muted);">${e.process_id || '-'}</td>
+          <td class="text-truncate" style="max-width: 420px; color: var(--text-color);" title="${escapeHtml(msgText)}">${escapeHtml(msgText)}</td>
         </tr>
       `;
     }).join('');
@@ -409,13 +425,13 @@
       if (data.clusters && data.clusters.length > 0) {
         clustersHtml = data.clusters.slice(0, 15).map((c, i) => `
           <tr>
-            <td class="font-monospace text-muted">${i + 1}</td>
+            <td class="font-monospace" style="color: var(--text-muted);">${i + 1}</td>
             <td><span class="badge ${getSeverityClass(c.level)}">${escapeHtml(c.level || 'Info')}</span></td>
-            <td class="text-truncate" style="max-width: 140px;" title="${escapeHtml(c.provider)}">${escapeHtml(c.provider)}</td>
-            <td class="font-monospace text-info">${c.event_id || '-'}</td>
-            <td class="small text-truncate" style="max-width: 340px;" title="${escapeHtml(c.pattern)}">${escapeHtml(c.pattern)}</td>
-            <td class="font-monospace text-center fw-bold text-white">${c.count}</td>
-            <td class="font-monospace small text-muted">${escapeHtml(formatTime(c.first_seen))}</td>
+            <td class="text-truncate" style="max-width: 140px; color: var(--text-color);" title="${escapeHtml(c.provider)}">${escapeHtml(c.provider)}</td>
+            <td class="font-monospace fw-bold" style="color: #0284c7;">${c.event_id || '-'}</td>
+            <td class="small text-truncate" style="max-width: 340px; color: var(--text-color);" title="${escapeHtml(c.pattern)}">${escapeHtml(c.pattern)}</td>
+            <td class="font-monospace text-center fw-bold" style="color: var(--text-color);">${c.count}</td>
+            <td class="font-monospace small" style="color: var(--text-muted);">${escapeHtml(formatTime(c.first_seen))}</td>
           </tr>
         `).join('');
       } else {
@@ -425,47 +441,47 @@
       contentEl.innerHTML = `
         <div class="row g-2 mb-3">
           <div class="col-sm-3 col-6">
-            <div class="p-1 rounded bg-black border border-secondary">
+            <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
               <div class="small text-muted" style="font-size: 0.72rem;">Всего проанализировано</div>
               <div class="fs-5 fw-bold text-info font-monospace">${totalEvents}</div>
             </div>
           </div>
           <div class="col-sm-3 col-6">
-            <div class="p-1 rounded bg-black border border-secondary">
+            <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
               <div class="small text-muted" style="font-size: 0.72rem;">Критических сбоев</div>
               <div class="fs-5 fw-bold text-danger font-monospace">${critSum}</div>
             </div>
           </div>
           <div class="col-sm-3 col-6">
-            <div class="p-1 rounded bg-black border border-secondary">
+            <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
               <div class="small text-muted" style="font-size: 0.72rem;">Ошибок</div>
               <div class="fs-5 fw-bold text-danger font-monospace">${errSum}</div>
             </div>
           </div>
           <div class="col-sm-3 col-6">
-            <div class="p-1 rounded bg-black border border-secondary">
+            <div class="p-2 rounded border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
               <div class="small text-muted" style="font-size: 0.72rem;">Предупреждений</div>
               <div class="fs-5 fw-bold text-warning font-monospace">${warnSum}</div>
             </div>
           </div>
         </div>
 
-        <div class="card bg-dark border-secondary mb-2 shadow-sm">
-          <div class="card-header bg-black text-warning fw-bold py-1 px-3 small">
+        <div class="slc-card mb-2 shadow-sm">
+          <div class="slc-card-header text-warning fw-bold py-1.5 px-3 small">
             <i class="bi bi-exclamation-triangle me-1"></i>Обнаруженные аномалии и всплески
           </div>
-          <div class="card-body p-2">
+          <div class="p-2">
             ${anomaliesHtml}
           </div>
         </div>
 
-        <div class="card bg-dark border-secondary">
-          <div class="card-header bg-black text-light fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-collection me-2"></i>Топ шаблонов событий (Дедупликация)</span>
+        <div class="slc-card shadow-sm">
+          <div class="slc-card-header fw-bold d-flex justify-content-between align-items-center py-1.5 px-3">
+            <span><i class="bi bi-collection me-2 text-primary"></i>Топ шаблонов событий (Дедупликация)</span>
             <span class="small text-muted">Топ 15 кластеров</span>
           </div>
           <div class="table-responsive">
-            <table class="table slc-table mb-0">
+            <table class="slc-table mb-0">
               <thead>
                 <tr>
                   <th style="width: 40px;">#</th>
@@ -509,17 +525,17 @@
       const chunks = data.results || [];
 
       if (chunks.length === 0) {
-        resultsEl.innerHTML = '<div class="card bg-dark border-secondary p-3 text-center text-muted">По вашему запросу совпадений в RAG-индексе не найдено. Попробуйте нажать «Перестроить RAG-индекс».</div>';
+        resultsEl.innerHTML = '<div class="slc-card p-3 text-center text-muted">По вашему запросу совпадений в RAG-индексе не найдено. Попробуйте нажать «Перестроить RAG-индекс».</div>';
         return;
       }
 
       resultsEl.innerHTML = chunks.map(c => `
-        <div class="card bg-dark border-secondary mb-2 p-2">
+        <div class="slc-card mb-2 p-2.5 shadow-sm">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="badge bg-info text-dark font-monospace">Relevance: ${Math.round((c.score || 0) * 100)}%</span>
-            <span class="small text-muted font-monospace">${escapeHtml(c.metadata?.timestamp || '')}</span>
+            <span class="small font-monospace" style="color: var(--text-muted);">${escapeHtml(c.metadata?.timestamp || '')}</span>
           </div>
-          <div class="small text-light font-monospace" style="white-space: pre-wrap;">${escapeHtml(c.text || c.content)}</div>
+          <div class="small font-monospace" style="white-space: pre-wrap; color: var(--text-color);">${escapeHtml(c.text || c.content)}</div>
         </div>
       `).join('');
     } catch (err) {
@@ -543,7 +559,7 @@
           <i class="bi bi-check-circle-fill fs-5"></i>
           <div>
             <strong>RAG-индекс успешно обновлен!</strong> Добавлено ${data.chunks_added} чанков (Всего в индексе: ${data.total_index_chunks}).
-            <div class="small mt-1 text-light">${escapeHtml(data.executive_summary || '')}</div>
+            <div class="small mt-1 text-muted">${escapeHtml(data.executive_summary || '')}</div>
           </div>
         </div>
       `;
@@ -630,19 +646,19 @@
       const incidents = data.incidents || [];
 
       if (incidents.length === 0) {
-        listEl.innerHTML = '<div class="card bg-dark border-secondary p-3 text-center text-muted">Связанных цепочек инцидентов и каскадных сбоев не обнаружено.</div>';
+        listEl.innerHTML = '<div class="slc-card p-3 text-center text-muted">Связанных цепочек инцидентов и каскадных сбоев не обнаружено.</div>';
         return;
       }
 
       listEl.innerHTML = incidents.map(inc => `
-        <div class="card bg-dark border-danger mb-2">
-          <div class="card-header bg-black text-danger d-flex justify-content-between align-items-center">
+        <div class="slc-card mb-2 shadow-sm border-danger">
+          <div class="slc-card-header text-danger d-flex justify-content-between align-items-center py-1.5 px-3">
             <strong>${escapeHtml(inc.incident_title || 'Каскадный сбой')}</strong>
             <span class="badge bg-danger">${inc.events_count} событий</span>
           </div>
-          <div class="card-body p-2">
-            <p class="small text-light mb-1">${escapeHtml(inc.summary || '')}</p>
-            <div class="small font-monospace text-secondary">Временное окно: ${escapeHtml(inc.time_window || '')}</div>
+          <div class="p-2.5">
+            <p class="small mb-1">${escapeHtml(inc.summary || '')}</p>
+            <div class="small font-monospace text-muted">Временное окно: ${escapeHtml(inc.time_window || '')}</div>
           </div>
         </div>
       `).join('');
@@ -663,17 +679,17 @@
       const points = data.timeline || [];
 
       if (points.length === 0) {
-        listEl.innerHTML = '<div class="card bg-dark border-secondary p-3 text-center text-muted">Данные временной шкалы отсутствуют.</div>';
+        listEl.innerHTML = '<div class="slc-card p-3 text-center text-muted">Данные временной шкалы отсутствуют.</div>';
         return;
       }
 
       listEl.innerHTML = points.map(p => `
         <div class="d-flex align-items-center gap-2 mb-1">
-          <span class="font-monospace small text-muted" style="width: 120px;">${escapeHtml(p.time_slot)}</span>
-          <div class="progress flex-grow-1 bg-secondary" style="height: 12px;">
+          <span class="font-monospace small" style="width: 120px; color: var(--text-muted);">${escapeHtml(p.time_slot)}</span>
+          <div class="progress flex-grow-1" style="height: 12px; background: var(--surface-2);">
             <div class="progress-bar bg-info" style="width: ${Math.min(100, p.count * 4)}%;"></div>
           </div>
-          <span class="font-monospace small text-info fw-bold" style="width: 40px;">${p.count}</span>
+          <span class="font-monospace small fw-bold" style="width: 40px; color: #0284c7;">${p.count}</span>
         </div>
       `).join('');
     } catch (e) {
@@ -785,7 +801,7 @@
       };
     }
 
-    // Кнопка обновления панели логов
+    // Кнопка обновления потока логов
     const slcRefreshBtn = document.getElementById('btn-slc-refresh');
     if (slcRefreshBtn) {
       slcRefreshBtn.onclick = () => {
@@ -793,33 +809,45 @@
       };
     }
 
-    // Сканирование каналов
-    const scanBtn = document.getElementById('btn-slc-scan');
-    if (scanBtn) {
-      scanBtn.onclick = () => {
+    // Кнопка сканирования источников
+    const slcScanBtn = document.getElementById('btn-slc-scan');
+    if (slcScanBtn) {
+      slcScanBtn.onclick = () => {
         scanChannels(true);
       };
     }
 
+    // Кнопка аудита
+    const auditBtn = document.getElementById('btn-slc-audit');
+    if (auditBtn) {
+      auditBtn.onclick = () => {
+        setMode('audit');
+      };
+    }
+
     // Фильтр каналов в дереве
-    const chanFilterInput = document.getElementById('slc-channel-filter-input');
-    if (chanFilterInput) {
-      chanFilterInput.oninput = () => {
-        const val = chanFilterInput.value.toLowerCase().trim();
-        const filtered = cachedChannels.filter(c => c.name.toLowerCase().includes(val));
+    const channelFilterInput = document.getElementById('slc-channel-filter-input');
+    if (channelFilterInput) {
+      channelFilterInput.oninput = (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = cachedChannels.filter(c => {
+          const name = (c.channel_name || c.display_name || c.name || '').toLowerCase();
+          const desc = (c.description || '').toLowerCase();
+          return name.includes(query) || desc.includes(query);
+        });
         renderChannelTree(filtered);
       };
     }
 
-    // Переключение режимов отображения
+    // Переключение режимов работы (Live, Audit, RAG, Incidents, Timeline, Raw, Activity)
     document.querySelectorAll('#slc-mode-tabs button').forEach(btn => {
       btn.onclick = () => {
-        const mode = btn.getAttribute('data-mode');
+        const mode = btn.getAttribute('data-mode') || 'live';
         setMode(mode);
       };
     });
 
-    // Изменение фильтров
+    // Фильтры потока
     const searchInput = document.getElementById('slc-search-input');
     if (searchInput) {
       let debounceTimer = null;
@@ -840,31 +868,45 @@
 
     const eventIdInput = document.getElementById('slc-eventid-input');
     if (eventIdInput) {
+      let debounceTimer = null;
       eventIdInput.oninput = () => {
-        loadEvents();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(loadEvents, 300);
       };
     }
 
-    // Live переключатель
+    // Live Auto-refresh switch
     const liveSwitch = document.getElementById('slc-live-switch');
     if (liveSwitch) {
-      liveSwitch.onchange = () => {
-        if (liveSwitch.checked) {
+      liveSwitch.onchange = (e) => {
+        if (e.target.checked) {
+          if (liveIntervalTimer) clearInterval(liveIntervalTimer);
           liveIntervalTimer = setInterval(loadEvents, 3000);
         } else {
           if (liveIntervalTimer) clearInterval(liveIntervalTimer);
+          liveIntervalTimer = null;
         }
       };
     }
 
-    // Экспорт
-    const expJson = document.getElementById('btn-slc-export-json');
-    if (expJson) expJson.onclick = (e) => { e.preventDefault(); exportEvents('json'); };
+    // Экспорт событий
+    const exportJson = document.getElementById('btn-slc-export-json');
+    if (exportJson) {
+      exportJson.onclick = (e) => {
+        e.preventDefault();
+        exportEvents('json');
+      };
+    }
 
-    const expCsv = document.getElementById('btn-slc-export-csv');
-    if (expCsv) expCsv.onclick = (e) => { e.preventDefault(); exportEvents('csv'); };
+    const exportCsv = document.getElementById('btn-slc-export-csv');
+    if (exportCsv) {
+      exportCsv.onclick = (e) => {
+        e.preventDefault();
+        exportEvents('csv');
+      };
+    }
 
-    // RAG кнопки
+    // RAG Search actions
     const ragSearchBtn = document.getElementById('btn-slc-rag-search');
     if (ragSearchBtn) ragSearchBtn.onclick = runRagSearch;
 
@@ -878,20 +920,32 @@
     const ragRebuildBtn = document.getElementById('btn-slc-rag-rebuild');
     if (ragRebuildBtn) ragRebuildBtn.onclick = rebuildRagIndex;
 
-    // Кнопка аудита в заголовке потока
-    const auditBtn = document.getElementById('btn-slc-audit');
-    if (auditBtn) {
-      auditBtn.onclick = () => {
-        setMode('audit');
+    // AI Ask Action
+    const askAiBtn = document.getElementById('btn-slc-ask-ai');
+    if (askAiBtn) {
+      askAiBtn.onclick = () => {
+        const topEvents = cachedEvents.slice(0, 10).map(e => `[${e.level}] ${e.provider}: ${e.message}`).join('\n');
+        const prompt = `Проведи диагностику следующих системных логов Windows (Канал: ${currentChannel}):\n${topEvents}`;
+        if (window.sendChatMessage) {
+          window.sendChatMessage(prompt);
+        } else if (window.toast) {
+          window.toast.info('ИИ Анализ', 'Запрос направлен в чат-ассистент.');
+        }
       };
     }
 
-    // Обновление логов активности
-    const refLogsBtn = document.getElementById('btn-scc-refresh-logs');
-    if (refLogsBtn) {
-      refLogsBtn.onclick = loadSccActivityLogs;
-    }
+    // Application activity refresh
+    const refreshActivityBtn = document.getElementById('btn-scc-refresh-logs');
+    if (refreshActivityBtn) refreshActivityBtn.onclick = loadSccActivityLogs;
   }
 
+  // Экспорт для динамического загрузчика
   window.initSystemControlTab = initSystemControlTab;
+
+  // Автостарт при готовности DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSystemControlTab);
+  } else {
+    initSystemControlTab();
+  }
 })();

@@ -17,15 +17,18 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:42:00
+# Updated: 2026-10-06 11:06:00
 # =============================================================================
 
 from __future__ import annotations
 """FastAPI REST эндпоинты для панели 'О Системе' из базы данных telemetry.db."""
 
+import asyncio
 import json
 import os
 import platform
+import re
+import subprocess
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
@@ -38,6 +41,25 @@ from logger import logger
 from apps.windows.telemetry.sqlite import TelemetryStorage
 
 
+def get_windows_workgroup() -> str:
+    """Возвращает текущее имя рабочей группы (Workgroup) или домена Windows."""
+    if os.name == 'nt':
+        try:
+            import ctypes
+            from ctypes import wintypes
+            netapi32 = ctypes.windll.netapi32
+            lp_buf = wintypes.LPWSTR()
+            join_stat = wintypes.DWORD()
+            if netapi32.NetGetJoinInformation(None, ctypes.byref(lp_buf), ctypes.byref(join_stat)) == 0:
+                name = lp_buf.value
+                netapi32.NetApiBufferFree(lp_buf)
+                if name:
+                    return name
+        except Exception as exc:
+            logger.debug(f"[router_about_system] Ошибка получения рабочей группы через NetGetJoinInformation: {exc}")
+    return "WORKGROUP"
+
+
 class PlatformOsPanelResponse(BaseModel):
     """Модель ответа панели «Платформа & ОС»."""
     status: str = Field(default="ok", description="Статус ответа")
@@ -46,10 +68,12 @@ class PlatformOsPanelResponse(BaseModel):
     os_install_date: str = Field(default="", description="Дата установки операционной системы")
     architecture: str = Field(default="x86_64", description="Архитектура процессора")
     hostname: str = Field(default="", description="Имя хоста")
+    workgroup: str = Field(default="WORKGROUP", description="Рабочая группа (Workgroup) или домен")
     uptime_seconds: float = Field(default=0.0, description="Аптайм в секундах")
     uptime_human: str = Field(default="0h 0m", description="Человекочитаемый аптайм")
     display_title: str = Field(default="Windows", description="Заголовок для KPI-карточки")
     display_host: str = Field(default="Host: --", description="Строка с именем хоста")
+    display_workgroup: str = Field(default="Workgroup: WORKGROUP", description="Строка с рабочей группой")
     timestamp: str = Field(default="", description="Временная метка последнего зафиксированного снимка")
 
 
@@ -188,6 +212,105 @@ class AboutSystemPanelOverviewResponse(BaseModel):
     meta: Dict[str, Any] = Field(default_factory=dict, description="Метаданные сформированного SQL-запроса к telemetry.db")
 
 
+class RenameComputerRequest(BaseModel):
+    """Модель запроса на переименование компьютера."""
+    new_name: str = Field(..., min_length=1, max_length=15, description="Новое имя компьютера (до 15 символов, без спецсимволов)")
+    restart: bool = Field(default=False, description="Флаг немедленной перезагрузки компьютера")
+
+
+class RenameComputerResponse(BaseModel):
+    """Модель ответа на переименование компьютера."""
+    status: str = Field(default="ok", description="Статус выполнения (ok/error)")
+    old_name: str = Field(default="", description="Предыдущее имя компьютера")
+    new_name: str = Field(default="", description="Новое имя компьютера")
+    message: str = Field(default="", description="Информационное сообщение")
+    restart_scheduled: bool = Field(default=False, description="Запланирована ли перезагрузка")
+
+
+class ChangeWorkgroupRequest(BaseModel):
+    """Модель запроса на изменение рабочей группы."""
+    new_workgroup: str = Field(..., min_length=1, max_length=15, description="Новое имя рабочей группы (до 15 символов, без спецсимволов)")
+    restart: bool = Field(default=False, description="Флаг немедленной перезагрузки компьютера")
+
+
+class ChangeWorkgroupResponse(BaseModel):
+    """Модель ответа на изменение рабочей группы."""
+    status: str = Field(default="ok", description="Статус выполнения (ok/error)")
+    old_workgroup: str = Field(default="", description="Предыдущее имя рабочей группы")
+    new_workgroup: str = Field(default="", description="Новое имя рабочей группы")
+    message: str = Field(default="", description="Информационное сообщение")
+    restart_scheduled: bool = Field(default=False, description="Запланирована ли перезагрузка")
+
+
+class TimezoneOption(BaseModel):
+    """Модель варианта часового пояса Windows."""
+    id: str = Field(..., description="Системный ID часового пояса (например: 'Israel Standard Time', 'Russian Standard Time')")
+    display_name: str = Field(..., description="Отображаемое имя (например: '(UTC+02:00) Jerusalem')")
+    offset_minutes: int = Field(default=0, description="Смещение от UTC в минутах")
+
+
+class LocaleOption(BaseModel):
+    """Модель варианта локали."""
+    code: str = Field(..., description="Код локали (ru-RU, en-US, he-IL, de-DE, etc.)")
+    name: str = Field(..., description="Название языка и региона")
+
+
+class RegionalOptionsResponse(BaseModel):
+    """Модель ответа списка доступных региональных параметров хоста."""
+    status: str = Field(default="ok", description="Статус ответа")
+    current_timezone: str = Field(default="", description="Текущий ID часового пояса")
+    current_timezone_name: str = Field(default="", description="Текущее отображаемое имя часового пояса")
+    current_system_locale: str = Field(default="", description="Текущая системная локаль")
+    current_user_locale: str = Field(default="", description="Текущая пользовательская локаль")
+    current_username: str = Field(default="", description="Текущий пользователь")
+    current_user_fullname: str = Field(default="", description="Полное имя пользователя")
+    current_user_description: str = Field(default="", description="Описание пользователя")
+    current_codepage: str = Field(default="UTF-8 (65001)", description="Текущая кодовая страница")
+    timezones: List[TimezoneOption] = Field(default_factory=list, description="Список доступных часовых поясов")
+    locales: List[LocaleOption] = Field(default_factory=list, description="Список распространенных локалей")
+
+
+class SetTimezoneRequest(BaseModel):
+    """Запрос на изменение системного часового пояса."""
+    timezone_id: str = Field(..., min_length=1, max_length=120, description="ID часового пояса из tzutil / Set-TimeZone")
+
+
+class SetTimezoneResponse(BaseModel):
+    """Ответ на изменение системного часового пояса."""
+    status: str = Field(default="ok", description="Статус операции (ok/error)")
+    old_timezone: str = Field(default="", description="Предыдущий часовой пояс")
+    new_timezone: str = Field(default="", description="Установленный часовой пояс")
+    message: str = Field(default="", description="Информационное сообщение")
+
+
+class SetLocaleRequest(BaseModel):
+    """Запрос на изменение системной и/или пользовательской локали."""
+    system_locale: str = Field(..., min_length=2, max_length=20, description="Тег системной локали (например: ru-RU, en-US)")
+    user_locale: Optional[str] = Field(default=None, description="Тег пользовательской локали")
+
+
+class SetLocaleResponse(BaseModel):
+    """Ответ на изменение локали."""
+    status: str = Field(default="ok", description="Статус операции (ok/error)")
+    system_locale: str = Field(default="", description="Установленная системная локаль")
+    message: str = Field(default="", description="Информационное сообщение")
+    restart_required: bool = Field(default=True, description="Требуется ли перезагрузка/перезаход для применения")
+
+
+class UpdateUserProfileRequest(BaseModel):
+    """Запрос на обновление информации локального пользователя."""
+    username: str = Field(default="", description="Имя учетной записи (если пусто - текущий пользователь)")
+    full_name: Optional[str] = Field(default=None, description="Полное имя пользователя")
+    description: Optional[str] = Field(default=None, description="Описание учетной записи")
+
+
+class UpdateUserProfileResponse(BaseModel):
+    """Ответ на обновление информации пользователя."""
+    status: str = Field(default="ok", description="Статус операции (ok/error)")
+    username: str = Field(default="", description="Имя пользователя")
+    message: str = Field(default="", description="Информационное сообщение")
+
+
 def _format_uptime_human(seconds: float) -> str:
     """Форматирует секунды аптайма в человекочитаемую строку."""
     sec = int(max(0.0, seconds))
@@ -319,6 +442,9 @@ def query_about_system_from_db(storage: TelemetryStorage) -> AboutSystemPanelOve
             pass
     arch = platform.machine() or "AMD64"
     hostname = (snap_row.get("hostname") if snap_row else None) or platform.node() or "Host"
+    workgroup = str((snap_row.get("workgroup") if snap_row else None) or "")
+    if not workgroup:
+        workgroup = get_windows_workgroup()
     uptime_sec = float((snap_row.get("uptime_seconds") if snap_row else None) or 0.0)
     if uptime_sec <= 0.0:
         try:
@@ -335,10 +461,12 @@ def query_about_system_from_db(storage: TelemetryStorage) -> AboutSystemPanelOve
         os_install_date=os_install_date,
         architecture=arch,
         hostname=hostname,
+        workgroup=workgroup,
         uptime_seconds=uptime_sec,
         uptime_human=uptime_str,
         display_title=os_title,
         display_host=f"Host: {hostname}",
+        display_workgroup=f"Workgroup: {workgroup}",
         timestamp=snap_row.get("timestamp") if snap_row else now_ts,
     )
 
@@ -880,7 +1008,7 @@ async def query_system_summary_full(storage: TelemetryStorage, process_limit: in
             snap["office"] = {"installed": False, "status": "Не установлен"}
 
     # OneDrive
-    if not snap.get("onedrive"):
+    if not snap.get("onedrive") or snap.get("onedrive", {}).get("status") == "Не настроено" or not snap.get("onedrive", {}).get("installed"):
         try:
             from apps.windows.telemetry import SystemCollector
             snap["onedrive"] = SystemCollector().get_onedrive_info().model_dump()
@@ -1004,45 +1132,147 @@ def query_storage_battery_from_db(storage: TelemetryStorage) -> Dict[str, Any]:
 
 def query_hardware_tree_from_db(storage: TelemetryStorage) -> List[Dict[str, Any]]:
     """Извлекает иерархическое дерево оборудования из базы данных telemetry.db."""
-    latest_audit = storage.get_latest_extended_audit() or {}
-    raw_devices = latest_audit.get("devices") or []
+    # 1. Попытка прочесть последний аудит оборудования из hardware_audits
+    latest_audit = storage.get_latest_hardware_audit() or storage.get_latest_extended_audit() or {}
+    audit_data = latest_audit.get("data") if isinstance(latest_audit.get("data"), dict) else latest_audit
+    raw_devices = audit_data.get("devices") or latest_audit.get("devices") or []
     if raw_devices:
         tree = []
         for d in raw_devices:
+            drv = d.get("driver") or {}
+            props: Dict[str, Any] = {
+                "Идентификатор устройства": d.get("device_id") or d.get("hardware_id") or "N/A",
+                "Производитель": d.get("manufacturer") or "Unknown",
+                "Дата установки": d.get("install_date") or "N/A",
+                "Состояние": d.get("status") or "OK",
+            }
+            if drv and isinstance(drv, dict):
+                props["Драйвер"] = drv.get("name") or "System Driver"
+                props["Версия драйвера"] = drv.get("driver_version") or "N/A"
+                props["Дата драйвера"] = drv.get("driver_date") or "N/A"
+                props["Поставщик"] = drv.get("provider") or "Microsoft"
+                props["Актуальность драйвера"] = drv.get("currency_status") or "Актуален"
             tree.append({
                 "category": d.get("device_class") or d.get("category") or "Устройства",
                 "name": d.get("name") or d.get("friendly_name") or "Hardware",
-                "properties": d,
+                "properties": props,
             })
         return tree
 
+    # 2. Попытка прочесть из снимка hardware_audit
     snap = storage.get_latest_snapshot_full() or {}
     hw_audit = snap.get("hardware_audit") or {}
     if isinstance(hw_audit, dict) and hw_audit.get("devices"):
         tree = []
         for d in hw_audit["devices"]:
+            drv = d.get("driver") or {}
+            props = {
+                "Идентификатор устройства": d.get("device_id") or d.get("hardware_id") or "N/A",
+                "Производитель": d.get("manufacturer") or "Unknown",
+                "Дата установки": d.get("install_date") or "N/A",
+                "Состояние": d.get("status") or "OK",
+            }
+            if drv and isinstance(drv, dict):
+                props["Драйвер"] = drv.get("name") or "System Driver"
+                props["Версия драйвера"] = drv.get("driver_version") or "N/A"
+                props["Дата драйвера"] = drv.get("driver_date") or "N/A"
+                props["Поставщик"] = drv.get("provider") or "Microsoft"
+                props["Актуальность драйвера"] = drv.get("currency_status") or "Актуален"
             tree.append({
                 "category": d.get("device_class") or d.get("category") or "Устройства",
                 "name": d.get("name") or d.get("friendly_name") or "Hardware",
-                "properties": d,
+                "properties": props,
             })
         return tree
 
-    cpu_model = snap.get("cpu", {}).get("model") or "Intel / AMD Processor"
+    # 3. Резервный расчет на основе плоских строковых характеристик из снимка
+    cpu_data = snap.get("cpu", {})
+    cpu_model = cpu_data.get("model") or "Intel / AMD Processor"
     mem_total = snap.get("memory", {}).get("total_gb") or 16.0
+    mem_used = snap.get("memory", {}).get("used_gb") or 8.0
     gpus = snap.get("gpus") or [{"name": "Display Adapter"}]
     monitors = snap.get("monitors") or [{"name": "Generic Monitor"}]
     disks = snap.get("disks") or []
+    phys_disks = snap.get("physical_disks") or []
+    ram_sticks = snap.get("ram_sticks") or []
+    network = snap.get("network") or []
+
+    cpu_props = {
+        "Модель процессора": cpu_model,
+        "Архитектура": cpu_data.get("architecture") or "x86_64",
+        "Физических ядер": cpu_data.get("physical_cores", 1),
+        "Логических потоков": cpu_data.get("logical_cores", 1),
+        "Базовая частота": f"{cpu_data.get('frequency_mhz', 0)} MHz" if cpu_data.get("frequency_mhz") else "N/A",
+        "Текущая загрузка": f"{cpu_data.get('total_percent', 0.0)}%",
+    }
+
+    ram_props: Dict[str, Any] = {
+        "Общий объем памяти": f"{mem_total} GB",
+        "Используется памяти": f"{mem_used} GB ({snap.get('memory', {}).get('percent', 0)}%)",
+        "Количество модулей": f"{len(ram_sticks)} шт." if ram_sticks else "Не определено",
+    }
+    for idx, stick in enumerate(ram_sticks, 1):
+        ram_props[f"Модуль #{idx} ({stick.get('bank_label', 'DIMM')})"] = f"{stick.get('capacity_gb', 0)} GB {stick.get('memory_type', 'RAM')} @ {stick.get('speed_mhz', 0)} MHz ({stick.get('manufacturer', '')})"
+
+    gpu_props: Dict[str, Any] = {}
+    for idx, g in enumerate(gpus, 1):
+        gpu_props[f"Видеоадаптер #{idx}"] = f"{g.get('name', 'GPU')} ({g.get('memory_total_gb', 0)} GB VRAM)"
+
+    disk_props: Dict[str, Any] = {
+        "Всего логических томов": len(disks),
+        "Физических накопителей": len(phys_disks),
+    }
+    for d in disks:
+        disk_props[f"Раздел {d.get('device', '')}"] = f"Свободно {d.get('free_gb', 0)} GB из {d.get('total_gb', 0)} GB ({d.get('fstype', 'NTFS')})"
+    for p in phys_disks:
+        disk_props[f"Накопитель {p.get('device_id', '')}"] = f"{p.get('model', '')} ({p.get('size_gb', 0)} GB, {p.get('media_type', 'Disk')}, Здоровье: {p.get('health_status', 'OK')})"
+
+    mon_props: Dict[str, Any] = {}
+    for idx, m in enumerate(monitors, 1):
+        mon_props[f"Дисплей #{idx}"] = f"{m.get('name', 'Monitor')} ({m.get('width', 1920)}x{m.get('height', 1080)} @ {m.get('frequency_hz', 60)}Hz)"
+
+    net_props: Dict[str, Any] = {}
+    for idx, n in enumerate(network, 1):
+        net_props[f"Сетевой адаптер #{idx}"] = f"{n.get('name', 'Interface')} ({'Активно' if n.get('is_up') else 'Отключено'}, {n.get('speed_mbps', 0)} Mbps)"
+
+    os_props = {
+        "Операционная система": snap.get("os_name", "Windows"),
+        "Номер сборки": snap.get("os_build") or "Windows Build",
+        "Время непрерывной работы": f"{round(float(snap.get('uptime_seconds') or 0) / 3600, 1)} часов",
+    }
 
     return [
-        {"category": "Процессор (CPU)", "name": cpu_model, "properties": snap.get("cpu", {})},
-        {"category": "Системная память (RAM)", "name": f"{mem_total} GB RAM", "properties": {"total_gb": mem_total, "ram_sticks": snap.get("ram_sticks", [])}},
-        {"category": "Видеоадаптеры (GPU)", "name": gpus[0].get("name", "GPU"), "properties": gpus[0]},
-        {"category": "Дисковые устройства", "name": f"Логических томов: {len(disks)}", "properties": {"partitions": disks, "physical_disks": snap.get("physical_disks", [])}},
-        {"category": "Мониторы и дисплеи", "name": monitors[0].get("name", "Monitor"), "properties": {"monitors": monitors}},
-        {"category": "Сетевые адаптеры", "name": "Network Controllers", "properties": {"network": snap.get("network", [])}},
-        {"category": "Операционная система", "name": snap.get("os_name", "Windows"), "properties": {"os_build": snap.get("os_build"), "uptime": snap.get("uptime_seconds")}},
+        {"category": "Процессор (CPU)", "name": cpu_model, "properties": cpu_props},
+        {"category": "Системная память (RAM)", "name": f"{mem_total} GB RAM", "properties": ram_props},
+        {"category": "Видеоадаптеры (GPU)", "name": gpus[0].get("name", "GPU"), "properties": gpu_props},
+        {"category": "Дисковые устройства", "name": f"Логических томов: {len(disks)}", "properties": disk_props},
+        {"category": "Мониторы и дисплеи", "name": monitors[0].get("name", "Monitor"), "properties": mon_props},
+        {"category": "Сетевые адаптеры", "name": "Network Controllers", "properties": net_props},
+        {"category": "Операционная система", "name": snap.get("os_name", "Windows"), "properties": os_props},
     ]
+
+
+async def query_hardware_tree_full(storage: TelemetryStorage, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    """Извлекает иерархическое дерево оборудования из SystemCollector или telemetry.db."""
+    # 1. Попытка получить живое подробное дерево через SystemCollector
+    try:
+        from apps.windows.telemetry.collector import SystemCollector
+        collector = SystemCollector(storage=storage)
+        nodes = await collector.get_hardware_tree_async(force=force_refresh)
+        if nodes:
+            return [
+                {
+                    "category": n.category if hasattr(n, "category") else n.get("category", "Device"),
+                    "name": n.name if hasattr(n, "name") else n.get("name", "Hardware"),
+                    "properties": n.properties if hasattr(n, "properties") else n.get("properties", {}),
+                }
+                for n in nodes
+            ]
+    except Exception as col_err:
+        logger.debug(f"[router_about_system] Не удалось собрать живое дерево через SystemCollector: {col_err}")
+
+    # 2. Резервное извлечение из базы данных
+    return query_hardware_tree_from_db(storage)
 
 
 def query_backup_health_from_db(storage: TelemetryStorage) -> Dict[str, Any]:
@@ -1106,9 +1336,9 @@ def init_router() -> APIRouter:
     # =========================================================================
     @router.get("/api/v1/system/hardware")
     @router.get("/api/v1/tc/hardware")
-    async def get_system_hardware_spec() -> List[Dict[str, Any]]:
-        """Получение спецификации оборудования для Hardware Tree из telemetry.db."""
-        return query_hardware_tree_from_db(storage)
+    async def get_system_hardware_spec(force: bool = False) -> List[Dict[str, Any]]:
+        """Получение спецификации оборудования для Hardware Tree из SystemCollector или telemetry.db."""
+        return await query_hardware_tree_full(storage, force_refresh=force)
 
     # =========================================================================
     # 0.02. Износ накопителей и батареи (Storage & Battery Wear)
@@ -1293,5 +1523,463 @@ def init_router() -> APIRouter:
         except Exception as exc:
             logger.error(f"[router_about_system] Ошибка при чтении панели /disk_io: {exc}", exc_info=True)
             return DiskIoPanelResponse()
+
+    # =========================================================================
+    # 9. Переименование компьютера: POST /api/v1/system/rename-computer
+    # =========================================================================
+    @router.post("/api/v1/system/rename-computer", response_model=RenameComputerResponse)
+    async def rename_computer_endpoint(req: RenameComputerRequest) -> RenameComputerResponse:
+        """Переименование компьютера в Windows через команду Rename-Computer."""
+        old_name = platform.node() or "Host"
+        clean_name = req.new_name.strip()
+
+        # Валидация NetBIOS имени хоста
+        if not re.match(r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,13}[a-zA-Z0-9])?$", clean_name):
+            return RenameComputerResponse(
+                status="error",
+                old_name=old_name,
+                new_name=clean_name,
+                message="Недопустимый формат имени. Разрешены буквы (A-Z), цифры (0-9) и дефис (-), длина от 1 до 15 символов.",
+                restart_scheduled=False,
+            )
+
+        if clean_name.lower() == old_name.lower():
+            return RenameComputerResponse(
+                status="ok",
+                old_name=old_name,
+                new_name=clean_name,
+                message="Имя совпадает с текущим. Изменения не требуются.",
+                restart_scheduled=False,
+            )
+
+        try:
+            cmd = f"Rename-Computer -NewName '{clean_name}' -Force"
+            proc = await asyncio.create_subprocess_exec(
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_text = stderr.decode("utf-8", errors="replace").strip() or stdout.decode("utf-8", errors="replace").strip()
+                logger.warning(f"[router_about_system] Ошибка Rename-Computer: {err_text}")
+                return RenameComputerResponse(
+                    status="error",
+                    old_name=old_name,
+                    new_name=clean_name,
+                    message=f"Ошибка переименования: {err_text}. Возможно, требуются права администратора.",
+                    restart_scheduled=False,
+                )
+
+            msg = f"Имя компьютера успешно изменено на '{clean_name}'. Изменения вступят в силу после перезагрузки."
+            if req.restart:
+                await asyncio.create_subprocess_exec("shutdown.exe", "/r", "/t", "5", "/c", "AI-Breadboard: Перезагрузка для применения нового имени хоста.")
+                msg += " Перезагрузка системы запланирована через 5 секунд."
+
+            return RenameComputerResponse(
+                status="ok",
+                old_name=old_name,
+                new_name=clean_name,
+                message=msg,
+                restart_scheduled=req.restart,
+            )
+        except Exception as exc:
+            logger.error(f"[router_about_system] Ошибка при переименовании компьютера: {exc}", exc_info=True)
+            return RenameComputerResponse(
+                status="error",
+                old_name=old_name,
+                new_name=clean_name,
+                message=f"Внутренняя ошибка: {exc}",
+                restart_scheduled=False,
+            )
+
+    # =========================================================================
+    # 10. Изменение рабочей группы: POST /api/v1/system/change-workgroup
+    # =========================================================================
+    @router.post("/api/v1/system/change-workgroup", response_model=ChangeWorkgroupResponse)
+    async def change_workgroup_endpoint(req: ChangeWorkgroupRequest) -> ChangeWorkgroupResponse:
+        """Изменение рабочей группы в Windows через команду Add-Computer."""
+        old_wg = get_windows_workgroup()
+        clean_wg = req.new_workgroup.strip().upper()
+
+        # Валидация NetBIOS имени рабочей группы
+        if not re.match(r"^[a-zA-Z0-9_\-]{1,15}$", clean_wg):
+            return ChangeWorkgroupResponse(
+                status="error",
+                old_workgroup=old_wg,
+                new_workgroup=clean_wg,
+                message="Недопустимый формат имени рабочей группы. Разрешены буквы (A-Z), цифры (0-9), дефис (-) и подчеркивание (_), длина от 1 до 15 символов.",
+                restart_scheduled=False,
+            )
+
+        if clean_wg.lower() == old_wg.lower():
+            return ChangeWorkgroupResponse(
+                status="ok",
+                old_workgroup=old_wg,
+                new_workgroup=clean_wg,
+                message="Имя рабочей группы совпадает с текущим. Изменения не требуются.",
+                restart_scheduled=False,
+            )
+
+        try:
+            cmd = f"Add-Computer -WorkGroupName '{clean_wg}' -Force"
+            proc = await asyncio.create_subprocess_exec(
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_text = stderr.decode("utf-8", errors="replace").strip() or stdout.decode("utf-8", errors="replace").strip()
+                logger.warning(f"[router_about_system] Ошибка Add-Computer: {err_text}")
+                return ChangeWorkgroupResponse(
+                    status="error",
+                    old_workgroup=old_wg,
+                    new_workgroup=clean_wg,
+                    message=f"Ошибка смены рабочей группы: {err_text}. Возможно, требуются права администратора.",
+                    restart_scheduled=False,
+                )
+
+            msg = f"Рабочая группа успешно изменена на '{clean_wg}'. Изменения вступят в силу после перезагрузки."
+            if req.restart:
+                await asyncio.create_subprocess_exec("shutdown.exe", "/r", "/t", "5", "/c", "AI-Breadboard: Перезагрузка для применения новой рабочей группы.")
+                msg += " Перезагрузка системы запланирована через 5 секунд."
+
+            return ChangeWorkgroupResponse(
+                status="ok",
+                old_workgroup=old_wg,
+                new_workgroup=clean_wg,
+                message=msg,
+                restart_scheduled=req.restart,
+            )
+        except Exception as exc:
+            logger.error(f"[router_about_system] Ошибка при смене рабочей группы: {exc}", exc_info=True)
+            return ChangeWorkgroupResponse(
+                status="error",
+                old_workgroup=old_wg,
+                new_workgroup=clean_wg,
+                message=f"Внутренняя ошибка: {exc}",
+                restart_scheduled=False,
+            )
+
+    # =========================================================================
+    # 11. Получение региональных настроек: GET /api/v1/system/regional-options
+    # =========================================================================
+    @router.get("/api/v1/system/regional-options", response_model=RegionalOptionsResponse)
+    async def get_regional_options_endpoint() -> RegionalOptionsResponse:
+        """Получение текущих региональных параметров, списка часовых поясов и локалей."""
+        def _fetch_options() -> RegionalOptionsResponse:
+            current_tz_id = ""
+            current_tz_name = ""
+            current_sys_loc = "ru-RU"
+            current_usr_loc = "ru-RU"
+            username = os.environ.get("USERNAME", "User")
+            user_fullname = ""
+            user_desc = ""
+            codepage = "UTF-8 (65001)"
+
+            # Текущая таймзона
+            try:
+                proc = subprocess.run(["tzutil", "/g"], capture_output=True, text=True, timeout=2)
+                if proc.returncode == 0 and proc.stdout.strip():
+                    current_tz_id = proc.stdout.strip()
+            except Exception as e:
+                logger.debug(f"[router_about_system] Ошибка tzutil /g: {e}")
+
+            # Список таймзон
+            tz_list: List[TimezoneOption] = []
+            try:
+                ps_cmd = "[System.TimeZoneInfo]::GetSystemTimeZones() | Select-Object Id, DisplayName, @{N='Offset';E={$_.BaseUtcOffset.TotalMinutes}} | ConvertTo-Json -Compress"
+                p = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", ps_cmd], capture_output=True, text=True, timeout=5)
+                if p.returncode == 0 and p.stdout.strip():
+                    data = json.loads(p.stdout.strip())
+                    if isinstance(data, list):
+                        for item in data:
+                            if isinstance(item, dict) and item.get("Id"):
+                                tz_list.append(TimezoneOption(
+                                    id=str(item["Id"]),
+                                    display_name=str(item.get("DisplayName", item["Id"])),
+                                    offset_minutes=int(item.get("Offset") or 0)
+                                ))
+            except Exception as e:
+                logger.debug(f"[router_about_system] Ошибка получения TimeZones: {e}")
+
+            # Fallback для таймзон если список пуст
+            if not tz_list:
+                default_tzs = [
+                    ("Dateline Standard Time", "(UTC-12:00) International Date Line West", -720),
+                    ("Hawaiian Standard Time", "(UTC-10:00) Hawaii", -600),
+                    ("Pacific Standard Time", "(UTC-08:00) Pacific Time (US & Canada)", -480),
+                    ("Mountain Standard Time", "(UTC-07:00) Mountain Time (US & Canada)", -420),
+                    ("Central Standard Time", "(UTC-06:00) Central Time (US & Canada)", -360),
+                    ("Eastern Standard Time", "(UTC-05:00) Eastern Time (US & Canada)", -300),
+                    ("UTC", "(UTC) Coordinated Universal Time", 0),
+                    ("GMT Standard Time", "(UTC+00:00) Dublin, Edinburgh, Lisbon, London", 0),
+                    ("W. Europe Standard Time", "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna", 60),
+                    ("Israel Standard Time", "(UTC+02:00) Jerusalem", 120),
+                    ("FLE Standard Time", "(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius", 120),
+                    ("Russian Standard Time", "(UTC+03:00) Moscow, St. Petersburg", 180),
+                    ("Arabic Standard Time", "(UTC+03:00) Baghdad, Riyadh", 180),
+                    ("Arabian Standard Time", "(UTC+04:00) Abu Dhabi, Muscat", 240),
+                    ("Ekaterinburg Standard Time", "(UTC+05:00) Ekaterinburg", 300),
+                    ("India Standard Time", "(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi", 330),
+                    ("Omsk Standard Time", "(UTC+06:00) Omsk", 360),
+                    ("SE Asia Standard Time", "(UTC+07:00) Bangkok, Hanoi, Jakarta", 420),
+                    ("China Standard Time", "(UTC+08:00) Beijing, Chongqing, Hong Kong", 480),
+                    ("Tokyo Standard Time", "(UTC+09:00) Osaka, Sapporo, Tokyo", 540),
+                    ("AUS Eastern Standard Time", "(UTC+10:00) Canberra, Melbourne, Sydney", 600),
+                    ("Vladivostok Standard Time", "(UTC+10:00) Vladivostok", 600),
+                    ("New Zealand Standard Time", "(UTC+12:00) Auckland, Wellington", 720),
+                ]
+                for tid, tname, toff in default_tzs:
+                    tz_list.append(TimezoneOption(id=tid, display_name=tname, offset_minutes=toff))
+
+            if current_tz_id:
+                for t in tz_list:
+                    if t.id.lower() == current_tz_id.lower():
+                        current_tz_name = t.display_name
+                        break
+                if not current_tz_name:
+                    current_tz_name = current_tz_id
+
+            # Локали
+            try:
+                p_loc = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "(Get-WinSystemLocale).Name; (Get-Culture).Name"], capture_output=True, text=True, timeout=3)
+                if p_loc.returncode == 0:
+                    lines = [l.strip() for l in p_loc.stdout.splitlines() if l.strip()]
+                    if len(lines) >= 1:
+                        current_sys_loc = lines[0]
+                    if len(lines) >= 2:
+                        current_usr_loc = lines[1]
+            except Exception as e:
+                logger.debug(f"[router_about_system] Ошибка получения локалей: {e}")
+
+            # Пользователь
+            try:
+                p_usr = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", f"Get-LocalUser -Name '{username}' | Select-Object FullName, Description | ConvertTo-Json -Compress"], capture_output=True, text=True, timeout=3)
+                if p_usr.returncode == 0 and p_usr.stdout.strip():
+                    u_data = json.loads(p_usr.stdout.strip())
+                    if isinstance(u_data, dict):
+                        user_fullname = u_data.get("FullName") or ""
+                        user_desc = u_data.get("Description") or ""
+            except Exception as e:
+                logger.debug(f"[router_about_system] Ошибка Get-LocalUser: {e}")
+
+            curated_locales = [
+                LocaleOption(code="ru-RU", name="Русский (Россия) [ru-RU]"),
+                LocaleOption(code="en-US", name="English (United States) [en-US]"),
+                LocaleOption(code="en-GB", name="English (United Kingdom) [en-GB]"),
+                LocaleOption(code="he-IL", name="עברית (ישראל) [he-IL]"),
+                LocaleOption(code="de-DE", name="Deutsch (Deutschland) [de-DE]"),
+                LocaleOption(code="fr-FR", name="Français (France) [fr-FR]"),
+                LocaleOption(code="es-ES", name="Español (España) [es-ES]"),
+                LocaleOption(code="it-IT", name="Italiano (Italia) [it-IT]"),
+                LocaleOption(code="zh-CN", name="中文 (简体, 中国) [zh-CN]"),
+                LocaleOption(code="ja-JP", name="日本語 (日本) [ja-JP]"),
+                LocaleOption(code="tr-TR", name="Türkçe (Türkiye) [tr-TR]"),
+                LocaleOption(code="uk-UA", name="Українська (Україна) [uk-UA]"),
+                LocaleOption(code="pl-PL", name="Polski (Polska) [pl-PL]"),
+                LocaleOption(code="pt-BR", name="Português (Brasil) [pt-BR]"),
+            ]
+
+            return RegionalOptionsResponse(
+                status="ok",
+                current_timezone=current_tz_id,
+                current_timezone_name=current_tz_name,
+                current_system_locale=current_sys_loc,
+                current_user_locale=current_usr_loc,
+                current_username=username,
+                current_user_fullname=user_fullname,
+                current_user_description=user_desc,
+                current_codepage=codepage,
+                timezones=tz_list,
+                locales=curated_locales,
+            )
+
+        return await asyncio.to_thread(_fetch_options)
+
+    # =========================================================================
+    # 12. Установка часового пояса: POST /api/v1/system/set-timezone
+    # =========================================================================
+    @router.post("/api/v1/system/set-timezone", response_model=SetTimezoneResponse)
+    async def set_timezone_endpoint(req: SetTimezoneRequest) -> SetTimezoneResponse:
+        """Изменение часового пояса Windows через tzutil /s."""
+        tz_id = req.timezone_id.strip()
+        if not re.match(r"^[a-zA-Z0-9_\-\.\s\(\)\+]+$", tz_id):
+            return SetTimezoneResponse(
+                status="error",
+                old_timezone="",
+                new_timezone=tz_id,
+                message="Недопустимый идентификатор часового пояса.",
+            )
+
+        old_tz = ""
+        try:
+            p_old = await asyncio.create_subprocess_exec("tzutil.exe", "/g", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            stdout_old, _ = await p_old.communicate()
+            old_tz = stdout_old.decode("utf-8", errors="replace").strip()
+        except Exception:
+            pass
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "tzutil.exe",
+                "/s",
+                tz_id,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_text = stderr.decode("utf-8", errors="replace").strip() or stdout.decode("utf-8", errors="replace").strip()
+                logger.warning(f"[router_about_system] Ошибка tzutil /s: {err_text}")
+                return SetTimezoneResponse(
+                    status="error",
+                    old_timezone=old_tz,
+                    new_timezone=tz_id,
+                    message=f"Не удалось изменить часовой пояс: {err_text}. Требуются права администратора.",
+                )
+
+            return SetTimezoneResponse(
+                status="ok",
+                old_timezone=old_tz,
+                new_timezone=tz_id,
+                message=f"Часовой пояс успешно изменен на '{tz_id}'.",
+            )
+        except Exception as exc:
+            logger.error(f"[router_about_system] Ошибка при установке часового пояса: {exc}", exc_info=True)
+            return SetTimezoneResponse(
+                status="error",
+                old_timezone=old_tz,
+                new_timezone=tz_id,
+                message=f"Внутренняя ошибка: {exc}",
+            )
+
+    # =========================================================================
+    # 13. Установка системной локали: POST /api/v1/system/set-locale
+    # =========================================================================
+    @router.post("/api/v1/system/set-locale", response_model=SetLocaleResponse)
+    async def set_locale_endpoint(req: SetLocaleRequest) -> SetLocaleResponse:
+        """Изменение системной локали Windows через Set-WinSystemLocale."""
+        loc = req.system_locale.strip()
+        if not re.match(r"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$", loc):
+            return SetLocaleResponse(
+                status="error",
+                system_locale=loc,
+                message="Некорректный формат языкового тега локали (например: ru-RU, en-US).",
+                restart_required=False,
+            )
+
+        try:
+            cmd = f"Set-WinSystemLocale -SystemLocale '{loc}'"
+            if req.user_locale and re.match(r"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$", req.user_locale.strip()):
+                u_loc = req.user_locale.strip()
+                cmd += f"; Set-Culture '{u_loc}'"
+
+            proc = await asyncio.create_subprocess_exec(
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_text = stderr.decode("utf-8", errors="replace").strip() or stdout.decode("utf-8", errors="replace").strip()
+                logger.warning(f"[router_about_system] Ошибка Set-WinSystemLocale: {err_text}")
+                return SetLocaleResponse(
+                    status="error",
+                    system_locale=loc,
+                    message=f"Не удалось изменить локаль: {err_text}. Требуются права администратора.",
+                    restart_required=False,
+                )
+
+            return SetLocaleResponse(
+                status="ok",
+                system_locale=loc,
+                message=f"Системная локаль успешно изменена на '{loc}'. Изменения вступят в силу после перезагрузки.",
+                restart_required=True,
+            )
+        except Exception as exc:
+            logger.error(f"[router_about_system] Ошибка при установке локали: {exc}", exc_info=True)
+            return SetLocaleResponse(
+                status="error",
+                system_locale=loc,
+                message=f"Внутренняя ошибка: {exc}",
+                restart_required=False,
+            )
+
+    # =========================================================================
+    # 14. Обновление профиля пользователя: POST /api/v1/system/update-user-profile
+    # =========================================================================
+    @router.post("/api/v1/system/update-user-profile", response_model=UpdateUserProfileResponse)
+    async def update_user_profile_endpoint(req: UpdateUserProfileRequest) -> UpdateUserProfileResponse:
+        """Обновление описания и полного имени локального пользователя через Set-LocalUser."""
+        target_user = req.username.strip() or os.environ.get("USERNAME", "User")
+        if not re.match(r"^[a-zA-Z0-9_\-\.]{1,64}$", target_user):
+            return UpdateUserProfileResponse(
+                status="error",
+                username=target_user,
+                message="Недопустимое имя пользователя.",
+            )
+
+        ps_args = []
+        if req.full_name is not None:
+            clean_fn = req.full_name.replace("'", "''")
+            ps_args.append(f"-FullName '{clean_fn}'")
+        if req.description is not None:
+            clean_desc = req.description.replace("'", "''")
+            ps_args.append(f"-Description '{clean_desc}'")
+
+        if not ps_args:
+            return UpdateUserProfileResponse(
+                status="ok",
+                username=target_user,
+                message="Параметры для изменения не указаны.",
+            )
+
+        try:
+            cmd = f"Set-LocalUser -Name '{target_user}' " + " ".join(ps_args)
+            proc = await asyncio.create_subprocess_exec(
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_text = stderr.decode("utf-8", errors="replace").strip() or stdout.decode("utf-8", errors="replace").strip()
+                logger.warning(f"[router_about_system] Ошибка Set-LocalUser: {err_text}")
+                return UpdateUserProfileResponse(
+                    status="error",
+                    username=target_user,
+                    message=f"Не удалось обновить профиль пользователя: {err_text}. Требуются права администратора.",
+                )
+
+            return UpdateUserProfileResponse(
+                status="ok",
+                username=target_user,
+                message=f"Профиль пользователя '{target_user}' успешно обновлен.",
+            )
+        except Exception as exc:
+            logger.error(f"[router_about_system] Ошибка при обновлении профиля пользователя: {exc}", exc_info=True)
+            return UpdateUserProfileResponse(
+                status="error",
+                username=target_user,
+                message=f"Внутренняя ошибка: {exc}",
+            )
 
     return router

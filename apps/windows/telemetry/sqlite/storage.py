@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 05:33:00
+# Updated: 2026-10-06 07:58:00
 # =============================================================================
 
 from __future__ import annotations
@@ -80,9 +80,19 @@ class TelemetryStorage:
 
         # 1. Определение путей базы данных
         if db_path is None:
-            appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
-            base_dir = Path(appdata) if appdata and os.path.exists(appdata) else (Path.home() / '.config')
-            target_dir = base_dir / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs'
+            programdata = os.environ.get('ProgramData') or os.environ.get('ALLUSERSPROFILE')
+            if programdata and os.path.exists(programdata):
+                base_dir = Path(programdata)
+            else:
+                appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+                base_dir = Path(appdata) if appdata and os.path.exists(appdata) else (Path.home() / '.config')
+
+            ai_tel_dir = base_dir / 'AITelemetry' / 'data'
+            if (ai_tel_dir / 'telemetry.db').is_file() or ai_tel_dir.is_dir():
+                target_dir = ai_tel_dir
+            else:
+                target_dir = base_dir / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs'
+
             if not self.read_only:
                 target_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = target_dir / 'telemetry.db'
@@ -488,6 +498,34 @@ class TelemetryStorage:
     def get_device_install_date(self, device_instance_id: str) -> Optional[str]:
         return self._reader.get_device_install_date(device_instance_id=device_instance_id)
 
+    def get_or_create_device_install_date(
+        self,
+        device_instance_id: str,
+        friendly_name: Optional[str] = None,
+        device_class: Optional[str] = None,
+        default_date: Optional[str] = None,
+    ) -> str:
+        """Возвращает существующую дату установки устройства или сохраняет новую."""
+        existing = self._reader.get_device_install_date(device_instance_id)
+        if existing:
+            return existing
+        date_to_save = default_date or datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')
+        if not self.read_only:
+            try:
+                with self._cm.lock, self._cm.get_connection() as conn:
+                    cursor = conn.cursor()
+                    self._writer.upsert_device_inventory(
+                        cursor=cursor,
+                        device_instance_id=device_instance_id,
+                        friendly_name=friendly_name,
+                        device_class=device_class,
+                        install_date=date_to_save,
+                    )
+                    conn.commit()
+            except Exception as ex:
+                logger.debug(f'Ошибка сохранения инвентаря устройства: {ex}')
+        return date_to_save
+
     def get_w64_events(self, event_type: Optional[str] = None, provider: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
         return self._reader.get_w64_events(event_type=event_type, provider=provider, limit=limit)
 
@@ -508,6 +546,12 @@ class TelemetryStorage:
 
     def get_latest_extended_audit(self) -> Optional[Dict[str, Any]]:
         return self._reader.get_latest_extended_audit()
+
+    def get_hardware_audits(self, limit: int = 50) -> List[Dict[str, Any]]:
+        return self._reader.get_hardware_audits(limit=limit)
+
+    def get_latest_hardware_audit(self) -> Optional[Dict[str, Any]]:
+        return self._reader.get_latest_hardware_audit()
 
     def get_telemetry_rollups(self, level: str = 'hourly', sensor_id: Optional[str] = None, start_epoch: Optional[float] = None, end_epoch: Optional[float] = None, limit: int = 100) -> List[Dict[str, Any]]:
         return self._reader.get_telemetry_rollups(level=level, sensor_id=sensor_id, start_epoch=start_epoch, end_epoch=end_epoch, limit=limit)

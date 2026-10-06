@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:34:00
+# Updated: 2026-10-06 11:06:00
 # =============================================================================
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -667,16 +668,27 @@ def init_router() -> APIRouter:
 
     @router.get("/hardware")
     async def get_hardware(request: Request) -> Dict[str, Any]:
-        """Получение данных спецификации оборудования и активных датчиков из базы данных telemetry.db."""
+        """Получение данных спецификации оборудования и активных датчиков."""
         storage = get_storage()
+        collector = get_collector()
         sensors = storage.get_latest_sensors()
         sensors_list = [{"name": s.get("name") or s.get("sensor_id"), "value": s.get("value"), "unit": s.get("unit")} for s in sensors]
 
-        latest_audit = storage.get_latest_extended_audit() or {}
-        devices = latest_audit.get("devices") or []
         hardware = []
-        for d in devices:
-            hardware.append({"category": d.get("device_class") or "Device", "name": d.get("name") or "Hardware", "properties": d})
+        try:
+            nodes = await collector.get_hardware_tree_async()
+            for n in nodes:
+                hardware.append({
+                    "category": n.category if hasattr(n, "category") else n.get("category", "Device"),
+                    "name": n.name if hasattr(n, "name") else n.get("name", "Hardware"),
+                    "properties": n.properties if hasattr(n, "properties") else n.get("properties", {}),
+                })
+        except Exception:
+            latest_audit = storage.get_latest_hardware_audit() or storage.get_latest_extended_audit() or {}
+            audit_data = latest_audit.get("data") if isinstance(latest_audit.get("data"), dict) else latest_audit
+            devices = audit_data.get("devices") or latest_audit.get("devices") or []
+            for d in devices:
+                hardware.append({"category": d.get("device_class") or "Device", "name": d.get("name") or "Hardware", "properties": d})
 
         return {"hardware": hardware, "sensors": sensors_list}
 
@@ -697,13 +709,24 @@ def init_router() -> APIRouter:
 
     @router.get("/hardware/tree")
     async def get_hardware_tree(request: Request) -> Dict[str, Any]:
-        """Получение иерархического дерева оборудования в стиле AIDA64 из базы данных telemetry.db."""
+        """Получение иерархического дерева оборудования в стиле AIDA64."""
         storage = get_storage()
-        latest_audit = storage.get_latest_extended_audit() or {}
-        devices = latest_audit.get("devices") or []
+        collector = get_collector()
         tree = []
-        for d in devices:
-            tree.append({"category": d.get("device_class") or "Device", "name": d.get("name") or "Hardware", "properties": d})
+        try:
+            nodes = await collector.get_hardware_tree_async()
+            for n in nodes:
+                tree.append({
+                    "category": n.category if hasattr(n, "category") else n.get("category", "Device"),
+                    "name": n.name if hasattr(n, "name") else n.get("name", "Hardware"),
+                    "properties": n.properties if hasattr(n, "properties") else n.get("properties", {}),
+                })
+        except Exception:
+            latest_audit = storage.get_latest_hardware_audit() or storage.get_latest_extended_audit() or {}
+            audit_data = latest_audit.get("data") if isinstance(latest_audit.get("data"), dict) else latest_audit
+            devices = audit_data.get("devices") or latest_audit.get("devices") or []
+            for d in devices:
+                tree.append({"category": d.get("device_class") or "Device", "name": d.get("name") or "Hardware", "properties": d})
         return {"tree": tree}
 
     @router.get("/hardware/sensors")
@@ -957,6 +980,90 @@ def init_router() -> APIRouter:
             "interval_seconds": ctrl.get_current_interval(),
         }
 
+    @router.post("/godmode/open")
+    @router.get("/godmode/open")
+    async def open_god_mode() -> Dict[str, Any]:
+        """Открывает виртуальную папку Windows God Mode (All Tasks) или переводит фокус на уже открытое окно."""
+        god_mode_guid = "ED7BA470-8E54-465E-825C-99712043E01C"
+        hwnd = None
+
+        # 1. Попытка найти уже открытое окно проводника через Shell.Application COM
+        try:
+            import win32com.client
+            shell = win32com.client.Dispatch("Shell.Application")
+            for w in shell.Windows():
+                url = getattr(w, "LocationURL", "") or ""
+                name = getattr(w, "LocationName", "") or ""
+                if god_mode_guid in url.upper() or god_mode_guid in name.upper():
+                    hwnd = getattr(w, "HWND", None)
+                    if hwnd:
+                        break
+        except Exception as exc:
+            logger.debug(f"[router_tc] Поиск окна God Mode через Shell.Application: {exc}")
+
+        # 2. Fallback: поиск через EnumWindows Win32
+        if not hwnd:
+            try:
+                import ctypes
+                from ctypes import wintypes
+                found = []
+                WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+
+                def _enum_cb(h, _):
+                    if ctypes.windll.user32.IsWindowVisible(h):
+                        length = ctypes.windll.user32.GetWindowTextLengthW(h)
+                        if length > 0:
+                            buff = ctypes.create_unicode_buffer(length + 1)
+                            ctypes.windll.user32.GetWindowTextW(h, buff, length + 1)
+                            title = buff.value
+                            if god_mode_guid.lower() in title.lower() or any(k in title.lower() for k in ["все задачи", "all tasks", "god mode"]):
+                                found.append(h)
+                    return True
+
+                ctypes.windll.user32.EnumWindows(WNDENUMPROC(_enum_cb), 0)
+                if found:
+                    hwnd = found[0]
+            except Exception as exc:
+                logger.debug(f"[router_tc] Поиск окна через EnumWindows: {exc}")
+
+        # 3. Если окно найдено — восстанавливаем и переводим на него фокус
+        if hwnd:
+            try:
+                import ctypes
+                user32 = ctypes.windll.user32
+                user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                user32.AllowSetForegroundWindow(-1)
+                user32.BringWindowToTop(hwnd)
+                user32.SetForegroundWindow(hwnd)
+                user32.SwitchToThisWindow(hwnd, True)
+                logger.info(f"[router_tc] Переведён фокус на существующее окно God Mode (HWND {hwnd})")
+                return {
+                    "status": "ok",
+                    "action": "focused",
+                    "hwnd": hwnd,
+                    "message": "Фокус переведён на открытое окно God Mode",
+                }
+            except Exception as exc:
+                logger.warning(f"[router_tc] Не удалось активировать окно HWND {hwnd}: {exc}")
+
+        # 4. Если окно не было открыто — запускаем
+        try:
+            bin_godmode = __root__ / "bin" / f".{{{god_mode_guid}}}"
+            if bin_godmode.exists():
+                target = str(bin_godmode.resolve())
+            else:
+                target = f"shell:::{{{god_mode_guid}}}"
+
+            subprocess.Popen(["explorer.exe", target])
+            logger.info(f"[router_tc] Открыт God Mode: {target}")
+            return {
+                "status": "ok",
+                "action": "opened",
+                "message": "Папка God Mode успешно открыта в Проводнике Windows",
+            }
+        except Exception as exc:
+            logger.error(f"[router_tc] Ошибка открытия God Mode: {exc}")
+            return {"status": "error", "message": str(exc)}
 
     return router
 

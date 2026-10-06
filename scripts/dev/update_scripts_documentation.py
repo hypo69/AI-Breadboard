@@ -18,7 +18,7 @@
 # Package: scripts.dev
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:27:07
+# Updated: 2026-10-06 10:10:00
 # =============================================================================
 
 """Automatic scripts documentation generation and update script.
@@ -207,9 +207,10 @@ def main():
         print('\n' + '=' * 60)
         print('ADDITIONAL DEPENDENCY ANALYSIS')
         print('=' * 60)
-        if (PROJECT_ROOT / 'analyze_dependencies.py').exists():
+        dep_script = PROJECT_ROOT / 'analyze_dependencies.py'
+        if dep_script.exists():
             import subprocess
-            result = subprocess.run([sys.executable, 'analyze_dependencies.py'], capture_output=True, text=True)
+            result = subprocess.run([sys.executable, str(dep_script)], capture_output=True, text=True)
             print(result.stdout)
             if result.stderr:
                 print(f'Warnings: {result.stderr}')

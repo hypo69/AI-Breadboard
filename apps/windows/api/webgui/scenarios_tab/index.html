@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/scenarios_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-06 10:38:00
 =============================================================================
 -->
 
@@ -25,13 +25,13 @@ Updated: 2026-10-01 13:04:40
 <div class="container-fluid p-0 scenarios-tab-wrapper">
   
   <!-- Header & Quick Actions -->
-  <div class="card bg-dark bg-opacity-50 border-secondary-subtle mb-3 shadow-sm">
+  <div class="card border-secondary-subtle mb-3 shadow-sm">
     <div class="card-body p-3">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-2">
           <div class="fs-2">🎬</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
               <span>Сценарии тестирования и автоматизации</span>
               <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fs-6">Test Computer (/tc)</span>
             </h5>
@@ -66,14 +66,14 @@ Updated: 2026-10-01 13:04:40
   <!-- Main View: AI Assistant Mini-Chat (expanded to full panel width and >= 80% height) -->
   <div class="row g-3">
     <div class="col-12">
-      <div class="card bg-dark bg-opacity-75 border-secondary-subtle shadow-sm d-flex flex-column" style="min-height: 80vh; height: calc(100vh - 170px);">
+      <div class="card scenario-chat-card border-secondary-subtle shadow-sm d-flex flex-column" style="min-height: 80vh; height: calc(100vh - 170px);">
         
         <!-- Chat Header -->
-        <div class="card-header bg-transparent border-secondary-subtle py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="card-header border-secondary-subtle py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-5">💬</span>
             <div>
-              <h6 class="mb-0 fw-bold text-white">AI Ассистент сценариев & Навыков</h6>
+              <h6 class="mb-0 fw-bold">AI Ассистент сценариев & Навыков</h6>
               <div class="text-muted small" style="font-size: 0.75rem;">Спросите что угодно о компьютере — система проверит и создаст навык</div>
             </div>
           </div>
@@ -82,15 +82,18 @@ Updated: 2026-10-01 13:04:40
               <i class="bi bi-layout-sidebar-reverse"></i>
               <span>Сценарии</span>
             </button>
-            <button class="btn btn-outline-secondary btn-sm py-0.5 px-2 text-light border-secondary" id="btn-scenario-new-chat" title="Очистить контекст и начать новую сессию диалога" style="font-size: 0.75rem;">
+            <button class="btn btn-outline-secondary btn-sm py-0.5 px-2 border-secondary" id="btn-scenario-new-chat" title="Очистить контекст и начать новую сессию диалога" style="font-size: 0.75rem;">
               <i class="bi bi-arrow-counterclockwise me-1"></i>Новая сессия
+            </button>
+            <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 ms-2" id="btn-clear-dialog" title="Очистить диалог и сбросить историю" style="font-size: 0.75rem;">
+              <i class="bi bi-trash"></i>Очистить диалог
             </button>
             <span class="badge bg-success-subtle text-success border border-success-subtle small">Online</span>
           </div>
         </div>
 
         <!-- Mini-Chat Suggestions / Prompt Pills -->
-        <div class="p-2 border-bottom border-secondary-subtle bg-black bg-opacity-25">
+        <div class="p-2 border-bottom border-secondary-subtle bg-body-secondary bg-opacity-50">
           <div class="small text-muted mb-1" style="font-size: 0.72rem;">Быстрые запросы:</div>
           <div class="d-flex flex-wrap gap-1" id="chat-quick-prompts">
             <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-prompt-btn" style="font-size: 0.75rem;">
@@ -109,29 +112,31 @@ Updated: 2026-10-01 13:04:40
         </div>
 
         <!-- Chat Messages History Container -->
-        <div class="card-body p-3 overflow-y-auto flex-grow-1" id="scenario-chat-history" style="min-height: 480px; max-height: none;">
-          <div class="d-flex gap-2 mb-3">
-            <div class="fs-5">🤖</div>
-            <div class="bg-secondary bg-opacity-25 p-2 rounded border border-secondary-subtle small text-light flex-grow-1">
-              Привет! Я интеллектуальный ассистент Test Computer. Вы можете задать мне любой вопрос о конфигурации хоста, например:
-              <br><br>
-              <div id="chat-greeting-prompts" class="d-flex flex-column gap-1">
-                <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Какие мыши были подключены к этому компьютеру?">«Какие мыши были подключены к этому компьютеру?»</a></div>
-                <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Покажи список сетевых портов и активных соединений">«Покажи список сетевых портов и активных соединений»</a></div>
-                <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Проверь автозапуск и службы Windows">«Проверь автозапуск и службы Windows»</a></div>
+        <div class="card-body p-3 overflow-y-auto flex-grow-1 scenario-chat-history" id="scenario-chat-history" style="min-height: 480px; max-height: none;">
+          <div class="chat-message-row bot-row mb-3">
+            <div class="chat-msg-avatar">🤖</div>
+            <div class="chat-msg-bot">
+              <div class="mb-2">
+                Привет! Я интеллектуальный ассистент Test Computer. Вы можете задать мне любой вопрос о конфигурации хоста, например:
               </div>
-              <br>
-              Если для вопроса нет готового сценария, я опрошу оборудование через PowerShell/WMI, сформирую для вас ответ и **автоматически сохраню новый навык** в каталог <code>.skills/</code>.
+              <div id="chat-greeting-prompts" class="d-flex flex-column gap-1 my-2">
+                <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="Какие мыши были подключены к этому компьютеру?">«Какие мыши были подключены к этому компьютеру?»</a></div>
+                <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="Покажи список сетевых портов и активных соединений">«Покажи список сетевых портов и активных соединений»</a></div>
+                <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="Проверь автозапуск и службы Windows">«Проверь автозапуск и службы Windows»</a></div>
+              </div>
+              <div class="text-muted small mt-2">
+                Если для вопроса нет готового сценария, я опрошу оборудование через PowerShell/WMI, сформирую для вас ответ и <strong>автоматически сохраню новый навык</strong> в каталог <code>.skills/</code>.
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Chat Input Form -->
-        <div class="card-footer bg-transparent border-secondary-subtle p-2 flex-shrink-0">
+        <div class="card-footer border-secondary-subtle p-2 flex-shrink-0">
           <form id="scenario-chat-form" class="d-flex flex-column gap-2">
             <div class="input-group input-group-sm">
-              <input type="text" class="form-control bg-dark text-white border-secondary" id="scenario-chat-input" placeholder="Задайте вопрос или введите /skills list..." autocomplete="off">
-              <button class="btn btn-primary d-flex align-items-center gap-1" type="submit" id="btn-scenario-chat-send">
+              <input type="text" class="form-control" id="scenario-chat-input" placeholder="Задайте вопрос или введите /skills list..." autocomplete="off">
+              <button class="btn btn-primary d-flex align-items-center gap-1 px-3" type="submit" id="btn-scenario-chat-send">
                 <span>Отправить</span>
                 <i class="bi bi-send-fill"></i>
               </button>

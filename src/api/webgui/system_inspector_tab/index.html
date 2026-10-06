@@ -17,23 +17,24 @@ Project: ai-breadboard
 Package: windows/api/webgui/system_inspector_tab
 Author: hypo69
 Copyright: © 2026 hypo69
- * Updated: 2026-10-06 06:35:00
+ * Updated: 2026-10-06 10:15:00
  =============================================================================
 -->
 
 <!-- System & Hardware Inspector Application Tab -->
 <style>
-  /* Все цвета через переменные main.css — адаптируется к обеим темам */
+  /* Адаптивные стили системного инспектора через CSS-переменные */
   .sys-container {
     padding: 1rem 1.25rem;
     max-width: 100%;
+    color: var(--text-color);
   }
 
   /* Стильные градиентные разделители между основными панелями */
   .sys-section-divider {
     height: 1px;
     margin: 1.75rem 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 15%, rgba(56, 189, 248, 0.4) 50%, rgba(255, 255, 255, 0.15) 85%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, var(--border-color) 15%, var(--nav-active) 50%, var(--border-color) 85%, transparent 100%);
     position: relative;
   }
   .sys-section-divider::after {
@@ -44,37 +45,49 @@ Copyright: © 2026 hypo69
     transform: translateX(-50%);
     width: 60px;
     height: 4px;
-    background: linear-gradient(90deg, #0dcaf0, #818cf8);
+    background: linear-gradient(90deg, var(--nav-active), #818cf8);
     border-radius: 4px;
-    box-shadow: 0 0 12px rgba(13, 202, 240, 0.6);
+    box-shadow: 0 0 12px rgba(13, 202, 240, 0.4);
   }
 
   /* Карточки основных разделов (CPU, GPU, RAM, Net, Storage) */
   .sys-card, .sys-panel {
-    background: linear-gradient(180deg, #141c2e 0%, #0d1424 100%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shadow-md);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     overflow: hidden;
+    color: var(--text-color);
   }
   .sys-card:hover {
-    border-color: rgba(255, 255, 255, 0.24);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
   }
-  .sys-card-cpu { border-top: 4px solid #0dcaf0; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(13, 202, 240, 0.2); }
-  .sys-card-gpu { border-top: 4px solid #f59e0b; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(245, 158, 11, 0.2); }
-  .sys-card-ram { border-top: 4px solid #10b981; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(16, 185, 129, 0.2); }
-  .sys-card-net { border-top: 4px solid #6366f1; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(99, 102, 241, 0.2); }
-  .sys-card-storage { border-top: 4px solid #06b6d4; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 -2px 10px rgba(6, 182, 212, 0.2); }
+  [data-theme="dark"] .sys-card,
+  [data-theme="dark"] .sys-panel {
+    background: linear-gradient(180deg, #141c2e 0%, #0d1424 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  [data-theme="terminal"] .sys-card,
+  [data-theme="terminal"] .sys-panel {
+    background: #0b120c;
+    border: 1px solid #1a4223;
+  }
+
+  .sys-card-cpu { border-top: 4px solid #0284c7; }
+  .sys-card-gpu { border-top: 4px solid #d97706; }
+  .sys-card-ram { border-top: 4px solid #16a34a; }
+  .sys-card-net { border-top: 4px solid #6366f1; }
+  .sys-card-storage { border-top: 4px solid #0891b2; }
 
   /* Заголовки секций с повышенной контрастностью и интерактивностью */
   .sys-core-section-title {
     font-size: 0.85rem !important;
-    color: #f8fafc !important;
+    color: var(--text-color) !important;
     font-weight: 700 !important;
     padding-bottom: 6px;
-    border-bottom: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1.5px solid var(--border-subtle);
     margin-top: 14px;
     margin-bottom: 12px !important;
     letter-spacing: 0.3px;
@@ -84,8 +97,8 @@ Copyright: © 2026 hypo69
   .sys-card-header-bar {
     padding: 0.6rem 0.85rem;
     margin: -1rem -1rem 1rem -1rem;
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -93,23 +106,88 @@ Copyright: © 2026 hypo69
     border-top-right-radius: 11px;
   }
 
-  /* Компактный режим: скрытие второстепенных списков и сенсоров для разгрузки */
-  .sys-compact-mode .sys-detailed-sensors {
+  /* Компактный режим: отображаются только верхние блоки панелей */
+  .sys-compact-mode .sys-full-only,
+  .sys-compact-mode .sys-detailed-sensors,
+  .sys-compact-mode .sys-card-header-bar {
     display: none !important;
   }
   .sys-compact-mode .sys-card {
-    padding: 0.75rem !important;
+    padding: 0.6rem 0.75rem !important;
   }
-  .sys-compact-mode .sys-card-header-bar {
-    margin: -0.75rem -0.75rem 0.6rem -0.75rem;
-    padding: 0.4rem 0.6rem;
+  .sys-compact-mode .sys-card-top-banner {
+    margin-bottom: 0 !important;
+    padding: 0.6rem 0.85rem !important;
+  }
+  .sys-compact-mode .sys-section-divider {
+    margin: 0.65rem 0 !important;
+  }
+  .sys-compact-mode .row.mb-3 {
+    margin-bottom: 0.5rem !important;
+  }
+  .sys-compact-mode #sys-gpu-panels-container {
+    gap: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Сетка и плашки ключевых экспресс-метрик (KPI Pills) в центре верхних баннеров */
+  .sys-banner-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+    gap: 6px;
+    width: 100%;
+    max-width: 580px;
+    margin-top: 4px;
+  }
+  .sys-kpi-pill {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    padding: 5px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-xs);
+  }
+  .sys-kpi-pill:hover {
+    border-color: var(--nav-active);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  [data-theme="dark"] .sys-kpi-pill {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  [data-theme="terminal"] .sys-kpi-pill {
+    background: #0b120c;
+    border: 1px solid #1a4223;
+  }
+  .sys-kpi-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+  }
+  .sys-kpi-value {
+    font-size: 0.80rem;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Сенсоры LHM */
   .sys-sensor-group {
     margin-bottom: 8px;
-    background: var(--surface-2, #111827);
-    border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    background: var(--surface-2);
+    border: 1.5px solid var(--border-color);
     border-radius: 6px;
     overflow: hidden;
   }
@@ -117,12 +195,12 @@ Copyright: © 2026 hypo69
     padding: 6px 10px;
     font-size: 0.80rem;
     font-weight: 700;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--surface-1);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: #38bdf8;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--nav-active);
+    border-bottom: 1px solid var(--border-color);
   }
   .sys-sensor-row {
     display: flex;
@@ -130,14 +208,14 @@ Copyright: © 2026 hypo69
     align-items: center;
     padding: 4px 10px;
     font-size: 0.78rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: var(--bg-color, #0b0f19);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-2);
   }
   .sys-sensor-row:last-child {
     border-bottom: none;
   }
   .sys-sensor-name {
-    color: #f1f5f9;
+    color: var(--text-color);
     font-weight: 600;
     max-width: 55%;
     overflow: hidden;
@@ -149,8 +227,9 @@ Copyright: © 2026 hypo69
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.80rem;
     text-align: right;
-    color: #ffffff;
+    color: var(--text-color);
   }
+
   /* Таблица процессов */
   .sys-proc-table {
     width: 100%;
@@ -159,41 +238,44 @@ Copyright: © 2026 hypo69
     border-collapse: collapse;
   }
   .sys-proc-table th {
-    background: #0f172a;
+    background: var(--surface-2);
     padding: 6px 10px;
-    color: #cbd5e1;
+    color: var(--text-muted);
     font-weight: 700;
-    border-bottom: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1.5px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 5;
   }
   .sys-proc-table td {
     padding: 5px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #f1f5f9;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-color);
   }
+
   /* Статусы загрузки */
-  .badge-cpu-high { color: #f87171; font-weight: 800; }
-  .badge-cpu-med  { color: #fbbf24; font-weight: 700; }
+  .badge-cpu-high { color: #dc2626; font-weight: 800; }
+  .badge-cpu-med  { color: #d97706; font-weight: 700; }
+
   /* Аномалии */
   .anomaly-tag {
     display: inline-block;
     font-size: 0.74rem;
     padding: 2px 7px;
     border-radius: 4px;
-    background: rgba(239, 68, 68, 0.25);
-    color: #fca5a5;
-    border: 1.5px solid rgba(239, 68, 68, 0.6);
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+    border: 1.5px solid var(--status-danger-border);
     margin-right: 4px;
     margin-top: 2px;
     font-weight: 700;
   }
+
   /* Интерактивный ресайзер для таблицы */
   .sys-table-resizer {
     height: 10px;
-    background: var(--surface-2, #111827);
-    border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    background: var(--surface-2);
+    border-top: 1px solid var(--border-color);
     cursor: ns-resize;
     display: flex;
     align-items: center;
@@ -205,43 +287,55 @@ Copyright: © 2026 hypo69
   }
   .sys-table-resizer:hover,
   .sys-table-resizer.resizing {
-    background: rgba(13, 202, 240, 0.35);
+    background: var(--nav-hover-bg);
   }
   .sys-table-resizer-grip {
     width: 42px;
     height: 3px;
-    background: rgba(255, 255, 255, 0.35);
+    background: var(--border-strong);
     border-radius: 3px;
     pointer-events: none;
     transition: background-color 0.15s ease, width 0.15s ease;
   }
   .sys-table-resizer:hover .sys-table-resizer-grip,
   .sys-table-resizer.resizing .sys-table-resizer-grip {
-    background: #0dcaf0;
+    background: var(--nav-active);
     width: 56px;
   }
+
   /* Карточки ядер CPU и блоков GPU, полукруги и термо-слайдеры */
   .sys-core-card {
-    background: #0f172a;
-    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    background: var(--surface-2);
+    border: 1.5px solid var(--border-color);
     border-radius: 8px;
     padding: 10px 12px;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-xs);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: 148px;
+    color: var(--text-color);
   }
   .sys-core-card:hover {
-    border-color: #38bdf8;
+    border-color: var(--nav-active);
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(13, 202, 240, 0.35);
+    box-shadow: var(--shadow-sm);
   }
+  [data-theme="dark"] .sys-core-card {
+    background: #0f172a;
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  [data-theme="terminal"] .sys-core-card {
+    background: #0b120c;
+    border: 1.5px solid #1a4223;
+  }
+
   .sys-core-title {
     font-size: 0.88rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-color);
     letter-spacing: 0.3px;
   }
   .sys-core-load-badge {
@@ -249,17 +343,18 @@ Copyright: © 2026 hypo69
     font-weight: 800;
     padding: 2px 7px;
     border-radius: 5px;
-    background: rgba(13, 202, 240, 0.25);
-    color: #38bdf8;
-    border: 1.5px solid #0ea5e9;
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
+    border: 1.5px solid var(--status-info-border);
   }
+
   .sys-temp-slider-wrap {
     margin-top: 5px;
   }
   .sys-temp-slider-track {
     position: relative;
     height: 8px;
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--border-color);
     border-radius: 4px;
     overflow: visible;
   }
@@ -274,11 +369,12 @@ Copyright: © 2026 hypo69
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 2px solid #fff;
+    border: 2px solid var(--surface-1);
     transform: translate(-50%, -50%);
     transition: left 0.4s ease, background-color 0.4s ease;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   }
+
   /* Таблица параметров ядра CPU внутри карточки */
   .sys-core-param-table {
     display: flex;
@@ -291,7 +387,7 @@ Copyright: © 2026 hypo69
     justify-content: space-between;
     align-items: center;
     padding: 2px 0;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+    border-bottom: 1px dashed var(--border-subtle);
     font-size: 0.74rem;
     line-height: 1.25;
   }
@@ -299,7 +395,7 @@ Copyright: © 2026 hypo69
     border-bottom: none;
   }
   .sys-core-param-key {
-    color: #cbd5e1;
+    color: var(--text-muted);
     font-size: 0.72rem;
     font-weight: 600;
     white-space: nowrap;
@@ -313,12 +409,14 @@ Copyright: © 2026 hypo69
     font-size: 0.76rem;
     text-align: right;
     white-space: nowrap;
+    color: var(--text-color);
   }
+
   /* Крупные слайдеры для главного заголовка */
   .sys-temp-slider-lg .sys-temp-slider-track {
     height: 12px;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--border-color);
   }
   .sys-temp-slider-lg .sys-temp-slider-bar {
     border-radius: 6px;
@@ -326,106 +424,101 @@ Copyright: © 2026 hypo69
   .sys-temp-slider-lg .sys-temp-slider-thumb {
     width: 20px;
     height: 20px;
-    border: 2.5px solid #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    border: 2.5px solid var(--surface-1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
   .sys-temp-slider-empty {
     font-size: 0.80rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     text-align: center;
     font-weight: 600;
   }
+
   /* Спецификации CPU: интерактивная карточка */
-  .sys-cpu-specs-card {
-    transition: all 0.2s ease;
-    cursor: pointer;
-    position: relative;
-    user-select: none;
-  }
-  .sys-cpu-specs-card:hover {
-    border-color: #38bdf8 !important;
-    background: rgba(255, 255, 255, 0.07) !important;
-    box-shadow: 0 4px 16px rgba(13, 202, 240, 0.3) !important;
-    transform: translateY(-1px);
-  }
-  /* Сворачиваемая интерактивная плашка детализации CPU */
-  .sys-cpu-details-accordion-btn {
-    cursor: pointer;
-    user-select: none;
-    padding: 8px 14px;
-    background: linear-gradient(90deg, rgba(13, 202, 240, 0.09) 0%, rgba(99, 102, 241, 0.07) 100%);
-    border-radius: 8px;
-    border: 1.5px solid rgba(13, 202, 240, 0.35);
-    transition: all 0.25s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  }
-  .sys-cpu-details-accordion-btn:hover {
-    background: linear-gradient(90deg, rgba(13, 202, 240, 0.18) 0%, rgba(99, 102, 241, 0.14) 100%);
-    border-color: #38bdf8;
-    box-shadow: 0 4px 16px rgba(13, 202, 240, 0.35);
-    transform: translateY(-1px);
-  }
-  .sys-cpu-details-accordion-btn.expanded {
-    background: linear-gradient(90deg, rgba(13, 202, 240, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
-    border-color: #38bdf8;
-  }
-  /* Спецификации GPU: интерактивная карточка */
+  .sys-cpu-specs-card,
   .sys-gpu-specs-card {
     transition: all 0.2s ease;
     cursor: pointer;
     position: relative;
     user-select: none;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
   }
+  .sys-cpu-specs-card:hover,
   .sys-gpu-specs-card:hover {
-    border-color: #f59e0b !important;
-    background: rgba(255, 255, 255, 0.07) !important;
-    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3) !important;
+    border-color: var(--nav-active) !important;
+    box-shadow: var(--shadow-sm) !important;
     transform: translateY(-1px);
   }
-  /* Сворачиваемая интерактивная плашка детализации GPU */
+
+  /* Сворачиваемая интерактивная плашка детализации CPU */
+  .sys-cpu-details-accordion-btn,
   .sys-gpu-details-accordion-btn {
     cursor: pointer;
     user-select: none;
     padding: 8px 14px;
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.09) 0%, rgba(239, 68, 68, 0.07) 100%);
+    background: var(--surface-2);
     border-radius: 8px;
-    border: 1.5px solid rgba(245, 158, 11, 0.35);
+    border: 1.5px solid var(--border-color);
     transition: all 0.25s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-xs);
+    color: var(--text-color);
   }
+  .sys-cpu-details-accordion-btn:hover,
   .sys-gpu-details-accordion-btn:hover {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(239, 68, 68, 0.14) 100%);
-    border-color: #f59e0b;
-    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+    border-color: var(--nav-active);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
   }
-  .sys-gpu-details-accordion-btn.expanded {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(239, 68, 68, 0.15) 100%);
-    border-color: #f59e0b;
-  }
+
   /* Сенсорные виджеты */
   .sys-sensor-widget-item {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-xs);
+    color: var(--text-color);
+  }
+  [data-theme="dark"] .sys-sensor-widget-item {
     background: #0f172a !important;
     border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  [data-theme="terminal"] .sys-sensor-widget-item {
+    background: #0b120c !important;
+    border: 1px solid #1a4223 !important;
+  }
+
+  /* Полоса заголовка инспектора */
+  .sys-header-strip {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xs);
+  }
+  [data-theme="dark"] .sys-header-strip {
+    background: linear-gradient(180deg, #182238 0%, #0f172a 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45) !important;
+  }
+  [data-theme="terminal"] .sys-header-strip {
+    background: #0b120c !important;
+    border: 1px solid #1a4223 !important;
   }
 </style>
 
 <div class="sys-container theme-inspector">
   <!-- Header Alert & Status (Compact Strip) -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3.5 py-2 px-3 rounded-3"
-       style="background: linear-gradient(180deg, #182238 0%, #0f172a 100%); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 4px 16px rgba(0,0,0,0.45);">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3.5 py-2 px-3 rounded-3 sys-header-strip">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="fs-5">📡</span>
-      <span class="fw-bold" style="font-size: 0.95rem; color: #ffffff;">Телеметрия хоста и оборудования</span>
+      <span class="fw-bold" style="font-size: 0.95rem; color: var(--text-color);">Телеметрия хоста и оборудования</span>
       <span class="badge bg-secondary fw-bold" style="font-size: 0.72rem;">Live Telemetry</span>
-      <span class="d-none d-lg-inline" style="font-size: 0.78rem; color: #cbd5e1;">| Комплексный мониторинг CPU, RAM, GPU, дисков, питания и процессов</span>
+      <span class="d-none d-lg-inline text-muted" style="font-size: 0.78rem;">| Комплексный мониторинг CPU, RAM, GPU, дисков, питания и процессов</span>
     </div>
     <div class="d-flex align-items-center gap-1.5 flex-wrap">
       <span class="badge rounded-pill bg-success text-white border border-light px-2.5 py-1" style="font-size: 0.74rem; font-weight: 700;" id="sys-conn-status">
         ● Активна
       </span>
-      <button class="btn btn-xs btn-outline-light rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-toggle-compact" title="Переключить компактный режим (скрыть второстепенные сенсоры)">
+      <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-toggle-compact" title="Переключить компактный режим (скрыть второстепенные сенсоры)">
         <i class="bi bi-arrows-collapse me-1"></i> <span id="sys-compact-btn-text">Компактно</span>
       </button>
       <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.75rem;" id="btn-sys-refresh-sensors">
@@ -454,7 +547,7 @@ Copyright: © 2026 hypo69
           <span class="small badge bg-dark border border-secondary text-info font-monospace" style="font-size: 0.84rem;" id="sys-metric-cpu-sub">-- Ядер</span>
         </div>
         <!-- Верхний баннер: Спидометр и датчик температуры слева, Модель в центре, Сводная таблица CPU справа -->
-        <div class="d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+        <div class="sys-card-top-banner d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <!-- Левая колонка: Спидометр загрузки, справа от него значение с динамическим оттенком, а СНИЗУ — датчик температуры -->
           <div class="d-flex flex-column justify-content-between gap-1.5" style="min-width: 250px; max-width: 300px;">
             <div class="d-flex align-items-center gap-2.5">
@@ -468,10 +561,33 @@ Copyright: © 2026 hypo69
             <div id="sys-metric-cpu-package-slider" style="width: 100%;"></div>
           </div>
 
-          <!-- Центральная колонка: Модель процессора -->
-          <div class="text-center flex-grow-1 px-2 d-flex flex-column align-items-center justify-content-center">
-            <span class="fw-bold text-info" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-cpu-model">--</span>
-            <span class="text-muted small mt-1" id="sys-metric-cpu-vendor-badge" style="font-size: 0.76rem;">Intel Corporation · 64-bit</span>
+          <!-- Центральная колонка: Модель процессора и экспресс-метрики KPI -->
+          <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 px-3" style="min-width: 280px;">
+            <div class="text-center mb-1.5">
+              <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-cpu-model">--</span>
+              <div class="d-flex align-items-center justify-content-center gap-1.5 mt-0.5">
+                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-cpu-vendor-badge" style="font-size: 0.70rem;">Intel Corporation · 64-bit</span>
+                <span class="badge bg-info-subtle text-info border border-info font-monospace" id="sys-cpu-status-badge" style="font-size: 0.70rem;">● Active</span>
+              </div>
+            </div>
+            <div class="sys-banner-kpi-grid">
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-lightning-charge text-warning me-1"></i>Мощность</span>
+                <span class="sys-kpi-value text-warning" id="sys-cpu-kpi-power">-- W</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-thermometer-half text-danger me-1"></i>Пакет t°</span>
+                <span class="sys-kpi-value text-info" id="sys-cpu-kpi-temp">-- °C</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-cpu text-info me-1"></i>Ядра/Потоки</span>
+                <span class="sys-kpi-value text-light" id="sys-cpu-kpi-cores">-- / --</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-speedometer2 text-primary me-1"></i>Частота</span>
+                <span class="sys-kpi-value text-primary" id="sys-cpu-kpi-freq">-- GHz</span>
+              </div>
+            </div>
           </div>
 
           <!-- Правая колонка: Сводная таблица о процессоре (кликабельна для запуска AI-аудита) -->
@@ -498,7 +614,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- График истории CPU (Загрузка %, Температура °C, Мощность W) с логарифмической/линейной шкалой -->
-        <div class="p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
+        <div class="sys-full-only p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
           <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
               <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История CPU</span>
@@ -522,14 +638,14 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Сворачиваемый блок детализации CPU: Ядра, потоки и датчики системы (расположен под графиком истории) -->
-        <div class="sys-detailed-sensors mt-2">
+        <div class="sys-full-only sys-detailed-sensors mt-2">
           <div class="sys-cpu-details-accordion-btn d-flex justify-content-between align-items-center flex-wrap gap-2" 
                id="sys-cpu-details-toggle-btn"
                title="Нажмите, чтобы развернуть или скрыть детализацию по ядрам, потокам и сенсорам CPU"
                onclick="window.toggleSysCpuDetails && window.toggleSysCpuDetails()">
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <span class="text-info" style="font-size: 1rem;"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-              <span class="fw-bold text-white" style="font-size: 0.88rem;">Детализация: Ядра, потоки и сенсоры CPU</span>
+              <span class="fw-bold" style="font-size: 0.88rem; color: var(--text-color);">Детализация: Ядра, потоки и сенсоры CPU</span>
               <span class="badge bg-dark border border-secondary text-info font-monospace ms-1" style="font-size: 0.72rem;" id="sys-cores-count-badge">0 ядер</span>
               <span class="badge bg-dark border border-secondary text-warning font-monospace" style="font-size: 0.72rem;" id="sys-cpu-sensors-count-badge">0 параметров</span>
             </div>
@@ -545,7 +661,7 @@ Copyright: © 2026 hypo69
           <div id="sys-cpu-details-collapse" style="display: none; flex-direction: column; gap: 14px; margin-top: 10px;">
             <!-- 1. Нагрузка и температура по ядрам и потокам -->
             <div>
-              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem;">
                 <span><i class="bi bi-cpu text-info me-1"></i>Нагрузка и температура по ядрам и потокам</span>
               </div>
               <div id="sys-metric-cpu-cores" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; font-size: 0.78rem;"></div>
@@ -553,7 +669,7 @@ Copyright: © 2026 hypo69
 
             <!-- 2. Общие показатели CPU (датчики системы) -->
             <div>
-              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem;">
                 <span><i class="bi bi-lightning-charge text-warning me-1"></i>Общие показатели CPU (датчики системы)</span>
               </div>
               <div id="sys-metric-cpu-sensors" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
@@ -589,7 +705,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Верхний баннер: Большой Gauge RAM и Большой Слайдер -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+        <div class="sys-card-top-banner d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-ram-gauge" style="width: 130px; height: 74px;"></div>
             <div>
@@ -597,8 +713,33 @@ Copyright: © 2026 hypo69
               <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-memio-used">0.0 / 0.0 GB</div>
             </div>
           </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-success" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);" id="sys-metric-ram-model">--</span>
+          <!-- Центральная колонка: Модель RAM и экспресс-метрики KPI -->
+          <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 px-3" style="min-width: 280px;">
+            <div class="text-center mb-1.5">
+              <span class="fw-bold text-success" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);" id="sys-metric-ram-model">-- GB RAM</span>
+              <div class="d-flex align-items-center justify-content-center gap-1.5 mt-0.5">
+                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-ram-type-badge" style="font-size: 0.70rem;">DDR4 · System Memory</span>
+                <span class="badge bg-success-subtle text-success border border-success font-monospace" id="sys-ram-status-badge" style="font-size: 0.70rem;">● Dual Channel</span>
+              </div>
+            </div>
+            <div class="sys-banner-kpi-grid">
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-pie-chart text-success me-1"></i>Занято RAM</span>
+                <span class="sys-kpi-value text-success" id="sys-ram-kpi-used">-- GB</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-check2-circle text-info me-1"></i>Свободно</span>
+                <span class="sys-kpi-value text-info" id="sys-ram-kpi-free">-- GB</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-arrow-repeat text-warning me-1"></i>Swap Подкачка</span>
+                <span class="sys-kpi-value text-warning" id="sys-ram-kpi-swap">--%</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-hdd-stack text-primary me-1"></i>Диск I/O</span>
+                <span class="sys-kpi-value text-primary" id="sys-ram-kpi-io">-- MB/s</span>
+              </div>
+            </div>
           </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 280px;">
             <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-memio-swap">Файл подкачки: 0%</span>
@@ -607,7 +748,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Сетка 4 блоков: RAM, Swap, Disk Read, Disk Write -->
-        <div class="row g-2 mb-2">
+        <div class="row g-2 mb-2 sys-full-only">
           <div class="col-6 col-md-3">
             <div class="sys-core-card h-100" title="Физическая оперативная память">
               <div class="d-flex justify-content-between align-items-center mb-1">
@@ -672,7 +813,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Параметры, тайминги и сенсоры RAM (Скрывается в компактном режиме) -->
-        <div class="sys-detailed-sensors">
+        <div class="sys-full-only sys-detailed-sensors">
           <div class="sys-core-section-title d-flex justify-content-between align-items-center mt-3">
             <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Параметры, тайминги и сенсоры RAM</span>
             <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-ram-sensors-count-badge">0 параметров</span>
@@ -683,7 +824,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- График истории RAM -->
-        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
+        <div class="sys-full-only p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-primary me-1"></i>История загрузки (RAM % · Чтение · Запись)</span>
             <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
@@ -713,7 +854,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Верхний баннер: Большой Gauge трафика + Слайдер линка -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+        <div class="sys-card-top-banner d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-net-gauge" style="width: 130px; height: 74px;"></div>
             <div>
@@ -721,8 +862,33 @@ Copyright: © 2026 hypo69
               <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-net-sub-details">⬇ 0 B/s · ⬆ 0 B/s (Всего: 0 B)</div>
             </div>
           </div>
-          <div class="text-center flex-grow-1 px-2">
-            <span class="fw-bold text-info" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-net-model">Ethernet (1000 Mbps) · Wi-Fi / BT</span>
+          <!-- Центральная колонка: Модель сети и экспресс-метрики KPI -->
+          <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 px-3" style="min-width: 280px;">
+            <div class="text-center mb-1.5">
+              <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-net-model">Ethernet (1000 Mbps) · Wi-Fi / BT</span>
+              <div class="d-flex align-items-center justify-content-center gap-1.5 mt-0.5">
+                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-net-speed-badge" style="font-size: 0.70rem;">1.0 Gbps Full Duplex</span>
+                <span class="badge bg-info-subtle text-info border border-info font-monospace" id="sys-net-status-badge" style="font-size: 0.70rem;">● Link Active</span>
+              </div>
+            </div>
+            <div class="sys-banner-kpi-grid">
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-arrow-down-circle text-info me-1"></i>Входящий (Rx)</span>
+                <span class="sys-kpi-value text-info" id="sys-net-kpi-rx">0 B/s</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-arrow-up-circle text-warning me-1"></i>Исходящий (Tx)</span>
+                <span class="sys-kpi-value text-warning" id="sys-net-kpi-tx">0 B/s</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-hdd-network text-primary me-1"></i>Всего сессия</span>
+                <span class="sys-kpi-value text-primary" id="sys-net-kpi-total">0 B</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-activity text-success me-1"></i>Утилизация</span>
+                <span class="sys-kpi-value text-success" id="sys-net-kpi-util">0.0%</span>
+              </div>
+            </div>
           </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 280px;">
             <span class="text-light mb-1" style="font-size: 0.80rem; font-weight: 700;" id="sys-net-util-label">Загрузка канала: 0%</span>
@@ -731,7 +897,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Сетка 4 блоков: Download, Upload, Wi-Fi, Bluetooth -->
-        <div class="row g-2 mb-2">
+        <div class="row g-2 mb-2 sys-full-only">
           <div class="col-6 col-md-3">
             <div class="sys-core-card h-100" title="Входящий сетевой трафик (Download / Rx)">
               <div class="d-flex justify-content-between align-items-center mb-1">
@@ -814,7 +980,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Параметры, адаптеры и сенсоры сети (Скрывается в компактном режиме) -->
-        <div class="sys-detailed-sensors">
+        <div class="sys-full-only sys-detailed-sensors">
           <div class="sys-core-section-title d-flex justify-content-between align-items-center mt-3">
             <span><i class="bi bi-lightning-charge text-warning me-1.5"></i>Параметры, адаптеры и сенсоры сети / Wi-Fi / BT</span>
             <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-net-sensors-count-badge">0 параметров</span>
@@ -825,7 +991,7 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- График истории сети -->
-        <div class="p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
+        <div class="sys-full-only p-2.5 mt-3 rounded-2" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15);">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История сети (⬇ Download · ⬆ Upload)</span>
             <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
@@ -856,12 +1022,40 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Верхний баннер: Большой Gauge общего объема + Слайдер максимальной t° -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+        <div class="sys-card-top-banner d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <div class="d-flex align-items-center gap-3">
             <div id="sys-metric-storage-gauge" style="width: 130px; height: 74px;"></div>
             <div>
               <div class="sys-value text-info" id="sys-storage-pct" style="font-size: 2.2rem; line-height: 1; font-weight: 800;">0.0%</div>
               <div class="text-light mt-1" style="font-size: 0.88rem; font-weight: 700;" id="sys-storage-used">0.0 / 0.0 GB</div>
+            </div>
+          </div>
+          <!-- Центральная колонка: Модель хранилища и экспресс-метрики KPI -->
+          <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 px-3" style="min-width: 280px;">
+            <div class="text-center mb-1.5">
+              <span class="fw-bold text-info" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(13, 202, 240, 0.4);" id="sys-metric-storage-model">Дисковая подсистема и накопители</span>
+              <div class="d-flex align-items-center justify-content-center gap-1.5 mt-0.5">
+                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-storage-summary-badge-top" style="font-size: 0.70rem;">NVMe / SSD / HDD</span>
+                <span class="badge bg-success-subtle text-success border border-success font-monospace" style="font-size: 0.70rem;">● SMART OK</span>
+              </div>
+            </div>
+            <div class="sys-banner-kpi-grid">
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-pie-chart text-info me-1"></i>Занято всего</span>
+                <span class="sys-kpi-value text-info" id="sys-storage-kpi-used">0.0 GB</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-check2-circle text-success me-1"></i>Свободно</span>
+                <span class="sys-kpi-value text-success" id="sys-storage-kpi-free">0.0 GB</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-hdd text-primary me-1"></i>Диски/Разделы</span>
+                <span class="sys-kpi-value text-primary" id="sys-storage-kpi-drives">-- / --</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-thermometer-half text-danger me-1"></i>Макс. t°</span>
+                <span class="sys-kpi-value text-warning" id="sys-storage-kpi-temp">-- °C</span>
+              </div>
             </div>
           </div>
           <div class="d-flex flex-column align-items-end flex-grow-1" style="min-width: 180px; max-width: 280px;">
@@ -871,22 +1065,24 @@ Copyright: © 2026 hypo69
         </div>
 
         <!-- Сетка карточек накопителей и разделов -->
-        <div class="sys-core-section-title d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-hdd-network text-info me-1.5"></i>Физические накопители и разделы</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-storage-summary-badge">Автоматический опрос</span>
-        </div>
-        <div id="sys-metric-storage-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; font-size: 0.78rem;">
-          <div class="text-muted small text-center py-3 col-12">Опрос накопителей выполняется...</div>
+        <div class="sys-full-only">
+          <div class="sys-core-section-title d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-hdd-network text-info me-1.5"></i>Физические накопители и разделы</span>
+            <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-storage-summary-badge">Автоматический опрос</span>
+          </div>
+          <div id="sys-metric-storage-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; font-size: 0.78rem;">
+            <div class="text-muted small text-center py-3 col-12">Опрос накопителей выполняется...</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Четкий стильный разделитель панелей -->
-  <div class="sys-section-divider"></div>
+  <div class="sys-section-divider sys-full-only"></div>
 
   <!-- Extended Hardware & Health Status Strip -->
-  <div class="row g-2 mb-2">
+  <div class="row g-2 mb-2 sys-full-only">
     <!-- Physical Storage & NVMe Health -->
     <div class="col-md-6 col-lg-3">
       <div class="sys-panel p-2 h-100">
@@ -941,10 +1137,10 @@ Copyright: © 2026 hypo69
   </div>
 
   <!-- Четкий стильный разделитель панелей -->
-  <div class="sys-section-divider"></div>
+  <div class="sys-section-divider sys-full-only"></div>
 
   <!-- Workspace Layout: LHM Sensors (Left) + Process Stream & AI Copilot (Right) -->
-  <div class="row g-2">
+  <div class="row g-2 sys-full-only">
     <!-- Left Column: Hardware Sensors Card -->
     <div class="col-lg-4">
       <div class="sys-panel h-100 d-flex flex-column">
@@ -1048,10 +1244,10 @@ Copyright: © 2026 hypo69
   </div>
 
   <!-- Четкий стильный разделитель панелей -->
-  <div class="sys-section-divider"></div>
+  <div class="sys-section-divider sys-full-only"></div>
 
   <!-- Сетевая активность программ (Интернет, Отправка и Прием) -->
-  <div class="row g-2 mt-1">
+  <div class="row g-2 mt-1 sys-full-only">
     <div class="col-12">
       <div class="sys-panel">
         <div class="sys-panel-header d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -1114,7 +1310,7 @@ Copyright: © 2026 hypo69
   </div>
 
   <!-- Real-Time Live Watcher Panel (WinAPI ReadDirectoryChangesW) -->
-  <div class="row g-2 mt-1">
+  <div class="row g-2 mt-1 sys-full-only">
     <div class="col-12">
       <div class="sys-panel">
         <div class="sys-panel-header d-flex align-items-center justify-content-between flex-wrap gap-2">

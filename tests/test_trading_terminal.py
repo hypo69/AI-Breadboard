@@ -16,14 +16,14 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-06 10:09:00
 # =============================================================================
 
 """Unit tests for TradingDeskEngine and Terminal Manager."""
 
 import pytest
 from scripts.cli.terminal_manager import build_wt_command, get_terminal_profiles, is_windows_terminal_available
-from scripts.dev.trading_terminal import TradingDeskEngine
+from apps.trading_terminal import TradingDeskEngine
 
 class TestTradingDeskEngine:
     """Test TradingDeskEngine logic and order lifecycle."""

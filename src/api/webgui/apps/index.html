@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/apps
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 07:05:00
+Updated: 2026-10-06 09:23:00
 =============================================================================
 -->
 
@@ -26,9 +26,9 @@ Updated: 2026-10-04 07:05:00
   <title>AI Breadboard — Приложения (/apps)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20261004_v1" rel="stylesheet">
+  <link href="/html/css/main.css?v=20261006_v8" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/html/js/toast.js?v=20261004_v1"></script>
+  <script src="/html/js/toast.js?v=20261006_v8"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
 </head>
 <body>
@@ -109,7 +109,14 @@ Updated: 2026-10-04 07:05:00
       </div>
 
       <!-- Footer Drawer -->
-      <div class="nav-drawer-footer border-top pt-2 mt-auto">
+      <div class="nav-drawer-footer border-top pt-2 mt-auto d-flex flex-column gap-2">
+        <button class="btn btn-sm btn-outline-warning w-100 d-flex align-items-center justify-content-between py-2 px-3 rounded" id="btn-godmode" type="button" onclick="openGodModeFolder()" title="Открыть панель всех настроек Windows (God Mode)">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-6">⚡</span>
+            <span class="fw-medium text-body">God Mode (Все настройки)</span>
+          </div>
+          <i class="bi bi-box-arrow-up-right text-muted small"></i>
+        </button>
         <button class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center gap-2 py-2 rounded" id="menu-editor-btn" type="button">
           <i class="bi bi-gear-fill"></i>
           <span class="fw-medium">Редактор меню</span>
@@ -344,9 +351,10 @@ Updated: 2026-10-04 07:05:00
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/chatService.js?v=20260925_v1"></script>
-<script src="/html/js/appConfigEditor.js"></script>
-<script type="module" src="/html/apps/main.js?v=20260925_v1"></script>
+<script src="/html/js/window-api.js?v=20261006_v7"></script>
+<script src="/html/js/chatService.js?v=20261006_v7"></script>
+<script src="/html/js/appConfigEditor.js?v=20261006_v7"></script>
+<script type="module" src="/html/apps/main.js?v=20261006_v7"></script>
 
 </body>
 </html>

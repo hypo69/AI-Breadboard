@@ -57,7 +57,34 @@ class NativeWinProvider(BaseHardwareProvider):
             logger.debug(f'Ошибка сбора CPU инвентаря: {e}')
         try:
             vm = psutil.virtual_memory()
+            # Собираем общую информацию о памяти
             inv.memory = MemoryInventory(total_physical_gb=round(vm.total / 1024 ** 3, 2), total_available_gb=round(vm.available / 1024 ** 3, 2), source_provider=self.name)
+            # Сбор данных о каждом модуле памяти через WMI (wmic)
+            try:
+                import subprocess, csv, io
+                cmd = ['wmic', 'memorychip', 'get', 'BankLabel,Capacity,Speed,Manufacturer,PartNumber,SerialNumber', '/format:csv']
+                output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+                text = output.decode(errors='ignore')
+                reader = csv.DictReader(io.StringIO(text))
+                modules = []
+                for row in reader:
+                    try:
+                        capacity_bytes = int(row.get('Capacity') or 0)
+                        capacity_gb = round(capacity_bytes / 1024 ** 3, 2) if capacity_bytes else 0
+                        modules.append(MemoryModule(
+                            slot_label=row.get('BankLabel', '').strip() or 'N/A',
+                            capacity_gb=capacity_gb,
+                            memory_type='DDR',  # тип не определён, placeholder
+                            speed_mhz=int(row.get('Speed') or 0) if row.get('Speed') else None,
+                            manufacturer=row.get('Manufacturer', '').strip() or None,
+                            part_number=row.get('PartNumber', '').strip() or None,
+                            serial_number=row.get('SerialNumber', '').strip() or None,
+                        ))
+                    except Exception:
+                        continue
+                inv.memory.modules = modules
+            except Exception as e:
+                logger.debug(f'Ошибка сбора информации о модулях RAM: {e}')
         except Exception as e:
             logger.debug(f'Ошибка сбора RAM инвентаря: {e}')
         try:

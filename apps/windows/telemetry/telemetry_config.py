@@ -20,7 +20,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:30:00
+# Updated: 2026-10-06 07:58:00
 # =============================================================================
 
 from __future__ import annotations
@@ -40,19 +40,29 @@ except ImportError:
 
 
 def get_default_telemetry_config_path() -> Path:
-    """Возвращает путь по умолчанию к файлу конфигурации телеметрии в %APPDATA%.
+    """Возвращает путь по умолчанию к файлу конфигурации телеметрии в %ProgramData%.
 
-    Если целевой файл в %APPDATA%/AI-Breadboard/apps/windows/telemetry/config.json отсутствует,
-    выполняется попытка скопировать шаблон из пакета модуля.
+    Проверяет сначала %ProgramData%/AITelemetry/config/config.json,
+    затем %ProgramData%/AI-Breadboard/apps/windows/telemetry/config.json.
+    Если целевой файл отсутствует, выполняется попытка скопировать шаблон из пакета модуля.
 
     Returns:
-        Path: Путь к файлу конфигурации в %APPDATA%.
+        Path: Путь к файлу конфигурации в %ProgramData%.
     """
-    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
-    if appdata and os.path.exists(appdata):
-        base_dir = Path(appdata)
+    programdata = os.environ.get('ProgramData') or os.environ.get('ALLUSERSPROFILE')
+    if programdata and os.path.exists(programdata):
+        base_dir = Path(programdata)
     else:
-        base_dir = Path.home() / '.config'
+        appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+        if appdata and os.path.exists(appdata):
+            base_dir = Path(appdata)
+        else:
+            base_dir = Path.home() / '.config'
+
+    ai_tel_config = base_dir / 'AITelemetry' / 'config' / 'config.json'
+    if ai_tel_config.is_file():
+        return ai_tel_config
+
     target_path = base_dir / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'config.json'
 
     if not target_path.exists():
@@ -275,6 +285,35 @@ class TelemetryConfigManager:
     def reload(self) -> None:
         """Принудительно перезагружает конфигурацию из файла."""
         self._load_config()
+
+    def get_data_path(self) -> Path:
+        """Возвращает настроенный или системный путь к директории хранения данных телеметрии."""
+        custom = self._config.get('data_path') or self._config.get('data_dir')
+        if not custom and isinstance(self._config.get('storage'), dict):
+            custom = self._config['storage'].get('data_path') or self._config['storage'].get('data_dir')
+        if custom:
+            return Path(os.path.expandvars(str(custom)))
+        programdata = os.environ.get('ProgramData') or os.environ.get('ALLUSERSPROFILE')
+        if programdata and os.path.exists(programdata):
+            base_dir = Path(programdata)
+        else:
+            appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+            if appdata and os.path.exists(appdata):
+                base_dir = Path(appdata)
+            else:
+                base_dir = Path.home() / '.config'
+        return base_dir / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs'
+
+    def get_db_path(self) -> Path:
+        """Возвращает настроенный или системный путь к файлу SQLite базы данных телеметрии."""
+        if isinstance(self._config.get('storage'), dict):
+            custom_db = self._config['storage'].get('db_path')
+            if custom_db:
+                return Path(os.path.expandvars(str(custom_db)))
+        custom_db = self._config.get('db_path')
+        if custom_db:
+            return Path(os.path.expandvars(str(custom_db)))
+        return self.get_data_path() / 'telemetry.db'
 
     def get_fast_interval(self) -> float:
         """Возвращает интервал быстрого режима (сек)."""

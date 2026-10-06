@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/hardware_monitor_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:13:56
+Updated: 2026-10-06 09:45:00
 =============================================================================
 -->
 
@@ -154,14 +154,17 @@ Updated: 2026-10-01 13:13:56
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="hw-card">
-        <div class="hw-card-label">
-          <span><span data-i18n="auto___f63c10"></span> (RAM)</span>
-          <span class="badge bg-success" id="hw-ram-total">- GB</span>
+      <template id="ram-card-template" style="display:none;">
+        <div class="hw-card">
+          <div class="hw-card-label">
+            <span><span data-i18n="auto___f63c10"></span> (RAM)</span>
+            <span class="badge bg-success" data-ram-total></span>
+          </div>
+          <div class="hw-card-value text-success" data-ram-percent></div>
+          <div class="hw-card-sub text-truncate" data-ram-sub></div>
         </div>
-        <div class="hw-card-value text-success" id="hw-val-ram">- %</div>
-        <div class="hw-card-sub text-truncate" id="hw-sub-ram"><span data-i18n="auto___07d65a"></span></div>
-      </div>
+      </template>
+      <div id="ram-cards-container" class="row g-2"></div>
     </div>
     <div class="col-6 col-md-3">
       <div class="hw-card">

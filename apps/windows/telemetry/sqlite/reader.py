@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:25:00
+# Updated: 2026-10-06 07:56:00
 # =============================================================================
 
 from __future__ import annotations
@@ -799,6 +799,30 @@ class TelemetryReader:
     def get_latest_extended_audit(self) -> Optional[Dict[str, Any]]:
         """Возвращает последний расширенный системный аудит."""
         audits = self.get_extended_audits(limit=1)
+        return audits[0] if audits else None
+
+    def get_hardware_audits(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Возвращает историю аудитов аппаратного обеспечения из таблицы hardware_audits."""
+        results: List[Dict[str, Any]] = []
+        try:
+            with self._cm.lock, self._cm.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM hardware_audits ORDER BY created_at DESC LIMIT ?', (limit,))
+                for row in cursor.fetchall():
+                    item = dict(row)
+                    if item.get('raw_json'):
+                        try:
+                            item['data'] = json.loads(item['raw_json'])
+                        except Exception:
+                            pass
+                    results.append(item)
+        except Exception as ex:
+            logger.error(f'Ошибка извлечения аудитов оборудования: {ex}')
+        return results
+
+    def get_latest_hardware_audit(self) -> Optional[Dict[str, Any]]:
+        """Возвращает самый последний сохраненный аудит аппаратного обеспечения."""
+        audits = self.get_hardware_audits(limit=1)
         return audits[0] if audits else None
 
     def get_process_provenance_history(

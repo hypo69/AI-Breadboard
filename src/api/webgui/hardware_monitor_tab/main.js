@@ -14,7 +14,7 @@
  * Package: src/api/webgui/hardware_monitor_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-06 09:45:00
  * =============================================================================
  */
 
@@ -107,13 +107,35 @@
 
       // RAM
       const ram = data.ram || {};
-      const elValRam = document.getElementById('hw-val-ram');
-      const elSubRam = document.getElementById('hw-sub-ram');
-      const elRamTotal = document.getElementById('hw-ram-total');
-
-      if (elValRam) elValRam.textContent = `${ram.percent_used !== undefined ? ram.percent_used : 0}%`;
-      if (elSubRam) elSubRam.textContent = `${ram.used_gb || 0} GB / ${ram.total_gb || 0} GB`;
-      if (elRamTotal) elRamTotal.textContent = `${ram.total_gb || 0} GB`;
+      const ramContainer = document.getElementById('ram-cards-container');
+      const template = document.getElementById('ram-card-template');
+      // Очистить контейнер
+      if (ramContainer) ramContainer.innerHTML = '';
+      if (template && Array.isArray(ram.modules) && ram.modules.length > 0) {
+        ram.modules.forEach(mod => {
+          const clone = template.content.cloneNode(true);
+          const badge = clone.querySelector('[data-ram-total]');
+          const value = clone.querySelector('[data-ram-percent]');
+          const sub = clone.querySelector('[data-ram-sub]');
+          if (badge) badge.textContent = `${mod.capacity_gb || 0} GB`;
+          if (value) value.textContent = '—%';
+          if (sub) sub.textContent = `${mod.speed_mhz ? mod.speed_mhz + ' MHz' : ''} ${mod.memory_type || ''}`.trim();
+          ramContainer.appendChild(clone);
+        });
+      } else {
+        const clone = template.content.cloneNode(true);
+        const badge = clone.querySelector('[data-ram-total]');
+        const value = clone.querySelector('[data-ram-percent]');
+        const sub = clone.querySelector('[data-ram-sub]');
+        const total = ram.total_physical_gb || 0;
+        const available = ram.total_available_gb || 0;
+        const used = total - available;
+        const percent = total > 0 ? Math.round((used / total) * 100) : 0;
+        if (badge) badge.textContent = `${total} GB`;
+        if (value) value.textContent = `${percent}%`;
+        if (sub) sub.textContent = `${used} GB / ${total} GB`;
+        ramContainer.appendChild(clone);
+      }
 
       // GPU
       const gpus = data.gpus || [];

@@ -621,7 +621,7 @@ async function initInterface() {
     { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261006_v3', js: '/html/about_system_tab/main.js?v=20261006_v3' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v2', js: '/html/system_inspector_tab/main.js?v=20261006_v2' },
+    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v7', js: '/html/system_inspector_tab/main.js?v=20261006_v7' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },

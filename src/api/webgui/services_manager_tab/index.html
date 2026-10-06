@@ -1,50 +1,79 @@
 <!--
 =============================================================================
-Process Name: AI-Breadboard Web Interface - Index View
+Process Name: Windows Web Interface - Services Manager View
 =============================================================================
 Description:
-  Шаблон веб-интерфейса системного модуля (index).
+  Шаблон клиентского веб-интерфейса диспетчера служб Windows.
 
 Usage Examples:
     Web Route:
-      /src/api/webgui/services_manager_tab/index.html
+      /windows/api/webgui/services_manager_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/webgui/services_manager_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
 File: index.html
 Project: ai-breadboard
-Package: src/api/webgui/services_manager_tab
+Package: windows/api/webgui/services_manager_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:13:56
+Updated: 2026-10-06 11:24:00
 =============================================================================
 -->
 
+<style>
+  .svc-manager-wrapper {
+    color: var(--text-color);
+  }
+  .svc-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+  }
+  .svc-card-header {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+  }
+  #svc-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+  }
+  #svc-table tbody tr:hover {
+    background-color: var(--surface-2, rgba(56, 189, 248, 0.06)) !important;
+  }
+  #svc-table td {
+    background: transparent;
+    color: var(--text-color);
+  }
+</style>
+
 <!-- Services Manager Tab -->
-<div class="container-fluid py-2 px-3">
+<div class="container-fluid py-2 px-3 svc-manager-wrapper">
   <!-- Top Stat Cards -->
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+      <div class="card svc-card h-100 shadow-sm p-3">
         <div class="text-muted small text-uppercase fw-semibold">Всего служб ⚙️</div>
         <div class="fs-4 fw-bold mt-1 text-primary" id="svc-total-count">--</div>
         <div class="small text-muted mt-1" id="svc-total-sub">sc query state= all</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+      <div class="card svc-card h-100 shadow-sm p-3">
         <div class="text-muted small text-uppercase fw-semibold">Работают (Running) 🟢</div>
         <div class="fs-4 fw-bold mt-1 text-success" id="svc-running-count">--</div>
         <div class="small text-muted mt-1" id="svc-running-sub">Активные процессы</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+      <div class="card svc-card h-100 shadow-sm p-3">
         <div class="text-muted small text-uppercase fw-semibold">Остановлены (Stopped) ⏸️</div>
         <div class="fs-4 fw-bold mt-1 text-secondary" id="svc-stopped-count">--</div>
         <div class="small text-muted mt-1" id="svc-stopped-sub">В режиме ожидания</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+      <div class="card svc-card h-100 shadow-sm p-3">
         <div class="text-muted small text-uppercase fw-semibold">С автозапуском (Auto) 🚀</div>
         <div class="fs-4 fw-bold mt-1 text-info" id="svc-auto-count">--</div>
         <div class="small text-muted mt-1" id="svc-auto-sub">Системный старт</div>
@@ -53,39 +82,39 @@ Updated: 2026-10-01 13:13:56
   </div>
 
   <!-- Action Bar -->
-  <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+  <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded flex-wrap gap-2 svc-card">
     <div class="d-flex align-items-center gap-2">
       <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="svc-refresh-btn">
         <i class="bi bi-arrow-clockwise"></i>
         <span>Обновить список</span>
       </button>
       <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-secondary active" id="svc-filter-all">Все</button>
-        <button class="btn btn-outline-success" id="svc-filter-running">Работающие</button>
-        <button class="btn btn-outline-secondary" id="svc-filter-stopped">Остановленные</button>
+        <button class="btn btn-sm btn-outline-secondary active" id="svc-filter-all">Все</button>
+        <button class="btn btn-sm btn-outline-secondary" id="svc-filter-running">Работающие</button>
+        <button class="btn btn-sm btn-outline-secondary" id="svc-filter-stopped">Остановленные</button>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="svc-search-input" placeholder="Поиск службы (имя или отображение)..." style="width: 260px;">
+      <input type="text" class="form-control form-control-sm" id="svc-search-input" placeholder="Поиск службы (имя или отображение)..." style="width: 260px; background: var(--surface-2); color: var(--text-color); border-color: var(--border-color);">
     </div>
   </div>
 
   <!-- Services Table -->
-  <div class="card bg-dark text-white border-secondary shadow-sm">
-    <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+  <div class="card svc-card shadow-sm">
+    <div class="card-header svc-card-header d-flex align-items-center justify-content-between py-2 px-3">
       <span class="fw-semibold"><i class="bi bi-gear-wide-connected text-primary me-2"></i>Службы Windows (Service Control Manager)</span>
-      <span class="badge bg-secondary" id="svc-table-badge">0 служб</span>
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary" id="svc-table-badge">0 служб</span>
     </div>
-    <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
-      <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="svc-table">
-        <thead class="sticky-top bg-dark">
-          <tr class="text-secondary">
-            <th>Имя службы</th>
-            <th>Отображаемое имя</th>
-            <th>Состояние</th>
-            <th>Тип запуска</th>
-            <th>PID</th>
-            <th class="text-end">Управление</th>
+    <div class="card-body p-0 table-responsive" style="max-height: 560px; overflow-y: auto;">
+      <table class="table table-hover align-middle mb-0 small" id="svc-table">
+        <thead class="sticky-top" style="background: var(--surface-2); border-bottom: 2px solid var(--border-color);">
+          <tr>
+            <th style="background: var(--surface-2); color: var(--text-color);">Имя службы</th>
+            <th style="background: var(--surface-2); color: var(--text-color);">Отображаемое имя</th>
+            <th style="background: var(--surface-2); color: var(--text-color);">Состояние</th>
+            <th style="background: var(--surface-2); color: var(--text-color);">Тип запуска</th>
+            <th style="background: var(--surface-2); color: var(--text-color);">PID</th>
+            <th class="text-end" style="background: var(--surface-2); color: var(--text-color);">Управление</th>
           </tr>
         </thead>
         <tbody id="svc-tbody">

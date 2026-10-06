@@ -32,17 +32,29 @@ from apps.windows.core.tools.dynamic_factory import DynamicSynthesizedTool, Dyna
 from apps.windows.core.tools.registry import ToolRegistry
 
 def extract_json_block(text: str) -> Optional[Dict[str, Any]]:
-    """Извлечение JSON объекта из текста или блока разметки ```json ... ```."""
+    """Извлечение JSON‑объекта из ответа LLM.
+    Поддерживает варианты:
+    • чистый JSON без обёртки;
+    • markdown‑блок ```json ... ```;
+    • markdown‑блок ``` ... ``` без указания языка;
+    • любой JSON‑объект в произвольном тексте.
+    При неудаче логирует ошибку и возвращает None.
+    """
     if not text:
         return None
     text_clean = text.strip()
+    # Прямая попытка парсинга чистого JSON
     try:
         data = json.loads(text_clean)
         if isinstance(data, dict):
             return data
     except Exception:
         pass
-    match = re.search('```(?:json)?\\s*(\\{[\\s\\S]*?\\})\\s*```', text)
+    # Поиск блока markdown ```json ... ```
+    match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', text, re.IGNORECASE)
+    if not match:
+        # Поиск блока markdown без указания языка
+        match = re.search(r'```\s*({[\s\S]*?})\s*```', text)
     if match:
         try:
             data = json.loads(match.group(1))
@@ -50,15 +62,25 @@ def extract_json_block(text: str) -> Optional[Dict[str, Any]]:
                 return data
         except Exception:
             pass
-    match = re.search('(\\{[\\s\\S]*\\})', text)
-    if match:
-        try:
-            data = json.loads(match.group(1))
-            if isinstance(data, dict):
-                return data
-        except Exception:
-            pass
-    '# TODO: вернуть корректное значение'
+    # Фолл‑бэк: поиск первого JSON‑объекта в тексте
+    brace_stack = []
+    start_idx = None
+    for idx, ch in enumerate(text):
+        if ch == '{':
+            if not brace_stack:
+                start_idx = idx
+            brace_stack.append(ch)
+        elif ch == '}':
+            if brace_stack:
+                brace_stack.pop()
+                if not brace_stack and start_idx is not None:
+                    candidate = text[start_idx:idx+1]
+                    try:
+                        data = json.loads(candidate)
+                        if isinstance(data, dict):
+                            return data
+                    except Exception:
+                        continue
     logger.error('Функция extract_json_block вернула пустой результат')
     return None
 

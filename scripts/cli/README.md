@@ -1,18 +1,18 @@
-# scripts/cli — Cross-Platform CLI Modules
+# Модуль `scripts/cli` — Кроссплатформенные CLI-модули
 
-Cross-platform Python utilities powering the AI Breadboard CLI on Windows, Linux, and macOS.
+Кроссплатформенные утилиты Python, обеспечивающие работу консольного интерфейса AI Breadboard (`manage_tools.py`, `assist`) на Windows, Linux и macOS.
 
-## Files
+## Структура файлов
 
-- `assist.py` — Main CLI entry point; implements all `assist` subcommands (start, stop, status, config, logs, providers, etc.)
-- `paths.py` — `CrossPlatformPaths` dataclass; auto-detects OS-specific data, config, cache, certs, and bin directories
-- `config.py` — `ConfigManager`; reads/writes `config.json` and `.env` with dot-notation key access
-- `utils.py` — Port management, process control, PATH manipulation, and cross-platform subprocess helpers
-- `installer.py` — Modular installer with i18n support (RU, EN, ES, HE) and skippable stages
-- `terminal_manager.py` — Terminal workspace profile manager & Windows Terminal wt.exe layout builder
-- `__init__.py` — Package root
+- [`assist.py`](assist.py) — Главная точка входа интерактивного CLI (`start`, `stop`, `status`, `config`, `logs`, `providers` и др.).
+- [`paths.py`](paths.py) — Датакласс `CrossPlatformPaths`: автоматическое определение путей к данным, конфигурациям, кэшу, сертификатам и бинарникам для текущей ОС.
+- [`config.py`](config.py) — `ConfigManager`: чтение и запись `config.json` и `.env` с поддержкой dot-нотации ключей.
+- [`utils.py`](utils.py) — Управление портами, контроль процессов, манипуляция PATH и кроссплатформенные хелперы `subprocess`.
+- [`installer.py`](installer.py) — Модульный интерактивный установщик с поддержкой локализации (RU, EN, ES, HE).
+- [`terminal_manager.py`](terminal_manager.py) — Менеджер профилей терминалов и сборщик макетов Windows Terminal (`wt.exe`).
+- [`commands/`](commands/) — Обработчики подкоманд для `manage_tools.py` (`agents`, `db`, `docs`, `network`, `plugins`, `rag`, `skills`, `sys_param`, `telemetry`).
 
-## Usage
+## Использование в коде
 
 ```python
 from scripts.cli.paths import get_paths
@@ -26,22 +26,10 @@ port = cfg.get_config_value("server.port", 8000)
 free_port = find_available_port(start_port=port)
 ```
 
-## Platform paths
+## Пути платформы
 
-| Platform | data_dir | certs_dir |
-|----------|----------|-----------|
-| Windows  | `%LOCALAPPDATA%\AI-Breadboard` | `%USERPROFILE%\.certs` |
-| Linux    | `~/.local/share/AI-Breadboard` | `~/.local/share/ca-certificates` |
-| macOS    | `~/Library/Application Support/AI-Breadboard` | `~/Library/Certs` |
-
-## Dependencies
-
-- `platformdirs` — OS-specific path resolution
-- `python-dotenv` — `.env` file loading
-- `typer` — CLI framework
-
-## Related
-
-- `launchers/` — Server startup scripts that consume these modules
-- `install/` — PowerShell/Bash installers that bootstrap the environment
-- `INSTALLER_README.md` — Detailed installer documentation
+| Платформа | `data_dir` | `certs_dir` |
+|---|---|---|
+| Windows | `%LOCALAPPDATA%\AI-Breadboard` | `%USERPROFILE%\.certs` |
+| Linux | `~/.local/share/AI-Breadboard` | `~/.local/share/ca-certificates` |
+| macOS | `~/Library/Application Support/AI-Breadboard` | `~/Library/Certs` |

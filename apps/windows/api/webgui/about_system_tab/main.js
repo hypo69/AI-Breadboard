@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 07:41:00
+ * Updated: 2026-10-06 11:04:00
  * =============================================================================
  */
 
@@ -184,6 +184,7 @@
     bindEvents();
     bindAIEvents();
     bindHistoryEvents();
+    bindRegionalEvents();
     updateLocalClock();
     
     // Проверка доступности кеша
@@ -361,6 +362,237 @@
         } else if (wearAutoRefreshTimer) {
           clearInterval(wearAutoRefreshTimer);
           wearAutoRefreshTimer = null;
+        }
+      };
+    }
+
+    // Inline Edit: Hostname
+    const btnHostEdit = document.getElementById('btn-host-inline-edit');
+    const viewBox = document.getElementById('about-host-view-box');
+    const editBox = document.getElementById('about-host-edit-box');
+    const inputHost = document.getElementById('about-host-inline-input');
+    const btnHostSave = document.getElementById('btn-host-inline-save');
+    const btnHostCancel = document.getElementById('btn-host-inline-cancel');
+    const reminderAlert = document.getElementById('about-host-reminder-alert');
+    const reminderText = document.getElementById('about-host-reminder-text');
+
+    function openHostEdit() {
+      if (!viewBox || !editBox || !inputHost) return;
+      const hostEl = document.getElementById('about-kpi-os-host');
+      let currentHost = hostEl ? hostEl.textContent.replace(/^Host:\s*/i, '').trim() : '';
+      if (!currentHost || currentHost === '--') currentHost = window.location.hostname || 'DELL-VOSTRO';
+      inputHost.value = currentHost;
+      viewBox.classList.add('d-none');
+      viewBox.classList.remove('d-flex');
+      editBox.classList.remove('d-none');
+      editBox.classList.add('d-flex');
+      inputHost.focus();
+      inputHost.select();
+    }
+
+    function closeHostEdit() {
+      if (!viewBox || !editBox) return;
+      editBox.classList.add('d-none');
+      editBox.classList.remove('d-flex');
+      viewBox.classList.remove('d-none');
+      viewBox.classList.add('d-flex');
+    }
+
+    if (btnHostEdit) {
+      btnHostEdit.onclick = (e) => {
+        e.preventDefault();
+        openHostEdit();
+      };
+    }
+
+    if (btnHostCancel) {
+      btnHostCancel.onclick = (e) => {
+        e.preventDefault();
+        closeHostEdit();
+      };
+    }
+
+    if (inputHost) {
+      inputHost.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnHostSave) btnHostSave.click();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeHostEdit();
+        }
+      };
+    }
+
+    if (btnHostSave && inputHost) {
+      btnHostSave.onclick = async (e) => {
+        e.preventDefault();
+        const newName = inputHost.value.trim();
+
+        if (!newName) {
+          if (window.showToast) window.showToast('Пожалуйста, введите новое имя компьютера', 'warning');
+          return;
+        }
+
+        const validNamePattern = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,13}[a-zA-Z0-9])?$/;
+        if (!validNamePattern.test(newName) || newName.length > 15) {
+          if (window.showToast) window.showToast('Имя должно содержать от 1 до 15 символов (A-Z, 0-9, дефис) без пробелов', 'warning');
+          return;
+        }
+
+        btnHostSave.disabled = true;
+        inputHost.disabled = true;
+        btnHostSave.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width: 10px; height: 10px;"></span>';
+
+        try {
+          const res = await fetch('/api/v1/system/rename-computer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_name: newName, restart: false }),
+          });
+          const result = await res.json();
+          if (res.ok && result.status === 'ok') {
+            setText('about-kpi-os-host', `Host: ${newName}`);
+            setText('about-ident-hostname', newName);
+            closeHostEdit();
+
+            // Показываем напоминание о перезагрузке
+            if (reminderAlert) {
+              reminderAlert.classList.remove('d-none');
+              if (reminderText) {
+                reminderText.textContent = `Имя компьютера изменено на «${newName}». Изменение сработает только после перезагрузки системы!`;
+              }
+            }
+            if (window.showToast) {
+              window.showToast(`✅ Имя изменено на «${newName}». Напоминание: требуется перезагрузка для применения!`, 'warning');
+            }
+          } else {
+            const errMsg = result.message || result.detail || 'Не удалось изменить имя компьютера.';
+            if (window.showToast) window.showToast(`Ошибка: ${errMsg}`, 'danger');
+            else alert(errMsg);
+          }
+        } catch (err) {
+          const errMsg = `Сетевая ошибка: ${err.message}`;
+          if (window.showToast) window.showToast(errMsg, 'danger');
+          else alert(errMsg);
+        } finally {
+          btnHostSave.disabled = false;
+          inputHost.disabled = false;
+          btnHostSave.innerHTML = '<i class="bi bi-check-lg"></i>';
+        }
+      };
+    }
+
+    // Inline Edit: Workgroup
+    const btnWgEdit = document.getElementById('btn-workgroup-inline-edit');
+    const wgViewBox = document.getElementById('about-workgroup-view-box');
+    const wgEditBox = document.getElementById('about-workgroup-edit-box');
+    const inputWg = document.getElementById('about-workgroup-inline-input');
+    const btnWgSave = document.getElementById('btn-workgroup-inline-save');
+    const btnWgCancel = document.getElementById('btn-workgroup-inline-cancel');
+
+    function openWgEdit() {
+      if (!wgViewBox || !wgEditBox || !inputWg) return;
+      const wgEl = document.getElementById('about-kpi-os-workgroup');
+      let currentWg = wgEl ? wgEl.textContent.replace(/^Workgroup:\s*/i, '').trim() : '';
+      if (!currentWg || currentWg === '--') currentWg = 'WORKGROUP';
+      inputWg.value = currentWg;
+      wgViewBox.classList.add('d-none');
+      wgViewBox.classList.remove('d-flex');
+      wgEditBox.classList.remove('d-none');
+      wgEditBox.classList.add('d-flex');
+      inputWg.focus();
+      inputWg.select();
+    }
+
+    function closeWgEdit() {
+      if (!wgViewBox || !wgEditBox) return;
+      wgEditBox.classList.add('d-none');
+      wgEditBox.classList.remove('d-flex');
+      wgViewBox.classList.remove('d-none');
+      wgViewBox.classList.add('d-flex');
+    }
+
+    if (btnWgEdit) {
+      btnWgEdit.onclick = (e) => {
+        e.preventDefault();
+        openWgEdit();
+      };
+    }
+
+    if (btnWgCancel) {
+      btnWgCancel.onclick = (e) => {
+        e.preventDefault();
+        closeWgEdit();
+      };
+    }
+
+    if (inputWg) {
+      inputWg.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnWgSave) btnWgSave.click();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeWgEdit();
+        }
+      };
+    }
+
+    if (btnWgSave && inputWg) {
+      btnWgSave.onclick = async (e) => {
+        e.preventDefault();
+        const newWg = inputWg.value.trim().toUpperCase();
+
+        if (!newWg) {
+          if (window.showToast) window.showToast('Пожалуйста, введите имя рабочей группы', 'warning');
+          return;
+        }
+
+        const validWgPattern = /^[a-zA-Z0-9_\-]{1,15}$/;
+        if (!validWgPattern.test(newWg)) {
+          if (window.showToast) window.showToast('Имя группы должно содержать от 1 до 15 символов (A-Z, 0-9, -, _)', 'warning');
+          return;
+        }
+
+        btnWgSave.disabled = true;
+        inputWg.disabled = true;
+        btnWgSave.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width: 10px; height: 10px;"></span>';
+
+        try {
+          const res = await fetch('/api/v1/system/change-workgroup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_workgroup: newWg, restart: false }),
+          });
+          const result = await res.json();
+          if (res.ok && result.status === 'ok') {
+            setText('about-kpi-os-workgroup', `Workgroup: ${newWg}`);
+            closeWgEdit();
+
+            // Показываем напоминание о перезагрузке
+            if (reminderAlert) {
+              reminderAlert.classList.remove('d-none');
+              if (reminderText) {
+                reminderText.textContent = `Рабочая группа изменена на «${newWg}». Изменение сработает только после перезагрузки системы!`;
+              }
+            }
+            if (window.showToast) {
+              window.showToast(`✅ Рабочая группа изменена на «${newWg}». Напоминание: требуется перезагрузка для применения!`, 'warning');
+            }
+          } else {
+            const errMsg = result.message || result.detail || 'Не удалось изменить рабочую группу.';
+            if (window.showToast) window.showToast(`Ошибка: ${errMsg}`, 'danger');
+            else alert(errMsg);
+          }
+        } catch (err) {
+          const errMsg = `Сетевая ошибка: ${err.message}`;
+          if (window.showToast) window.showToast(errMsg, 'danger');
+          else alert(errMsg);
+        } finally {
+          btnWgSave.disabled = false;
+          inputWg.disabled = false;
+          btnWgSave.innerHTML = '<i class="bi bi-check-lg"></i>';
         }
       };
     }
@@ -642,10 +874,12 @@
       if (data) {
         if (data.display_title) setText('about-kpi-os-title', data.display_title);
         if (data.display_host) setText('about-kpi-os-host', data.display_host);
+        if (data.workgroup) setText('about-kpi-os-workgroup', `Workgroup: ${data.workgroup}`);
+        else if (data.display_workgroup) setText('about-kpi-os-workgroup', data.display_workgroup);
         if (data.uptime_human) setText('about-spec-uptime', `Uptime: ${data.uptime_human}`);
+        if (data.os_build) setText('about-spec-os', data.os_build);
         if (data.os_install_date) {
           setText('about-ident-install-date', data.os_install_date);
-          setText('about-kpi-os-install', data.os_install_date);
         }
       }
     } catch (e) {
@@ -896,14 +1130,14 @@
       setText('about-ident-timezone', tz);
       setText('about-ident-codepage', `Кодировка: ${cp}`);
       setText('about-ident-inputs', inputs);
-      setText('about-ident-os-build', osBuild);
       const installDate = snap.os_install_date || 'Не определена';
       setText('about-ident-install-date', installDate);
-      setText('about-kpi-os-install', installDate);
 
       // Top KPI Card 1: Operating System
       setText('about-kpi-os-title', `${snap.os_name || 'Windows 11'} (${snap.cpu?.architecture || 'AMD64'})`);
       setText('about-kpi-os-host', `Host: ${host}`);
+      const wg = snap.workgroup || 'WORKGROUP';
+      setText('about-kpi-os-workgroup', `Workgroup: ${wg}`);
 
   /**
    * Форматирование коммерческого названия процессора (например, Intel Core i5-10400)
@@ -1730,7 +1964,7 @@
       let driveIcon = 'bi-hdd-fill text-primary';
       let driveBadge = '';
       let driveSubtitle = '';
-      let fsBadge = `<span class="badge bg-secondary-subtle text-secondary border border-secondary">${escapeHtml(d.fstype || 'NTFS')}</span>`;
+      let fsBadge = `<span class="badge" style="background: var(--surface-2, rgba(255,255,255,0.06)); color: var(--text-color, #f8fafc); border: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;">${escapeHtml(d.fstype || 'NTFS')}</span>`;
       let smartBadge = `<span class="about-sys-badge-ok">OK</span>`;
 
       if (isGoogleDrive) {
@@ -1745,20 +1979,20 @@
           emailDesc = 'e.cat.co.il@gmail.com';
         }
         driveSubtitle = `<div class="small text-muted font-monospace mt-0.5">${escapeHtml(emailDesc)}</div>`;
-        fsBadge = `<span class="badge bg-dark border border-secondary text-info">Virtual ${escapeHtml(d.fstype || 'FAT32')}</span>`;
-        smartBadge = `<span class="badge bg-secondary-subtle text-muted border border-secondary font-monospace" title="Виртуальный диск Google Drive — аппаратный контроллер S.M.A.R.T. отсутствует" style="font-size: 0.68rem;">N/A (Облако)</span>`;
+        fsBadge = `<span class="badge" style="background: var(--surface-2, rgba(255,255,255,0.06)); color: var(--accent-color, #38bdf8); border: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;">Virtual ${escapeHtml(d.fstype || 'FAT32')}</span>`;
+        smartBadge = `<span class="badge font-monospace" title="Виртуальный диск Google Drive — аппаратный контроллер S.M.A.R.T. отсутствует" style="background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border-subtle); font-size: 0.68rem;">N/A (Облако)</span>`;
       } else if (d.volume_name) {
-        driveSubtitle = `<div class="small text-secondary font-monospace mt-0.5">${escapeHtml(d.volume_name)}</div>`;
+        driveSubtitle = `<div class="small text-muted font-monospace mt-0.5">${escapeHtml(d.volume_name)}</div>`;
       }
 
       return `
         <tr>
           <td>
             <div class="d-flex align-items-center">
-              <i class="bi ${driveIcon} me-1.5 fs-6"></i>
+              <i class="bi ${driveIcon} me-2 fs-6"></i>
               <div>
                 <div class="d-flex align-items-center">
-                  <strong>${escapeHtml(devStr || 'C:\\')}</strong>
+                  <strong class="font-monospace" style="color: var(--text-color);">${escapeHtml(devStr || 'C:\\')}</strong>
                   ${driveBadge}
                 </div>
                 ${driveSubtitle}
@@ -1766,15 +2000,15 @@
             </div>
           </td>
           <td>${fsBadge}</td>
-          <td class="font-monospace">${Number(d.total_gb || 0).toFixed(1)} GB</td>
-          <td class="text-light font-monospace">${Number(d.used_gb || 0).toFixed(1)} GB</td>
-          <td class="text-info fw-semibold font-monospace">${Number(d.free_gb || 0).toFixed(1)} GB</td>
+          <td class="font-monospace" style="color: var(--text-color);">${Number(d.total_gb || 0).toFixed(1)} GB</td>
+          <td class="font-monospace" style="color: var(--text-color);">${Number(d.used_gb || 0).toFixed(1)} GB</td>
+          <td class="font-monospace text-info fw-semibold">${Number(d.free_gb || 0).toFixed(1)} GB</td>
           <td>
             <div class="d-flex align-items-center gap-2">
-              <div class="about-sys-progress-track flex-grow-1" style="height: 6px;">
+              <div class="about-sys-progress-track flex-grow-1" style="height: 6px; background: var(--surface-2, rgba(120, 120, 120, 0.2));">
                 <div class="about-sys-progress-bar ${barClass}" style="width: ${pct}%;"></div>
               </div>
-              <span class="small font-monospace" style="min-width: 42px; text-align: right;">${pct.toFixed(1)}%</span>
+              <span class="small font-monospace text-muted" style="min-width: 42px; text-align: right;">${pct.toFixed(1)}%</span>
             </div>
           </td>
           <td>${smartBadge}</td>
@@ -1860,7 +2094,14 @@
       const propsHtml = propsEntries.length > 0
         ? propsEntries.map(([k, v]) => {
             const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
-            const valStr = String(v ?? '');
+            let valStr = '';
+            if (Array.isArray(v)) {
+              valStr = v.map(item => (typeof item === 'object' && item !== null) ? (item.name || item.model || item.device || item.bank_label || JSON.stringify(item)) : String(item)).filter(Boolean).join(', ') || 'N/A';
+            } else if (typeof v === 'object' && v !== null) {
+              valStr = Object.entries(v).map(([subK, subV]) => `${subK}: ${subV}`).join(', ') || 'N/A';
+            } else {
+              valStr = String(v ?? '');
+            }
             let valHtml = escapeHtml(valStr);
 
             // Специфичное выделение частот и статусов совместимости памяти RAM
@@ -1997,6 +2238,295 @@
         btn.className = 'btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter';
       }
     });
+  }
+
+  let cachedRegionalData = null;
+
+  /**
+   * Переключение активной вкладки в модальном окне региональных настроек
+   */
+  function switchRegionalTab(targetPaneId) {
+    const panes = document.querySelectorAll('.regional-tab-pane');
+    panes.forEach(pane => {
+      if (pane.id === targetPaneId) {
+        pane.classList.remove('d-none');
+      } else {
+        pane.classList.add('d-none');
+      }
+    });
+
+    const navBtns = document.querySelectorAll('.btn-reg-nav');
+    navBtns.forEach(btn => {
+      if (btn.getAttribute('data-tab-target') === targetPaneId) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  /**
+   * Отображение уведомления внутри модального окна региональных настроек
+   */
+  function showRegModalAlert(msg, type = 'success') {
+    const alertBox = document.getElementById('reg-modal-alert');
+    if (!alertBox) return;
+    alertBox.className = `alert alert-${type} py-2 px-3 small mb-0`;
+    alertBox.innerHTML = msg;
+    alertBox.classList.remove('d-none');
+    setTimeout(() => {
+      alertBox.classList.add('d-none');
+    }, 6000);
+  }
+
+  /**
+   * Отрисовка элементов выбора часового пояса с фильтрацией
+   */
+  function renderTimezonesList(timezones, filterQuery = '', selectedTzId = '') {
+    const tzSelect = document.getElementById('reg-tz-select');
+    if (!tzSelect) return;
+    const q = (filterQuery || '').toLowerCase();
+    const filtered = (timezones || []).filter(tz => {
+      if (!q) return true;
+      return (tz.id || '').toLowerCase().includes(q) || (tz.name || '').toLowerCase().includes(q);
+    });
+
+    if (filtered.length === 0) {
+      tzSelect.innerHTML = '<option value="" disabled>Ничего не найдено</option>';
+      return;
+    }
+
+    tzSelect.innerHTML = filtered.map(tz => {
+      const isSel = tz.id === selectedTzId ? 'selected' : '';
+      return `<option value="${escapeHtml(tz.id)}" ${isSel}>${escapeHtml(tz.name || tz.id)}</option>`;
+    }).join('');
+
+    const selLabel = document.getElementById('reg-tz-selected-label');
+    if (selLabel) {
+      const cur = tzSelect.value;
+      selLabel.textContent = cur ? `Выбран: ${cur}` : 'Выберите пояс из списка';
+    }
+  }
+
+  /**
+   * Загрузка параметров региона, времени и пользователя с сервера
+   */
+  async function loadRegionalOptions(targetPaneId = null) {
+    if (targetPaneId) {
+      switchRegionalTab(targetPaneId);
+    }
+    const tzBadge = document.getElementById('reg-cur-tz-badge');
+    if (tzBadge) tzBadge.textContent = 'Загрузка...';
+
+    try {
+      const data = await apiFetch('/api/v1/system/regional-options');
+      cachedRegionalData = data;
+
+      if (tzBadge) tzBadge.textContent = data.current_timezone || 'Не определен';
+
+      // 1. Часовые пояса
+      const searchInput = document.getElementById('reg-tz-search-input');
+      const curQuery = searchInput ? searchInput.value.trim() : '';
+      renderTimezonesList(data.timezones || [], curQuery, data.current_timezone);
+
+      // 2. Локали
+      if (Array.isArray(data.locales) && data.locales.length > 0) {
+        const sysLocSelect = document.getElementById('reg-loc-sys-select');
+        const usrLocSelect = document.getElementById('reg-loc-usr-select');
+        const optionsHtml = data.locales.map(loc => 
+          `<option value="${escapeHtml(loc.code)}">${escapeHtml(loc.name)} [${escapeHtml(loc.code)}]</option>`
+        ).join('');
+        
+        if (sysLocSelect) {
+          sysLocSelect.innerHTML = optionsHtml;
+          if (data.current_system_locale) sysLocSelect.value = data.current_system_locale;
+        }
+        if (usrLocSelect) {
+          usrLocSelect.innerHTML = optionsHtml;
+          if (data.current_user_locale) usrLocSelect.value = data.current_user_locale;
+        }
+      } else {
+        const sysLocSelect = document.getElementById('reg-loc-sys-select');
+        const usrLocSelect = document.getElementById('reg-loc-usr-select');
+        if (sysLocSelect && data.current_system_locale) sysLocSelect.value = data.current_system_locale;
+        if (usrLocSelect && data.current_user_locale) usrLocSelect.value = data.current_user_locale;
+      }
+
+      // 3. Профиль пользователя
+      const usrNameInput = document.getElementById('reg-usr-name-input');
+      const usrFullNameInput = document.getElementById('reg-usr-fullname-input');
+      const usrDescInput = document.getElementById('reg-usr-desc-input');
+
+      if (usrNameInput) usrNameInput.value = data.current_username || '';
+      if (usrFullNameInput) usrFullNameInput.value = data.current_user_fullname || '';
+      if (usrDescInput) usrDescInput.value = data.current_user_description || '';
+
+    } catch (err) {
+      console.error('[AboutSystemTab] loadRegionalOptions error:', err);
+      if (tzBadge) tzBadge.textContent = 'Ошибка загрузки';
+      showRegModalAlert(`Ошибка загрузки параметров: ${escapeHtml(err.message || String(err))}`, 'danger');
+    }
+  }
+
+  /**
+   * Привязка событий модального окна региональных параметров
+   */
+  function bindRegionalEvents() {
+    // 1. Открытие модального окна по кнопкам в таблице или заголовке
+    const openButtons = document.querySelectorAll('#btn-open-regional-settings, .btn-open-reg-tab');
+    openButtons.forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const targetTab = btn.getAttribute('data-reg-tab') || 'pane-tz';
+        const modalEl = document.getElementById('aboutRegionalSettingsModal');
+        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+          const modalInst = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+          modalInst.show();
+        }
+        loadRegionalOptions(targetTab);
+      };
+    });
+
+    // 2. Переключение вкладок в модальном окне
+    document.querySelectorAll('.btn-reg-nav').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const targetPane = btn.getAttribute('data-tab-target');
+        if (targetPane) {
+          switchRegionalTab(targetPane);
+        }
+      };
+    });
+
+    // 3. Фильтрация часовых поясов
+    const tzSearchInput = document.getElementById('reg-tz-search-input');
+    const tzSelect = document.getElementById('reg-tz-select');
+    if (tzSearchInput) {
+      tzSearchInput.oninput = () => {
+        if (cachedRegionalData && cachedRegionalData.timezones) {
+          const currentVal = tzSelect ? tzSelect.value : '';
+          renderTimezonesList(cachedRegionalData.timezones, tzSearchInput.value.trim(), currentVal);
+        }
+      };
+    }
+
+    if (tzSelect) {
+      tzSelect.onchange = () => {
+        const selLabel = document.getElementById('reg-tz-selected-label');
+        if (selLabel) {
+          selLabel.textContent = tzSelect.value ? `Выбран: ${tzSelect.value}` : 'Выберите пояс из списка';
+        }
+      };
+    }
+
+    // 4. Применение часового пояса
+    const btnSaveTz = document.getElementById('btn-reg-save-tz');
+    if (btnSaveTz) {
+      btnSaveTz.onclick = async () => {
+        const tzVal = tzSelect ? tzSelect.value : '';
+        if (!tzVal) {
+          showRegModalAlert('Пожалуйста, выберите часовой пояс из списка', 'warning');
+          return;
+        }
+
+        btnSaveTz.disabled = true;
+        btnSaveTz.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Применение...';
+
+        try {
+          const res = await apiFetch('/api/v1/system/set-timezone', {
+            method: 'POST',
+            body: JSON.stringify({ timezone_id: tzVal })
+          });
+
+          if (res.status === 'ok') {
+            showRegModalAlert(`✅ Часовой пояс успешно изменен на «<strong>${escapeHtml(res.timezone_id || tzVal)}</strong>»`, 'success');
+            if (window.showToast) window.showToast(`✅ Часовой пояс изменен на «${tzVal}»`, 'success');
+            const tzBadge = document.getElementById('reg-cur-tz-badge');
+            if (tzBadge) tzBadge.textContent = res.timezone_id || tzVal;
+            updateLocalClock();
+            fetchSystemSummary();
+          } else {
+            showRegModalAlert(`Ошибка: ${escapeHtml(res.message || 'Не удалось применить пояс')}`, 'danger');
+          }
+        } catch (err) {
+          showRegModalAlert(`Ошибка при смене часового пояса: ${escapeHtml(err.message || String(err))}`, 'danger');
+        } finally {
+          btnSaveTz.disabled = false;
+          btnSaveTz.innerHTML = '<i class="bi bi-check-lg me-1"></i> Применить пояс';
+        }
+      };
+    }
+
+    // 5. Применение локали
+    const btnSaveLoc = document.getElementById('btn-reg-save-loc');
+    if (btnSaveLoc) {
+      btnSaveLoc.onclick = async () => {
+        const sysLoc = document.getElementById('reg-loc-sys-select')?.value;
+        const usrLoc = document.getElementById('reg-loc-usr-select')?.value;
+
+        btnSaveLoc.disabled = true;
+        btnSaveLoc.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Сохранение...';
+
+        try {
+          const res = await apiFetch('/api/v1/system/set-locale', {
+            method: 'POST',
+            body: JSON.stringify({ system_locale: sysLoc, user_locale: usrLoc })
+          });
+
+          if (res.status === 'ok') {
+            const rebootMsg = res.reboot_required ? '<br><small class="text-warning">⚠️ Для полного применения требуется перезагрузка Windows.</small>' : '';
+            showRegModalAlert(`✅ Системная локаль обновлена: <strong>${escapeHtml(res.locale || sysLoc)}</strong>.${rebootMsg}`, 'success');
+            if (window.showToast) window.showToast(`✅ Системная локаль обновлена на «${res.locale || sysLoc}»`, 'warning');
+            fetchSystemSummary();
+          } else {
+            showRegModalAlert(`Ошибка: ${escapeHtml(res.message || 'Не удалось изменить локаль')}`, 'danger');
+          }
+        } catch (err) {
+          showRegModalAlert(`Ошибка при изменении локали: ${escapeHtml(err.message || String(err))}`, 'danger');
+        } finally {
+          btnSaveLoc.disabled = false;
+          btnSaveLoc.innerHTML = '<i class="bi bi-check-lg me-1"></i> Применить локаль';
+        }
+      };
+    }
+
+    // 6. Сохранение профиля пользователя
+    const btnSaveUsr = document.getElementById('btn-reg-save-usr');
+    if (btnSaveUsr) {
+      btnSaveUsr.onclick = async () => {
+        const usrName = document.getElementById('reg-usr-name-input')?.value.trim();
+        const fullName = document.getElementById('reg-usr-fullname-input')?.value.trim();
+        const desc = document.getElementById('reg-usr-desc-input')?.value.trim();
+
+        if (!usrName) {
+          showRegModalAlert('Имя учетной записи не указано', 'warning');
+          return;
+        }
+
+        btnSaveUsr.disabled = true;
+        btnSaveUsr.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Сохранение...';
+
+        try {
+          const res = await apiFetch('/api/v1/system/update-user-profile', {
+            method: 'POST',
+            body: JSON.stringify({ username: usrName, full_name: fullName, description: desc })
+          });
+
+          if (res.status === 'ok') {
+            showRegModalAlert(`✅ Профиль пользователя «<strong>${escapeHtml(usrName)}</strong>» успешно обновлен`, 'success');
+            if (window.showToast) window.showToast(`✅ Профиль пользователя «${usrName}» обновлен`, 'success');
+            fetchSystemSummary();
+          } else {
+            showRegModalAlert(`Ошибка: ${escapeHtml(res.message || 'Не удалось обновить профиль')}`, 'danger');
+          }
+        } catch (err) {
+          showRegModalAlert(`Ошибка при обновлении профиля: ${escapeHtml(err.message || String(err))}`, 'danger');
+        } finally {
+          btnSaveUsr.disabled = false;
+          btnSaveUsr.innerHTML = '<i class="bi bi-check-lg me-1"></i> Сохранить профиль';
+        }
+      };
+    }
   }
 
   /**

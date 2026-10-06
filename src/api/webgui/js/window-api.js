@@ -14,7 +14,7 @@
  * Package: src/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-06 11:06:00
  * =============================================================================
  */
 
@@ -227,3 +227,39 @@ window.api.googleAccounts = window.api.googleAccounts || {
     });
   }
 };
+
+// System & God Mode API
+window.api.system = window.api.system || {
+  async openGodMode() {
+    return await window.api.fetch('/api/v1/tc/godmode/open', { method: 'POST' });
+  }
+};
+
+window.openGodModeFolder = async function() {
+  try {
+    const res = await fetch('/api/v1/tc/godmode/open', { method: 'POST' });
+    const data = await res.json();
+    if (data && data.status === 'ok') {
+      if (typeof showToast === 'function') {
+        const msg = data.action === 'focused'
+          ? '⚡ Фокус переведён на открытое окно God Mode'
+          : '⚡ God Mode (All Tasks) открыт в Проводнике Windows';
+        showToast('success', msg);
+      }
+    } else {
+      const errMsg = (data && data.message) ? data.message : 'Неизвестная ошибка';
+      if (typeof showToast === 'function') {
+        showToast('danger', 'Ошибка: ' + errMsg);
+      } else {
+        alert('Ошибка: ' + errMsg);
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') {
+      showToast('danger', 'Не удалось связаться с сервером TC: ' + err.message);
+    } else {
+      alert('Ошибка: ' + err.message);
+    }
+  }
+};
+

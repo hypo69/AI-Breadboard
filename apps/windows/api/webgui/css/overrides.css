@@ -15,7 +15,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 07:22:00
+ * Updated: 2026-10-06 08:14:00
  * =============================================================================
  */
 
@@ -64,6 +64,102 @@
     background-color: var(--surface-1) !important;
   }
 
+  /* Высококонтрастные читаемые цвета текста в светлой теме NightView / Brick */
+  .text-info {
+    color: #0369a1 !important; /* глубокий читаемый океанский синий */
+  }
+  .text-warning {
+    color: #92400e !important; /* глубокий читаемый янтарно-коричневый */
+  }
+  .text-success {
+    color: #166534 !important; /* глубокий читаемый лесной зеленый */
+  }
+  .text-danger {
+    color: #991b1b !important; /* глубокий читаемый рубиновый */
+  }
+  .text-primary {
+    color: #1d4ed8 !important; /* четкий читаемый сапфировый */
+  }
+
+  /* Кнопки с контуром (Outline Buttons) высокой контрастности */
+  .btn-outline-light {
+    color: var(--text-color) !important;
+    border-color: var(--border-strong) !important;
+    background-color: transparent !important;
+  }
+  .btn-outline-light:hover,
+  .btn-outline-light:focus,
+  .btn-outline-light.active {
+    background-color: var(--surface-2) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-contrast) !important;
+  }
+
+  .btn-outline-secondary {
+    color: var(--text-color) !important;
+    border-color: var(--border-strong) !important;
+    background-color: transparent !important;
+  }
+  .btn-outline-secondary:hover,
+  .btn-outline-secondary:focus,
+  .btn-outline-secondary.active {
+    background-color: var(--surface-2) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-contrast) !important;
+  }
+
+  .btn-outline-info {
+    color: #0369a1 !important;
+    border-color: #0284c7 !important;
+    background-color: transparent !important;
+  }
+  .btn-outline-info:hover,
+  .btn-outline-info:focus,
+  .btn-outline-info.active {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+    border-color: #0284c7 !important;
+  }
+
+  .btn-outline-warning {
+    color: #92400e !important;
+    border-color: #d97706 !important;
+    background-color: transparent !important;
+  }
+  .btn-outline-warning:hover,
+  .btn-outline-warning:focus,
+  .btn-outline-warning.active {
+    background-color: #d97706 !important;
+    color: #ffffff !important;
+    border-color: #d97706 !important;
+  }
+
+  .btn-outline-primary {
+    color: #1d4ed8 !important;
+    border-color: #2563eb !important;
+    background-color: transparent !important;
+  }
+  .btn-outline-primary:hover,
+  .btn-outline-primary:focus,
+  .btn-outline-primary.active {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+  }
+
+  .btn-outline-danger {
+    color: #991b1b !important;
+    border-color: #dc2626 !important;
+    background-color: transparent !important;
+  }
+  .btn-outline-danger:hover,
+  .btn-outline-danger:focus,
+  .btn-outline-danger.active {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+  }
+
   /* text-white / text-light в карточках и панелях */
   .card .text-white,
   .card .text-light,
@@ -74,14 +170,37 @@
   .tab-pane .text-white,
   .tab-pane .text-light,
   .tab-pane .text-white:not(.btn):not(.badge),
-  .card .text-white:not(.btn):not(.badge) {
+  .card .text-white:not(.btn):not(.badge),
+  .sys-container .text-white:not(.btn):not(.badge),
+  .sys-container .text-light:not(.btn):not(.badge) {
     color: var(--text-color) !important;
   }
 
-  /* Бейджи bg-dark → нейтральный цвет */
+  /* Бейджи bg-dark и статусных оттенков */
   .badge.bg-dark {
-    background-color: var(--border-color) !important;
+    background-color: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
     color: var(--text-color) !important;
+  }
+  .badge.bg-info-subtle {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border-color: #7dd3fc !important;
+  }
+  .badge.bg-warning-subtle {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    border-color: #fde047 !important;
+  }
+  .badge.bg-success-subtle {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    border-color: #86efac !important;
+  }
+  .badge.bg-danger-subtle {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border-color: #fca5a5 !important;
   }
 
   /* pre/code без явного светлого фона */
@@ -116,6 +235,79 @@
     color: var(--text-color) !important;
   }
 
+  .sys-card-header-bar {
+    background-color: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  .sys-core-section-title {
+    color: var(--text-color) !important;
+    border-color: var(--border-subtle) !important;
+  }
+
+  .sys-core-card {
+    background-color: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+    box-shadow: var(--shadow-xs) !important;
+  }
+
+  .sys-core-title {
+    color: var(--text-color) !important;
+  }
+
+  .sys-core-param-key {
+    color: var(--text-muted) !important;
+  }
+
+  .sys-core-param-row {
+    border-color: var(--border-subtle) !important;
+  }
+
+  .sys-sensor-widget-item {
+    background-color: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  .sys-sensor-name,
+  .sys-sensor-value {
+    color: var(--text-color) !important;
+  }
+
+  .sys-temp-slider-track {
+    background-color: var(--border-color) !important;
+  }
+
+  .sys-temp-slider-thumb {
+    border-color: var(--surface-1) !important;
+  }
+
+  .sys-cpu-specs-card,
+  .sys-gpu-specs-card {
+    background-color: var(--surface-1) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  .sys-cpu-details-accordion-btn,
+  .sys-gpu-details-accordion-btn {
+    background: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Переопределение жестко закодированных темных плашек в светлой теме */
+  div[style*="background: rgba(0, 0, 0"],
+  div[style*="background:rgba(0,0,0"],
+  div[style*="background: linear-gradient(180deg, #182238"],
+  div[style*="background:linear-gradient(180deg,#182238"] {
+    background: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
   .sys-panel-header {
     background-color: var(--surface-2) !important;
     color: var(--nav-active) !important;
@@ -133,6 +325,10 @@
   .sys-proc-table th {
     background-color: var(--surface-2) !important;
     color: var(--text-muted) !important;
+  }
+
+  .sys-proc-table td {
+    color: var(--text-color) !important;
   }
 
   .sys-value {

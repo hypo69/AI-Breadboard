@@ -16,7 +16,7 @@
 # Package: apps.trading_terminal
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 10:09:40
 # =============================================================================
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+from logger import logger
 from apps.windows.telemetry.models import AnomalyItem, SystemDiagnosticReport
 from apps.common.csv_logger import AppCsvLogger
 _csv_logger = AppCsvLogger('trading_terminal')

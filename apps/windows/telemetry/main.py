@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 03:15:00
+# Updated: 2026-10-06 07:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -110,8 +110,10 @@ def run_telemetry_service(
     from apps.windows.modules.hardware.gpu_prober import GpuProber
     from .models import CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, GpuMetrics, MemoryMetrics, NetworkInterfaceMetrics, ProcessMetrics, SystemSnapshot
     from .sqlite import TelemetryStorage
+    from .telemetry_config import TelemetryConfigManager
     _set_low_priority()
-    resolved_log_dir = log_dir or os.path.join(os.environ.get('APPDATA', os.path.expanduser('~\\AppData\\Roaming')), 'AI-Breadboard', 'apps', 'windows', 'telemetry', 'logs')
+    cfg_mgr = TelemetryConfigManager(config_path=config_path)
+    resolved_log_dir = log_dir or str(cfg_mgr.get_data_path())
     os.makedirs(resolved_log_dir, exist_ok=True)
     db_path = os.path.join(resolved_log_dir, 'telemetry.db')
     storage = TelemetryStorage(db_path=db_path)
@@ -119,8 +121,6 @@ def run_telemetry_service(
     hostname = os.environ.get('COMPUTERNAME', 'localhost')
     boot_time = psutil.boot_time()
     psutil.cpu_percent(interval=None)
-    from .telemetry_config import TelemetryConfigManager
-    cfg_mgr = TelemetryConfigManager(config_path=config_path)
 
     custom_mode_set = mode is not None and ('--mode' in sys.argv or '--minimal' in sys.argv)
     custom_interval_set = interval is not None and ('--interval' in sys.argv or '-i' in sys.argv)

@@ -17,12 +17,31 @@ Usage Examples:
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 06:27:00
+ * Updated: 2026-10-06 10:55:00
  * =============================================================================
 -->
 
 <!-- About System Application Tab -->
 <style>
+
+  .about-param-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.55rem;
+    color: var(--accent-color, #38bdf8);
+    opacity: 0.75;
+    transition: opacity 0.15s ease, transform 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+    vertical-align: middle;
+    text-decoration: none;
+  }
+  .about-param-edit-btn:hover {
+    opacity: 1;
+    color: #7dd3fc;
+    transform: scale(1.15);
+  }
+
   .about-sys-wrapper {
     padding: 0.75rem;
     color: var(--text-color, #f8fafc);
@@ -137,12 +156,25 @@ Usage Examples:
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    margin-bottom: 0;
+  }
+  .about-sys-spec-table th {
+    padding: 8px 16px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted, #94a3b8);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border-subtle, rgba(51, 65, 85, 0.35));
+    background: transparent;
+    vertical-align: middle;
   }
   .about-sys-spec-table td {
     padding: 10px 16px;
     border-bottom: 1px solid var(--border-subtle, rgba(51, 65, 85, 0.35));
     vertical-align: middle;
     line-height: 1.5;
+    color: var(--text-color, #f8fafc);
   }
   .about-sys-spec-table tr:hover td {
     background: rgba(56, 189, 248, 0.04);
@@ -582,6 +614,143 @@ Usage Examples:
     </div>
   </div>
 
+  <!-- Regional, Timezone & User Account Settings Modal Dialog -->
+  <div class="modal fade" id="aboutRegionalSettingsModal" tabindex="-1" aria-labelledby="aboutRegionalSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content" style="background: var(--surface-1); color: var(--text-color); border: 1px solid var(--border-color);">
+        
+        <div class="modal-header" style="background: var(--surface-2); border-bottom: 1px solid var(--border-color);">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-5">⚙️</span>
+            <div>
+              <h6 class="modal-title fw-bold mb-0" id="aboutRegionalSettingsModalLabel">
+                Параметры региона, времени и учетной записи
+              </h6>
+              <div class="small text-muted" style="font-size: 0.72rem;">Настройка часового пояса, системной локали и профиля пользователя Windows</div>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+
+        <div class="modal-body p-3">
+          <!-- Subtabs nav -->
+          <ul class="nav nav-pills gap-1 mb-3" id="regional-modal-pills">
+            <li class="nav-item">
+              <button class="nav-link active py-1 px-3 small slc-subtab-btn btn-reg-nav" id="btn-tab-tz" data-tab-target="pane-tz">🕒 Часовой пояс</button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link py-1 px-3 small slc-subtab-btn btn-reg-nav" id="btn-tab-loc" data-tab-target="pane-loc">🌐 Язык и локали</button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link py-1 px-3 small slc-subtab-btn btn-reg-nav" id="btn-tab-usr" data-tab-target="pane-usr">👤 Учетная запись</button>
+            </li>
+          </ul>
+
+          <!-- Pane 1: Timezone -->
+          <div class="regional-tab-pane" id="pane-tz">
+            <div class="p-2.5 mb-2 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small text-muted">Текущий часовой пояс:</span>
+                <span class="badge bg-info text-dark font-monospace" id="reg-cur-tz-badge">Загрузка...</span>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Поиск и выбор часового пояса:</label>
+                <input type="text" class="form-control form-control-sm mb-2" id="reg-tz-search-input" placeholder="Фильтр поясов (например: Jerusalem, Moscow, UTC, Rome)...">
+                <select class="form-select form-select-sm font-monospace" id="reg-tz-select" size="6" style="height: 140px; font-size: 0.8rem;">
+                  <option value="">Загрузка списка часовых поясов...</option>
+                </select>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                <span class="small text-muted font-monospace" id="reg-tz-selected-label">Выберите пояс из списка</span>
+                <button class="btn btn-sm btn-info text-dark fw-bold px-3 rounded-pill" id="btn-reg-save-tz">
+                  <i class="bi bi-check-lg me-1"></i> Применить пояс
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pane 2: Locales -->
+          <div class="regional-tab-pane d-none" id="pane-loc">
+            <div class="p-2.5 mb-2 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+              <div class="row g-3 mb-2">
+                <div class="col-sm-6">
+                  <label class="form-label small fw-bold mb-1">Системная локаль (System Locale):</label>
+                  <select class="form-select form-select-sm" id="reg-loc-sys-select">
+                    <option value="ru-RU">Русский (Россия) [ru-RU]</option>
+                    <option value="en-US">English (United States) [en-US]</option>
+                    <option value="en-GB">English (United Kingdom) [en-GB]</option>
+                    <option value="he-IL">עברית (ישראל) [he-IL]</option>
+                    <option value="de-DE">Deutsch (Deutschland) [de-DE]</option>
+                    <option value="fr-FR">Français (France) [fr-FR]</option>
+                    <option value="es-ES">Español (España) [es-ES]</option>
+                    <option value="it-IT">Italiano (Italia) [it-IT]</option>
+                    <option value="zh-CN">中文 (简体, 中国) [zh-CN]</option>
+                    <option value="ja-JP">日本語 (日本) [ja-JP]</option>
+                  </select>
+                  <div class="small text-muted mt-1" style="font-size: 0.72rem;">Для программ без поддержки Юникода и форматов дат/чисел.</div>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label small fw-bold mb-1">Пользовательская культура (User Culture):</label>
+                  <select class="form-select form-select-sm" id="reg-loc-usr-select">
+                    <option value="ru-RU">Русский (Россия) [ru-RU]</option>
+                    <option value="en-US">English (United States) [en-US]</option>
+                    <option value="en-GB">English (United Kingdom) [en-GB]</option>
+                    <option value="he-IL">עברית (ישראל) [he-IL]</option>
+                    <option value="de-DE">Deutsch (Deutschland) [de-DE]</option>
+                  </select>
+                  <div class="small text-muted mt-1" style="font-size: 0.72rem;">Язык форматирования времени, валюты и пользовательских параметров.</div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                <span class="small text-warning"><i class="bi bi-info-circle me-1"></i>Вступает в силу после перезагрузки</span>
+                <button class="btn btn-sm btn-info text-dark fw-bold px-3 rounded-pill" id="btn-reg-save-loc">
+                  <i class="bi bi-check-lg me-1"></i> Применить локаль
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pane 3: User Account -->
+          <div class="regional-tab-pane d-none" id="pane-usr">
+            <div class="p-2.5 mb-2 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Имя учетной записи (Логин):</label>
+                <input type="text" class="form-control form-control-sm font-monospace" id="reg-usr-name-input" readonly style="opacity: 0.85;">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Полное имя (Full Name):</label>
+                <input type="text" class="form-control form-control-sm" id="reg-usr-fullname-input" placeholder="Например: Главный администратор хоста">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Описание учетной записи (Description):</label>
+                <input type="text" class="form-control form-control-sm" id="reg-usr-desc-input" placeholder="Например: Основная рабочая учетная запись">
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                <span class="small text-muted">Локальный пользователь Windows</span>
+                <button class="btn btn-sm btn-info text-dark fw-bold px-3 rounded-pill" id="btn-reg-save-usr">
+                  <i class="bi bi-check-lg me-1"></i> Сохранить профиль
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Result Alert -->
+          <div id="reg-modal-alert" class="alert d-none py-2 px-3 small mb-0"></div>
+        </div>
+
+        <div class="modal-footer" style="background: var(--surface-2); border-top: 1px solid var(--border-color);">
+          <div class="small text-muted" style="font-size: 0.72rem;">
+            <i class="bi bi-shield-check text-info me-1"></i>System Regional & Environment Configuration
+          </div>
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">
+            Закрыть
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 
   <!-- Top 4 Summary KPI Cards (Vital Overview) -->
   <div class="row g-2 mb-3">
@@ -610,14 +779,54 @@ Usage Examples:
           </div>
         </div>
         <div class="about-sys-value text-info text-truncate mt-1" id="about-kpi-os-title">Windows 11 (AMD64)</div>
-        <div class="about-sys-sub text-truncate d-flex align-items-center justify-content-between">
-          <span id="about-kpi-os-host">Host: DELL-VOSTRO</span>
+        <div class="about-sys-sub text-truncate d-flex align-items-center justify-content-between" id="about-host-view-box">
+          <div class="d-flex align-items-center text-truncate">
+            <span id="about-kpi-os-host">Host: DELL-VOSTRO</span>
+            <button class="btn btn-sm btn-link p-0 text-info text-decoration-none about-param-edit-btn" id="btn-host-inline-edit" title="Изменить имя компьютера">
+              <i class="bi bi-gear-fill" style="font-size: 0.80rem;"></i>
+            </button>
+          </div>
           <span class="badge bg-dark border border-secondary text-info py-0 px-1" id="about-spec-uptime">Uptime: --</span>
         </div>
-        <div class="about-sys-sub text-truncate text-muted d-flex align-items-center gap-1 mt-1" style="font-size: 0.72rem;">
-          <i class="bi bi-calendar-check text-info"></i>
-          <span>Установка:</span>
-          <span class="text-white-50" id="about-kpi-os-install">--</span>
+        <!-- Inline Редактирование Host -->
+        <div class="about-sys-sub d-none align-items-center gap-1 mt-1" id="about-host-edit-box">
+          <div class="input-group input-group-sm w-100">
+            <span class="input-group-text bg-dark border-secondary text-muted py-0 px-1.5 font-monospace" style="font-size: 0.70rem;">Host:</span>
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-info py-0 px-1.5 font-monospace" id="about-host-inline-input" style="font-size: 0.75rem; height: 25px;" maxlength="15" placeholder="Новое имя">
+            <button class="btn btn-sm btn-info text-dark py-0 px-2 fw-bold" id="btn-host-inline-save" title="Сохранить имя компьютера" style="height: 25px; font-size: 0.72rem;">
+              <i class="bi bi-check-lg"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary py-0 px-1.5 text-muted" id="btn-host-inline-cancel" title="Отмена" style="height: 25px; font-size: 0.72rem;">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+        <!-- Workgroup View -->
+        <div class="about-sys-sub text-truncate d-flex align-items-center justify-content-between mt-1" id="about-workgroup-view-box">
+          <div class="d-flex align-items-center text-truncate">
+            <span id="about-kpi-os-workgroup">Workgroup: WORKGROUP</span>
+            <button class="btn btn-sm btn-link p-0 text-info text-decoration-none about-param-edit-btn" id="btn-workgroup-inline-edit" title="Изменить рабочую группу">
+              <i class="bi bi-gear-fill" style="font-size: 0.80rem;"></i>
+            </button>
+          </div>
+        </div>
+        <!-- Inline Редактирование Workgroup -->
+        <div class="about-sys-sub d-none align-items-center gap-1 mt-1" id="about-workgroup-edit-box">
+          <div class="input-group input-group-sm w-100">
+            <span class="input-group-text bg-dark border-secondary text-muted py-0 px-1.5 font-monospace" style="font-size: 0.70rem;">WG:</span>
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-info py-0 px-1.5 font-monospace" id="about-workgroup-inline-input" style="font-size: 0.75rem; height: 25px;" maxlength="15" placeholder="Новая группа">
+            <button class="btn btn-sm btn-info text-dark py-0 px-2 fw-bold" id="btn-workgroup-inline-save" title="Сохранить рабочую группу" style="height: 25px; font-size: 0.72rem;">
+              <i class="bi bi-check-lg"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary py-0 px-1.5 text-muted" id="btn-workgroup-inline-cancel" title="Отмена" style="height: 25px; font-size: 0.72rem;">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+        <!-- Напоминание о перезагрузке после смены имени / группы -->
+        <div id="about-host-reminder-alert" class="alert alert-warning d-none py-1 px-2 mt-1 mb-0 border-warning border-opacity-50" style="font-size: 0.70rem; line-height: 1.2;">
+          <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+          <span id="about-host-reminder-text">Имя изменено. Вступит в силу после перезагрузки.</span>
         </div>
       </div>
     </div>
@@ -733,7 +942,6 @@ Usage Examples:
               <option value="60">Каждые 60 сек</option>
               <option value="120">Каждые 120 сек</option>
             </select>
-            <span class="badge bg-dark border border-secondary text-info" id="about-ident-os-build">Windows 11</span>
           </div>
         </div>
         <table class="about-sys-spec-table">
@@ -753,6 +961,10 @@ Usage Examples:
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-lightning-charge me-1.5 text-success"></i>Схема питания</td>
               <td class="about-sys-spec-val" id="about-spec-power">Balanced (Сбалансированная)</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key"><i class="bi bi-layers me-1.5 text-info"></i>Сборка ОС</td>
+              <td class="about-sys-spec-val" id="about-spec-os">10.0.26200</td>
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-calendar-check me-1.5 text-warning"></i>Дата установки ОС</td>
@@ -776,6 +988,9 @@ Usage Examples:
             <span class="text-white">Окружение пользователя и безопасность</span>
           </div>
           <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-0.5" id="btn-open-regional-settings" data-bs-toggle="modal" data-bs-target="#aboutRegionalSettingsModal" title="Настроить часовой пояс, язык, локаль и пользователя" style="font-size: 0.75rem;">
+              <i class="bi bi-gear-fill me-1"></i>Настроить
+            </button>
             <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_user_env" title="Частота опроса: Окружение пользователя">
               <option value="start">Только при старте</option>
               <option value="manual" selected>По запросу</option>
@@ -794,22 +1009,43 @@ Usage Examples:
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-person-circle me-1.5 text-success"></i>Пользователь и права</td>
               <td class="about-sys-spec-val">
-                <span class="fw-bold text-white me-1" id="about-ident-username">Пользователь</span>
-                <span class="text-muted small" id="about-ident-privilege">(Права)</span>
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span class="fw-bold text-white me-1" id="about-ident-username">Пользователь</span>
+                    <span class="text-muted small" id="about-ident-privilege">(Права)</span>
+                  </div>
+                  <button class="btn btn-sm btn-link p-0 text-info text-decoration-none btn-open-reg-tab" data-tab="pane-usr" data-bs-toggle="modal" data-bs-target="#aboutRegionalSettingsModal" title="Настроить профиль пользователя">
+                    <i class="bi bi-gear-fill" style="font-size: 0.76rem;"></i>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-translate me-1.5 text-warning"></i>Язык и локали</td>
               <td class="about-sys-spec-val">
-                <span id="about-ident-language">Русский</span>
-                <div class="small text-muted font-monospace" id="about-ident-locales">User: ru-RU | Sys: ru-RU</div>
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span id="about-ident-language">Русский</span>
+                    <div class="small text-muted font-monospace" id="about-ident-locales">User: ru-RU | Sys: ru-RU</div>
+                  </div>
+                  <button class="btn btn-sm btn-link p-0 text-info text-decoration-none btn-open-reg-tab" data-tab="pane-loc" data-bs-toggle="modal" data-bs-target="#aboutRegionalSettingsModal" title="Настроить локали">
+                    <i class="bi bi-gear-fill" style="font-size: 0.76rem;"></i>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-clock me-1.5 text-primary"></i>Часовой пояс и кодировка</td>
               <td class="about-sys-spec-val">
-                <span id="about-ident-timezone">UTC+03:00</span>
-                <div class="small text-muted font-monospace" id="about-ident-codepage">Кодировка: UTF-8</div>
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span id="about-ident-timezone">UTC+03:00</span>
+                    <div class="small text-muted font-monospace" id="about-ident-codepage">Кодировка: UTF-8</div>
+                  </div>
+                  <button class="btn btn-sm btn-link p-0 text-info text-decoration-none btn-open-reg-tab" data-tab="pane-tz" data-bs-toggle="modal" data-bs-target="#aboutRegionalSettingsModal" title="Настроить часовой пояс">
+                    <i class="bi bi-gear-fill" style="font-size: 0.76rem;"></i>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr>
@@ -869,16 +1105,16 @@ Usage Examples:
           </div>
         </div>
         <div class="table-responsive">
-          <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.8rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+          <table class="about-sys-spec-table">
             <thead>
-              <tr class="text-secondary border-secondary">
-                <th style="width: 12%;">Drive</th>
+              <tr>
+                <th style="width: 14%;">Drive</th>
                 <th style="width: 14%;">FS</th>
                 <th style="width: 14%;">Total</th>
                 <th style="width: 14%;">Used</th>
                 <th style="width: 14%;">Free</th>
                 <th style="width: 20%;">Usage</th>
-                <th style="width: 12%;">SMART</th>
+                <th style="width: 10%;">SMART</th>
               </tr>
             </thead>
             <tbody id="about-sys-disks-tbody">
@@ -937,9 +1173,9 @@ Usage Examples:
           </div>
         </div>
         <div class="table-responsive">
-          <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+          <table class="about-sys-spec-table">
             <thead>
-              <tr class="text-secondary border-secondary">
+              <tr>
                 <th>Физический накопитель</th>
                 <th>Тип / Шина</th>
                 <th>Разделы</th>

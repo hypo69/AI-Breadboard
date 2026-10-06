@@ -18,7 +18,7 @@ Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 03:30:00
+Updated: 2026-10-06 11:06:00
 =============================================================================
 
 .SYNOPSIS
@@ -41,9 +41,16 @@ Updated: 2026-10-06 03:30:00
 .PARAMETER DisableRealtimeTelemetry
     Принудительно оставить стандартный режим телеметрии (сброс каждые 30с, лимит 100МБ).
 
+.PARAMETER GodMode
+    Открыть специальную панель Windows God Mode (All Tasks / все настройки системы) или перевести на неё фокус.
+
 .EXAMPLE
     .\tc.ps1
     Запуск Windows API сервера с телеметрией реального времени.
+
+.EXAMPLE
+    .\tc.ps1 -GodMode
+    Запуск Windows API сервера и открытие/фокусировка папки God Mode.
 
 .EXAMPLE
     .\tc.ps1 -DisableRealtimeTelemetry
@@ -59,7 +66,9 @@ param (
 
     [switch]$RealtimeTelemetry = $true,
 
-    [switch]$DisableRealtimeTelemetry
+    [switch]$DisableRealtimeTelemetry,
+
+    [switch]$GodMode
 )
 
 $ErrorActionPreference = 'Continue'
@@ -75,29 +84,39 @@ $pythonExe = if ($env:PYTHON_HOME) { Join-Path $env:PYTHON_HOME 'python.exe' } e
 $host_ = if ($HostAddress) { $HostAddress } else { '127.0.0.1' }
 $port_ = if ($Port)        { $Port }        else { '8001' }
 
-# Конфигурация телеметрии полностью удалена – больше не используется
+if ($GodMode) {
+    $godModeGuid = "ED7BA470-8E54-465E-825C-99712043E01C"
+    $focused = $false
+    try {
+        $shell = New-Object -ComObject Shell.Application
+        foreach ($w in $shell.Windows()) {
+            $url = "$($w.LocationURL)"
+            $name = "$($w.LocationName)"
+            if ($url -like "*$godModeGuid*" -or $name -like "*$godModeGuid*") {
+                $hwnd = $w.HWND
+                if ($hwnd) {
+                    $sig = '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow); [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd); [DllImport("user32.dll")] public static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);'
+                    $type = Add-Type -MemberDefinition $sig -Name "Win32Focus_$((Get-Random))" -Namespace "TC" -PassThru -ErrorAction SilentlyContinue
+                    $type::ShowWindow([IntPtr]$hwnd, 9)
+                    $type::SetForegroundWindow([IntPtr]$hwnd)
+                    $type::SwitchToThisWindow([IntPtr]$hwnd, $true)
+                    $focused = $true
+                    break
+                }
+            }
+        }
+    } catch {}
 
-# =============================================================================
-# ВЕРХНЯЯ ПАНЕЛЬ УПРАВЛЕНИЯ TC
-# =============================================================================
-Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║              AI BREADBOARD — WINDOWS SYSTEM CONTROLLER (TC)                  ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
-
-if ($isRealtime) {
-    Write-Host "  [⚙️  ТЕЛЕМЕТРИЯ: РЕАЛЬНОЕ ВРЕМЯ (TC MODE, flush 5s, автоотключение 5м) | Включено]" -ForegroundColor Green
-} else {
-    Write-Host "  [⚙️  ТЕЛЕМЕТРИЯ: СТАНДАРТНЫЙ РЕЖИМ (flush 30s, max_db 100MB) | Активен]" -ForegroundColor DarkYellow
+    if (-not $focused) {
+        $godModeFolder = Join-Path $scriptDir "bin\.{ED7BA470-8E54-465E-825C-99712043E01C}"
+        if (Test-Path $godModeFolder) {
+            Start-Process explorer.exe $godModeFolder
+        } else {
+            Start-Process explorer.exe "shell:::{ED7BA470-8E54-465E-825C-99712043E01C}"
+        }
+    }
+    Write-Host "  [⚡ God Mode (All Tasks): активирован / переведён фокус]" -ForegroundColor Yellow
 }
-Write-Host "  [📁  Конфиг: $telemetryConfigPath]" -ForegroundColor DarkGray
-Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
-
-Write-Host "  URL Сервера: http://${host_}:${port_}/tc" -ForegroundColor Green
-Write-Host "  Health:      http://${host_}:${port_}/health" -ForegroundColor Gray
-Write-Host "  OpenAPI Doc: http://${host_}:${port_}/docs" -ForegroundColor DarkGray
-Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
-Write-Host ""
 
 # Освобождаем порт если он занят
 $occupied = netstat -aon 2>$null |

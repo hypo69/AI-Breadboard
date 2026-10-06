@@ -14,7 +14,7 @@
  * Package: src/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-06 10:38:00
  * =============================================================================
  */
 
@@ -195,13 +195,13 @@
 #tab-chat #chat-debugger-toolbar { flex-shrink: 0; margin-bottom: 5px !important; }
 #tab-chat .input-group           { flex-shrink: 0; margin-bottom: 2px !important; }
 
-/* ── Сообщения ───────────────────────────────────────────────────────────── */
+/* ── Сообщения (Базовые блоки) ───────────────────────────────────────────── */
 .message {
-  margin-bottom: 5px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 1.16rem;
-  line-height: 1.55;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 /* ── Поле ввода чата ─────────────────────────────────────────────────────── */
@@ -209,25 +209,123 @@
 .chat-main-area #message-input,
 #chat-popup-input,
 #scenario-chat-input {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
 }
 
 .user-message {
   background: var(--chat-user-bg);
   color: var(--chat-user-text);
   text-align: right;
+  border-radius: 12px 12px 2px 12px;
+  box-shadow: var(--shadow-xs);
 }
 
 .bot-message {
   background: var(--chat-bot-bg);
   color: var(--chat-bot-text);
+  border: 1px solid var(--border-color);
+  border-radius: 12px 12px 12px 2px;
+  box-shadow: var(--shadow-xs);
+}
+
+/* ── Универсальные пузыри сообщений (Modern Chat Bubbles) ──────────────────── */
+.chat-message-row {
+  display: flex;
+  margin-bottom: 0.75rem;
+  width: 100%;
+}
+
+.chat-message-row.user-row {
+  justify-content: flex-end;
+}
+
+.chat-message-row.bot-row {
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.chat-msg-avatar {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+  user-select: none;
+}
+
+/* Пузырь сообщения пользователя: выравнивание справа, мягкий фон темы */
+.chat-msg-user {
+  background: var(--chat-user-bg);
+  color: var(--chat-user-text);
+  border-radius: 14px 14px 2px 14px;
+  padding: 0.55rem 0.95rem;
+  max-width: 80%;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  box-shadow: var(--shadow-xs);
+  word-break: break-word;
+  white-space: pre-wrap;
+  border: 1px solid transparent;
+}
+
+/* Пузырь сообщения бота / ассистента: выравнивание слева */
+.chat-msg-bot {
+  background: var(--chat-bot-bg);
+  color: var(--chat-bot-text);
+  border: 1px solid var(--border-color);
+  border-radius: 14px 14px 14px 2px;
+  padding: 0.75rem 1rem;
+  flex-grow: 1;
+  max-width: 95%;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  box-shadow: var(--shadow-xs);
+  word-break: break-word;
+}
+
+.chat-msg-bot a {
+  color: var(--nav-active);
+}
+
+/* Диагностический конвейер этапов (Stages Pipeline) */
+.chat-stage-pipeline {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.65rem;
+  color: var(--text-color);
+}
+
+.chat-stage-pipeline .stage-item {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.chat-stage-pipeline .stage-item.active {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+/* Карточка и контейнер истории чата сценариев */
+.scenario-chat-card {
+  background-color: var(--surface-1) !important;
+  border: 1.5px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+.scenario-chat-history {
+  background-color: var(--bg-color);
 }
 
 /* Чипы сообщений в чате */
 .chat-window .badge,
 .message .badge,
 .bot-message .badge,
-.user-message .badge {
+.user-message .badge,
+.chat-msg-bot .badge,
+.chat-msg-user .badge {
   font-size: 0.7rem;
   font-weight: 500;
 }

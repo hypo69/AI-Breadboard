@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/scenarios_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-06 10:38:00
  * =============================================================================
  */
 
@@ -63,12 +63,12 @@
     // Italic
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
     // Inline code
-    html = html.replace(/`(.*?)`/g, '<code class="text-info bg-black bg-opacity-50 px-1 rounded">$1</code>');
+    html = html.replace(/`(.*?)`/g, '<code class="text-primary bg-body-secondary px-1 rounded">$1</code>');
     // Blockquote
-    html = html.replace(/^&gt;\s+(.*$)/gim, '<div class="border-start border-primary border-3 ps-2 my-1 text-info bg-primary bg-opacity-10 py-1 rounded-end">$1</div>');
+    html = html.replace(/^&gt;\s+(.*$)/gim, '<div class="border-start border-primary border-3 ps-2 my-1 text-body bg-body-secondary py-1 rounded-end">$1</div>');
     // Headers
-    html = html.replace(/^###\s+(.*$)/gim, '<h6 class="fw-bold text-info mt-2 mb-1">$1</h6>');
-    html = html.replace(/^##\s+(.*$)/gim, '<h5 class="fw-bold text-white mt-2 mb-1">$1</h5>');
+    html = html.replace(/^###\s+(.*$)/gim, '<h6 class="fw-bold text-primary mt-2 mb-1">$1</h6>');
+    html = html.replace(/^##\s+(.*$)/gim, '<h5 class="fw-bold text-body mt-2 mb-1">$1</h5>');
     // Line breaks
     html = html.replace(/\n/g, '<br>');
     return html;
@@ -178,11 +178,11 @@
 
       return `
         <div class="col-12">
-          <div class="card bg-dark bg-opacity-75 ${borderClass} transition-all hover-shadow">
+          <div class="card ${borderClass} transition-all hover-shadow">
             <div class="card-header ${bgHeader} border-secondary-subtle py-2 px-3 d-flex align-items-center justify-content-between">
               <div class="d-flex align-items-center gap-2">
                 <span class="fs-5">${sc.icon || categoryIcons[sc.category] || '🎬'}</span>
-                <strong class="text-white small">${escapeHtml(sc.title)}</strong>
+                <strong class="small">${escapeHtml(sc.title)}</strong>
               </div>
               <div>
                 ${isRecommended ? '<span class="badge bg-success small">Рекомендуется</span>' : `<span class="badge bg-secondary small">${sc.estimated_duration_sec || 3} сек</span>`}
@@ -345,11 +345,11 @@
         const dataId = `step-data-${idx}`;
 
         return `
-          <div class="card bg-black bg-opacity-30 border border-secondary-subtle p-2 rounded">
+          <div class="card border border-secondary-subtle p-2 rounded">
             <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
               <div class="d-flex align-items-center gap-2">
                 <span>${icon}</span>
-                <strong class="text-light small">${escapeHtml(step.name)}</strong>
+                <strong class="small">${escapeHtml(step.name)}</strong>
               </div>
               <div class="d-flex align-items-center gap-2">
                 <span class="badge ${badgeBg} small" style="font-size: 0.68rem;">${step.status.toUpperCase()}</span>
@@ -366,10 +366,10 @@
             ` : ''}
             ${hasData ? `
               <div class="ps-4 mt-1">
-                <button class="btn btn-link btn-sm p-0 text-info text-decoration-none small" style="font-size: 0.72rem;" onclick="const el=document.getElementById('${dataId}'); if(el) el.classList.toggle('d-none')">
+                <button class="btn btn-link btn-sm p-0 text-primary text-decoration-none small" style="font-size: 0.72rem;" onclick="const el=document.getElementById('${dataId}'); if(el) el.classList.toggle('d-none')">
                   🔍 Показать детали JSON
                 </button>
-                <div id="${dataId}" class="d-none mt-1 p-2 bg-dark rounded border border-secondary font-monospace text-light small overflow-auto" style="max-height: 140px; font-size: 0.7rem;">
+                <div id="${dataId}" class="d-none mt-1 p-2 bg-body-secondary rounded border border-secondary font-monospace small overflow-auto" style="max-height: 140px; font-size: 0.7rem;">
                   <pre class="m-0">${escapeHtml(JSON.stringify(step.data, null, 2))}</pre>
                 </div>
               </div>
@@ -480,7 +480,7 @@
     const selected = shuffled.slice(0, 3);
 
     greetingContainer.innerHTML = selected.map(q => `
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="${escapeHtml(q)}">«${escapeHtml(q)}»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="${escapeHtml(q)}">«${escapeHtml(q)}»</a></div>
     `).join('');
   }
 
@@ -488,24 +488,26 @@
     const shuffled = sampleQuestionsPool.length ? [...sampleQuestionsPool].sort(() => 0.5 - Math.random()) : [];
     const selected = shuffled.slice(0, 3);
     const promptsHtml = selected.length ? selected.map(q => `
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="${escapeHtml(q)}">«${escapeHtml(q)}»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="${escapeHtml(q)}">«${escapeHtml(q)}»</a></div>
     `).join('') : `
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Какие мыши были подключены к этому компьютеру?">«Какие мыши были подключены к этому компьютеру?»</a></div>
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Покажи список сетевых портов и активных соединений">«Покажи список сетевых портов и активных соединений»</a></div>
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Проверь автозапуск и службы Windows">«Проверь автозапуск и службы Windows»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="Какие мыши были подключены к этому компьютеру?">«Какие мыши были подключены к этому компьютеру?»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="Покажи список сетевых портов и активных соединений">«Покажи список сетевых портов и активных соединений»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-decoration-none border-bottom border-primary border-opacity-50" data-prompt="Проверь автозапуск и службы Windows">«Проверь автозапуск и службы Windows»</a></div>
     `;
 
     return `
-      <div class="d-flex gap-2 mb-3">
-        <div class="fs-5">🤖</div>
-        <div class="bg-secondary bg-opacity-25 p-2 rounded border border-secondary-subtle small text-light flex-grow-1">
-          Привет! Я интеллектуальный ассистент Test Computer. Вы можете задать мне любой вопрос о конфигурации хоста, например:
-          <br><br>
-          <div id="chat-greeting-prompts" class="d-flex flex-column gap-1">
+      <div class="chat-message-row bot-row mb-3">
+        <div class="chat-msg-avatar">🤖</div>
+        <div class="chat-msg-bot">
+          <div class="mb-2">
+            Привет! Я интеллектуальный ассистент Test Computer. Вы можете задать мне любой вопрос о конфигурации хоста, например:
+          </div>
+          <div id="chat-greeting-prompts" class="d-flex flex-column gap-1 my-2">
             ${promptsHtml}
           </div>
-          <br>
-          Если для вопроса нет готового сценария, я опрошу оборудование через PowerShell/WMI, сформирую для вас ответ и **автоматически сохраню новый навык** в каталог <code>.skills/</code>.
+          <div class="text-muted small mt-2">
+            Если для вопроса нет готового сценария, я опрошу оборудование через PowerShell/WMI, сформирую для вас ответ и <strong>автоматически сохраню новый навык</strong> в каталог <code>.skills/</code>.
+          </div>
         </div>
       </div>
     `;
@@ -607,8 +609,8 @@
 
       // Append User message
       const userMsgHtml = `
-        <div class="d-flex justify-content-end mb-2">
-          <div class="bg-primary text-white p-2 rounded small shadow-sm" style="max-width: 85%;">
+        <div class="chat-message-row user-row mb-2">
+          <div class="chat-msg-user">
             ${escapeHtml(message)}
           </div>
         </div>
@@ -640,9 +642,9 @@
           }
 
           const assistantMsgHtml = `
-            <div class="d-flex gap-2 mb-3">
-              <div class="fs-5">🤖</div>
-              <div class="bg-secondary bg-opacity-25 p-2.5 rounded border border-secondary-subtle small text-light flex-grow-1 shadow-sm">
+            <div class="chat-message-row bot-row mb-3">
+              <div class="chat-msg-avatar">🤖</div>
+              <div class="chat-msg-bot">
                 <div>${formatMarkdown(replyMd)}</div>
               </div>
             </div>
@@ -652,9 +654,9 @@
           if (statusInd) statusInd.innerText = 'Список навыков выведен';
         } catch (err) {
           const errorMsgHtml = `
-            <div class="d-flex gap-2 mb-3">
-              <div class="fs-5">⚠️</div>
-              <div class="bg-danger bg-opacity-25 p-2 rounded border border-danger small text-danger flex-grow-1">
+            <div class="chat-message-row bot-row mb-3">
+              <div class="chat-msg-avatar">⚠️</div>
+              <div class="chat-msg-bot border-danger text-danger">
                 Ошибка получения списка навыков: ${escapeHtml(err.message)}
               </div>
             </div>
@@ -681,24 +683,24 @@
         const isComplete = isFinal;
         const headerIcon = isComplete
           ? '<i class="bi bi-check-circle-fill text-success"></i>'
-          : '<div class="spinner-border spinner-border-sm text-info" role="status" style="width:0.75rem;height:0.75rem;"></div>';
+          : '<div class="spinner-border spinner-border-sm text-primary" role="status" style="width:0.75rem;height:0.75rem;"></div>';
         const headerText = isComplete
           ? `Диагностика хоста завершена (${currentCount} шагов)`
           : `Диагностический конвейер хоста (${currentCount} шагов)...`;
-        const headerClass = isComplete ? 'text-success' : 'text-info';
+        const headerClass = isComplete ? 'text-success' : 'text-primary';
         const collapseClass = isComplete ? 'd-none' : '';
         const chevronIcon = isComplete ? 'bi-chevron-down' : 'bi-chevron-up';
         const lastTitle = stages[stages.length - 1]?.title || 'Зонд';
 
         return `
-          <div class="mb-2 p-2 bg-black bg-opacity-40 border border-secondary border-opacity-30 rounded shadow-sm" id="${msgId}-stages-wrapper">
+          <div class="chat-stage-pipeline mb-2 shadow-sm" id="${msgId}-stages-wrapper">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1" onclick="const b=document.getElementById('${msgId}-stages-content'); const c=document.getElementById('${msgId}-stages-chevron'); if(b){b.classList.toggle('d-none'); if(c){c.classList.toggle('bi-chevron-down'); c.classList.toggle('bi-chevron-up');}}" style="cursor:pointer;" title="Нажмите, чтобы развернуть/свернуть детали этапов">
               <span class="${headerClass} small fw-semibold d-flex align-items-center gap-1.5" style="font-size:0.75rem;">
                 ${headerIcon}
                 <span>${escapeHtml(headerText)}</span>
               </span>
               <div class="d-flex align-items-center gap-1">
-                <span class="badge bg-dark text-secondary border border-secondary-subtle font-monospace" style="font-size:0.63rem;">${escapeHtml(lastTitle)}</span>
+                <span class="badge bg-body-secondary text-body border border-secondary-subtle font-monospace" style="font-size:0.63rem;">${escapeHtml(lastTitle)}</span>
                 <i class="bi ${chevronIcon} text-muted" id="${msgId}-stages-chevron" style="font-size:0.65rem;"></i>
               </div>
             </div>
@@ -706,16 +708,16 @@
               ${stages.map((st, sIdx) => {
                 const isLatest = sIdx === stages.length - 1 && !isComplete;
                 const icon = isLatest
-                  ? '<div class="spinner-grow spinner-grow-sm text-info" style="width: 0.55rem; height: 0.55rem;" role="status"></div>'
+                  ? '<div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.55rem; height: 0.55rem;" role="status"></div>'
                   : '<span class="text-success small" style="font-size:0.7rem;">✔</span>';
-                const textClass = isLatest ? 'text-light fw-medium' : 'text-muted';
+                const textClass = isLatest ? 'text-body fw-medium' : 'text-muted';
                 return `
-                  <div class="small ${textClass} d-flex flex-column ps-0.5" style="font-size: 0.74rem; line-height: 1.35;">
+                  <div class="small ${textClass} d-flex flex-column ps-0.5 stage-item ${isLatest ? 'active' : ''}" style="font-size: 0.74rem; line-height: 1.35;">
                     <div class="d-flex align-items-center gap-1.5">
                       <span>${icon}</span>
                       <span>${escapeHtml(st.message || '')}</span>
                     </div>
-                    ${st.details ? `<div class="text-secondary ps-3 font-monospace" style="font-size: 0.68rem; word-break: break-all;">↳ ${escapeHtml(st.details)}</div>` : ''}
+                    ${st.details ? `<div class="text-muted ps-3 font-monospace" style="font-size: 0.68rem; word-break: break-all;">↳ ${escapeHtml(st.details)}</div>` : ''}
                     ${st.generated_prompt ? `
                       <div class="mt-1 ps-3">
                         <button class="btn btn-sm btn-outline-warning py-0 px-2 d-inline-flex align-items-center gap-1 font-monospace" type="button" onclick="event.stopPropagation(); const p=document.getElementById('${msgId}-stage-prompt-${sIdx}'); const ic=document.getElementById('${msgId}-stage-prompt-ic-${sIdx}'); if(p){p.classList.toggle('d-none'); if(ic){ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up');}}" style="font-size: 0.68rem;">
@@ -723,12 +725,12 @@
                           <span>Показать отправленный промпт</span>
                           <i class="bi bi-chevron-down text-warning" id="${msgId}-stage-prompt-ic-${sIdx}" style="font-size:0.6rem;"></i>
                         </button>
-                        <div id="${msgId}-stage-prompt-${sIdx}" class="d-none mt-1.5 p-2 bg-black bg-opacity-70 border border-warning border-opacity-40 rounded text-start" onclick="event.stopPropagation();">
+                        <div id="${msgId}-stage-prompt-${sIdx}" class="d-none mt-1.5 p-2 bg-dark bg-opacity-25 border border-warning border-opacity-40 rounded text-start" onclick="event.stopPropagation();">
                           <div class="d-flex justify-content-between align-items-center text-warning mb-1" style="font-size: 0.68rem;">
                             <span><i class="bi bi-terminal me-1"></i>Точный текст промпта, отправленный модели:</span>
                             <button class="btn btn-dark btn-sm py-0 px-1.5 text-secondary border border-secondary-subtle" type="button" onclick="navigator.clipboard.writeText(this.closest('#${msgId}-stage-prompt-${sIdx}').querySelector('pre')?.innerText || ''); this.innerText='Скопировано!'; setTimeout(()=>this.innerText='Копировать', 1500);" style="font-size: 0.65rem;">Копировать</button>
                           </div>
-                          <pre class="m-0 p-1.5 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(st.generated_prompt)}</pre>
+                          <pre class="m-0 p-1.5 bg-body-tertiary text-body border border-secondary border-opacity-30 rounded font-monospace" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(st.generated_prompt)}</pre>
                         </div>
                       </div>
                     ` : ''}
@@ -749,9 +751,9 @@
       stagesLog.push(initialStage);
 
       const loadingHtml = `
-        <div class="d-flex gap-2 mb-3" id="${msgId}-container">
-          <div class="fs-5">🤖</div>
-          <div class="bg-secondary bg-opacity-25 p-2.5 rounded border border-secondary-subtle small text-light flex-grow-1 shadow-sm" id="${msgId}-body">
+        <div class="chat-message-row bot-row mb-3" id="${msgId}-container">
+          <div class="chat-msg-avatar">🤖</div>
+          <div class="chat-msg-bot shadow-sm" id="${msgId}-body">
             ${renderStagesHtml(stagesLog, false)}
           </div>
         </div>
@@ -856,7 +858,7 @@
         if (Array.isArray(finalData.remediation_actions) && finalData.remediation_actions.length > 0) {
           const actionsList = finalData.remediation_actions;
           remediationHtml = `
-            <div class="mt-2.5 p-2.5 bg-black bg-opacity-30 border border-warning border-opacity-50 rounded" id="remediation-container-${msgId}">
+            <div class="mt-2.5 p-2.5 bg-body-secondary border border-warning border-opacity-50 rounded" id="remediation-container-${msgId}">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="fw-semibold text-warning small d-flex align-items-center gap-1">
                   <i class="bi bi-shield-check text-warning"></i> <span>Предложенные действия и исправления:</span>
@@ -868,11 +870,11 @@
                   const isCaution = (act.risk || '').toLowerCase() === 'caution' || (act.risk || '').toLowerCase() === 'critical';
                   const badgeRisk = isCaution ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1" style="font-size:0.65rem;">Требует подтверждения</span>' : '<span class="badge bg-info-subtle text-info border border-info-subtle ms-1" style="font-size:0.65rem;">Безопасно</span>';
                   return `
-                    <div class="d-flex align-items-center justify-content-between p-2 bg-dark bg-opacity-75 rounded border border-secondary border-opacity-25 gap-2 flex-wrap" id="act-row-${msgId}-${aIdx}">
-                      <div class="small text-light d-flex flex-column" style="font-size: 0.78rem;">
+                    <div class="d-flex align-items-center justify-content-between p-2 bg-body rounded border border-secondary border-opacity-25 gap-2 flex-wrap" id="act-row-${msgId}-${aIdx}">
+                      <div class="small d-flex flex-column" style="font-size: 0.78rem;">
                         <div><strong>${escapeHtml(act.title || act.action_id)}</strong>${badgeRisk}</div>
                         ${act.description ? `<span class="text-muted mt-0.5" style="font-size: 0.72rem;">${escapeHtml(act.description)}</span>` : ''}
-                        ${act.execution_command ? `<code class="text-warning-emphasis bg-black bg-opacity-50 px-1 py-0.5 rounded mt-1 font-monospace" style="font-size: 0.68rem; word-break: break-all;">${escapeHtml(act.execution_command)}</code>` : ''}
+                        ${act.execution_command ? `<code class="text-warning-emphasis bg-body-secondary px-1 py-0.5 rounded mt-1 font-monospace" style="font-size: 0.68rem; word-break: break-all;">${escapeHtml(act.execution_command)}</code>` : ''}
                       </div>
                       <button class="btn btn-warning btn-sm py-1 px-3 d-flex align-items-center gap-1.5 shadow-sm fw-semibold btn-exec-action"
                         id="btn-act-${msgId}-${aIdx}"
@@ -919,19 +921,19 @@
                 <span>Скорректировать</span>
               </button>
             </div>
-            <div id="skill-edit-form-${msgId}" class="mt-2 p-2.5 bg-dark bg-opacity-50 border border-secondary-subtle rounded small d-none">
+            <div id="skill-edit-form-${msgId}" class="mt-2 p-2.5 bg-body-secondary border border-secondary-subtle rounded small d-none">
               <div class="fw-semibold text-warning mb-2"><i class="bi bi-sliders me-1"></i>Корректировка навыка перед сохранением</div>
               <div class="mb-2">
                 <label class="form-label text-muted mb-1" style="font-size:0.75rem;">Заголовок навыка:</label>
-                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="edit-title-${msgId}" value="${escapeHtml(finalData.tool_plan.tool_title || '')}">
+                <input type="text" class="form-control form-control-sm border-secondary" id="edit-title-${msgId}" value="${escapeHtml(finalData.tool_plan.tool_title || '')}">
               </div>
               <div class="mb-2">
                 <label class="form-label text-muted mb-1" style="font-size:0.75rem;">Описание (русский язык):</label>
-                <textarea class="form-control form-control-sm bg-dark text-light border-secondary" id="edit-desc-${msgId}" rows="2">${escapeHtml(finalData.tool_plan.description_ru || '')}</textarea>
+                <textarea class="form-control form-control-sm border-secondary" id="edit-desc-${msgId}" rows="2">${escapeHtml(finalData.tool_plan.description_ru || '')}</textarea>
               </div>
               <div class="mb-2">
                 <label class="form-label text-muted mb-1" style="font-size:0.75rem;">Команда проверки / скрипт:</label>
-                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="edit-cmd-${msgId}" value="${escapeHtml(finalData.command_executed || finalData.tool_plan.probe_script || '')}">
+                <input type="text" class="form-control form-control-sm border-secondary font-monospace" id="edit-cmd-${msgId}" value="${escapeHtml(finalData.command_executed || finalData.tool_plan.probe_script || '')}">
               </div>
               <div class="d-flex gap-2 justify-content-end mt-2">
                 <button class="btn btn-secondary btn-sm py-1 px-2" id="btn-cancel-edit-${msgId}" type="button">Отмена</button>
@@ -953,17 +955,17 @@
           metaInfoHtml = `
             <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25" id="meta-container-${msgId}">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5" type="button" onclick="const el=document.getElementById('${metaCollapseId}'); const ic=document.getElementById('meta-icon-${msgId}'); if(el){el.classList.toggle('d-none'); if(ic) { ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up'); }}" style="font-size: 0.75rem;">
-                  <i class="bi bi-diagram-3-fill text-info"></i>
+                <button class="btn btn-sm btn-link p-0 text-primary text-decoration-none d-flex align-items-center gap-1.5" type="button" onclick="const el=document.getElementById('${metaCollapseId}'); const ic=document.getElementById('meta-icon-${msgId}'); if(el){el.classList.toggle('d-none'); if(ic) { ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up'); }}" style="font-size: 0.75rem;">
+                  <i class="bi bi-diagram-3-fill text-primary"></i>
                   <span><strong>Задействованные знания и агенты</strong> (${totalCount})</span>
                   <i class="bi bi-chevron-down text-muted" id="meta-icon-${msgId}" style="font-size: 0.7rem;"></i>
                 </button>
                 <div class="d-flex gap-1 flex-wrap">
-                  ${agentsList.map(a => `<span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25" style="font-size: 0.65rem;" title="${escapeHtml(a.role || '')}">${escapeHtml(a.icon || '🤖')} ${escapeHtml(a.name)}</span>`).slice(0, 2).join('')}
+                  ${agentsList.map(a => `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.65rem;" title="${escapeHtml(a.role || '')}">${escapeHtml(a.icon || '🤖')} ${escapeHtml(a.name)}</span>`).slice(0, 2).join('')}
                 </div>
               </div>
 
-              <div id="${metaCollapseId}" class="d-none mt-2 p-2 bg-black bg-opacity-40 border border-secondary border-opacity-50 rounded small">
+              <div id="${metaCollapseId}" class="d-none mt-2 p-2 bg-body-secondary border border-secondary border-opacity-50 rounded small">
                 ${agentsList.length > 0 ? `
                   <div class="mb-2">
                     <div class="text-warning fw-semibold mb-1" style="font-size: 0.73rem;">
@@ -971,7 +973,7 @@
                     </div>
                     <div class="d-flex flex-column gap-1 ps-1">
                       ${agentsList.map(ag => `
-                        <div class="d-flex align-items-start gap-1.5 text-light" style="font-size: 0.73rem;">
+                        <div class="d-flex align-items-start gap-1.5" style="font-size: 0.73rem;">
                           <span>${escapeHtml(ag.icon || '🤖')}</span>
                           <div>
                             <strong>${escapeHtml(ag.name)}</strong>
@@ -985,12 +987,12 @@
 
                 ${knowledgeList.length > 0 ? `
                   <div>
-                    <div class="text-info fw-semibold mb-1" style="font-size: 0.73rem;">
+                    <div class="text-primary fw-semibold mb-1" style="font-size: 0.73rem;">
                       <i class="bi bi-book-half me-1"></i>Использованные источники знаний и артефакты:
                     </div>
                     <div class="d-flex flex-column gap-1 ps-1">
                       ${knowledgeList.map(kn => `
-                        <div class="d-flex align-items-start gap-1.5 text-light" style="font-size: 0.73rem;">
+                        <div class="d-flex align-items-start gap-1.5" style="font-size: 0.73rem;">
                           <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25" style="font-size: 0.65rem;">${escapeHtml(kn.badge || 'База')}</span>
                           <div>
                             <strong>${escapeHtml(kn.title)}</strong>
@@ -1020,19 +1022,19 @@
                   <i class="bi bi-chevron-down text-muted" id="prompt-icon-${msgId}" style="font-size: 0.7rem;"></i>
                 </button>
                 <div class="d-flex align-items-center gap-1">
-                  <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" onclick="navigator.clipboard.writeText(document.getElementById('${promptCodeId}')?.innerText || ''); const s=this.querySelector('span'); if(s){s.innerText='Скопировано!'; setTimeout(()=>s.innerText='Копировать', 1800);}" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
+                  <button class="btn btn-outline-secondary btn-sm py-0 px-2 d-flex align-items-center gap-1" type="button" onclick="navigator.clipboard.writeText(document.getElementById('${promptCodeId}')?.innerText || ''); const s=this.querySelector('span'); if(s){s.innerText='Скопировано!'; setTimeout(()=>s.innerText='Копировать', 1800);}" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
                     <i class="bi bi-clipboard"></i>
                     <span>Копировать</span>
                   </button>
                 </div>
               </div>
 
-              <div id="${promptCollapseId}" class="d-none mt-2 p-2.5 bg-black bg-opacity-60 border border-warning border-opacity-40 rounded">
+              <div id="${promptCollapseId}" class="d-none mt-2 p-2.5 bg-body-secondary border border-warning border-opacity-40 rounded">
                 <div class="d-flex align-items-center justify-content-between text-warning small mb-1.5" style="font-size: 0.72rem;">
                   <span><i class="bi bi-terminal me-1"></i>Точный текст запроса, отправленный языковой модели:</span>
                   <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace" style="font-size: 0.65rem;">${generatedPromptText.length} симв.</span>
                 </div>
-                <pre class="m-0 p-2 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace small" id="${promptCodeId}" style="font-size: 0.72rem; line-height: 1.4; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(generatedPromptText)}</pre>
+                <pre class="m-0 p-2 bg-body text-body border border-secondary border-opacity-30 rounded font-monospace small" id="${promptCodeId}" style="font-size: 0.72rem; line-height: 1.4; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(generatedPromptText)}</pre>
               </div>
             </div>
           `;
@@ -1040,8 +1042,8 @@
 
         const trainingActionHtml = `
           <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2" id="training-save-container-${msgId}">
-            <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm btn-save-training-qa" id="btn-save-training-${msgId}" type="button" title="Сохранить пару вопрос-ответ в базу данных Test Computer для RAG и последующего обучения (тюнинга) модели">
-              <i class="bi bi-mortarboard-fill text-info"></i>
+            <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm btn-save-training-qa" id="btn-save-training-${msgId}" type="button" title="Сохранить пару вопрос-ответ в базу данных Test Computer для RAG и последующего обучения (тюнинга) модели">
+              <i class="bi bi-mortarboard-fill text-primary"></i>
               <span>Сохранить ответ для обучения модели</span>
             </button>
             <span class="text-muted" style="font-size: 0.68rem;"><i class="bi bi-database me-1"></i>data/tc/approved_responses</span>
@@ -1281,7 +1283,7 @@
               ${errDetail && errDetail.trim() !== (err.message || '').trim() ? `
                 <div class="mt-2 pt-1.5 border-top border-danger border-opacity-25">
                   <div class="text-muted small mb-1" style="font-size: 0.72rem;"><i class="bi bi-code-slash me-1"></i>Параметры и стек ошибки:</div>
-                  <pre class="m-0 p-2 bg-black bg-opacity-60 text-danger border border-danger border-opacity-25 rounded font-monospace small" style="font-size: 0.72rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${escapeHtml(errDetail)}</pre>
+                  <pre class="m-0 p-2 bg-body-secondary text-danger border border-danger border-opacity-25 rounded font-monospace small" style="font-size: 0.72rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${escapeHtml(errDetail)}</pre>
                 </div>
               ` : ''}
             </div>

@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 
-**Updated:** 15 September 2026  
+**Updated:** 06 October 2026  
 
 **Status:** Current (auto-updated)
 
@@ -10,161 +10,10 @@
 
 | Category | Count | Status |
 |----------|-------|--------|
-| Other scripts | 12 | 🔶 Miscellaneous |
 | Main launch scripts | 1 | ✅ Critical |
+| Other scripts | 7 | 🔶 Miscellaneous |
 | Media library processing | 1 | ✅ Important |
-| **Total active scripts** | **14** | |
-
-
-## Other scripts
-
-**Description:** Scripts not matching other categories  
-
-**Status:** 🔶 Miscellaneous
-
-
-### **assist_cli.py**
-**Type:** Python script  
-
-**Size:** 11,215 bytes  
-
-**Lines of code:** 340  
-
-**Modified:** 2026-09-07 16:47  
-
-**Purpose:** Description:
-
-
-### **convert_to_md.py**
-**Type:** Python script  
-
-**Size:** 2,091 bytes  
-
-**Lines of code:** 61  
-
-**Modified:** 2026-08-31 22:09  
-
-**Purpose:** Description:
-
-
-### **export_pdf.py**
-**Type:** Python script  
-
-**Size:** 2,852 bytes  
-
-**Lines of code:** 90  
-
-**Modified:** 2026-09-13 21:25  
-
-**Purpose:** Description:
-
-
-### **init_plugin.py**
-**Type:** Python script  
-
-**Size:** 10,406 bytes  
-
-**Lines of code:** 298  
-
-**Modified:** 2026-09-10 00:03  
-
-**Purpose:** Description:
-
-
-### **package_skill.py**
-**Type:** Python script  
-
-**Size:** 2,424 bytes  
-
-**Lines of code:** 64  
-
-**Modified:** 2026-08-31 22:08  
-
-**Purpose:** Description:
-
-
-### **run_tests.py**
-**Type:** Python script  
-
-**Size:** 3,202 bytes  
-
-**Lines of code:** 101  
-
-**Modified:** 2026-09-02 16:18  
-
-**Purpose:** Description:
-
-
-### **save_file.py**
-**Type:** Python script  
-
-**Size:** 2,225 bytes  
-
-**Lines of code:** 67  
-
-**Modified:** 2026-08-31 22:08  
-
-**Purpose:** Description:
-
-
-### **scan_headers.py**
-**Type:** Python script  
-
-**Size:** 4,279 bytes  
-
-**Lines of code:** 117  
-
-**Modified:** 2026-08-31 22:08  
-
-**Purpose:** Description:
-
-
-### **search_code.py**
-**Type:** Python script  
-
-**Size:** 1,726 bytes  
-
-**Lines of code:** 54  
-
-**Modified:** 2026-09-04 18:56  
-
-**Purpose:** Description:
-
-
-### **trading_terminal.py**
-**Type:** Python script  
-
-**Size:** 1,016 bytes  
-
-**Lines of code:** 37  
-
-**Modified:** 2026-09-12 21:28  
-
-**Purpose:** Description:
-
-
-### **update_docs.py**
-**Type:** Python script  
-
-**Size:** 2,951 bytes  
-
-**Lines of code:** 90  
-
-**Modified:** 2026-08-31 22:07  
-
-**Purpose:** Description:
-
-
-### **update_model.py**
-**Type:** Python script  
-
-**Size:** 1,088 bytes  
-
-**Lines of code:** 33  
-
-**Modified:** 2026-08-31 22:15  
-
-**Purpose:** Description:
+| **Total active scripts** | **9** | |
 
 
 ## Main launch scripts
@@ -177,11 +26,102 @@
 ### **bot_runner.py**
 **Type:** Python script  
 
-**Size:** 3,586 bytes  
+**Size:** 3,557 bytes  
 
-**Lines of code:** 106  
+**Lines of code:** 92  
 
-**Modified:** 2026-09-07 17:25  
+**Modified:** 2026-10-03 07:05  
+
+**Purpose:** Description:
+
+
+## Other scripts
+
+**Description:** Scripts not matching other categories  
+
+**Status:** 🔶 Miscellaneous
+
+
+### **export_pdf.py**
+**Type:** Python script  
+
+**Size:** 3,133 bytes  
+
+**Lines of code:** 71  
+
+**Modified:** 2026-10-03 07:05  
+
+**Purpose:** Description:
+
+
+### **init_plugin.py**
+**Type:** Python script  
+
+**Size:** 10,360 bytes  
+
+**Lines of code:** 101  
+
+**Modified:** 2026-10-01 13:27  
+
+**Purpose:** Description:
+
+
+### **init_skill.py**
+**Type:** Python script  
+
+**Size:** 3,661 bytes  
+
+**Lines of code:** 78  
+
+**Modified:** 2026-10-03 07:05  
+
+**Purpose:** Description:
+
+
+### **package_skill.py**
+**Type:** Python script  
+
+**Size:** 2,348 bytes  
+
+**Lines of code:** 61  
+
+**Modified:** 2026-10-01 13:27  
+
+**Purpose:** Description:
+
+
+### **run_tests.py**
+**Type:** Python script  
+
+**Size:** 3,037 bytes  
+
+**Lines of code:** 82  
+
+**Modified:** 2026-10-01 13:27  
+
+**Purpose:** Description:
+
+
+### **scan_headers.py**
+**Type:** Python script  
+
+**Size:** 4,304 bytes  
+
+**Lines of code:** 116  
+
+**Modified:** 2026-10-01 13:27  
+
+**Purpose:** Description:
+
+
+### **update_docs.py**
+**Type:** Python script  
+
+**Size:** 2,927 bytes  
+
+**Lines of code:** 87  
+
+**Modified:** 2026-10-01 13:27  
 
 **Purpose:** Description:
 
@@ -196,11 +136,11 @@
 ### **generate_coverage_report.py**
 **Type:** Python script  
 
-**Size:** 3,817 bytes  
+**Size:** 3,695 bytes  
 
-**Lines of code:** 119  
+**Lines of code:** 104  
 
-**Modified:** 2026-09-02 16:18  
+**Modified:** 2026-10-01 13:27  
 
 **Purpose:** Description:
 
@@ -234,7 +174,7 @@ python analyze_dependencies.py
 
 **Project:** ai-breadboard  
 
-**Last updated:** 15 September 2026 16:34  
+**Last updated:** 06 October 2026 10:10  
 
 **Update script:** `update_scripts_documentation.py`  
 

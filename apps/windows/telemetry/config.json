@@ -1,6 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Единая конфигурация телеметрии: сенсоры, логгеры приложений и опции сбора данных",
+  "storage": {
+    "data_path": "%ProgramData%/AI-Breadboard/apps/windows/telemetry/logs",
+    "db_path": "%ProgramData%/AI-Breadboard/apps/windows/telemetry/logs/telemetry.db"
+  },
+  "data_path": "%ProgramData%/AI-Breadboard/apps/windows/telemetry/logs",
   "mode": "hybrid",
   "telemetry_mode": "telemetry",
   "standard_flush_interval_seconds": 30.0,

@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:16:00
+# Updated: 2026-10-06 07:56:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1009,6 +1009,30 @@ class TelemetryWriter:
                 problem_devices_count, outdated_drivers_count, changes_count, raw_json
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (archive_id, timestamp, now_epoch, devices_count, prob_count, outdated_count, changes_count, raw_json))
+        return cursor.lastrowid or 0
+
+    def upsert_device_inventory(
+        self,
+        cursor: sqlite3.Cursor,
+        device_instance_id: str,
+        friendly_name: Optional[str] = None,
+        device_class: Optional[str] = None,
+        install_date: Optional[str] = None,
+    ) -> int:
+        """Вставка или обновление записи в таблице device_inventory."""
+        now_dt = datetime.now(timezone.utc)
+        now_epoch = now_dt.timestamp()
+        norm_id = str(device_instance_id).strip().upper()
+        date_val = install_date or now_dt.strftime('%d.%m.%Y %H:%M')
+        cursor.execute('''
+            INSERT INTO device_inventory (
+                device_instance_id, friendly_name, device_class, install_date, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(device_instance_id) DO UPDATE SET
+                friendly_name = COALESCE(excluded.friendly_name, device_inventory.friendly_name),
+                device_class = COALESCE(excluded.device_class, device_inventory.device_class),
+                updated_at = excluded.updated_at
+        ''', (norm_id, friendly_name or '', device_class or '', date_val, now_epoch, now_epoch))
         return cursor.lastrowid or 0
 
     def upsert_disk_inventory(self, cursor: sqlite3.Cursor, data: Any) -> int:

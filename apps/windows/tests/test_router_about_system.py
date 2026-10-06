@@ -14,7 +14,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 04:30:00
+# Updated: 2026-10-06 11:05:00
 # =============================================================================
 
 from __future__ import annotations
@@ -106,3 +106,79 @@ def test_api_endpoints(test_client):
 
     resp_stor = test_client.get("/api/v1/dashboard/storage")
     assert resp_stor.status_code == 200
+
+    # 6. Rename Computer Endpoint
+    # Тест некорректного имени
+    resp_invalid = test_client.post("/api/v1/system/rename-computer", json={"new_name": "INVALID NAME!"})
+    assert resp_invalid.status_code == 200
+    assert resp_invalid.json().get("status") == "error"
+
+    # Тест совпадения имени
+    import platform
+    current_host = platform.node() or "Host"
+    resp_same = test_client.post("/api/v1/system/rename-computer", json={"new_name": current_host})
+    assert resp_same.status_code == 200
+    assert resp_same.json().get("status") == "ok"
+
+    # 7. Change Workgroup Endpoint
+    # Тест некорректного имени рабочей группы
+    resp_wg_inv = test_client.post("/api/v1/system/change-workgroup", json={"new_workgroup": "INVALID WG!#"})
+    assert resp_wg_inv.status_code == 200
+    assert resp_wg_inv.json().get("status") == "error"
+
+    # Тест совпадения имени рабочей группы
+    from apps.windows.api.routers.router_about_system import get_windows_workgroup
+    cur_wg = get_windows_workgroup()
+    resp_wg_same = test_client.post("/api/v1/system/change-workgroup", json={"new_workgroup": cur_wg})
+    assert resp_wg_same.status_code == 200
+    assert resp_wg_same.json().get("status") == "ok"
+
+    # 8. Regional Options Endpoint
+    resp_reg = test_client.get("/api/v1/system/regional-options")
+    assert resp_reg.status_code == 200
+    reg_data = resp_reg.json()
+    assert "current_timezone" in reg_data
+    assert "timezones" in reg_data
+    assert isinstance(reg_data["timezones"], list)
+    assert len(reg_data["timezones"]) > 0
+    assert "locales" in reg_data
+    assert isinstance(reg_data["locales"], list)
+
+    # 9. Set Timezone Endpoint
+    # Некорректный запрос (несуществующая таймзона)
+    resp_tz_err = test_client.post("/api/v1/system/set-timezone", json={"timezone_id": "NonExistent_TZ_999"})
+    assert resp_tz_err.status_code == 200
+    assert resp_tz_err.json().get("status") in ("error", "ok")
+
+    # Корректный запрос (с текущей таймзоной)
+    cur_tz = reg_data.get("current_timezone") or "UTC"
+    resp_tz_ok = test_client.post("/api/v1/system/set-timezone", json={"timezone_id": cur_tz})
+    assert resp_tz_ok.status_code == 200
+    assert resp_tz_ok.json().get("status") == "ok"
+
+    # 10. Set Locale Endpoint
+    # Некорректная локаль
+    resp_loc_err = test_client.post("/api/v1/system/set-locale", json={"system_locale": "invalid-locale-xxx"})
+    assert resp_loc_err.status_code == 200
+    assert resp_loc_err.json().get("status") == "error"
+
+    # Корректная локаль
+    resp_loc_ok = test_client.post("/api/v1/system/set-locale", json={"system_locale": "ru-RU", "user_locale": "ru-RU"})
+    assert resp_loc_ok.status_code == 200
+    assert resp_loc_ok.json().get("status") == "ok"
+
+    # 11. Update User Profile Endpoint
+    # Некорректное имя пользователя
+    resp_usr_err = test_client.post("/api/v1/system/update-user-profile", json={"username": "invalid user name!@#$"})
+    assert resp_usr_err.status_code == 200
+    assert resp_usr_err.json().get("status") == "error"
+
+    # Валидный запрос обновления профиля
+    cur_usr = reg_data.get("current_username") or "onela"
+    resp_usr_ok = test_client.post("/api/v1/system/update-user-profile", json={
+        "username": cur_usr,
+        "full_name": "Test User Full Name",
+        "description": "Test Account Description"
+    })
+    assert resp_usr_ok.status_code == 200
+    assert resp_usr_ok.json().get("status") == "ok"

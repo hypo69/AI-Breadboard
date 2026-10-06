@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:00:00
+# Updated: 2026-10-06 08:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -269,8 +269,7 @@ class SensorCollector:
                     '_provider': SensorProvider.SENSOR_COLLECTOR
                 })
         
-        # GPU metrics: temperature and load are already collected via GpuProber
-        # in HardwareMonitor, so we normalize them here without re-probing
+        # GPU metrics: temperature, load, memory, and subsystem engines
         if 'gpus' in hardware_data and isinstance(hardware_data['gpus'], list):
             for gpu in hardware_data['gpus']:
                 gpu_name = gpu.get('name', 'GPU')
@@ -299,6 +298,44 @@ class SensorCollector:
                         'value': gpu['utilization_gpu_pct'],
                         '_provider': SensorProvider.GPU_PROBER
                     })
+                # GPU VRAM / Memory
+                if 'memory_used_mb' in gpu and gpu['memory_used_mb'] is not None:
+                    raw_readings.append({
+                        'id': f'gpu_{gpu_idx}_mem_used',
+                        'hardware_name': gpu_name,
+                        'hardware_type': 'gpu',
+                        'sensor_category': 'Data',
+                        'sensor_name': 'GPU Memory Used',
+                        'unit': 'MB',
+                        'value': float(gpu['memory_used_mb']),
+                        '_provider': SensorProvider.GPU_PROBER
+                    })
+                if 'memory_total_mb' in gpu and gpu['memory_total_mb'] is not None:
+                    raw_readings.append({
+                        'id': f'gpu_{gpu_idx}_mem_total',
+                        'hardware_name': gpu_name,
+                        'hardware_type': 'gpu',
+                        'sensor_category': 'Data',
+                        'sensor_name': 'GPU Memory Total',
+                        'unit': 'MB',
+                        'value': float(gpu['memory_total_mb']),
+                        '_provider': SensorProvider.GPU_PROBER
+                    })
+                # GPU Subsystem Engines (3D, Video Decode, Video Processing, Copy, etc.)
+                engines = gpu.get('engines')
+                if engines and isinstance(engines, dict):
+                    for eng_name, eng_val in engines.items():
+                        clean_id = re.sub(r'[^a-zA-Z0-9]+', '_', eng_name.lower()).strip('_')
+                        raw_readings.append({
+                            'id': f'gpu_{gpu_idx}_eng_{clean_id}',
+                            'hardware_name': gpu_name,
+                            'hardware_type': 'gpu',
+                            'sensor_category': 'Load',
+                            'sensor_name': eng_name,
+                            'unit': '%',
+                            'value': float(eng_val),
+                            '_provider': SensorProvider.GPU_PROBER
+                        })
         
         if 'storage' in hardware_data:
             storage = hardware_data['storage']

@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.hardware
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 01:26:00
+# Updated: 2026-10-06 08:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -76,6 +76,9 @@ class GpuMetrics:
     power_limit_w: Optional[float] = None
     fan_speed_pct: Optional[float] = None
     throttle_reasons: List[str] = field(default_factory=list)
+    engines: Dict[str, float] = field(default_factory=dict)
+    shared_memory_used_mb: Optional[float] = None
+    dedicated_memory_used_mb: Optional[float] = None
 
 @dataclass
 class DiskPartitionMetrics:
@@ -234,7 +237,25 @@ class HardwareMonitor:
         try:
             gpus = self._gpu_prober.probe_all()
             for g in gpus:
-                metrics.append(GpuMetrics(index=g.index, name=g.name, vendor=g.vendor, driver_version=g.driver_version, temperature_gpu_c=g.temperature_gpu_c, temperature_memory_c=g.temperature_memory_c, utilization_gpu_pct=g.utilization_gpu_pct, utilization_memory_pct=g.utilization_memory_pct, memory_used_mb=g.memory_used_mb, memory_total_mb=g.memory_total_mb, power_draw_w=g.power_draw_w, power_limit_w=g.power_limit_w, fan_speed_pct=g.fan_speed_pct, throttle_reasons=g.throttle_reasons))
+                metrics.append(GpuMetrics(
+                    index=g.index,
+                    name=g.name,
+                    vendor=g.vendor,
+                    driver_version=g.driver_version,
+                    temperature_gpu_c=g.temperature_gpu_c,
+                    temperature_memory_c=g.temperature_memory_c,
+                    utilization_gpu_pct=g.utilization_gpu_pct,
+                    utilization_memory_pct=g.utilization_memory_pct,
+                    memory_used_mb=g.memory_used_mb,
+                    memory_total_mb=g.memory_total_mb,
+                    power_draw_w=g.power_draw_w,
+                    power_limit_w=g.power_limit_w,
+                    fan_speed_pct=g.fan_speed_pct,
+                    throttle_reasons=g.throttle_reasons,
+                    engines=g.engines,
+                    shared_memory_used_mb=g.shared_memory_used_mb,
+                    dedicated_memory_used_mb=g.dedicated_memory_used_mb,
+                ))
         except Exception as e:
             logger.debug(f'Ошибка опроса GPU: {e}')
         return metrics

@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-06 07:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -53,11 +53,15 @@ def get_default_telemetry_db_path() -> Path:
     Returns:
         Path: Путь к файлу telemetry.db в каталоге логов приложения.
     """
-    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
-    if appdata and os.path.exists(appdata):
-        base_dir = Path(appdata)
+    programdata = os.environ.get('ProgramData') or os.environ.get('ALLUSERSPROFILE')
+    if programdata and os.path.exists(programdata):
+        base_dir = Path(programdata)
     else:
-        base_dir = Path.home() / '.config'
+        appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+        if appdata and os.path.exists(appdata):
+            base_dir = Path(appdata)
+        else:
+            base_dir = Path.home() / '.config'
     return base_dir / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs' / 'telemetry.db'
 
 

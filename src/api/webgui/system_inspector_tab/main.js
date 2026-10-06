@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 06:50:00
+ * Updated: 2026-10-06 10:15:00
  * =============================================================================
  */
 
@@ -1039,13 +1039,13 @@
         const barClass = thLoad >= 80 ? 'bg-danger' : thLoad >= 60 ? 'bg-warning' : 'bg-info';
         return `
           <div class="d-flex align-items-center justify-content-between gap-1 mb-1" style="font-size: 0.72rem;">
-            <span class="text-truncate text-light" style="max-width: 65px;" title="${escapeHtml(th.name || 'Thread')}">
+            <span class="text-truncate" style="max-width: 65px; color: var(--text-color);" title="${escapeHtml(th.name || 'Thread')}">
               ${escapeHtml(th.name || 'Thread')}
             </span>
-            <div class="progress flex-grow-1" style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+            <div class="progress flex-grow-1" style="height: 5px; background: var(--border-color); border-radius: 3px;">
               <div class="progress-bar ${barClass}" style="width: ${Math.min(100, thLoad)}%; border-radius: 3px;"></div>
             </div>
-            <span class="font-monospace text-light fw-bold" style="width: 32px; text-align: right; font-size: 0.69rem;">${thLoad.toFixed(0)}%</span>
+            <span class="font-monospace fw-bold" style="width: 32px; text-align: right; font-size: 0.69rem; color: var(--text-color);">${thLoad.toFixed(0)}%</span>
           </div>
         `;
       }).join('');
@@ -1807,6 +1807,13 @@
       set('sys-net-speed-val', totalFormatted);
       set('sys-net-sub-details', `⬇ ${rxFormatted} · ⬆ ${txFormatted} (Всего: ${sumTotalFormatted})`);
       set('sys-net-util-label', `Загрузка канала: ${utilPct.toFixed(1)}% (Линк: ${data.link_speed_mbps || 1000} Mbps)`);
+      set('sys-net-speed-badge', `${data.link_speed_mbps || 1000} Mbps Full Duplex`);
+
+      // Экспресс-метрики KPI в центре баннера сети
+      set('sys-net-kpi-rx', rxFormatted);
+      set('sys-net-kpi-tx', txFormatted);
+      set('sys-net-kpi-total', sumTotalFormatted);
+      set('sys-net-kpi-util', `${utilPct.toFixed(1)}%`);
 
       const netGauge = document.getElementById('sys-metric-net-gauge');
       if (netGauge) {
@@ -1981,6 +1988,26 @@
       set('sys-storage-temp-label', maxTemp != null ? `Макс. температура: ${maxTemp.toFixed(0)} °C` : 'Макс. температура: -- °C');
       set('sys-storage-ts', new Date().toLocaleTimeString());
 
+      const stModel = document.getElementById('sys-metric-storage-model');
+      if (stModel && totalGb > 0) {
+        const totalTb = totalGb >= 1000 ? `${(totalGb / 1024).toFixed(2)} TB` : `${totalGb.toFixed(0)} GB`;
+        stModel.innerText = `Дисковая подсистема (${totalTb})`;
+      }
+
+      // Экспресс-метрики KPI в центре баннера хранилища
+      set('sys-storage-kpi-used', `${usedGb.toFixed(1)} GB`);
+      set('sys-storage-kpi-free', `${freeGb.toFixed(1)} GB`);
+      const dCount = s.drives_count || (Array.isArray(data.drives) ? data.drives.length : '--');
+      const pCount = s.partitions_count || (Array.isArray(data.partitions) ? data.partitions.length : '--');
+      set('sys-storage-kpi-drives', `${dCount} диск. / ${pCount} разд.`);
+      const stKpiTemp = document.getElementById('sys-storage-kpi-temp');
+      if (stKpiTemp) {
+        stKpiTemp.textContent = maxTemp != null ? `${maxTemp.toFixed(0)} °C` : '-- °C';
+        if (maxTemp != null) {
+          stKpiTemp.className = maxTemp >= 60 ? 'sys-kpi-value text-danger' : maxTemp >= 48 ? 'sys-kpi-value text-warning' : 'sys-kpi-value text-info';
+        }
+      }
+
       const stGauge = document.getElementById('sys-metric-storage-gauge');
       if (stGauge) {
         stGauge.innerHTML = createGaugeSvg(pct, 130, 74);
@@ -2075,6 +2102,28 @@
         setSpec('sys-cpu-spec-base-freq', specs.base_frequency_str || '--');
         setSpec('sys-cpu-spec-max-freq', specs.max_frequency_str || '--');
         setSpec('sys-cpu-spec-cache', specs.cache_combined_str || '--');
+      }
+
+      // Экспресс-метрики KPI в центре баннера CPU
+      const kpiPower = document.getElementById('sys-cpu-kpi-power');
+      const kpiTemp = document.getElementById('sys-cpu-kpi-temp');
+      const kpiCores = document.getElementById('sys-cpu-kpi-cores');
+      const kpiFreq = document.getElementById('sys-cpu-kpi-freq');
+      const cCount = data.cores_count || (specs.physical_cores || cores.length);
+      const thCount = data.threads_count || (specs.logical_cores || threads.length);
+
+      if (kpiPower) kpiPower.textContent = pkgPower != null ? `${pkgPower.toFixed(0)} W` : (data.package_power_w != null ? `${Number(data.package_power_w).toFixed(0)} W` : '-- W');
+      if (kpiTemp) {
+        kpiTemp.textContent = pkgTemp != null ? `${pkgTemp.toFixed(0)} °C` : '-- °C';
+        if (pkgTemp != null) {
+          kpiTemp.className = pkgTemp >= 80 ? 'sys-kpi-value text-danger' : pkgTemp >= 65 ? 'sys-kpi-value text-warning' : 'sys-kpi-value text-info';
+        }
+      }
+      if (kpiCores) kpiCores.textContent = cCount ? `${cCount}C / ${thCount}T` : '-- / --';
+      if (kpiFreq) {
+        const fMax = specs.max_frequency_str || (specs.max_frequency_ghz ? `${specs.max_frequency_ghz} GHz` : null);
+        const fBase = specs.base_frequency_str || (specs.base_frequency_ghz ? `${specs.base_frequency_ghz} GHz` : null);
+        kpiFreq.textContent = fMax || fBase || '-- GHz';
       }
 
       const vendorBadge = document.getElementById('sys-metric-cpu-vendor-badge');
@@ -2265,7 +2314,7 @@
       return `
         <div class="sys-core-card p-2.5" style="min-height: 156px; display: flex; flex-direction: column; justify-content: space-between;" title="${escapeHtml(e.name)}: Нагрузка ${loadStr}${temp != null ? ', Температура ' + temp.toFixed(0) + '°C' : ''}">
           <div class="d-flex justify-content-between align-items-start gap-1.5 mb-1" style="min-height: 32px;">
-            <span class="sys-core-title" style="font-size: 0.84rem; font-weight: 800; color: #ffffff; line-height: 1.25; word-break: break-word;" title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
+            <span class="sys-core-title" style="font-size: 0.84rem; font-weight: 800; color: var(--text-color); line-height: 1.25; word-break: break-word;" title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
             <span class="sys-core-load-badge font-monospace flex-shrink-0" style="font-size: 0.76rem; padding: 2px 6px;">${loadStr}</span>
           </div>
           <div class="py-1 d-flex justify-content-center">
@@ -2299,7 +2348,7 @@
         </div>
 
         <!-- Верхний баннер: Спидометр и датчик температуры слева, Модель в центре, Сводная спецификация GPU справа -->
-        <div class="d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
+        <div class="sys-card-top-banner d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
           <!-- Левая колонка: Спидометр загрузки, справа от него значение с динамическим оттенком, а СНИЗУ — датчик температуры -->
           <div class="d-flex flex-column justify-content-between gap-1.5" style="min-width: 250px; max-width: 300px;">
             <div class="d-flex align-items-center gap-2.5">
@@ -2313,10 +2362,33 @@
             <div id="sys-metric-gpu-temp-slider-${idx}" style="width: 100%;"></div>
           </div>
 
-          <!-- Центральная колонка: Модель графического процессора -->
-          <div class="text-center flex-grow-1 px-2 d-flex flex-column align-items-center justify-content-center">
-            <span class="fw-bold text-warning" style="font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
-            <span class="text-muted small mt-1" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.76rem;">${vendor} · PCIe</span>
+          <!-- Центральная колонка: Модель графического процессора и экспресс-метрики KPI -->
+          <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 px-3" style="min-width: 280px;">
+            <div class="text-center mb-1.5">
+              <span class="fw-bold text-warning" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
+              <div class="d-flex align-items-center justify-content-center gap-1.5 mt-0.5">
+                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.70rem;">${vendor} · PCIe</span>
+                <span class="badge bg-warning-subtle text-warning border border-warning font-monospace" id="sys-gpu-status-badge-${idx}" style="font-size: 0.70rem;">● Ready</span>
+              </div>
+            </div>
+            <div class="sys-banner-kpi-grid">
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-memory text-info me-1"></i>VRAM Память</span>
+                <span class="sys-kpi-value text-info" id="sys-gpu-kpi-vram-${idx}">-- / -- GB</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-lightning-charge text-warning me-1"></i>Мощность</span>
+                <span class="sys-kpi-value text-warning" id="sys-gpu-kpi-power-${idx}">-- W</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-speedometer2 text-primary me-1"></i>Частота Core</span>
+                <span class="sys-kpi-value text-primary" id="sys-gpu-kpi-clock-${idx}">-- MHz</span>
+              </div>
+              <div class="sys-kpi-pill">
+                <span class="sys-kpi-label"><i class="bi bi-thermometer-half text-danger me-1"></i>GPU t°</span>
+                <span class="sys-kpi-value text-warning" id="sys-gpu-kpi-temp-${idx}">-- °C</span>
+              </div>
+            </div>
           </div>
 
           <!-- Правая колонка: Сводная таблица о GPU (кликабельна для запуска AI-аудита) -->
@@ -2343,7 +2415,7 @@
         </div>
 
         <!-- График истории GPU (Загрузка %, Температура °C, Мощность / Память %) с логарифмической/линейной шкалой -->
-        <div class="p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
+        <div class="sys-full-only p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
           <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
               <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-warning me-1"></i>История GPU</span>
@@ -2367,14 +2439,14 @@
         </div>
 
         <!-- Сворачиваемый блок детализации GPU: Блоки, подсистемы и сенсоры питания/напряжения/кулеров -->
-        <div class="sys-detailed-sensors mt-2">
+        <div class="sys-full-only sys-detailed-sensors mt-2">
           <div class="sys-gpu-details-accordion-btn d-flex justify-content-between align-items-center flex-wrap gap-2" 
                id="sys-gpu-details-toggle-btn-${idx}"
                title="Нажмите, чтобы развернуть или скрыть детализацию по подсистемам и сенсорам GPU"
                onclick="window.toggleSysGpuDetails && window.toggleSysGpuDetails(${idx})">
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <span class="text-warning" style="font-size: 1rem;"><i class="bi bi-grid-3x3-gap-fill"></i></span>
-              <span class="fw-bold text-white" style="font-size: 0.88rem;">Детализация: Блоки, подсистемы и сенсоры GPU</span>
+              <span class="fw-bold" style="font-size: 0.88rem; color: var(--text-color);">Детализация: Блоки, подсистемы и сенсоры GPU</span>
               <span class="badge bg-dark border border-secondary text-warning font-monospace ms-1" style="font-size: 0.72rem;" id="sys-gpu-engines-count-badge-${idx}">0 блоков</span>
               <span class="badge bg-dark border border-secondary text-danger font-monospace" style="font-size: 0.72rem;" id="sys-gpu-sensors-count-badge-${idx}">0 параметров</span>
             </div>
@@ -2390,7 +2462,7 @@
           <div id="sys-gpu-details-collapse-${idx}" style="display: none; flex-direction: column; gap: 14px; margin-top: 10px;">
             <!-- 1. Блоки и подсистемы GPU -->
             <div>
-              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem;">
                 <span><i class="bi bi-grid-3x3-gap-fill text-warning me-1"></i>Блоки и подсистемы GPU</span>
               </div>
               <div id="sys-metric-gpu-engines-${idx}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; font-size: 0.78rem;"></div>
@@ -2398,7 +2470,7 @@
 
             <!-- 2. Энергопотребление, напряжение, частоты и сенсоры GPU -->
             <div>
-              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem; color: #cbd5e1;">
+              <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2" style="font-size: 0.82rem;">
                 <span><i class="bi bi-lightning-charge text-warning me-1"></i>Энергопотребление, напряжение, вентиляторы и частоты GPU</span>
               </div>
               <div id="sys-metric-gpu-sensors-${idx}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 0.78rem;">
@@ -2494,6 +2566,29 @@
     if (specDriver) specDriver.textContent = specs.driver_version ? `${specs.driver_version} (DirectX 12)` : 'WDDM 2.7 (DirectX 12)';
     if (specDirectx) specDirectx.textContent = specs.directx || 'DirectX 12';
 
+    // Экспресс-метрики KPI в центре баннера GPU
+    const kpiVram = document.getElementById(`sys-gpu-kpi-vram-${idx}`);
+    const kpiPower = document.getElementById(`sys-gpu-kpi-power-${idx}`);
+    const kpiClock = document.getElementById(`sys-gpu-kpi-clock-${idx}`);
+    const kpiTemp = document.getElementById(`sys-gpu-kpi-temp-${idx}`);
+    if (kpiVram) {
+      if (memory && memory.total_mb) {
+        const uGb = ((memory.used_mb || 0) / 1024).toFixed(1);
+        const tGb = (memory.total_mb / 1024).toFixed(1);
+        kpiVram.textContent = `${uGb} / ${tGb} GB`;
+      } else {
+        kpiVram.textContent = '-- / -- GB';
+      }
+    }
+    if (kpiPower) kpiPower.textContent = powerW != null ? `${powerW.toFixed(0)} W` : (gpu.power_w ? `${gpu.power_w} W` : '-- W');
+    if (kpiClock) kpiClock.textContent = clocks && clocks.core_mhz ? `${Math.round(clocks.core_mhz)} MHz` : '-- MHz';
+    if (kpiTemp) {
+      kpiTemp.textContent = coreTemp != null ? `${coreTemp.toFixed(0)} °C` : '-- °C';
+      if (coreTemp != null) {
+        kpiTemp.className = coreTemp >= 80 ? 'sys-kpi-value text-danger' : coreTemp >= 65 ? 'sys-kpi-value text-warning' : 'sys-kpi-value text-info';
+      }
+    }
+
     // Gauge SVG
     if (gpuGauge) {
       gpuGauge.innerHTML = createGaugeSvg(pct, 120, 68);
@@ -2522,12 +2617,12 @@
           return `
             <div class="sys-sensor-widget-item p-2 rounded-2 d-flex flex-column justify-content-between" style="min-height: 52px;">
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="sys-sensor-name text-truncate" title="${escapeHtml(s.name)}" style="font-size: 0.74rem; font-weight: 600; color: #cbd5e1;">${escapeHtml(s.name)}</span>
+                <span class="sys-sensor-name text-truncate" title="${escapeHtml(s.name)}" style="font-size: 0.74rem; font-weight: 600; color: var(--text-color);">${escapeHtml(s.name)}</span>
                 <span class="${statusClass} font-monospace" style="font-size: 0.68rem;">${escapeHtml(s.category || 'GPU')}</span>
               </div>
               <div class="d-flex justify-content-between align-items-baseline">
                 <span class="text-muted" style="font-size: 0.68rem;">Значение</span>
-                <span class="font-monospace fw-bold text-white" style="font-size: 0.82rem;">${escapeHtml(s.value_raw || String(s.value))}</span>
+                <span class="font-monospace fw-bold" style="font-size: 0.82rem; color: var(--text-color);">${escapeHtml(s.value_raw || String(s.value))}</span>
               </div>
             </div>
           `;
@@ -2628,6 +2723,14 @@
       const ramSubBadge = document.getElementById('sys-ram-sub-badge');
       if (ramSubBadge) ramSubBadge.textContent = `${pct.toFixed(0)}%`;
 
+      // Экспресс-метрики KPI в центре баннера RAM
+      const ramKpiUsed = document.getElementById('sys-ram-kpi-used');
+      const ramKpiFree = document.getElementById('sys-ram-kpi-free');
+      const ramKpiSwap = document.getElementById('sys-ram-kpi-swap');
+      if (ramKpiUsed) ramKpiUsed.textContent = `${usedGb.toFixed(1)} GB`;
+      if (ramKpiFree) ramKpiFree.textContent = `${Number(snap.memory.available_gb || (totalGb - usedGb)).toFixed(1)} GB`;
+      if (ramKpiSwap) ramKpiSwap.textContent = `${swapPct.toFixed(1)}%`;
+
       // Swap
       const swapSubBadge = document.getElementById('sys-swap-sub-badge');
       if (swapSubBadge) swapSubBadge.textContent = `${swapPct.toFixed(1)}%`;
@@ -2655,6 +2758,8 @@
 
       if (diskVal) diskVal.innerText = `${totalMb} MB/s`;
       if (diskSub) diskSub.innerText = `Чтение: ${rKb} KB/s | Запись: ${wKb} KB/s`;
+      const ramKpiIo = document.getElementById('sys-ram-kpi-io');
+      if (ramKpiIo) ramKpiIo.textContent = `${totalMb} MB/s`;
 
       const readFormatted = formatBytesPerSec(rBps);
       const writeFormatted = formatBytesPerSec(wBps);
@@ -2759,7 +2864,7 @@
         alertsBadge.className = isReboot ? 'badge bg-warning text-dark' : 'badge bg-info-subtle text-info border border-info';
       }
       alertsCont.innerHTML = `
-        <div>Сетевые сокеты: <span class="fw-bold text-white">${portCount} портов LISTEN</span></div>
+        <div>Сетевые сокеты: <span class="fw-bold" style="color: var(--text-color);">${portCount} портов LISTEN</span></div>
         <div class="text-truncate" title="${escapeHtml(snap.alerts?.latest_alert || '')}">${escapeHtml(snap.alerts?.latest_alert || 'Система стабильна')}</div>
       `;
     }
@@ -2799,13 +2904,13 @@
 
       return `
         <tr class="sys-proc-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной AI-диагностики процесса">
-          <td style="color: #38bdf8;">${p.pid}</td>
-          <td style="font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(p.name || '')}">${escapeHtml(p.name || '')}</td>
-          <td style="color: #94a3b8;">${escapeHtml(p.status || 'running')}</td>
+          <td class="font-monospace fw-semibold text-info">${p.pid}</td>
+          <td style="font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-color);" title="${escapeHtml(p.name || '')}">${escapeHtml(p.name || '')}</td>
+          <td class="text-muted">${escapeHtml(p.status || 'running')}</td>
           <td style="text-align: right;" class="${cpuClass}">${Number(p.cpu_percent || 0).toFixed(1)}%</td>
-          <td style="text-align: right; color: #4ade80;">${Number(p.memory_mb || 0).toFixed(1)} MB</td>
-          <td style="text-align: right; color: #a855f7;">${p.num_threads || 1}</td>
-          <td style="color: #94a3b8;">${escapeHtml(p.username || 'SYSTEM')}</td>
+          <td style="text-align: right;" class="font-monospace text-success fw-semibold">${Number(p.memory_mb || 0).toFixed(1)} MB</td>
+          <td style="text-align: right;" class="font-monospace text-warning fw-semibold">${p.num_threads || 1}</td>
+          <td class="text-muted">${escapeHtml(p.username || 'SYSTEM')}</td>
         </tr>
       `;
     }).join('');
@@ -2950,13 +3055,13 @@
       return `
         <tr class="sys-net-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной диагностики сетевого соединения">
           <td>
-            <div class="fw-bold text-white text-truncate" style="max-width: 165px;" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
-            <div class="small text-muted" style="font-size: 0.70rem;">PID: <span style="color: #38bdf8;">${item.pid}</span> ${item.user ? '• ' + escapeHtml(item.user) : ''}</div>
+            <div class="fw-bold text-truncate" style="max-width: 165px; color: var(--text-color);" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="small text-muted" style="font-size: 0.70rem;">PID: <span class="font-monospace text-info">${item.pid}</span> ${item.user ? '• ' + escapeHtml(item.user) : ''}</div>
           </td>
           <td>
             <div class="d-flex align-items-center gap-1">
               ${isExtBadge}
-              <span class="font-monospace text-light fw-semibold text-truncate" style="max-width: 195px;" title="${escapeHtml(item.remote_address)}">
+              <span class="font-monospace fw-semibold text-truncate" style="max-width: 195px; color: var(--text-color);" title="${escapeHtml(item.remote_address)}">
                 ${escapeHtml(item.remote_address !== '-' ? item.remote_address : item.local_address)}
               </span>
             </div>
@@ -2965,7 +3070,7 @@
           <td>
             <div class="d-flex align-items-center gap-1 mb-0.5">
               ${protoBadge}
-              <span class="fw-semibold text-truncate" style="max-width: 110px; font-size: 0.74rem; color: #a855f7;" title="${escapeHtml(item.service_type)}">${escapeHtml(item.service_type)}</span>
+              <span class="fw-semibold text-truncate" style="max-width: 110px; font-size: 0.74rem; color: var(--nav-active);" title="${escapeHtml(item.service_type)}">${escapeHtml(item.service_type)}</span>
             </div>
           </td>
           <td style="text-align: center;">
@@ -2982,7 +3087,7 @@
             </div>
             <div class="d-flex align-items-start gap-1">
               <i class="bi bi-arrow-up-right text-warning mt-0.5" style="font-size: 0.70rem;"></i>
-              <div class="text-truncate" style="max-width: 250px; font-size: 0.72rem; color: #fde047;" title="${escapeHtml(item.sent_summary)}">
+              <div class="text-truncate" style="max-width: 250px; font-size: 0.72rem; color: var(--text-muted);" title="${escapeHtml(item.sent_summary)}">
                 ${escapeHtml(item.sent_summary)}
               </div>
             </div>
@@ -2998,7 +3103,7 @@
             </div>
             <div class="d-flex align-items-start gap-1">
               <i class="bi bi-arrow-down-left text-success mt-0.5" style="font-size: 0.70rem;"></i>
-              <div class="text-truncate" style="max-width: 250px; font-size: 0.72rem; color: #86efac;" title="${escapeHtml(item.recv_summary)}">
+              <div class="text-truncate" style="max-width: 250px; font-size: 0.72rem; color: var(--text-muted);" title="${escapeHtml(item.recv_summary)}">
                 ${escapeHtml(item.recv_summary)}
               </div>
             </div>
@@ -3325,14 +3430,14 @@
         if (compactText) compactText.textContent = 'Развернуть';
         if (btnCompact) {
           btnCompact.classList.add('btn-info', 'text-dark');
-          btnCompact.classList.remove('btn-outline-light');
+          btnCompact.classList.remove('btn-outline-secondary');
         }
       } else {
         sysContainer.classList.remove('sys-compact-mode');
         if (compactText) compactText.textContent = 'Компактно';
         if (btnCompact) {
           btnCompact.classList.remove('btn-info', 'text-dark');
-          btnCompact.classList.add('btn-outline-light');
+          btnCompact.classList.add('btn-outline-secondary');
         }
       }
     };
@@ -3758,7 +3863,7 @@
     const val = currentInterval || '1 minute';
     const isCustom = !INTERVAL_PRESETS.some(p => p.value === val);
 
-    let html = `<select class="form-select form-select-sm bg-dark text-white border-secondary sys-int-select" data-logger="${loggerName}" style="min-width: 120px;">`;
+    let html = `<select class="form-select form-select-sm sys-int-select" data-logger="${loggerName}" style="min-width: 120px;">`;
     INTERVAL_PRESETS.forEach(p => {
       const sel = p.value === val ? 'selected' : '';
       html += `<option value="${p.value}" ${sel}>${p.label} (${p.value})</option>`;
@@ -4086,7 +4191,7 @@
                 ${rootDirHint && currentWatchDirs.length > 1 ? `<span class="badge bg-dark border border-secondary text-muted ms-1" style="font-size: 0.65rem;" title="Корень: ${escapeHtml(e.watch_dir)}">${rootDirHint}</span>` : ''}
               </td>
               <td>${procDisplay}</td>
-              <td class="font-monospace small text-light" style="word-break: break-all;" title="${escapeHtml(e.path)}">${escapeHtml(e.path)}</td>
+              <td class="font-monospace small" style="word-break: break-all; color: var(--text-color);" title="${escapeHtml(e.path)}">${escapeHtml(e.path)}</td>
             </tr>
           `;
         }).join('');
@@ -4175,7 +4280,7 @@
             <i class="bi bi-folder-check text-warning fs-6"></i>
             <span class="badge bg-secondary font-monospace" style="font-size: 0.68rem;">${driveLetter}</span>
             <div class="text-truncate">
-              <span class="fw-bold small text-light">${escapeHtml(folderName)}</span>
+              <span class="fw-bold small" style="color: var(--text-color);">${escapeHtml(folderName)}</span>
               <span class="small text-muted font-monospace d-block text-truncate" style="font-size: 0.72rem;" title="${escapeHtml(dirPath)}">${escapeHtml(dirPath)}</span>
             </div>
           </div>
@@ -4230,7 +4335,7 @@
       const label = d.mountpoint || 'C:\\';
       const freeTxt = d.free_gb ? `${d.free_gb} GB free` : '';
       return `
-        <button class="btn btn-xs btn-outline-light rounded-pill px-2 py-0.5 sys-drive-btn font-monospace" data-drive="${escapeHtml(label)}" title="${escapeHtml(label)} ${freeTxt}">
+        <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0.5 sys-drive-btn font-monospace" data-drive="${escapeHtml(label)}" title="${escapeHtml(label)} ${freeTxt}">
           <i class="bi bi-hdd me-1"></i>${escapeHtml(label)}
         </button>
       `;
@@ -4261,7 +4366,7 @@
       return `
         <span class="d-inline-flex align-items-center">
           ${idx > 0 ? '<span class="text-muted mx-1">/</span>' : ''}
-          <a href="#" class="sys-breadcrumb-link text-decoration-none ${isLast ? 'fw-bold text-info' : 'text-light'}" data-path="${escapeHtml(clickPath)}">
+          <a href="#" class="sys-breadcrumb-link text-decoration-none ${isLast ? 'fw-bold text-info' : ''}" style="color: var(--text-color);" data-path="${escapeHtml(clickPath)}">
             ${escapeHtml(part || 'Корень')}
           </a>
         </span>

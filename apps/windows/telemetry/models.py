@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:35:00
+# Updated: 2026-10-06 12:00:00
 # =============================================================================
 
 from __future__ import annotations
@@ -196,6 +196,7 @@ class GpuMetrics(BaseModel):
     temperature_celsius: Optional[float] = Field(default=None, description='GPU core temperature in Celsius')
     has_cuda: bool = Field(default=False, description='CUDA support availability')
     has_directml: bool = Field(default=False, description='DirectML accelerator availability')
+    engines: Dict[str, float] = Field(default_factory=dict, description='Подсистемы и движки GPU (3D, Decode, Copy, etc.)')
 
 class DiskPartitionMetrics(BaseModel):
     """Storage partition metrics."""
@@ -528,6 +529,7 @@ class SystemSnapshot(BaseModel):
     """Complete system and hardware telemetry snapshot."""
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='ISO 8601 UTC timestamp of snapshot')
     hostname: str = Field(default='', description='Machine host name')
+    workgroup: str = Field(default='WORKGROUP', description='Machine workgroup or domain')
     username: str = Field(default='', description='Current logged in username')
     os_name: str = Field(default='Windows', description='Operating system name and version')
     os_build: str = Field(default='', description='Operating system build number')
@@ -559,6 +561,12 @@ class SystemSnapshot(BaseModel):
     sensors: List[HardwareSensor] = Field(default_factory=list, description='Hardware sensor readings')
     top_processes: List[ProcessMetrics] = Field(default_factory=list, description='Top active processes')
     hardware_audit: Dict[str, Any] = Field(default_factory=dict, description='Full hardware audit data (manufacturer, serial, etc.)')
+
+class WindowsFeaturesSnapshot(BaseModel):
+    """Снимок состояния Windows Optional Features при старте телеметрии."""
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='ISO‑8601 метка времени')
+    features: List[Dict[str, Any]] = Field(default_factory=list, description='Список компонентов Windows Optional Features')
+
 
 class AnomalyItem(BaseModel):
     """Specific detected anomaly or performance bottleneck."""

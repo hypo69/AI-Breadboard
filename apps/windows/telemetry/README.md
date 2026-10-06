@@ -35,3 +35,43 @@ for disk in disks:
 ```powershell
 python -m apps.windows.modules.storage_manager.core.windows_storage_sensor --output storage_snapshot.json
 ```
+
+## Установка как Windows Service (`Install-TelemetryExe.ps1`)
+
+Для сборки и развертывания фоновой службы Windows Service используется сценарий:
+
+```powershell
+# Полная сборка, установка в Program Files и запуск службы от имени администратора
+.\apps\windows\telemetry\launchers\Install-TelemetryExe.ps1
+
+# Проверка статуса
+.\apps\windows\telemetry\launchers\Install-TelemetryExe.ps1 -Status
+
+# Остановка / Запуск / Перезапуск
+.\apps\windows\telemetry\launchers\Install-TelemetryExe.ps1 -Stop
+.\apps\windows\telemetry\launchers\Install-TelemetryExe.ps1 -Start
+.\apps\windows\telemetry\launchers\Install-TelemetryExe.ps1 -Restart
+
+# Удаление службы из Windows SCM
+.\apps\windows\telemetry\launchers\Install-TelemetryExe.ps1 -Uninstall
+```
+
+### Архитектура каталогов службы
+
+```text
+C:\Program Files\AITelemetry\
+├── AITelemetry.exe          ← основной бинарник службы Windows
+├── AITelemetryCtl.exe       ← консольная утилита управления
+├── *.dll / *.pyd
+└── ...
+
+C:\ProgramData\AITelemetry\
+├── config\
+│   └── config.json
+├── logs\
+│   └── telemetry.log
+├── data\
+│   └── telemetry.db
+├── cache\
+└── snapshots\
+```

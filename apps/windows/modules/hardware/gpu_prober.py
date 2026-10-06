@@ -16,11 +16,11 @@
 # Package: apps.windows.modules.hardware
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:15:00
+# Updated: 2026-10-06 08:10:00
 # =============================================================================
 
 from __future__ import annotations
-"""GPU hardware prober supporting NVIDIA (nvidia-smi), AMD (amd-smi), Intel Arc (xpu-smi) and WMI."""
+"""GPU hardware prober supporting NVIDIA (nvidia-smi), AMD (amd-smi), Intel Arc (xpu-smi), WMI and WDDM Performance Counters."""
 
 import json
 import re
@@ -47,6 +47,9 @@ class GpuDeviceTelemetry:
     power_limit_w: Optional[float] = None
     fan_speed_pct: Optional[float] = None
     throttle_reasons: List[str] = field(default_factory=list)
+    engines: Dict[str, float] = field(default_factory=dict)
+    shared_memory_used_mb: Optional[float] = None
+    dedicated_memory_used_mb: Optional[float] = None
 
 
 def _normalize_name_tokens(name: str) -> set[str]:
@@ -73,7 +76,7 @@ def _is_same_gpu_device(name_a: str, name_b: str) -> bool:
 
 
 class GpuProber:
-    """Multi-vendor GPU telemetry collector."""
+    """Multi-vendor GPU telemetry collector with WDDM Direct3D counters."""
 
     def __init__(self) -> None:
         """Locate vendor SMI binaries."""
@@ -82,7 +85,7 @@ class GpuProber:
         self._xpu_smi = shutil.which('xpu-smi') or shutil.which('xpu-smi.exe')
 
     def probe_all(self) -> List[GpuDeviceTelemetry]:
-        """Опрашивает все доступные GPU в системе (NVIDIA, AMD, Intel Arc и WMI адаптеры).
+        """Опрашивает все доступные GPU в системе (NVIDIA, AMD, Intel Arc, WMI и WDDM счетчики).
 
         Returns:
             List[GpuDeviceTelemetry]: Список обнаруженных видеокарт без дублирования.
@@ -105,11 +108,117 @@ class GpuProber:
             if not already_exists:
                 gpus.append(w_gpu)
 
+        # Обогащаем данными WDDM / Direct3D счетчиков производительности (движки 3D/Decode/Copy и память)
+        self._enrich_wddm_performance(gpus)
+
         # Переиндексируем список
         for idx, g in enumerate(gpus):
             g.index = idx
 
         return gpus
+
+    def _enrich_wddm_performance(self, gpus: List[GpuDeviceTelemetry]) -> None:
+        """Обогащает метрики видеокарт счетчиками WDDM/Direct3D (движки 3D/Video/Copy и память)."""
+        if not gpus:
+            return
+        try:
+            # 1. Опрос счетчиков памяти видеоадаптеров
+            ps_mem = 'Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUAdapterMemory -ErrorAction SilentlyContinue | Select-Object Name, DedicatedUsage, SharedUsage, TotalCommitted | ConvertTo-Json -Compress'
+            res_mem = subprocess.run(['powershell', '-NoProfile', '-Command', ps_mem], capture_output=True, text=True, timeout=5)
+            mems = json.loads(res_mem.stdout) if res_mem.stdout.strip() else []
+            if isinstance(mems, dict):
+                mems = [mems]
+
+            luid_memory: Dict[str, Dict[str, float]] = {}
+            for m in mems:
+                name = str(m.get('Name', ''))
+                if 'luid_' in name:
+                    luid_match = re.search(r'luid_(0x[0-9a-fA-F]+_0x[0-9a-fA-F]+)', name)
+                    if luid_match:
+                        luid = luid_match.group(1).lower()
+                        ded = float(m.get('DedicatedUsage') or 0.0) / (1024 ** 2)
+                        shared = float(m.get('SharedUsage') or 0.0) / (1024 ** 2)
+                        tot = float(m.get('TotalCommitted') or 0.0) / (1024 ** 2)
+                        luid_memory[luid] = {'dedicated_mb': ded, 'shared_mb': shared, 'total_mb': tot}
+
+            # 2. Опрос счетчиков графических движков
+            ps_eng = 'Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine -ErrorAction SilentlyContinue | Select-Object Name, UtilizationPercentage | ConvertTo-Json -Compress'
+            res_eng = subprocess.run(['powershell', '-NoProfile', '-Command', ps_eng], capture_output=True, text=True, timeout=5)
+            engs = json.loads(res_eng.stdout) if res_eng.stdout.strip() else []
+            if isinstance(engs, dict):
+                engs = [engs]
+
+            luid_engines: Dict[str, Dict[str, float]] = {}
+            for it in engs:
+                name = str(it.get('Name', ''))
+                if '_luid_' in name and '_engtype_' in name:
+                    luid_match = re.search(r'luid_(0x[0-9a-fA-F]+_0x[0-9a-fA-F]+)', name)
+                    if luid_match:
+                        luid = luid_match.group(1).lower()
+                        eng_type = name.split('_engtype_')[-1].strip()
+                        if eng_type:
+                            val = float(it.get('UtilizationPercentage') or 0.0)
+                            luid_engines.setdefault(luid, {}).setdefault(eng_type, 0.0)
+                            luid_engines[luid][eng_type] += val
+
+            # 3. Сопоставление LUID и адаптеров
+            for g in gpus:
+                g_vendor = g.vendor.lower()
+                is_igpu = "intel" in g_vendor or "generic" in g_vendor or (g.memory_total_mb and g.memory_total_mb <= 2048 and "intel" in g.name.lower())
+
+                matched_luid = None
+                if is_igpu:
+                    igpu_candidates = [
+                        (luid, m['shared_mb']) for luid, m in luid_memory.items()
+                        if m.get('dedicated_mb', 0.0) == 0.0
+                    ]
+                    if igpu_candidates:
+                        igpu_candidates.sort(key=lambda x: x[1], reverse=True)
+                        matched_luid = igpu_candidates[0][0]
+                else:
+                    discrete_candidates = [
+                        (luid, m['dedicated_mb']) for luid, m in luid_memory.items()
+                        if m.get('dedicated_mb', 0.0) > 0.0
+                    ]
+                    if discrete_candidates:
+                        discrete_candidates.sort(key=lambda x: x[1], reverse=True)
+                        matched_luid = discrete_candidates[0][0]
+
+                if matched_luid:
+                    mem_info = luid_memory.get(matched_luid, {})
+                    g.dedicated_memory_used_mb = round(mem_info.get('dedicated_mb', 0.0), 1)
+                    g.shared_memory_used_mb = round(mem_info.get('shared_mb', 0.0), 1)
+                    if g.memory_used_mb is None:
+                        g.memory_used_mb = g.shared_memory_used_mb if is_igpu else g.dedicated_memory_used_mb
+                    if is_igpu and (g.memory_total_mb is None or g.memory_total_mb == 0):
+                        g.memory_total_mb = round(mem_info.get('total_mb', 1024.0), 1)
+
+                    eng_info = luid_engines.get(matched_luid, {})
+                    normalized_engines: Dict[str, float] = {}
+                    for eng_name, eng_pct in eng_info.items():
+                        clean_eng = eng_name
+                        if eng_name == "3D": clean_eng = "3D Engine"
+                        elif eng_name == "VideoDecode": clean_eng = "Video Decode"
+                        elif eng_name == "VideoProcessing": clean_eng = "Video Processing"
+                        elif eng_name == "Copy": clean_eng = "Copy Engine"
+                        elif eng_name == "GDI Render": clean_eng = "GDI Render"
+                        normalized_engines[clean_eng] = round(eng_pct, 1)
+
+                    if not normalized_engines and is_igpu:
+                        normalized_engines = {
+                            "3D Engine": 0.0,
+                            "Video Decode": 0.0,
+                            "Video Processing": 0.0,
+                            "Copy Engine": 0.0
+                        }
+
+                    g.engines = normalized_engines
+
+                    if g.utilization_gpu_pct is None and normalized_engines:
+                        g.utilization_gpu_pct = max(normalized_engines.values())
+
+        except Exception as exc:
+            logger.debug(f'WDDM Performance enrichment error: {exc}')
 
     def _probe_nvidia(self) -> List[GpuDeviceTelemetry]:
         """Query nvidia-smi with CSV query flags."""
@@ -172,4 +281,4 @@ class GpuProber:
                     ))
         except Exception as e:
             logger.error(f'WMI GPU probe error: {e}')
-        return results
+        return results

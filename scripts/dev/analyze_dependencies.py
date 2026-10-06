@@ -18,7 +18,7 @@
 # Package: scripts.dev
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:27:07
+# Updated: 2026-10-06 10:10:30
 # =============================================================================
 
 """Script dependency analysis utility.
@@ -27,10 +27,18 @@ Analyzes dependencies between project scripts to identify usage patterns
 and help determine which scripts can be safely removed."""
 
 import ast
+import os
 import re
+import sys
 from pathlib import Path
 from collections import defaultdict
 from typing import Set, Dict, List
+
+_project_root = Path(__file__).resolve().parent.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+import header
+from header import __root__
 
 class ScriptAnalyzer:
     """Analyzes Python scripts for dependencies."""
@@ -137,7 +145,6 @@ class ScriptAnalyzer:
 
 def main():
     """Main entry point."""
-    from header import __root__
     analyzer = ScriptAnalyzer(__root__)
     analyzer.analyze_all()
     analyzer.report()

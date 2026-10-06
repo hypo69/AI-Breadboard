@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:47:00
+# Updated: 2026-10-06 09:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -229,8 +229,22 @@ class SystemCollector:
                         continue
             except Exception as ex:
                 logger.debug(f'Failed to query Windows InstallDate from registry: {ex}')
+        workgroup = 'WORKGROUP'
+        if os.name == 'nt':
+            try:
+                from ctypes import wintypes
+                netapi32 = ctypes.windll.netapi32
+                lp_buf = wintypes.LPWSTR()
+                join_stat = wintypes.DWORD()
+                if netapi32.NetGetJoinInformation(None, ctypes.byref(lp_buf), ctypes.byref(join_stat)) == 0:
+                    if lp_buf.value:
+                        workgroup = lp_buf.value
+                    netapi32.NetApiBufferFree(lp_buf)
+            except Exception as ex:
+                logger.debug(f'Failed to query Windows Workgroup: {ex}')
         self._identity_cached = {
             'hostname': hostname,
+            'workgroup': workgroup,
             'username': full_username,
             'os_build': os_build,
             'os_install_date': os_install_date,
@@ -356,7 +370,8 @@ class SystemCollector:
                     load_percent=g.utilization_gpu_pct,
                     temperature_celsius=g.temperature_gpu_c,
                     has_cuda=g.vendor.lower() == 'nvidia',
-                    has_directml=True
+                    has_directml=True,
+                    engines=g.engines,
                 ))
         except Exception as ex:
             logger.debug(f'Ошибка сбора метрик GPU через GpuProber: {ex}')
@@ -1172,10 +1187,10 @@ class SystemCollector:
         return res
 
     def get_onedrive_info(self) -> CloudStorageInfo:
-        """Сбор информации о синхронизированной папке и дисковом пространстве OneDrive.
+        """Сбор информации о папке/диске OneDrive и состоянии синхронизации.
 
         Returns:
-            CloudStorageInfo: Сведения о локальном пути и емкости диска OneDrive.
+            CloudStorageInfo: Сведения о локальном пути, емкости диска и статусе синхронизации OneDrive.
         """
         import shutil
         od_paths: List[str] = []
@@ -1201,20 +1216,52 @@ class SystemCollector:
                         pass
             except Exception:
                 pass
+
         if not od_paths:
             return CloudStorageInfo(installed=False, name='OneDrive', path=None, status='Не настроено')
+
         target_path = od_paths[0]
+
+        # Проверка активности процесса синхронизации OneDrive
+        is_running = False
+        try:
+            for p in psutil.process_iter(['name']):
+                try:
+                    pname = (p.info.get('name') or '').lower()
+                    if pname in ('onedrive.exe', 'onedrive.standalone.exe', 'filecoauth.exe'):
+                        is_running = True
+                        break
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+        except Exception:
+            pass
+
         try:
             usage = shutil.disk_usage(target_path)
-            free_gb = round(usage.free / 1024 ** 3, 1)
-            total_gb = round(usage.total / 1024 ** 3, 1)
-            used_gb = round(usage.used / 1024 ** 3, 1)
+            free_gb = round(usage.free / (1024 ** 3), 1)
+            total_gb = round(usage.total / (1024 ** 3), 1)
+            used_gb = round(usage.used / (1024 ** 3), 1)
             pct = round(usage.used / max(usage.total, 1) * 100.0, 1)
-            summary = f'{free_gb} GB своб. ({target_path})'
-            return CloudStorageInfo(installed=True, name='OneDrive', path=target_path, total_gb=total_gb, used_gb=used_gb, free_gb=free_gb, percent_used=pct, status=summary)
+
+            if is_running:
+                summary = f'{free_gb} GB своб. (Синхронизирован)'
+            else:
+                summary = f'Локальный диск ({free_gb} GB своб., не синхронизирован)'
+
+            return CloudStorageInfo(
+                installed=True,
+                name='OneDrive',
+                path=target_path,
+                total_gb=total_gb,
+                used_gb=used_gb,
+                free_gb=free_gb,
+                percent_used=pct,
+                status=summary,
+            )
         except Exception as ex:
             logger.debug(f'Ошибка проверки диска OneDrive: {ex}')
-            return CloudStorageInfo(installed=True, name='OneDrive', path=target_path, status=f'Активен ({target_path})')
+            fallback_status = f'Локальный диск ({target_path}, не синхронизирован)' if not is_running else f'Активен ({target_path})'
+            return CloudStorageInfo(installed=True, name='OneDrive', path=target_path, status=fallback_status)
 
     async def get_core_metrics(self) -> SystemCoreMetrics:
         """Сверхбыстрый сбор базовой телеметрии без вызова тяжелых внешних утилит (< 0.2с).
@@ -1299,13 +1346,14 @@ class SystemCollector:
         hardware_audit_dict: Dict[str, Any] = {}
         if self.storage:
             try:
-                latest_audit = self.storage.get_latest_extended_audit()
+                latest_audit = self.storage.get_latest_hardware_audit() or self.storage.get_latest_extended_audit()
                 if latest_audit:
                     hardware_audit_dict = latest_audit
             except Exception:
                 pass
         return SystemSnapshot(
             hostname=ident.get('hostname') or socket.gethostname(),
+            workgroup=ident.get('workgroup') or 'WORKGROUP',
             username=ident.get('username') or '',
             os_name=f'{platform.system()} {platform.release()}',
             os_build=ident.get('os_build') or platform.version(),

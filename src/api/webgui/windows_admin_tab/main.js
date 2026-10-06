@@ -14,7 +14,7 @@
  * Package: src/api/webgui/windows_admin_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-06 11:38:46
  * =============================================================================
  */
 
@@ -269,7 +269,18 @@
 
     if (!isWinAdminInitialized) {
       const refreshBtn = document.getElementById('btn-winadmin-refresh');
-      const configBtn = document.getElementById('btn-winadmin-configi18n.t('auto__if_refreshbtn_refreshbtn_onclick_fetchstatus_fetchaccounts_currentuserfilter_fetchevents_const_filtergroup_document_getelementbyid__866c68')winadmin-user-filters');
+      const configBtn = document.getElementById('btn-winadmin-config');
+
+      if (refreshBtn) {
+        refreshBtn.onclick = () => {
+          fetchStatus();
+          fetchAccounts(currentUserFilter);
+          fetchEvents();
+        };
+      }
+
+      // Фильтры пользователей
+      const filterGroup = document.getElementById('winadmin-user-filters');
       if (filterGroup) {
         filterGroup.querySelectorAll('.winadmin-filter-btn').forEach(btn => {
           btn.onclick = () => {

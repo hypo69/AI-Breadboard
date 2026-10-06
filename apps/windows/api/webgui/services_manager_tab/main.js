@@ -3,11 +3,11 @@
  * Process Name: Windows Services Manager Tab - Main Script
  * =============================================================================
  * Description:
- *   Клиентский скрипт управления интерфейсом модуля main.
+ *   Клиентский скрипт управления интерфейсом диспетчера служб Windows.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/services_manager_tab/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/services_manager_tab/main.js?v=20261006_v1" type="module"></script>
  *
  *   JavaScript Import:
  *     import { initServicesManagerTab } from '/windows/api/webgui/services_manager_tab/main.js';
@@ -17,13 +17,8 @@
  * Package: windows/api/webgui/services_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 11:15:30
+ * Updated: 2026-10-06 11:24:00
  * =============================================================================
- */
-
-/**
- * services_manager_tab/main.js — Управление системными службами Windows
- * Updated: 2026-10-04 11:15:30
  */
 
 const registerTabPoller = window.registerTabPoller || function() {};
@@ -32,7 +27,23 @@ let isInitialized = false;
 let servicesList = [];
 let currentFilter = 'all';
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function fetchServicesSummary() {
+  const refreshBtn = document.getElementById('svc-refresh-btn');
+  if (refreshBtn) {
+    const icon = refreshBtn.querySelector('i');
+    if (icon) icon.classList.add('spin-animation');
+  }
+
   try {
     const res = await fetch('/api/services-manager/summary');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -40,6 +51,11 @@ export async function fetchServicesSummary() {
     renderServices(data);
   } catch (err) {
     console.warn('[ServicesManager] Ошибка получения списка служб:', err);
+  } finally {
+    if (refreshBtn) {
+      const icon = refreshBtn.querySelector('i');
+      if (icon) icon.classList.remove('spin-animation');
+    }
   }
 }
 
@@ -94,20 +110,25 @@ function applyServiceFilters() {
 
   tbody.innerHTML = filtered.slice(0, 150).map(s => {
     const isRunning = (s.state || '').toLowerCase().includes('running') || s.state === '4';
+    const badgeClass = isRunning
+      ? 'badge bg-success-subtle text-success border border-success'
+      : 'badge bg-secondary-subtle text-secondary border border-secondary';
+    const statusText = isRunning ? 'Running' : 'Stopped';
+
     return `
       <tr>
-        <td class="fw-bold text-info font-monospace">${s.name}</td>
-        <td>${s.display_name || s.name}</td>
+        <td class="fw-bold font-monospace" style="color: var(--accent-color, #0ea5e9);">${escapeHtml(s.name)}</td>
+        <td style="color: var(--text-color);">${escapeHtml(s.display_name || s.name)}</td>
         <td>
-          <span class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">
-            ${isRunning ? 'Running' : 'Stopped'}
+          <span class="${badgeClass}">
+            ${statusText}
           </span>
         </td>
-        <td class="small text-muted">${s.start_type || 'Manual'}</td>
-        <td class="font-monospace small text-muted">${s.pid || '-'}</td>
+        <td class="small text-muted">${escapeHtml(s.start_type || 'Manual')}</td>
+        <td class="font-monospace small text-muted">${escapeHtml(String(s.pid || '-'))}</td>
         <td class="text-end">
           <button class="btn btn-xs ${isRunning ? 'btn-outline-danger' : 'btn-outline-success'} py-0 px-2 svc-action-btn" 
-                  data-service="${s.name}" data-action="${isRunning ? 'sc_stop' : 'sc_start'}">
+                  data-service="${escapeHtml(s.name)}" data-action="${isRunning ? 'sc_stop' : 'sc_start'}">
             <i class="bi ${isRunning ? 'bi-stop-fill' : 'bi-play-fill'}"></i> ${isRunning ? 'Стоп' : 'Старт'}
           </button>
         </td>
@@ -125,7 +146,9 @@ function applyServiceFilters() {
 }
 
 async function executeServiceCmd(serviceName, action) {
-  if (window.toast) window.toast.info('Команда отправлена', `${action}: ${serviceName}`);
+  if (window.showToast) window.showToast(`Команда отправлена: ${action} ${serviceName}`, 'info');
+  else if (window.toast) window.toast.info('Команда отправлена', `${action}: ${serviceName}`);
+
   try {
     const res = await fetch('/api/services-manager/action', {
       method: 'POST',
@@ -134,13 +157,18 @@ async function executeServiceCmd(serviceName, action) {
     });
     const result = await res.json();
     if (res.ok) {
-      if (window.toast) window.toast.success('Успех', `${serviceName}: команда выполнена`);
+      if (window.showToast) window.showToast(`✅ ${serviceName}: команда выполнена`, 'success');
+      else if (window.toast) window.toast.success('Успех', `${serviceName}: команда выполнена`);
       fetchServicesSummary();
     } else {
-      if (window.toast) window.toast.error('Ошибка', result.detail || 'Сбой операции');
+      const errDetail = result.detail || result.message || 'Сбой операции';
+      if (window.showToast) window.showToast(`Ошибка: ${errDetail}`, 'danger');
+      else if (window.toast) window.toast.error('Ошибка', errDetail);
     }
   } catch (err) {
-    if (window.toast) window.toast.error('Ошибка сети', err.message);
+    const errMsg = `Ошибка сети: ${err.message}`;
+    if (window.showToast) window.showToast(errMsg, 'danger');
+    else if (window.toast) window.toast.error('Ошибка сети', err.message);
   }
 }
 
@@ -161,8 +189,13 @@ export function initServicesManagerTab() {
   [filterAll, filterRunning, filterStopped].forEach(btn => {
     if (!btn) return;
     btn.addEventListener('click', () => {
-      [filterAll, filterRunning, filterStopped].forEach(b => b?.classList.remove('active'));
-      btn.classList.add('active');
+      [filterAll, filterRunning, filterStopped].forEach(b => {
+        if (!b) return;
+        b.classList.remove('active', 'btn-primary');
+        b.classList.add('btn-outline-secondary');
+      });
+      btn.classList.add('active', 'btn-primary');
+      btn.classList.remove('btn-outline-secondary');
       currentFilter = btn.id.replace('svc-filter-', '');
       applyServiceFilters();
     });
@@ -172,3 +205,13 @@ export function initServicesManagerTab() {
 }
 
 window.initServicesManagerTab = initServicesManagerTab;
+
+// Автозапуск если вкладка уже в DOM
+if (document.getElementById('svc-table') || document.getElementById('tab-services-manager')) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initServicesManagerTab());
+  } else {
+    setTimeout(() => initServicesManagerTab(), 10);
+  }
+}
+

@@ -1,10 +1,13 @@
-# `scripts` Module — Developer & System Utilities
+# Модуль `scripts` — Системные и сервисные утилиты
 
-## Purpose
-The `scripts/` directory contains **system-wide developer tooling, maintenance utilities, and operational scripts**:
+## Назначение
+Директория `scripts/` содержит системные утилиты обслуживания, CLI-инструменты разработчика и модули администрирования платформы **AI-Breadboard**:
 
-- **`dev/`**: Development environment tools, test runners, dependency analyzers, doc generators, and code audit scripts.
-- **`maintenance/`**: System maintenance tasks, log rotation, log compression, and development RAG index rebuilders.
+- **[`cli/`](cli/)**: Кроссплатформенное ядро CLI (`manage_tools.py`, `assist`), управление конфигурацией, путями и подкомандами (`skills`, `rag`, `telemetry`, `db`, `docs` и др.).
+- **[`deploy/`](deploy/)**: Сценарии автоматизации развертывания и регистрации сервисов.
+- **[`dev/`](dev/)**: Инструменты разработчика (запуск тестов, отчеты покрытия, валидация заголовков, экспорт в PDF, создание плагинов и навыков).
+- **[`docs/`](docs/)**: Генерация API-документации Sphinx, валидация структуры и ссылок.
+- **[`maintenance/`](maintenance/)**: Задачи регулярного обслуживания (анализ логов, генерация SSL-сертификатов, переиндексация RAG).
 
 > [!NOTE]
-> Domain business logic (media management, torrents, RAG search) is encapsulated within plugins and backend core modules (`core/`, `plugins/`).
+> Доменная бизнес-логика (управление медиа, системный стек Windows, RAG) инкапсулирована в приложениях [`/apps`](../apps) и плагинах [`/plugins`](../plugins).

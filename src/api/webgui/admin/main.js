@@ -1,39 +1,27 @@
 /**
  * =============================================================================
- * Process Name: AI-Breadboard UI - Admin Dashboard Main Script
+ * Process Name: Windows Admin - Main Script
  * =============================================================================
  * Description:
- *   Главный клиентский скрипт панели администрирования AI-Breadboard.
- *
- *   Зачем нужен этот модуль:
- *     1. Оркестрация вкладок и компонентов: регистрация динамических вкладок через TabRegistry,
- *        управление жизненным циклом (монтирование, фоновый поллинг, очистка при демонтировании).
- *     2. Шина событий (EventBus): координация взаимодействия между вкладками без жесткой связности.
- *     3. Глобальные сервисы: инициализация i18n, переключение тем оформления, профиль пользователя.
+ *   Клиентский скрипт управления интерфейсом модуля main.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/src/api/webgui/admin/main.js?v=20261006_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/admin/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
- * Package: src/api/webgui/admin
+ * Package: windows/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:55:00
+ * Updated: 2026-10-06 06:10:00
  * =============================================================================
  */
 
+// Admin Interface Main JS
 import { initI18n, switchLang, applyTranslations } from '../js/i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme } from '../js/theme.js';
 import { initUserSettings, refreshUserProfile } from '../js/userSettings.js';
-import { TabRegistry } from '../core/tab-registry.js';
-import { eventBus } from '../core/event-bus.js';
-
-// Подписка на событие переключения вкладок
-eventBus.on('tabSwitched', ({ tabId }) => {
-  onTabSwitched(tabId);
-});
 
 // Make switchLang and theme functions available globally
 window.switchLang = switchLang;
@@ -385,9 +373,6 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-cloudflared' && typeof window.initCloudflaredTab === 'function') {
     console.log('[AdminInterface] Switching to cloudflared tab...');
     window.initCloudflaredTab();
-  } else if (cleanId === 'tab-google-desktop' && typeof window.initGoogleDesktopTab === 'function') {
-    console.log('[AdminInterface] Switching to google desktop tab...');
-    window.initGoogleDesktopTab();
   } else if (cleanId === 'tab-user-assistant' && typeof window.initUserAssistantTab === 'function') {
     console.log('[AdminInterface] Switching to user assistant tab...');
     window.initUserAssistantTab();
@@ -421,16 +406,8 @@ function onTabSwitched(targetId) {
 // Programmatic tab switcher
 function switchTab(targetId) {
   if (!targetId) return;
-  let cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
-  if (cleanId === 'observability' || cleanId === 'tab-observability' || cleanId === 'system_inspector' || cleanId === 'tab-system-inspector' || cleanId === 'tab-system-load-inspector') {
-    cleanId = 'tab-hardware-load-inspector';
-  }
-  const tabDef = TabRegistry.getById(cleanId);
-  if (!tabDef) {
-    console.warn(`[AdminInterface] Tab definition not found for ${cleanId}`);
-    return;
-  }
-  const tabId = tabDef.tabId || `tab-${tabDef.id}`;
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
 
   // 1. Update active state on dropdown items & toggles
   document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
@@ -473,7 +450,7 @@ function switchTab(targetId) {
   }
 
   // 3. Notify lifecycle callback
-
+  onTabSwitched(tabId);
 }
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
@@ -593,6 +570,7 @@ async function initInterface() {
   // Initialize User Settings & Google OAuth
   await initUserSettings();
 
+  
   // Initialize HELP content
   initHelpContent();
   
@@ -632,29 +610,48 @@ async function initInterface() {
     loadTabContent('sources', `/html/sources_tab/index.html?v=${cb}`, `/html/sources_tab/main.js?v=${cb}`),
     loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
     loadTabContent('mcp', `/html/mcp_tab/index.html?v=${cb}`, `/html/mcp_tab/main.js?v=${cb}`),
+    loadTabContent('observability', `/html/system_inspector_tab/index.html?v=${cb}`, `/html/system_inspector_tab/main.js?v=${cb}`),
     loadTabContent('news', `/html/news_tab/index.html?v=${cb}`, `/html/news_tab/main.js?v=${cb}`),
     loadTabContent('logs', `/html/logs/index.html?v=${cb}`, `/html/logs/main.js?v=${cb}`),
-    loadTabContent('helpi18n.t('auto__html_help_index_html_v_cb_html_help_main_js_v_cb_apps_const_apptabdefs_id__b8fc43')about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260926_v2', js: '/html/about_system_tab/main.js?v=20260926_v2' },
+    loadTabContent('help', `/html/help/index.html?v=${cb}`, `/html/help/main.js?v=${cb}`),
+  ];
+
+  // Определение и фильтрация вкладок микроприложений (/apps)
+  const appTabDefs = [
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261006_v3', js: '/html/about_system_tab/main.js?v=20261006_v3' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20260926_v2', js: '/html/system_inspector_tab/main.js?v=20260926_v2' },
+    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v7', js: '/html/system_inspector_tab/main.js?v=20261006_v7' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },
     { id: 'gcloud_monitor', tab: 'gcloud', html: '/html/gcloud_tab/index.html', js: '/html/gcloud_tab/main.js' },
     { id: 'website_monitor', tab: 'website-monitor', html: '/html/website_monitor_tab/index.html', js: '/html/website_monitor_tab/main.js' },
     { id: 'cloudflared_monitor', tab: 'cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
-    { id: 'google_user_desktop', tab: 'google-desktop', html: '/html/google_desktop_tab/index.html?v=20260928_v1', js: '/html/google_desktop_tab/main.js?v=20260928_v1' },
     { id: 'process_leaks', tab: 'process-leaks', html: '/html/process_leaks_tab/index.html?v=20260924_v1', js: '/html/process_leaks_tab/main.js?v=20260924_v1' },
     { id: 'forensics', tab: 'forensics', html: '/html/forensics_tab/index.html?v=20260924_v1', js: '/html/forensics_tab/main.js?v=20260924_v1' },
     { id: 'throttling', tab: 'throttling', html: '/html/throttling_tab/index.html?v=20260924_v1', js: '/html/throttling_tab/main.js?v=20260924_v1' },
     { id: 'storage_wear', tab: 'storage-wear', html: '/html/storage_wear_tab/index.html?v=20260924_v1', js: '/html/storage_wear_tab/main.js?v=20260924_v1' },
-    { id: 'peripherals', tab: 'peripherals', html: '/html/peripherals_tab/index.html?v=20260924_v1', js: '/html/peripherals_tab/main.js?v=20260924_v1i18n.t('auto__const_apptabloads_apptabdefs_filter_def_const_appinfo_appsmap_def_id_object_values_appsmap_find_a_a_tab_tab_def_tab_a_id_def_id_a_folder_def_id_return_appinfo_appinfo_enabled_true_map_def_loadtabcontent_def_tab_def_html_v_cb_def_js_v_cb_await_promise_all_coretabloads_apptabloads_try_const_pluginsdata_await_window_api_fetch__11b70f')/api/admin/plugins');
+    { id: 'peripherals', tab: 'peripherals', html: '/html/peripherals_tab/index.html?v=20260924_v1', js: '/html/peripherals_tab/main.js?v=20260924_v1' },
+  ];
+
+  const appTabLoads = appTabDefs
+    .filter(def => {
+      const appInfo = appsMap[def.id] || Object.values(appsMap).find(a => a.tab === `tab-${def.tab}` || a.id === def.id || a.folder === def.id);
+      return appInfo ? appInfo.enabled : true;
+    })
+    .map(def => loadTabContent(def.tab, `${def.html}?v=${cb}`, `${def.js}?v=${cb}`));
+
+  await Promise.all([...coreTabLoads, ...appTabLoads]);
+  
+  // Синхронизация видимости вкладок плагинов
+  try {
+    const pluginsData = await window.api.fetch('/api/admin/plugins');
     if (window.syncPluginTabsVisibility && pluginsData && pluginsData.plugins) {
       window.syncPluginTabsVisibility(pluginsData.plugins);
     }
   } catch (err) {
-    console.error(i18n.t('auto___88116c'), err);
+    console.error('Ошибка синхронизации видимости плагинов:', err);
   }
   
   setupDropdownTabs();
@@ -762,7 +759,7 @@ async function verifyPassword() {
   } catch {
     passwordError?.classList.remove('d-none');
     if (passwordError) {
-      passwordError.textContent = i18n.t('auto___e97cb7');
+      passwordError.textContent = 'Неверный пароль';
     }
     if (passwordInput) {
       passwordInput.value = '';
@@ -825,14 +822,42 @@ async function loadTabContent(tabName, url, jsOverrideSrc) {
 function initHelpContent() {
   window.HELP_CONTENT = window.HELP_CONTENT || {};
   const defaults = {
-    'overviewi18n.t('auto__h4_h4_p_ai_breadboard_ai_rag_p__da1ad2')google_oauthi18n.t('auto__h4_google_oauth_h4_p_gmail_drive_sheets_docs_oauth_2_0_service_accounts_p__7943c8')ai_modelsi18n.t('auto__h4_h4_p_gemini_openai_groq_ollama_foundry_directml_p__e73c40')gdrive_synci18n.t('auto__h4_google_drive_sync_h4_p_google_drive_p__0650aa')rag_knowledgei18n.t('auto__h4_rag_h4_p_pdf_word_txt_csv_json_p__44bba4')ragi18n.t('auto__h4_rag_h4_p_strong_1_rag_strong_p_p_strong_2_strong_code_json_code_code_txt_code_code_md_code_code_pdf_code_rag_p_p_strong_3_rag_strong_p__0834f8')voice_ttsi18n.t('auto__h4_h4_p_whisper_webspeech_edge_tts_p__632d68')plugins_skillsi18n.t('auto__h4_mcp_h4_p_telegram_ifttt_mcp_p__d059a6')storage_disksi18n.t('auto__h4_h4_p_p__754fb0')troubleshootingi18n.t('auto__h4_faq_h4_p_p_window_help_content_object_assign_defaults_window_help_content_function_showhelpmodal_key_const_content_window_help_content_key__f2006b')<p>Информация не найдена</p>';
+    'overview': `<h4>🚀 Обзор проекта</h4><p>ai-breadboard — интегрированная среда для работы с AI, RAG и системным управлением.</p>`,
+    'google_oauth': `<h4>🔑 Google OAuth и аккаунты</h4><p>Интеграция с Gmail, Drive, Sheets и Docs через OAuth 2.0 и Service Accounts.</p>`,
+    'ai_models': `<h4>🤖 ИИ Провайдеры и Модели</h4><p>Облачные (Gemini, OpenAI, Groq) и локальные (Ollama, Foundry, DirectML) модели.</p>`,
+    'gdrive_sync': `<h4>☁️ Google Drive Sync</h4><p>Автоматическая синхронизация баз данных и файлов с Google Drive.</p>`,
+    'rag_knowledge': `<h4>📚 База знаний и RAG</h4><p>Загрузка и поиск по вашим документам (PDF, Word, TXT, CSV, JSON).</p>`,
+    'rag': `<h4>🧠 RAG-индекс (Векторный поиск)</h4>
+<p><strong>1. База RAG:</strong> Индексирует системные базы знаний, системные инструкции и документы.</p>
+<p><strong>2. Загрузка документов:</strong> Позволяет загрузить внешние <code>.json</code>, <code>.txt</code>, <code>.md</code>, <code>.pdf</code> файлы или сканировать директории напрямую в RAG-индекс.</p>
+<p><strong>3. Чат-RAG:</strong> Индексирует историю сохраненных диалогов и ответов ассистента.</p>`,
+    'voice_tts': `<h4>🎙️ Голос и Озвучка</h4><p>Голосовой ввод (Whisper/WebSpeech) и синтез речи (Edge TTS).</p>`,
+    'plugins_skills': `<h4>🔌 Плагины, Навыки и MCP</h4><p>Telegram-бот, IFTTT, распознавание счетов и расширение через MCP.</p>`,
+    'storage_disks': `<h4>💾 Диски и Хранилище</h4><p>Сканирование накопителей, проверка целостности и консолидация дублей.</p>`,
+    'troubleshooting': `<h4>❓ Решение проблем (FAQ)</h4><p>Ответы на частые вопросы и устранение ошибок подключения.</p>`
+  };
+  window.HELP_CONTENT = Object.assign(defaults, window.HELP_CONTENT);
+}
+
+function showHelpModal(key) {
+  const content = window.HELP_CONTENT[key] || '<p>Информация не найдена</p>';
   document.getElementById('help-modal-content').innerHTML = content;
   const modal = new bootstrap.Modal(document.getElementById('help-modal'));
   modal.show();
 }
 
 function showChatLogicModal() {
-  const modalEl = document.getElementById('chat-logic-modali18n.t('auto__if_modalel_const_modal_new_bootstrap_modal_modalel_modal_show_window_showchatlogicmodal_showchatlogicmodal_window_showhelpmodal_showhelpmodal_function_shownotification_message_type__6167d9')info') {
+  const modalEl = document.getElementById('chat-logic-modal');
+  if (modalEl) {
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+}
+window.showChatLogicModal = showChatLogicModal;
+window.showHelpModal = showHelpModal;
+
+// Уведомления
+function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
   notification.style.zIndex = '9999';
@@ -847,14 +872,29 @@ function showChatLogicModal() {
 
 async function initAdminTab() {
   const modelSelect = document.getElementById('admin-model-select');
-  const saveBtn = document.getElementById('btn-admin-save-modeli18n.t('auto__if_modelselect_savebtn_return_1_modelselect_innerhtml__f4f9a5')i18n.t('auto__let_modelsgrouped_2_try_const_modelsdata_await_window_api_fetch__214a7c')/api/chat/models');
+  const saveBtn = document.getElementById('btn-admin-save-model');
+  
+  if (!modelSelect || !saveBtn) return;
+  
+  // 1. Очищаем селект
+  modelSelect.innerHTML = '';
+  
+  let modelsGrouped = {};
+  // 2. Загружаем доступные модели
+  try {
+    const modelsData = await window.api.fetch('/api/chat/models');
     modelsGrouped = modelsData.models || {};
     if (Array.isArray(modelsGrouped)) {
       modelsGrouped = { 'gemini': modelsGrouped };
     }
   } catch (err) {
-    console.error(i18n.t('auto___688de2'), err);
-    showNotification(i18n.t('auto__ai__ca8a13') + err.message, 'dangeri18n.t('auto__3_optgroup_const_providermeta__530638')gemini': { label: '✨ Google Gemini', order: 1 },
+    console.error('Ошибка загрузки моделей:', err);
+    showNotification('Ошибка загрузки моделей AI: ' + err.message, 'danger');
+  }
+  
+  // 3. Заполняем селект моделями с иерархией optgroup
+  const providerMeta = {
+    'gemini': { label: '✨ Google Gemini', order: 1 },
     'agy': { label: '🚀 Google Antigravity (AGY)', order: 2 },
     'foundry': { label: '⚙️ Microsoft Foundry', order: 3 },
     'ollama': { label: '🦙 Ollama (Local)', order: 4 },
@@ -889,7 +929,7 @@ async function initAdminTab() {
   if (totalModels === 0) {
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = i18n.t('auto___ec1bc6');
+    option.textContent = 'Нет доступных моделей';
     modelSelect.appendChild(option);
     saveBtn.disabled = true;
   } else {
@@ -907,7 +947,7 @@ async function initAdminTab() {
       window.updateChatBadges(savedModel);
     }
   } catch (err) {
-    console.error(i18n.t('auto__ai__450d9e'), err);
+    console.error('Ошибка загрузки настроек AI пользователя:', err);
   }
   
   // 5. Навешиваем обработчик сохранения
@@ -915,7 +955,7 @@ async function initAdminTab() {
     const selectedModel = modelSelect.value;
     saveBtn.disabled = true;
     const originalText = saveBtn.textContent;
-    saveBtn.textContent = i18n.t('auto___a91a7e');
+    saveBtn.textContent = 'Сохранение...';
     
     try {
       await window.api.fetch('/auth/settings', {
@@ -923,7 +963,11 @@ async function initAdminTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: selectedModel })
       });
-      showNotification(i18n.t('auto___4d96e2') + selectedModel, 'successi18n.t('auto__window_activemodelname_selectedmodel_if_typeof_window_updatechatbadges__e7fd87')function') {
+      showNotification('Модель успешно обновлена на: ' + selectedModel, 'success');
+      
+      // Обновляем бейджи модели в реальном времени на странице
+      window.activeModelName = selectedModel;
+      if (typeof window.updateChatBadges === 'function') {
         window.updateChatBadges(selectedModel);
       } else {
         const badges = document.querySelectorAll('#chat-model-badge, #chat-popup-model-badge');
@@ -933,8 +977,8 @@ async function initAdminTab() {
         });
       }
     } catch (err) {
-      console.error(i18n.t('auto___a9a82f'), err);
-      showNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
+      console.error('Ошибка сохранения модели:', err);
+      showNotification('Ошибка сохранения: ' + err.message, 'danger');
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = originalText;

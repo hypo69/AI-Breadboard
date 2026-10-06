@@ -17,23 +17,17 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 06:35:00
- * =============================================================================
- */
-
-/**
- * apps/modules/tabs-config.js — Реестр определений вкладок для интерфейса /apps
- * Updated: 2026-10-06 06:35:00
+ * Updated: 2026-10-06 10:55:00
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261006_v5', js: '/html/about_system_tab/main.js?v=20261006_v5' },
-  { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261006_v13', js: '/html/about_system_tab/main.js?v=20261006_v13' },
+  { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20261006_v8', js: '/html/scenarios_tab/main.js?v=20261006_v8' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-  { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v3', js: '/html/system_inspector_tab/main.js?v=20261006_v3' },
+  { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v7', js: '/html/system_inspector_tab/main.js?v=20261006_v7' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
-  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261006_v2', js: '/html/system_control_tab/main.js?v=20261006_v2' },
+  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261006_v12', js: '/html/system_control_tab/main.js?v=20261006_v12' },
   { id: 'post_install_wizard', tab: 'post-install-wizard', tabId: 'tab-post-install-wizard', html: '/html/post_install_wizard_tab/index.html?v=20261006_v1', js: '/html/post_install_wizard_tab/main.js?v=20261006_v1' },
   { id: 'maintenance_recovery', tab: 'maintenance-recovery', tabId: 'tab-maintenance-recovery', html: '/html/maintenance_recovery_tab/index.html?v=20261006_v1', js: '/html/maintenance_recovery_tab/main.js?v=20261006_v1' },
   { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
@@ -78,7 +72,7 @@ export const APP_TAB_DEFS = [
   { id: 'disk_speed', tab: 'disk-speed', tabId: 'tab-disk-speed', html: '/html/disk_speed_tab/index.html?v=20261004_v1', js: '/html/disk_speed_tab/main.js?v=20261004_v1' },
   { id: 'boot_recovery', tab: 'boot-recovery', tabId: 'tab-boot-recovery', html: '/html/boot_recovery_tab/index.html?v=20261001_v1', js: '/html/boot_recovery_tab/main.js?v=20261001_v1' },
   { id: 'servicing_integrity', tab: 'servicing-integrity', tabId: 'tab-servicing-integrity', html: '/html/servicing_integrity_tab/index.html?v=20261001_v1', js: '/html/servicing_integrity_tab/main.js?v=20261001_v1' },
-  { id: 'services_manager', tab: 'services-manager', tabId: 'tab-services-manager', html: '/html/services_manager_tab/index.html?v=20261001_v1', js: '/html/services_manager_tab/main.js?v=20261001_v1' },
+  { id: 'services_manager', tab: 'services-manager', tabId: 'tab-services-manager', html: '/html/services_manager_tab/index.html?v=20261006_v1', js: '/html/services_manager_tab/main.js?v=20261006_v1' },
   { id: 'task_scheduler', tab: 'task-scheduler', tabId: 'tab-task-scheduler', html: '/html/task_scheduler_tab/index.html?v=20261001_v1', js: '/html/task_scheduler_tab/main.js?v=20261001_v1' },
   { id: 'process_manager', tab: 'process-manager', tabId: 'tab-process-manager', html: '/html/process_manager_tab/index.html?v=20261004_v2', js: '/html/process_manager_tab/main.js?v=20261004_v2' },
   { id: 'firewall_manager', tab: 'firewall-manager', tabId: 'tab-firewall-manager', html: '/html/firewall_manager_tab/index.html?v=20261001_v1', js: '/html/firewall_manager_tab/main.js?v=20261001_v1' },
