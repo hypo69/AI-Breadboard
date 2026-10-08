@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/defender_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 14:10:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -418,6 +418,7 @@
     let attempts = 0;
 
     activeTaskPollers[taskId] = setInterval(async () => {
+      if (window.isTabActive && !window.isTabActive('tab-defender')) return;
       attempts++;
       try {
         const task = await fetchJSON(`/api/v1/defender/tasks/${taskId}`);
@@ -555,7 +556,9 @@
   window.initDefenderTab = async function() {
     console.log('[DefenderTab] Initializing Defender Security Center Tab...');
     setupActions();
-    await refreshAll();
+    if (window.isTabActive ? window.isTabActive('tab-defender') : false) {
+      await refreshAll();
+    }
   };
 
   window.activateDefenderTab = async function() {

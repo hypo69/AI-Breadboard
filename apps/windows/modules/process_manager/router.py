@@ -3,24 +3,25 @@
 # Process Name: AI-Breadboard Apps Windows Modules Process_Manager - Router
 # =============================================================================
 # Description:
-#   # Description:
+#   FastAPI роутер управления процессами Windows, категоризации (Apps,
+#   Background processes, Windows processes) и завершения процессов (taskkill).
 #
 # Usage Examples:
 #   Python API:
 #     from apps.windows.modules.process_manager.router import init_router
 #
-#     res = init_router()
+#     router = init_router()
 #
 # File: router.py
 # Project: ai-breadboard
 # Package: apps.windows.modules.process_manager
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 17:43:00
+# Updated: 2026-10-08 02:08:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""FastAPI роутер управления и категоризации процессов Windows."""
 
 import asyncio
 from typing import Any, Dict, List, Optional
@@ -29,6 +30,7 @@ from logger import logger
 from apps.windows.telemetry.sqlite import TelemetryStorage
 from apps.windows.modules.process_manager.core.manager import ProcessManager
 from apps.windows.modules.process_manager.core.models import (
+    CategorizedProcessReport,
     ProcessItem,
     ProcessKillRequest,
     ProcessReport,
@@ -41,8 +43,14 @@ _manager = ProcessManager()
 @router.get('/summary', response_model=ProcessReport)
 @router.get('/report', response_model=ProcessReport)
 async def get_processes_report() -> ProcessReport:
-    """Сводный отчет о процессах, нагрузке на CPU и памяти."""
+    """Сводный отчет о процессах хоста с агрегатами и структурой категорий."""
     return await asyncio.to_thread(_manager.generate_report)
+
+
+@router.get('/categorized', response_model=CategorizedProcessReport)
+async def get_categorized_processes() -> CategorizedProcessReport:
+    """Детальный отчет о процессах, разделенный на Apps, Background и Windows."""
+    return await asyncio.to_thread(_manager.generate_categorized_report)
 
 
 @router.get('/list', response_model=List[ProcessItem])
@@ -51,7 +59,7 @@ async def list_processes(
     sort_by: str = Query('cpu_percent', description='Поле сортировки: cpu_percent, memory_mb, name, pid'),
     limit: int = Query(0, description='Лимит возвращаемых процессов (0 = все)')
 ) -> List[ProcessItem]:
-    """Список всех активных процессов из SQLite (< 5 мс)."""
+    """Список всех активных процессов из SQLite (< 5 мс) или через psutil."""
     try:
         storage = TelemetryStorage.get_instance(read_only=True)
         raw_list = storage.get_latest_processes(limit=limit, sort_by=sort_by)

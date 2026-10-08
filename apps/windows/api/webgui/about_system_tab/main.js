@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 18:34:00
+ * Updated: 2026-10-08 02:56:00
  * =============================================================================
  */
 
@@ -320,26 +320,35 @@
       };
     }
 
-    const btnExpandAll = document.getElementById('btn-about-sys-expand-all');
-    if (btnExpandAll) {
-      btnExpandAll.onclick = () => {
-        document.querySelectorAll('.about-sys-tree-body').forEach(b => b.classList.remove('d-none'));
-        document.querySelectorAll('.about-sys-chevron').forEach(c => c.textContent = '▲');
-      };
-    }
+    const btnTreeToggle = document.getElementById('btn-about-sys-tree-toggle');
+    if (btnTreeToggle) {
+      btnTreeToggle.onclick = () => {
+        const bodies = document.querySelectorAll('.about-sys-tree-body');
+        const chevrons = document.querySelectorAll('.about-sys-chevron');
+        if (!bodies.length) return;
 
-    const btnCollapseAll = document.getElementById('btn-about-sys-collapse-all');
-    if (btnCollapseAll) {
-      btnCollapseAll.onclick = () => {
-        document.querySelectorAll('.about-sys-tree-body').forEach(b => b.classList.add('d-none'));
-        document.querySelectorAll('.about-sys-chevron').forEach(c => c.textContent = '▼');
+        // Если хотя бы один узел свернут — разворачиваем ВСЕ
+        const hasHidden = Array.from(bodies).some(b => b.classList.contains('d-none'));
+
+        if (hasHidden) {
+          bodies.forEach(b => b.classList.remove('d-none'));
+          chevrons.forEach(c => c.textContent = '▲');
+          btnTreeToggle.classList.remove('collapsed');
+          btnTreeToggle.title = 'Свернуть все категории';
+        } else {
+          bodies.forEach(b => b.classList.add('d-none'));
+          chevrons.forEach(c => c.textContent = '▼');
+          btnTreeToggle.classList.add('collapsed');
+          btnTreeToggle.title = 'Развернуть все категории';
+        }
       };
     }
 
     const treeSearch = document.getElementById('about-sys-search');
     if (treeSearch) {
       treeSearch.oninput = () => {
-        renderHardwareTree(hardwareData, treeSearch.value.trim().toLowerCase());
+        const query = treeSearch.value.trim().toLowerCase();
+        renderHardwareTree(hardwareData, query);
       };
     }
 
@@ -359,10 +368,23 @@
     if (wearAutoSwitch) {
       wearAutoSwitch.onchange = (e) => {
         if (e.target.checked) {
-          wearAutoRefreshTimer = setInterval(() => fetchStorageBatteryWear(true), 10000);
-        } else if (wearAutoRefreshTimer) {
-          clearInterval(wearAutoRefreshTimer);
-          wearAutoRefreshTimer = null;
+          if (window.registerTabPoller) {
+            window.registerTabPoller('tab-about-system', () => fetchStorageBatteryWear(true), 10000, { pollerId: 'about_sys_wear', immediate: true });
+          } else {
+            wearAutoRefreshTimer = setInterval(() => {
+              if (window.isTabActive ? window.isTabActive('tab-about-system') : true) {
+                fetchStorageBatteryWear(true);
+              }
+            }, 10000);
+          }
+        } else {
+          if (window.unregisterTabPoller) {
+            window.unregisterTabPoller('about_sys_wear');
+          }
+          if (wearAutoRefreshTimer) {
+            clearInterval(wearAutoRefreshTimer);
+            wearAutoRefreshTimer = null;
+          }
         }
       };
     }
@@ -2158,58 +2180,74 @@
     container.innerHTML = filtered.map((node, idx) => {
       const propsEntries = Object.entries(node.properties || {});
       const propsHtml = propsEntries.length > 0
-        ? propsEntries.map(([k, v]) => {
-            const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
-            let valStr = '';
-            if (Array.isArray(v)) {
-              valStr = v.map(item => (typeof item === 'object' && item !== null) ? (item.name || item.model || item.device || item.bank_label || JSON.stringify(item)) : String(item)).filter(Boolean).join(', ') || 'N/A';
-            } else if (typeof v === 'object' && v !== null) {
-              valStr = Object.entries(v).map(([subK, subV]) => `${subK}: ${subV}`).join(', ') || 'N/A';
-            } else {
-              valStr = String(v ?? '');
-            }
-            let valHtml = escapeHtml(valStr);
+        ? `<div class="table-responsive">
+            <table class="about-sys-spec-table table-sm mb-0 align-middle">
+              <tbody>
+                ${propsEntries.map(([k, v]) => {
+                  const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
+                  let valStr = '';
+                  if (Array.isArray(v)) {
+                    valStr = v.map(item => (typeof item === 'object' && item !== null) ? (item.name || item.model || item.device || item.bank_label || JSON.stringify(item)) : String(item)).filter(Boolean).join(', ') || 'N/A';
+                  } else if (typeof v === 'object' && v !== null) {
+                    valStr = Object.entries(v).map(([subK, subV]) => `${subK}: ${subV}`).join(', ') || 'N/A';
+                  } else {
+                    valStr = String(v ?? '');
+                  }
+                  let valHtml = escapeHtml(valStr);
 
-            // Специфичное выделение частот и статусов совместимости памяти RAM
-            if (cleanKey.includes('Номинальная частота')) {
-              valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
-            } else if (cleanKey.includes('Текущая рабочая частота')) {
-              const isWarning = valStr.includes('⚠️') || valStr.includes('занижена');
-              if (isWarning) {
-                valHtml = `<span class="badge border border-warning-subtle fw-bold px-2 py-0.5" style="color: #facc15; background: rgba(234, 179, 8, 0.18);"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr)}</span>`;
-              } else if (valStr && valStr !== 'N/A') {
-                valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);">${escapeHtml(valStr)}</span>`;
-              }
-            } else if (valStr.includes('⚠️') || valStr.includes('Потенциал не раскрыт') || valStr.includes('Узкое место')) {
-              valHtml = `<span class="badge border border-warning-subtle fw-semibold px-2 py-0.5 text-wrap" style="color: #facc15; background: rgba(234, 179, 8, 0.18); text-align: start;"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr.replace(/^⚠️\s*/, ''))}</span>`;
-            } else if (valStr.includes('✅') || valStr.includes('Оптимально')) {
-              valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);"><i class="bi bi-check-circle-fill me-1"></i>${escapeHtml(valStr.replace(/^✅\s*/, ''))}</span>`;
-            } else if (cleanKey.includes('Эффективность планки')) {
-              valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
-            }
+                  // Специфичное выделение частот и статусов совместимости памяти RAM
+                  if (cleanKey.includes('Номинальная частота')) {
+                    valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
+                  } else if (cleanKey.includes('Текущая рабочая частота')) {
+                    const isWarning = valStr.includes('⚠️') || valStr.includes('занижена');
+                    if (isWarning) {
+                      valHtml = `<span class="badge border border-warning-subtle fw-bold px-2 py-0.5" style="color: #facc15; background: rgba(234, 179, 8, 0.18);"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr)}</span>`;
+                    } else if (valStr && valStr !== 'N/A') {
+                      valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);">${escapeHtml(valStr)}</span>`;
+                    }
+                  } else if (valStr.includes('⚠️') || valStr.includes('Потенциал не раскрыт') || valStr.includes('Узкое место')) {
+                    valHtml = `<span class="badge border border-warning-subtle fw-semibold px-2 py-0.5 text-wrap" style="color: #facc15; background: rgba(234, 179, 8, 0.18); text-align: start;"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(valStr.replace(/^⚠️\s*/, ''))}</span>`;
+                  } else if (valStr.includes('✅') || valStr.includes('Оптимально')) {
+                    valHtml = `<span class="badge border border-success-subtle fw-semibold px-2 py-0.5" style="color: #4ade80; background: rgba(34, 197, 94, 0.14);"><i class="bi bi-check-circle-fill me-1"></i>${escapeHtml(valStr.replace(/^✅\s*/, ''))}</span>`;
+                  } else if (cleanKey.includes('Эффективность планки')) {
+                    valHtml = `<span class="badge border border-info-subtle fw-semibold px-2 py-0.5" style="color: #38bdf8; background: rgba(56, 189, 248, 0.14);">${escapeHtml(valStr)}</span>`;
+                  }
 
-            return `
-            <div class="about-sys-prop-row">
-              <span class="about-sys-prop-key">${cleanKey}</span>
-              <span class="about-sys-prop-val">${valHtml}</span>
-            </div>
-          `;
-          }).join('')
-        : '<div class="text-muted small py-1">Свойства не указаны</div>';
+                  return `
+                    <tr>
+                      <td class="about-sys-spec-key" style="width: 32%; min-width: 200px; max-width: 340px;">
+                        ${cleanKey}
+                      </td>
+                      <td class="about-sys-spec-val font-monospace">
+                        ${valHtml}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`
+        : '<div class="text-muted small py-2 px-3">Свойства не указаны</div>';
 
       const iconClass = getNodeIcon(node.category);
+      const isSearchActive = Boolean(filter);
+      const bodyClass = isSearchActive ? 'about-sys-tree-body' : 'about-sys-tree-body d-none';
+      const chevronChar = isSearchActive ? '▲' : '▼';
 
       return `
         <div class="about-sys-tree-node">
           <div class="about-sys-tree-title" onclick="toggleNode(${idx})">
-            <span class="d-flex align-items-center gap-2">
-              <i class="${iconClass} text-info"></i>
-              <strong>${escapeHtml(node.category)}:</strong>
-              <span class="text-white">${escapeHtml(node.name || '')}</span>
+            <span class="d-flex align-items-center gap-2 text-truncate me-2">
+              <i class="${iconClass} text-info fs-6"></i>
+              <strong style="color: var(--text-color);">${escapeHtml(node.category)}:</strong>
+              <span style="color: var(--text-color); font-weight: 500;">${escapeHtml(node.name || '')}</span>
             </span>
-            <span class="about-sys-chevron" id="about-chevron-${idx}" style="font-size: 0.72rem; color: #38bdf8;">▼</span>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
+              <span class="badge bg-secondary-subtle text-body-secondary border px-2 py-0.5 font-monospace" style="font-size: 0.7rem;">${propsEntries.length} параметров</span>
+              <span class="about-sys-chevron" id="about-chevron-${idx}">${chevronChar}</span>
+            </div>
           </div>
-          <div class="about-sys-tree-body" id="about-node-body-${idx}">
+          <div class="${bodyClass}" id="about-node-body-${idx}">
             ${propsHtml}
           </div>
         </div>
@@ -2224,6 +2262,18 @@
       body.classList.toggle('d-none');
       if (chevron) {
         chevron.textContent = body.classList.contains('d-none') ? '▼' : '▲';
+      }
+      const btnTreeToggle = document.getElementById('btn-about-sys-tree-toggle');
+      if (btnTreeToggle) {
+        const allBodies = document.querySelectorAll('.about-sys-tree-body');
+        const hasHidden = Array.from(allBodies).some(b => b.classList.contains('d-none'));
+        if (hasHidden) {
+          btnTreeToggle.classList.add('collapsed');
+          btnTreeToggle.title = 'Развернуть все категории';
+        } else {
+          btnTreeToggle.classList.remove('collapsed');
+          btnTreeToggle.title = 'Свернуть все категории';
+        }
       }
     }
   };

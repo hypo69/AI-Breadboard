@@ -18,7 +18,7 @@
 # Package: apps.windows.modules.defender
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -26,9 +26,9 @@ from __future__ import annotations
 
 import argparse
 import sys
-from apps.windows.defender.core.defender_service import DefenderService
-from apps.windows.defender.core.models import ScanRequest, ScanType
-from apps.windows.defender.tui import DefenderTUI
+from apps.windows.modules.defender.core.defender_service import DefenderService
+from apps.windows.modules.defender.core.models import ScanRequest, ScanType
+from apps.windows.modules.defender.tui import DefenderTUI
 
 def main() -> None:
     """Основная функция запуска CLI/TUI Windows Defender."""
@@ -60,7 +60,7 @@ def main() -> None:
     if args.server:
         import uvicorn
         from fastapi import FastAPI
-        from apps.windows.defender.router import init_router
+        from apps.windows.modules.defender.router import init_router
         app = FastAPI(title='Windows Defender Security API', version='1.0.0')
         app.include_router(init_router())
         print(f'Запуск сервера Windows Defender API на http://{args.host}:{args.port} ...')

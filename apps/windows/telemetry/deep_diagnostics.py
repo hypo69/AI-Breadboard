@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:47:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 """Модуль глубокой аппаратной и системной диагностики, поведенческой форензики и анализа утечек.
@@ -669,7 +669,7 @@ class DeepDiagnosticsEngine:
         """Собрать сводку телеметрии Windows Defender (CFA, ASR, исключения, угрозы)."""
         summary = DefenderTelemetrySummary()
         try:
-            from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
+            from apps.windows.modules.defender.core.cfa_manager import ControlledFolderAccessManager
             cfa_mgr = ControlledFolderAccessManager()
             cfa_info = cfa_mgr.get_cfa_status()
             summary.cfa_enabled = bool(cfa_info.enabled)
@@ -678,29 +678,29 @@ class DeepDiagnosticsEngine:
         except Exception as ex:
             logger.debug(f'Ошибка сбора статуса CFA Defender: {ex}')
         try:
-            from apps.windows.defender.core.asr_manager import AttackSurfaceReductionManager
-            asr_mgr = AttackSurfaceReductionManager()
-            rules = asr_mgr.get_all_rules_status()
+            from apps.windows.modules.defender.core.asr_manager import ASRManager
+            asr_mgr = ASRManager()
+            rules = asr_mgr.get_asr_rules()
             summary.asr_rules_count = len(rules)
             summary.asr_enabled_count = len([r for r in rules if getattr(r, 'state', None) and str(r.state).lower() in ('enabled', 'block', 'audit', 'warn')])
         except Exception as ex:
             logger.debug(f'Ошибка сбора правил ASR Defender: {ex}')
         try:
-            from apps.windows.defender.core.exclusions_auditor import DefenderExclusionsAuditor
-            excl_auditor = DefenderExclusionsAuditor()
-            excl = excl_auditor.audit_all_exclusions()
-            paths = getattr(excl, 'paths', []) or []
-            processes = getattr(excl, 'processes', []) or []
-            summary.path_exclusions = [str(p) for p in paths]
-            summary.process_exclusions = [str(p) for p in processes]
+            from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+            excl_auditor = ExclusionsAuditor()
+            excl = excl_auditor.audit_exclusions()
+            paths = getattr(excl, 'path_exclusions', []) or []
+            processes = getattr(excl, 'process_exclusions', []) or []
+            summary.path_exclusions = [str(p.value if hasattr(p, 'value') else p) for p in paths]
+            summary.process_exclusions = [str(p.value if hasattr(p, 'value') else p) for p in processes]
             summary.exclusions_count = len(summary.path_exclusions) + len(summary.process_exclusions)
         except Exception as ex:
             logger.debug(f'Ошибка сбора исключений Defender: {ex}')
         try:
-            from apps.windows.defender.core.threat_manager import ThreatManager
+            from apps.windows.modules.defender.core.threat_manager import ThreatManager
             threat_mgr = ThreatManager()
-            active_threats = threat_mgr.get_active_threats()
-            threat_history = threat_mgr.get_threat_history(limit=50)
+            threat_history = threat_mgr.get_threats_history(limit=50)
+            active_threats = [t for t in threat_history if str(getattr(t, 'status', '')).lower() == 'active']
             summary.active_threats_count = len(active_threats)
             summary.threat_history_count = len(threat_history)
         except Exception as ex:

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/storage_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -143,7 +143,9 @@ function stopPolling() {
 function applyPoller(freq, runInitial = false) {
   stopPolling();
   if (freq === 'start' || freq === 'manual') {
-    if (runInitial) fetchStorageSummary();
+    if (runInitial && (window.isTabActive ? window.isTabActive('tab-storage-manager') : true)) {
+      fetchStorageSummary();
+    }
     return;
   }
 
@@ -156,7 +158,9 @@ function applyPoller(freq, runInitial = false) {
   if (window.registerTabPoller) {
     window.registerTabPoller('tab-storage-manager', fetchStorageSummary, intervalMs, { pollerId, immediate: runInitial });
   } else {
-    if (runInitial) fetchStorageSummary();
+    if (runInitial && (window.isTabActive ? window.isTabActive('tab-storage-manager') : true)) {
+      fetchStorageSummary();
+    }
     timerId = setInterval(() => {
       if (window.isTabActive ? window.isTabActive('tab-storage-manager') : true) {
         fetchStorageSummary();
@@ -196,10 +200,15 @@ export function initStorageManagerTab() {
         window.showToast(`Частота опроса хранилища: ${label}`, 'info');
       }
     };
-    applyPoller(currentFreq, true);
+    applyPoller(currentFreq, window.isTabActive ? window.isTabActive('tab-storage-manager') : true);
   } else {
-    applyPoller(getFrequency(), true);
+    applyPoller(getFrequency(), window.isTabActive ? window.isTabActive('tab-storage-manager') : true);
   }
 }
 
+export function activateStorageManagerTab() {
+  applyPoller(getFrequency(), true);
+}
+
 window.initStorageManagerTab = initStorageManagerTab;
+window.activateStorageManagerTab = activateStorageManagerTab;

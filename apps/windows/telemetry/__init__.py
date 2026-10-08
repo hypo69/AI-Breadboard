@@ -13,7 +13,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 00:20:00
+# Updated: 2026-10-08 02:15:00
 # =============================================================================
 
 """Exports core system metrics models, sensor probers, and telemetry collectors."""
@@ -96,6 +96,16 @@ from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyze
 from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
 from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
 from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
+from .security_collector import WindowsSecurityCollector
+from .security_normalizer import SecurityEventNormalizer
+from .models import (
+    SecurityAuditStatus,
+    SecurityBookmarkState,
+    SecurityCollectorReport,
+    SecurityCorrelationItem,
+    SecurityEventItem,
+    SecurityEventRaw,
+)
 
 
 
@@ -167,6 +177,14 @@ __all__ = [
     "W64CollectorStatus",
     "W64SystemEvent",
     "ETWTraceEvent",
+    "WindowsSecurityCollector",
+    "SecurityEventNormalizer",
+    "SecurityEventItem",
+    "SecurityEventRaw",
+    "SecurityBookmarkState",
+    "SecurityAuditStatus",
+    "SecurityCollectorReport",
+    "SecurityCorrelationItem",
     "init_telemetry_database",
     "get_default_telemetry_db_path",
     "get_default_telemetry_config_path",

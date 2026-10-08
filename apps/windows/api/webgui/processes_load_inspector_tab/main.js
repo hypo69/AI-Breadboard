@@ -15,7 +15,7 @@
  * Package: windows/api/webgui/processes_load_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 14:25:00
+ * Updated: 2026-10-08 04:06:00
  * =============================================================================
  */
 
@@ -42,6 +42,20 @@
     processes: [],
     filtered_count: 0
   };
+
+  async function ensureAITableModal() {
+    if (window.AITableModal && typeof window.AITableModal.show === 'function') return true;
+    if (!document.querySelector('script[src*="ai_table_modal.js"]')) {
+      await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = '/html/js/ai_table_modal.js?v=20261008_v1';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+      });
+    }
+    return !!(window.AITableModal && typeof window.AITableModal.show === 'function');
+  }
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -120,12 +134,13 @@
     }).join('');
 
     tbody.querySelectorAll('.sys-proc-row').forEach(row => {
-      row.onclick = () => {
+      row.onclick = async () => {
         const idx = parseInt(row.getAttribute('data-idx'), 10);
         const p = filtered[idx];
         if (!p) return;
 
-        if (window.AITableModal) {
+        const isModalReady = await ensureAITableModal();
+        if (isModalReady && window.AITableModal) {
           window.AITableModal.show({
             icon: '⚙️',
             title: p.name,
@@ -320,7 +335,7 @@
     }).join('');
 
     tbody.querySelectorAll('.proc-net-row').forEach(row => {
-      row.onclick = () => {
+      row.onclick = async () => {
         const idx = parseInt(row.getAttribute('data-idx'), 10);
         const item = filtered[idx];
         if (!item) return;
@@ -338,7 +353,8 @@
           return rate.toFixed(1) + ' KB/s';
         };
 
-        if (window.AITableModal) {
+        const isModalReady = await ensureAITableModal();
+        if (isModalReady && window.AITableModal) {
           window.AITableModal.show({
             icon: '🌐',
             title: `${item.name} (${item.service_type})`,
@@ -381,8 +397,8 @@
   async function fetchLiveFileEvents() {
     try {
       const [resEvents, resTelem] = await Promise.all([
-        fetch('/api/sysadmin/file-audit/live-events?limit=30'),
-        fetch('/api/sysadmin/file-audit/telemetry').catch(() => null)
+        fetch('/api/v1/system/file-audit/live-events?limit=30'),
+        fetch('/api/v1/system/file-audit/telemetry').catch(() => null)
       ]);
 
       if (resTelem && resTelem.ok) {
@@ -485,12 +501,13 @@
         }).join('');
 
         tbody.querySelectorAll('.proc-live-row').forEach(row => {
-          row.onclick = () => {
+          row.onclick = async () => {
             const idx = parseInt(row.getAttribute('data-idx'), 10);
             const e = events[idx];
             if (!e) return;
 
-            if (window.AITableModal) {
+            const isModalReady = await ensureAITableModal();
+            if (isModalReady && window.AITableModal) {
               window.AITableModal.show({
                 icon: '⚡',
                 title: `Файловое событие: ${e.action}`,
@@ -855,7 +872,7 @@
 
   async function fetchExclusionsData() {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions');
+      const res = await fetch('/api/v1/system/file-audit/exclusions');
       if (res.ok) {
         currentExclusions = await res.json();
         renderExclusionsLists();
@@ -869,7 +886,7 @@
     if (!value || !value.trim()) return;
     const cleanVal = value.trim();
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/add', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, value: cleanVal })
@@ -892,7 +909,7 @@
   window._procRemoveExclusionItem = async function(category, value) {
     if (!value) return;
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/remove', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, value })
@@ -912,7 +929,7 @@
 
   async function toggleExclusionsActive(enabled) {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/toggle', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled })
@@ -959,7 +976,7 @@
     }
 
     try {
-      const res = await fetch('/api/sysadmin/file-audit/watch-dirs');
+      const res = await fetch('/api/v1/system/file-audit/watch-dirs');
       if (res.ok) {
         const data = await res.json();
         stagedWatchDirs = data.watch_dirs && data.watch_dirs.length ? [...data.watch_dirs] : [currentWatchDir || 'C:\\'];
@@ -1004,9 +1021,10 @@
     }
   }
 
-  function showLiveWatcherHelpModal() {
+  async function showLiveWatcherHelpModal() {
     const dirsStr = currentWatchDirs.length ? currentWatchDirs.join('\n- ') : (currentWatchDir || 'Рабочая папка');
-    if (window.AITableModal) {
+    const isModalReady = await ensureAITableModal();
+    if (isModalReady && window.AITableModal) {
       window.AITableModal.show({
         icon: 'ℹ️',
         title: 'Справка: Изменения файлов в реальном времени',
@@ -1287,7 +1305,7 @@
         btnApply.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Применение...';
 
         try {
-          const res = await fetch('/api/sysadmin/file-audit/watch-dirs', {
+          const res = await fetch('/api/v1/system/file-audit/watch-dirs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paths: stagedWatchDirs })
@@ -1330,7 +1348,7 @@
     };
 
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-processes-load-inspector', pollHandler, seconds * 1000, { immediate: false });
+      window.registerTabPoller('tab-processes-load-inspector', pollHandler, seconds * 1000, { pollerId: 'proc_load_inspector', immediate: false });
     } else {
       if (window._procLoadInspectorInterval) {
         clearInterval(window._procLoadInspectorInterval);
@@ -1347,9 +1365,11 @@
   async function initProcessesLoadInspectorTab() {
     console.log('[ProcessesLoadInspectorTab] Initializing...');
     bindEvents();
-    await fetchTopProcesses();
-    await fetchNetworkActivity();
-    await fetchLiveFileEvents();
+    if (window.isTabActive ? window.isTabActive('tab-processes-load-inspector') : false) {
+      await fetchTopProcesses();
+      await fetchNetworkActivity();
+      await fetchLiveFileEvents();
+    }
     setupPoller(_currentUiRefreshSeconds || 2);
   }
 

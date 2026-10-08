@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/maintenance_recovery_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 05:55:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -305,11 +305,14 @@
    * Инициализация вкладки Maintenance & Recovery.
    */
   function initMaintenanceRecoveryTab() {
-    fetchMaintStatus();
-    fetchRestorePoints();
-
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-maintenance-recovery_status', fetchMaintStatus, 5000);
+      window.registerTabPoller('tab-maintenance-recovery', () => {
+        fetchMaintStatus();
+        fetchRestorePoints();
+      }, 5000, { pollerId: 'tab-maintenance-recovery_status', immediate: true });
+    } else if (window.isTabActive ? window.isTabActive('tab-maintenance-recovery') : true) {
+      fetchMaintStatus();
+      fetchRestorePoints();
     }
 
     if (isInitialized) return;

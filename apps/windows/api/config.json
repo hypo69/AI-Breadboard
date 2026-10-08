@@ -20,6 +20,12 @@
       "description": "Windows diagnostics & hardware (/api/windows/*)"
     },
     {
+      "module": "apps.windows.api.routers.router_log_settings",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Настройка и просмотр параметров журналов Windows (/api/v1/log-settings/*)"
+    },
+    {
       "module": "src.api.routers.core.router_system",
       "factory": "init_router",
       "enabled": true,
@@ -31,6 +37,12 @@
       "factory": "init_router",
       "enabled": true,
       "description": "TC (/api/v1/tc/*, /tc/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_power_lifecycle",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Жизненный цикл питания и сессии (/api/v1/power/*)"
     },
     {
       "module": "apps.windows.api.routers.router_chat",

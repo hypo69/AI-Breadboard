@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/disk_speed_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 11:15:30
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -27,16 +27,25 @@ let pollTimer = null;
 let cachedTargets = [];
 let lastResult = null;
 
-/**
- * Инициализация вкладки бенчмарка дисков.
- */
 async function initDiskSpeedTab() {
+  if (isInitialized) return;
+  isInitialized = true;
+  initChart();
+  setupEventListeners();
+  if (window.isTabActive ? window.isTabActive('tab-disk-speed') : false) {
+    await checkEngineStatus();
+    await loadTargets();
+    await loadHistory();
+  }
+}
+
+async function activateDiskSpeedTab() {
   await checkEngineStatus();
   await loadTargets();
   await loadHistory();
-  initChart();
-  setupEventListeners();
 }
+
+window.activateDiskSpeedTab = activateDiskSpeedTab;
 
 /**
  * Проверка статуса утилиты DiskSpd.
@@ -210,9 +219,6 @@ async function startBenchmark(profiles) {
   }
 }
 
-/**
- * Опрос статуса выполняющегося бенчмарка.
- */
 function pollBenchmarkTask() {
   if (pollTimer) clearInterval(pollTimer);
 
@@ -221,6 +227,7 @@ function pollBenchmarkTask() {
       clearInterval(pollTimer);
       return;
     }
+    if (window.isTabActive && !window.isTabActive('tab-disk-speed')) return;
 
     try {
       const res = await fetch(`/api/v1/storage/benchmark/status/${currentTaskId}`);

@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/trading_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-08 03:08:00
 =============================================================================
 -->
 
@@ -104,12 +104,12 @@ Updated: 2026-10-01 13:04:40
 
 <div class="trading-container">
   <!-- Header Alert & Status -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+  <div class="card shadow-sm border-secondary-subtle p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+      <h5 class="mb-1 fw-bold d-flex align-items-center gap-2">
         <span class="fs-4">📈</span> Торговый терминал (Exchange Trading Desk)
       </h5>
-      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+      <p class="mb-0 small text-muted" >
         Автономный торговый терминал с обновлением стакана цен L2, расчётом PnL и кнопкой экстренной ликвидации (Kill-Switch).
       </p>
     </div>
@@ -182,8 +182,8 @@ Updated: 2026-10-01 13:04:40
             <tbody id="trading-asks-tbody">
               <tr><td colspan="3" class="text-center py-2 text-muted">Загрузка заявок на продажу...</td></tr>
             </tbody>
-            <tbody style="border-top: 2px solid #334155; border-bottom: 2px solid #334155;">
-              <tr style="background: #020617;">
+            <tbody >
+              <tr >
                 <td colspan="3" class="text-center py-2 fw-bold" id="trading-orderbook-midprice" style="font-size: 0.95rem; color: #f8fafc;">
                   $0.00
                 </td>

@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 17:30:00
+# Updated: 2026-10-08 02:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -2244,4 +2244,316 @@ class TelemetryWriter:
                 ))
             conn.commit()
             return len(net_items)
+
+    def save_security_events(
+        self,
+        events: List[Any],
+        save_raw: bool = False,
+        raw_events: Optional[List[Any]] = None,
+    ) -> int:
+        """Сохраняет список нормализованных событий журнала безопасности в SQLite.
+
+        Args:
+            events: Список объектов SecurityEventItem или словарей.
+            save_raw: Сохранять ли параллельно сырые XML события в security_events_raw.
+            raw_events: Список объектов SecurityEventRaw или словарей.
+
+        Returns:
+            int: Количество сохраненных событий.
+        """
+        if self._cm.read_only or not events:
+            return 0
+
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            for ev in events:
+                d = ev if isinstance(ev, dict) else (ev.model_dump() if hasattr(ev, 'model_dump') else vars(ev))
+                ed_json = json.dumps(d.get('event_data', {}), ensure_ascii=False) if d.get('event_data') else None
+
+                cursor.execute('''
+                    INSERT INTO security_events (
+                        event_record_id, event_id, timestamp, created_at, computer,
+                        channel, level, subject_user, subject_domain, subject_sid,
+                        target_user, target_domain, target_sid, process_id,
+                        process_name, parent_process_id, parent_process_name,
+                        command_line, logon_id, logon_type, elevated_token,
+                        source_ip, source_port, object_name, status_code,
+                        message, event_data_json, ingested_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    int(d.get('event_record_id', 0) or 0),
+                    int(d.get('event_id', 0) or 0),
+                    str(d.get('timestamp', '')),
+                    float(d.get('created_at', time.time()) or time.time()),
+                    str(d.get('computer', '')),
+                    str(d.get('channel', 'Security')),
+                    str(d.get('level', 'Information')),
+                    str(d.get('subject_user', '')),
+                    str(d.get('subject_domain', '')),
+                    str(d.get('subject_sid', '')),
+                    str(d.get('target_user', '')),
+                    str(d.get('target_domain', '')),
+                    str(d.get('target_sid', '')),
+                    int(d.get('process_id', 0) or 0),
+                    str(d.get('process_name', '')),
+                    int(d.get('parent_process_id', 0) or 0),
+                    str(d.get('parent_process_name', '')),
+                    str(d.get('command_line', '')),
+                    str(d.get('logon_id', '')),
+                    d.get('logon_type'),
+                    d.get('elevated_token'),
+                    str(d.get('source_ip', '')),
+                    d.get('source_port'),
+                    str(d.get('object_name', '')),
+                    str(d.get('status_code', '')),
+                    str(d.get('message', '')),
+                    ed_json,
+                    str(d.get('ingested_at', datetime.now(timezone.utc).isoformat())),
+                ))
+
+            if save_raw and raw_events:
+                for raw in raw_events:
+                    rd = raw if isinstance(raw, dict) else (raw.model_dump() if hasattr(raw, 'model_dump') else vars(raw))
+                    cursor.execute('''
+                        INSERT INTO security_events_raw (
+                            event_record_id, event_id, timestamp, created_at,
+                            channel, raw_xml, ingested_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        int(rd.get('event_record_id', 0) or 0),
+                        int(rd.get('event_id', 0) or 0),
+                        str(rd.get('timestamp', '')),
+                        float(rd.get('created_at', time.time()) or time.time()),
+                        str(rd.get('channel', 'Security')),
+                        str(rd.get('raw_xml', '')),
+                        str(rd.get('ingested_at', datetime.now(timezone.utc).isoformat())),
+                    ))
+
+            conn.commit()
+            return len(events)
+
+    def save_security_bookmark(
+        self,
+        channel: str,
+        last_record_id: int,
+        bookmark_xml: Optional[str] = None,
+        last_timestamp: str = '',
+    ) -> None:
+        """Сохраняет или обновляет состояние закладки инкрементального сбора в SQLite.
+
+        Args:
+            channel: Имя канала событий (например, 'Security').
+            last_record_id: Последний обработанный EventRecordID.
+            bookmark_xml: XML-представление закладки WevtAPI.
+            last_timestamp: Временная метка последнего обработанного события.
+        """
+        if self._cm.read_only:
+            return
+
+        now_epoch = time.time()
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO security_collector_bookmarks (
+                    channel, last_record_id, bookmark_xml, last_timestamp, updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(channel) DO UPDATE SET
+                    last_record_id = excluded.last_record_id,
+                    bookmark_xml = CASE WHEN excluded.bookmark_xml IS NOT NULL THEN excluded.bookmark_xml ELSE security_collector_bookmarks.bookmark_xml END,
+                    last_timestamp = excluded.last_timestamp,
+                    updated_at = excluded.updated_at
+            ''', (
+                channel,
+                int(last_record_id or 0),
+                bookmark_xml,
+                last_timestamp,
+                now_epoch,
+            ))
+            conn.commit()
+
+    def save_power_events(self, events: List[Any]) -> int:
+        """Сохраняет пакет сырых/нормализованных событий питания в таблицу power_events.
+
+        Args:
+            events: Список объектов PowerEventRecord или словарей.
+
+        Returns:
+            int: Количество сохраненных записей.
+        """
+        if not events or self._cm.read_only:
+            return 0
+
+        now_epoch = time.time()
+        saved = 0
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            for ev in events:
+                if hasattr(ev, 'model_dump'):
+                    d = ev.model_dump()
+                elif isinstance(ev, dict):
+                    d = ev
+                else:
+                    continue
+
+                eid = int(d.get('event_id', 0))
+                provider = str(d.get('provider') or '')
+                channel = str(d.get('channel') or 'System')
+                ts = str(d.get('timestamp') or '')
+                c_at = float(d.get('created_at') or now_epoch)
+                event_type = str(d.get('event_type') or 'event')
+                shutdown_type = d.get('shutdown_type')
+                user = d.get('user')
+                domain = d.get('domain')
+                process = d.get('process')
+                pid = d.get('process_id')
+                reason = d.get('reason')
+                reason_code = d.get('reason_code')
+                comment = d.get('comment')
+                unexpected = 1 if d.get('unexpected') else 0
+                bugcheck_code = d.get('bugcheck_code')
+                bugcheck_params = d.get('bugcheck_params_json')
+                if isinstance(bugcheck_params, (dict, list)):
+                    bugcheck_params = json.dumps(bugcheck_params, ensure_ascii=False)
+                boot_id = d.get('boot_id')
+                details_json = d.get('details_json')
+                if isinstance(details_json, (dict, list)):
+                    details_json = json.dumps(details_json, ensure_ascii=False)
+                raw_xml = d.get('raw_xml')
+
+                cursor.execute('''
+                    INSERT INTO power_events (
+                        event_id, provider, channel, timestamp, created_at,
+                        event_type, shutdown_type, user, domain, process,
+                        process_id, reason, reason_code, comment, unexpected,
+                        bugcheck_code, bugcheck_params_json, boot_id, details_json, raw_xml
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(event_id, timestamp, provider) DO UPDATE SET
+                        event_type = excluded.event_type,
+                        shutdown_type = excluded.shutdown_type,
+                        user = excluded.user,
+                        domain = excluded.domain,
+                        process = excluded.process,
+                        process_id = excluded.process_id,
+                        reason = excluded.reason,
+                        reason_code = excluded.reason_code,
+                        comment = excluded.comment,
+                        unexpected = excluded.unexpected,
+                        bugcheck_code = excluded.bugcheck_code,
+                        bugcheck_params_json = excluded.bugcheck_params_json,
+                        boot_id = excluded.boot_id,
+                        details_json = excluded.details_json,
+                        raw_xml = excluded.raw_xml
+                ''', (
+                    eid, provider, channel, ts, c_at,
+                    event_type, shutdown_type, user, domain, process,
+                    pid, reason, reason_code, comment, unexpected,
+                    bugcheck_code, bugcheck_params, boot_id, details_json, raw_xml
+                ))
+                saved += 1
+
+            conn.commit()
+        return saved
+
+    def save_power_sessions(self, sessions: List[Any]) -> int:
+        """Сохраняет пакет реконструированных сессий питания в таблицу power_sessions.
+
+        Args:
+            sessions: Список объектов PowerSessionRecord или словарей.
+
+        Returns:
+            int: Количество сохраненных/обновленных сессий.
+        """
+        if not sessions or self._cm.read_only:
+            return 0
+
+        now_epoch = time.time()
+        saved = 0
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            for s in sessions:
+                if hasattr(s, 'model_dump'):
+                    d = s.model_dump()
+                elif isinstance(s, dict):
+                    d = s
+                else:
+                    continue
+
+                session_id = str(d.get('session_id') or '')
+                if not session_id:
+                    continue
+
+                boot_time = str(d.get('boot_time') or '')
+                boot_ts = float(d.get('boot_timestamp') or 0.0)
+                shutdown_time = d.get('shutdown_time')
+                shutdown_ts = float(d.get('shutdown_timestamp') or 0.0) if d.get('shutdown_timestamp') is not None else None
+                uptime_sec = float(d.get('uptime_seconds') or 0.0)
+                uptime_human = str(d.get('uptime_human') or '')
+                shutdown_type = str(d.get('shutdown_type') or 'Active')
+                initiator = d.get('initiator')
+                process = d.get('process')
+                reason = d.get('reason')
+                reason_code = d.get('reason_code')
+                comment = d.get('comment')
+                clean = 1 if d.get('clean_shutdown', True) else 0
+                unexpected = 1 if d.get('unexpected_shutdown', False) else 0
+                bugcheck = d.get('bugcheck')
+                boot_eid = int(d.get('boot_event_id', 12))
+                shutdown_eid = int(d.get('shutdown_event_id')) if d.get('shutdown_event_id') is not None else None
+
+                initiator_chain = d.get('initiator_chain') or []
+                if isinstance(initiator_chain, list):
+                    chain_json = json.dumps(initiator_chain, ensure_ascii=False)
+                else:
+                    chain_json = str(initiator_chain)
+
+                events = d.get('events') or []
+                if isinstance(events, (list, dict)):
+                    events_json = json.dumps(events, ensure_ascii=False)
+                else:
+                    events_json = str(events)
+
+                c_at = float(d.get('created_at') or now_epoch)
+
+                cursor.execute('''
+                    INSERT INTO power_sessions (
+                        session_id, boot_time, boot_timestamp, shutdown_time, shutdown_timestamp,
+                        uptime_seconds, uptime_human, shutdown_type, initiator, process,
+                        reason, reason_code, comment, clean_shutdown, unexpected_shutdown,
+                        bugcheck, boot_event_id, shutdown_event_id, initiator_chain_json,
+                        events_json, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(session_id) DO UPDATE SET
+                        boot_time = excluded.boot_time,
+                        boot_timestamp = excluded.boot_timestamp,
+                        shutdown_time = excluded.shutdown_time,
+                        shutdown_timestamp = excluded.shutdown_timestamp,
+                        uptime_seconds = excluded.uptime_seconds,
+                        uptime_human = excluded.uptime_human,
+                        shutdown_type = excluded.shutdown_type,
+                        initiator = excluded.initiator,
+                        process = excluded.process,
+                        reason = excluded.reason,
+                        reason_code = excluded.reason_code,
+                        comment = excluded.comment,
+                        clean_shutdown = excluded.clean_shutdown,
+                        unexpected_shutdown = excluded.unexpected_shutdown,
+                        bugcheck = excluded.bugcheck,
+                        boot_event_id = excluded.boot_event_id,
+                        shutdown_event_id = excluded.shutdown_event_id,
+                        initiator_chain_json = excluded.initiator_chain_json,
+                        events_json = excluded.events_json,
+                        created_at = excluded.created_at
+                ''', (
+                    session_id, boot_time, boot_ts, shutdown_time, shutdown_ts,
+                    uptime_sec, uptime_human, shutdown_type, initiator, process,
+                    reason, reason_code, comment, clean, unexpected,
+                    bugcheck, boot_eid, shutdown_eid, chain_json,
+                    events_json, c_at
+                ))
+                saved += 1
+
+            conn.commit()
+        return saved
+
+
 

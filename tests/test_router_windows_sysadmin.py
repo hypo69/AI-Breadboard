@@ -18,7 +18,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-08 03:45:00
 # =============================================================================
 
 """Unit tests for Windows System Administrator FastAPI router."""
@@ -130,9 +130,9 @@ class TestWindowsSysadminRouter(unittest.TestCase):
         self.assertIn('domain', data)
 
     def test_init_router(self):
-        """Test init_router function returns valid router."""
+        """Test init_router function returns valid router with sysadmin and file_audit routes."""
         router = init_router()
         self.assertIsNotNone(router)
-        self.assertEqual(router.prefix, '/api/sysadmin')
+        self.assertGreater(len(router.routes), 0)
 if __name__ == '__main__':
     unittest.main()

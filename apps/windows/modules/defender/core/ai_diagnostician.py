@@ -16,27 +16,49 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
 """Модуль комплексного AI-анализа защищенности и корреляции угроз."""
 
+from datetime import datetime, timezone
 from typing import List, Optional
 from logger import logger
-from apps.windows.defender.core.asr_manager import ASRManager
-from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
-from apps.windows.defender.core.defender_service import DefenderService
-from apps.windows.defender.core.event_correlator import EventCorrelator
-from apps.windows.defender.core.exclusions_auditor import ExclusionsAuditor
-from apps.windows.defender.core.models import DefenderDiagnosticReport, ProtectionState
-from apps.windows.defender.core.process_tree_watcher import ProcessTreeWatcher
-from apps.windows.defender.core.threat_manager import ThreatManager
+from apps.windows.modules.defender.core.asr_manager import ASRManager
+from apps.windows.modules.defender.core.cfa_manager import ControlledFolderAccessManager
+from apps.windows.modules.defender.core.defender_service import DefenderService
+from apps.windows.modules.defender.core.event_correlator import EventCorrelator
+from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+from apps.windows.modules.defender.core.models import (
+    ASRRuleInfo,
+    ControlledFolderAccessInfo,
+    DefenderDiagnosticReport,
+    DefenderStatus,
+    ExclusionItem,
+    ExclusionsAuditReport,
+    ProtectionState,
+    SuspiciousProcessChain,
+    ThreatRecord,
+)
+from apps.windows.modules.defender.core.process_tree_watcher import ProcessTreeWatcher
+from apps.windows.modules.defender.core.threat_manager import ThreatManager
+from apps.windows.telemetry.sqlite import TelemetryStorage
 
 class AIDiagnostician:
     """Аналитический движок корреляции и оценки защищенности."""
 
-    def __init__(self, defender_service: Optional[DefenderService]=None, asr_manager: Optional[ASRManager]=None, cfa_manager: Optional[ControlledFolderAccessManager]=None, exclusions_auditor: Optional[ExclusionsAuditor]=None, threat_manager: Optional[ThreatManager]=None, event_correlator: Optional[EventCorrelator]=None, process_watcher: Optional[ProcessTreeWatcher]=None) -> None:
+    def __init__(
+        self,
+        defender_service: Optional[DefenderService] = None,
+        asr_manager: Optional[ASRManager] = None,
+        cfa_manager: Optional[ControlledFolderAccessManager] = None,
+        exclusions_auditor: Optional[ExclusionsAuditor] = None,
+        threat_manager: Optional[ThreatManager] = None,
+        event_correlator: Optional[EventCorrelator] = None,
+        process_watcher: Optional[ProcessTreeWatcher] = None,
+        storage: Optional[TelemetryStorage] = None,
+    ) -> None:
         """Инициализация AI Diagnostician со всеми зависимостями."""
         self._service = defender_service or DefenderService()
         self._asr = asr_manager or ASRManager(self._service)
@@ -45,18 +67,70 @@ class AIDiagnostician:
         self._threats = threat_manager or ThreatManager(self._service)
         self._events = event_correlator or EventCorrelator()
         self._processes = process_watcher or ProcessTreeWatcher()
+        self._storage = storage
 
     def generate_diagnostic_report(self) -> DefenderDiagnosticReport:
-        """Генерация комплексного отчета защищенности системы.
+        """Генерация комплексного отчета защищенности системы из БД телеметрии (< 5 мс).
 
         Returns:
             DefenderDiagnosticReport: Детальный отчет с оценкой и рекомендациями.
         """
-        status = self._service.get_defender_status()
-        asr_rules = self._asr.get_asr_rules()
+        status: Optional[DefenderStatus] = None
+        asr_rules: List[ASRRuleInfo] = []
+        threats: List[ThreatRecord] = []
+        exclusions_report: Optional[ExclusionsAuditReport] = None
+
+        if self._storage:
+            try:
+                db_status = self._storage.get_latest_defender_status()
+                if db_status:
+                    status = DefenderStatus.model_validate(db_status)
+            except Exception as e:
+                logger.debug(f'Ошибка извлечения статуса Defender из БД: {e}')
+
+            try:
+                db_asr = self._storage.get_latest_defender_asr_rules()
+                if db_asr:
+                    asr_rules = [ASRRuleInfo.model_validate(r) for r in db_asr]
+            except Exception as e:
+                logger.debug(f'Ошибка извлечения ASR из БД: {e}')
+
+            try:
+                db_threats = self._storage.get_latest_defender_threats(limit=20)
+                if db_threats:
+                    threats = [ThreatRecord.model_validate(t) for t in db_threats]
+            except Exception as e:
+                logger.debug(f'Ошибка извлечения угроз из БД: {e}')
+
+            try:
+                db_exc = self._storage.get_latest_defender_exclusions()
+                if db_exc:
+                    items = [ExclusionItem.model_validate(x) for x in db_exc]
+                    path_exc = [x for x in items if x.type == 'path']
+                    ext_exc = [x for x in items if x.type == 'extension']
+                    proc_exc = [x for x in items if x.type == 'process']
+                    susp_count = sum(1 for x in items if str(x.risk_level).lower() in ('critical', 'high'))
+                    exclusions_report = ExclusionsAuditReport(
+                        total_exclusions=len(items),
+                        suspicious_count=susp_count,
+                        path_exclusions=path_exc,
+                        extension_exclusions=ext_exc,
+                        process_exclusions=proc_exc,
+                        summary_recommendation='Исключения получены из телеметрии SQLite'
+                    )
+            except Exception as e:
+                logger.debug(f'Ошибка извлечения исключений из БД: {e}')
+
+        if status is None:
+            status = self._service.get_defender_status()
+        if not asr_rules:
+            asr_rules = self._asr.get_asr_rules()
+        if exclusions_report is None:
+            exclusions_report = self._exclusions.audit_exclusions()
+        if not threats and self._storage is None:
+            threats = self._threats.get_threats_history(limit=20)
+
         cfa_info = self._cfa.get_cfa_status()
-        exclusions_report = self._exclusions.audit_exclusions()
-        threats = self._threats.get_threats_history(limit=20)
         suspicious_chains = self._processes.scan_suspicious_chains()
         score = 100
         critical_findings: List[str] = []

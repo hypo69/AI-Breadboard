@@ -20,7 +20,7 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 18:33:00
+# Updated: 2026-10-08 03:18:00
 # =============================================================================
 
 from __future__ import annotations
@@ -31,6 +31,7 @@ import base64
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import threading
@@ -264,6 +265,125 @@ def parse_smart_vendor_data(raw_b64: str) -> Dict[int, Dict[str, Any]]:
         return attrs
     except Exception:
         return {}
+
+
+def _enrich_disks_with_lhm(disks: List[StorageDiskHealthInfo], sensors: List[Dict[str, Any]]) -> None:
+    """Обогащает объекты StorageDiskHealthInfo данными SMART/LHM (наработка, температура, износ, запись).
+
+    Args:
+        disks: Список дисков для обогащения.
+        sensors: Плоский список сенсоров из LibreHardwareMonitor.
+    """
+    if not disks or not sensors:
+        return
+
+    lhm_by_hardware: Dict[str, Dict[str, Any]] = {}
+    for s in sensors:
+        htype = str(s.get("hardware_type", "")).lower()
+        if not any(k in htype for k in ("storage", "disk", "hdd", "ssd", "nvme")):
+            continue
+        hname = str(s.get("hardware_name", "")).strip()
+        if not hname:
+            continue
+        if hname not in lhm_by_hardware:
+            lhm_by_hardware[hname] = {
+                "power_on_hours": None,
+                "power_on_count": None,
+                "temperature_c": None,
+                "life_pct": None,
+                "wear_pct": None,
+                "data_written_gb": None,
+                "data_read_gb": None,
+                "total_space_gb": None,
+            }
+
+        cat = str(s.get("sensor_category", "")).lower()
+        sname = str(s.get("sensor_name", "")).lower()
+        v_num = s.get("value_num") if s.get("value_num") is not None else s.get("value_numeric")
+        if v_num is None:
+            continue
+
+        if "factor" in cat:
+            if "power on hours" in sname:
+                lhm_by_hardware[hname]["power_on_hours"] = int(v_num)
+            elif "power on count" in sname:
+                lhm_by_hardware[hname]["power_on_count"] = int(v_num)
+        elif "temp" in cat:
+            if 5 < v_num < 120:
+                lhm_by_hardware[hname]["temperature_c"] = float(v_num)
+        elif "level" in cat:
+            if "life" in sname or "remaining" in sname:
+                lhm_by_hardware[hname]["life_pct"] = float(v_num)
+                lhm_by_hardware[hname]["wear_pct"] = max(0.0, min(100.0, 100.0 - float(v_num)))
+            elif "wear" in sname:
+                lhm_by_hardware[hname]["wear_pct"] = float(v_num)
+        elif "data" in cat:
+            if "data written" in sname:
+                lhm_by_hardware[hname]["data_written_gb"] = float(v_num)
+            elif "data read" in sname:
+                lhm_by_hardware[hname]["data_read_gb"] = float(v_num)
+            elif "total space" in sname:
+                lhm_by_hardware[hname]["total_space_gb"] = float(v_num)
+
+    if not lhm_by_hardware:
+        return
+
+    matched_lhm_names: set[str] = set()
+
+    for d in disks:
+        m_lower = (d.model or "").lower().strip()
+        fn_lower = (d.friendly_name or "").lower().strip()
+        matched_data: Optional[Dict[str, Any]] = None
+        best_name: Optional[str] = None
+
+        # 1. Прямой поиск по подстроке имени/модели
+        for hname, metrics in lhm_by_hardware.items():
+            h_lower = hname.lower().strip()
+            if (h_lower in m_lower) or (m_lower and m_lower in h_lower) or (h_lower in fn_lower) or (fn_lower and fn_lower in h_lower):
+                matched_data = metrics
+                best_name = hname
+                break
+
+        # 2. Поиск по ключевым словам модели
+        if not matched_data:
+            m_words = [w for w in re.split(r"[\s\-_/]+", f"{m_lower} {fn_lower}") if len(w) >= 4 and w not in ("disk", "drive", "generic", "storage", "device")]
+            for hname, metrics in lhm_by_hardware.items():
+                h_lower = hname.lower().strip()
+                if any(w in h_lower for w in m_words):
+                    matched_data = metrics
+                    best_name = hname
+                    break
+
+        # 3. Fallback: сопоставление по близкому объему для внешних накопителей (USB bridges), если остался неиспользованный
+        if not matched_data and d.size_gb > 0:
+            for hname, metrics in lhm_by_hardware.items():
+                if hname in matched_lhm_names:
+                    continue
+                tot_gb = metrics.get("total_space_gb")
+                if tot_gb and abs(tot_gb - d.size_gb) / max(d.size_gb, 1.0) < 0.15:
+                    matched_data = metrics
+                    best_name = hname
+                    break
+
+        if matched_data and best_name:
+            matched_lhm_names.add(best_name)
+            # Обогащаем отсутствующие или нулевые метрики
+            if (d.power_on_hours is None or d.power_on_hours == 0) and matched_data.get("power_on_hours") is not None:
+                d.power_on_hours = matched_data["power_on_hours"]
+
+            if (d.temperature_c is None or d.temperature_c == 0.0) and matched_data.get("temperature_c") is not None:
+                d.temperature_c = matched_data["temperature_c"]
+
+            if (d.wear_percentage is None or d.wear_percentage == 0.0) and matched_data.get("wear_pct") is not None:
+                d.wear_percentage = matched_data["wear_pct"]
+
+            if (d.lifetime_write_bytes is None or d.lifetime_write_bytes == 0) and matched_data.get("data_written_gb") is not None:
+                d.lifetime_write_bytes = int(matched_data["data_written_gb"] * (1024 ** 3))
+                d.lifetime_write_tb = round(matched_data["data_written_gb"] / 1024.0, 2)
+
+            if (d.lifetime_read_bytes is None or d.lifetime_read_bytes == 0) and matched_data.get("data_read_gb") is not None:
+                d.lifetime_read_bytes = int(matched_data["data_read_gb"] * (1024 ** 3))
+                d.lifetime_read_tb = round(matched_data["data_read_gb"] / 1024.0, 2)
 
 
 class WindowsStorageSensor:
@@ -769,6 +889,18 @@ class WindowsStorageSensor:
                     lifetime_write_tb=write_tb,
                     raw_storage_data=w_disk,
                 ))
+
+        # Обогащение данными из LibreHardwareMonitor (LhmService)
+        try:
+            from apps.windows.modules.hardware.lhm_service import LhmService
+            lhm = LhmService()
+            if lhm.is_running():
+                lhm_sensors = lhm.get_flattened_sensors()
+                if lhm_sensors:
+                    _enrich_disks_with_lhm(result_disks, lhm_sensors)
+        except Exception as lhm_err:
+            logger.debug(f'Обогащение через LHM пропущено: {lhm_err}')
+
         return result_disks
 
     def _empty_snapshot(self) -> Dict[str, Any]:

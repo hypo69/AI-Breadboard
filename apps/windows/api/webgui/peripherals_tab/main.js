@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/peripherals_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -147,7 +147,9 @@
   function applyPoller(freq, runInitial = false) {
     stopPolling();
     if (freq === 'start' || freq === 'manual') {
-      if (runInitial) fetchPeripheralsNetwork();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-peripherals') : true)) {
+        fetchPeripheralsNetwork();
+      }
       return;
     }
 
@@ -160,7 +162,9 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-peripherals', fetchPeripheralsNetwork, intervalMs, { pollerId, immediate: runInitial });
     } else {
-      if (runInitial) fetchPeripheralsNetwork();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-peripherals') : true)) {
+        fetchPeripheralsNetwork();
+      }
       autoRefreshTimer = setInterval(() => {
         if (window.isTabActive ? window.isTabActive('tab-peripherals') : true) {
           fetchPeripheralsNetwork();
@@ -191,7 +195,7 @@
     }
   }
 
-  async function init() {
+  async function initPeripheralsTab() {
     bindEvents();
     const currentFreq = getFrequency();
     const select = document.getElementById('diag-peripherals-poll-freq');
@@ -199,9 +203,24 @@
     applyPoller(currentFreq, true);
   }
 
+  window.initPeripheralsTab = initPeripheralsTab;
+  window.activatePeripheralsTab = () => {
+    applyPoller(getFrequency(), true);
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.isTabActive ? window.isTabActive('tab-peripherals') : false) {
+        initPeripheralsTab();
+      } else {
+        bindEvents();
+      }
+    });
   } else {
-    setTimeout(init, 10);
+    if (window.isTabActive ? window.isTabActive('tab-peripherals') : false) {
+      initPeripheralsTab();
+    } else {
+      bindEvents();
+    }
   }
 })();

@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-08 03:45:00
 # =============================================================================
 
 """Тесты модуля аудита файловой системы и регистрации удаления файлов."""
@@ -76,16 +76,16 @@ def test_router_status_endpoint(client):
     assert 'file_audit' in data
 
 def test_router_file_audit_deletions(client):
-    """Тест эндпоинта /api/sysadmin/file-audit/deletions."""
-    response = client.get('/api/sysadmin/file-audit/deletions?hours=1')
+    """Тест эндпоинта /api/v1/system/file-audit/deletions."""
+    response = client.get('/api/v1/system/file-audit/deletions?hours=1')
     assert response.status_code == 200
     data = response.json()
     assert 'events' in data
     assert 'deletions_count' in data
 
 def test_router_file_audit_live_events(client):
-    """Тест эндпоинта /api/sysadmin/file-audit/live-events."""
-    response = client.get('/api/sysadmin/file-audit/live-events?limit=10')
+    """Тест эндпоинта /api/v1/system/file-audit/live-events."""
+    response = client.get('/api/v1/system/file-audit/live-events?limit=10')
     assert response.status_code == 200
     data = response.json()
     assert 'events' in data

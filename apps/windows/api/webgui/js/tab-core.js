@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 18:33:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -27,6 +27,7 @@
  * 
  * Правило: Только открытая АКТИВНАЯ вкладка выполняет периодические опросы API.
  * При неактивности вкладки или скрытии страницы (visibilitychange) все таймеры засыпают.
+ * Сценарий опроса запускается немедленно при открытии вкладки.
  * 
  * Приоритет переключения: кнопки навигации имеют самый высокий приоритет.
  * Если что-то запущено внутри вкладки, переключение происходит немедленно без ожидания.
@@ -262,15 +263,13 @@ export function switchTab(tabId) {
 
   // Активация новой вкладки в следующем фрейме анимации
   requestAnimationFrame(() => {
-    const initFn = window[`init${name[0].toUpperCase() + name.slice(1)}Tab`];
-    if (typeof initFn === 'function') {
-      try { initFn(); } catch (err) { console.debug('init tab hook error:', err); }
-    }
+    try {
+      window[`init${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+    } catch (err) { console.debug('init tab hook error:', err); }
     
-    const activateFn = window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`];
-    if (typeof activateFn === 'function') {
-      try { activateFn(); } catch (err) { console.debug('activate tab hook error:', err); }
-    }
+    try {
+      window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+    } catch (err) { console.debug('activate tab hook error:', err); }
     
     document.dispatchEvent(new CustomEvent('tab:activated', { detail: { tabId: id, name } }));
   });
@@ -407,6 +406,14 @@ export function resetTabProcessing(tabId) {
 }
 
 /**
+ * Возвращает ID текущей активной вкладки.
+ * @returns {string|null}
+ */
+export function getCurrentActiveTabId() {
+  return currentActiveTabId;
+}
+
+/**
  * Экспорт в глобальный контекст window для совместимости с инлайн-скриптами и вкладками
  */
 if (typeof window !== 'undefined') {
@@ -416,6 +423,7 @@ if (typeof window !== 'undefined') {
   window.setupTabClicks = setupTabClicks;
   window.normalizeTabId = normalizeTabId;
   window.isTabActive = isTabActive;
+  window.getCurrentActiveTabId = getCurrentActiveTabId;
   window.registerTabPoller = registerTabPoller;
   window.unregisterTabPoller = unregisterTabPoller;
   window.unregisterAllTabPollers = unregisterAllTabPollers;

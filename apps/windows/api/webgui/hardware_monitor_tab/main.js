@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/hardware_monitor_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -51,7 +51,9 @@
   function applyPoller(freq, runInitial = false) {
     stopPolling();
     if (freq === 'start' || freq === 'manual') {
-      if (runInitial) loadHardwareData();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : true)) {
+        loadHardwareData();
+      }
       return;
     }
 
@@ -64,7 +66,9 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-hardware-monitor', loadHardwareData, intervalMs, { pollerId, immediate: runInitial });
     } else {
-      if (runInitial) loadHardwareData();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : true)) {
+        loadHardwareData();
+      }
       timerId = setInterval(() => {
         if (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : true) {
           loadHardwareData();
@@ -76,13 +80,19 @@
   async function initHardwareMonitorTab() {
     console.log('[HardwareMonitor] Initializing tab...');
     bindEvents();
-    loadUtilitiesStatus();
+    if (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : false) {
+      loadUtilitiesStatus();
+    }
     const currentFreq = getFrequency();
     const select = document.getElementById('hw-poll-freq');
     if (select) select.value = currentFreq;
     applyPoller(currentFreq, true);
   }
   window.initHardwareMonitorTab = initHardwareMonitorTab;
+  window.activateHardwareMonitorTab = () => {
+    loadUtilitiesStatus();
+    applyPoller(getFrequency(), true);
+  };
 
   function bindEvents() {
     const btnRefresh = document.getElementById('hw-btn-refresh');

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 10:15:00
+ * Updated: 2026-10-08 03:51:00
  * =============================================================================
  */
 
@@ -373,23 +373,17 @@
 
   function toggleSysCpuDetails() {
     const box = document.getElementById('sys-cpu-details-collapse');
-    const icon = document.getElementById('sys-cpu-details-toggle-icon');
-    const text = document.getElementById('sys-cpu-details-toggle-text');
-    const btn = document.getElementById('sys-cpu-details-action-btn');
+    const drillBtn = document.getElementById('sys-cpu-details-drill-btn');
     const parentBtn = document.getElementById('sys-cpu-details-toggle-btn');
     if (!box) return;
     const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
     if (isHidden) {
       box.style.display = 'flex';
-      if (icon) icon.className = 'bi bi-chevron-up';
-      if (text) text.textContent = 'Свернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-info text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.remove('collapsed');
       if (parentBtn) parentBtn.classList.add('expanded');
     } else {
       box.style.display = 'none';
-      if (icon) icon.className = 'bi bi-chevron-down';
-      if (text) text.textContent = 'Развернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-outline-info rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.add('collapsed');
       if (parentBtn) parentBtn.classList.remove('expanded');
     }
   }
@@ -398,28 +392,109 @@
 
   function toggleSysGpuDetails(idx = 0) {
     const box = document.getElementById(`sys-gpu-details-collapse-${idx}`) || document.getElementById('sys-gpu-details-collapse');
-    const icon = document.getElementById(`sys-gpu-details-toggle-icon-${idx}`) || document.getElementById('sys-gpu-details-toggle-icon');
-    const text = document.getElementById(`sys-gpu-details-toggle-text-${idx}`) || document.getElementById('sys-gpu-details-toggle-text');
-    const btn = document.getElementById(`sys-gpu-details-action-btn-${idx}`) || document.getElementById('sys-gpu-details-action-btn');
+    const drillBtn = document.getElementById(`sys-gpu-details-drill-btn-${idx}`) || document.getElementById('sys-gpu-details-drill-btn');
     const parentBtn = document.getElementById(`sys-gpu-details-toggle-btn-${idx}`) || document.getElementById('sys-gpu-details-toggle-btn');
     if (!box) return;
     const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
     if (isHidden) {
       box.style.display = 'flex';
-      if (icon) icon.className = 'bi bi-chevron-up';
-      if (text) text.textContent = 'Свернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-warning text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.remove('collapsed');
       if (parentBtn) parentBtn.classList.add('expanded');
     } else {
       box.style.display = 'none';
-      if (icon) icon.className = 'bi bi-chevron-down';
-      if (text) text.textContent = 'Развернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-outline-warning rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.add('collapsed');
       if (parentBtn) parentBtn.classList.remove('expanded');
     }
   }
   window.toggleSysGpuDetails = toggleSysGpuDetails;
   window.toggleSysGpuSensors = toggleSysGpuDetails;
+
+  /**
+   * Управление режимом Drill-down по нажатию на значок дрели слева от названия компонента.
+   * Раскрывает все скрытые панели, графики и датчики конкретного компонента.
+   *
+   * @param {string|HTMLElement} cardIdOrEl - Идентификатор карточки или элемент кнопки
+   * @param {number} [idx] - Индекс устройства (для GPU)
+   */
+  function toggleSysCardDrill(cardIdOrEl, idx) {
+    let card = null;
+    let btn = null;
+    if (typeof cardIdOrEl === 'string') {
+      card = document.getElementById(cardIdOrEl);
+    } else if (cardIdOrEl instanceof HTMLElement) {
+      btn = cardIdOrEl;
+      card = btn.closest('.sys-card');
+    }
+    if (!card) return;
+    if (!btn) {
+      btn = card.querySelector('.sys-drill-btn');
+    }
+
+    const isExpanded = card.classList.contains('sys-card-drill-expanded');
+    if (isExpanded) {
+      card.classList.remove('sys-card-drill-expanded');
+      if (btn) {
+        btn.classList.remove('active');
+        btn.title = 'Drill-down: Развернуть/скрыть все скрытые панели и датчики';
+      }
+    } else {
+      card.classList.add('sys-card-drill-expanded');
+      if (btn) {
+        btn.classList.add('active');
+        btn.title = 'Drill-down: Свернуть скрытые панели';
+      }
+
+      // Если это CPU - также открываем вложенный аккордеон деталей ядер и сенсоров
+      if (card.classList.contains('sys-card-cpu') || card.id === 'sys-card-cpu') {
+        const box = document.getElementById('sys-cpu-details-collapse');
+        const icon = document.getElementById('sys-cpu-details-toggle-icon');
+        const text = document.getElementById('sys-cpu-details-toggle-text');
+        const actionBtn = document.getElementById('sys-cpu-details-action-btn');
+        const parentBtn = document.getElementById('sys-cpu-details-toggle-btn');
+        if (box) box.style.display = 'flex';
+        if (icon) icon.className = 'bi bi-chevron-up';
+        if (text) text.textContent = 'Свернуть детализацию';
+        if (actionBtn) actionBtn.className = 'btn btn-xs btn-info text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+        if (parentBtn) parentBtn.classList.add('expanded');
+        if (typeof renderCpuSpark === 'function' && Array.isArray(_cpuSparkHistory)) {
+          renderCpuSpark(_cpuSparkHistory);
+        }
+      }
+
+      // Если это GPU - также открываем вложенный аккордеон деталей GPU
+      if (card.classList.contains('sys-card-gpu') || (card.id && card.id.startsWith('sys-card-gpu-'))) {
+        const cardIdx = idx != null ? idx : (card.id ? card.id.replace('sys-card-gpu-', '') : 0);
+        const box = document.getElementById(`sys-gpu-details-collapse-${cardIdx}`) || document.getElementById('sys-gpu-details-collapse');
+        const icon = document.getElementById(`sys-gpu-details-toggle-icon-${cardIdx}`) || document.getElementById('sys-gpu-details-toggle-icon');
+        const text = document.getElementById(`sys-gpu-details-toggle-text-${cardIdx}`) || document.getElementById('sys-gpu-details-toggle-text');
+        const actionBtn = document.getElementById(`sys-gpu-details-action-btn-${cardIdx}`) || document.getElementById('sys-gpu-details-action-btn');
+        const parentBtn = document.getElementById(`sys-gpu-details-toggle-btn-${cardIdx}`) || document.getElementById('sys-gpu-details-toggle-btn');
+        if (box) box.style.display = 'flex';
+        if (icon) icon.className = 'bi bi-chevron-up';
+        if (text) text.textContent = 'Свернуть детализацию';
+        if (actionBtn) actionBtn.className = 'btn btn-xs btn-warning text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+        if (parentBtn) parentBtn.classList.add('expanded');
+        if (typeof renderGpuSpark === 'function') {
+          renderGpuSpark(_gpuSparkHistories[cardIdx] || [], cardIdx);
+        }
+      }
+
+      // RAM график
+      if (card.classList.contains('sys-card-ram') || card.id === 'sys-card-ram') {
+        if (typeof renderMemIoSpark === 'function' && Array.isArray(_memIoSparkHistory)) {
+          renderMemIoSpark(_memIoSparkHistory);
+        }
+      }
+
+      // Net график
+      if (card.classList.contains('sys-card-net') || card.id === 'sys-card-net') {
+        if (typeof renderNetSpark === 'function' && Array.isArray(_netSparkHistory)) {
+          renderNetSpark(_netSparkHistory);
+        }
+      }
+    }
+  }
+  window.toggleSysCardDrill = toggleSysCardDrill;
 
   function updateAllComponentSensors() {
     if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) return;
@@ -808,7 +883,7 @@
           </linearGradient>
         </defs>
         <!-- Фоновая дуга -->
-        <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="var(--border-color, rgba(128,128,128,0.25))" stroke-width="9" stroke-linecap="round"/>
         <!-- Градиентная активная шкала -->
         <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="url(#sysGaugeGrad)" stroke-width="9" stroke-linecap="round" opacity="0.9"/>
         <!-- Стрелка прибора -->
@@ -818,7 +893,7 @@
         </g>
         <!-- Центральный шарнир -->
         <circle cx="50" cy="50" r="6" fill="#38bdf8"/>
-        <circle cx="50" cy="50" r="2.5" fill="#0f172a"/>
+        <circle cx="50" cy="50" r="2.5" fill="var(--surface-1, #0f172a)"/>
       </svg>
     `;
   }
@@ -1318,7 +1393,7 @@
     const crosshair = document.createElementNS(ns, 'line');
     crosshair.setAttribute('y1', '0');
     crosshair.setAttribute('y2', String(H));
-    crosshair.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+    crosshair.setAttribute('stroke', 'var(--text-muted, rgba(128,128,128,0.5))');
     crosshair.setAttribute('stroke-dasharray', '2,2');
     crosshair.setAttribute('stroke-width', '1');
     crosshair.style.display = 'none';
@@ -1533,7 +1608,7 @@
     const crosshair = document.createElementNS(ns, 'line');
     crosshair.setAttribute('y1', '0');
     crosshair.setAttribute('y2', String(H));
-    crosshair.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+    crosshair.setAttribute('stroke', 'var(--text-muted, rgba(128,128,128,0.5))');
     crosshair.setAttribute('stroke-dasharray', '2,2');
     crosshair.setAttribute('stroke-width', '1');
     crosshair.style.display = 'none';
@@ -2347,28 +2422,20 @@
           <span class="small text-truncate font-monospace badge bg-dark border border-secondary text-warning" style="font-size: 0.84rem; max-width: 320px;" id="sys-metric-gpu-sub-${idx}">--</span>
         </div>
 
-        <!-- Верхний баннер: Спидометр и датчик температуры слева, Модель в центре, Сводная спецификация GPU справа -->
-        <div class="sys-card-top-banner d-flex align-items-stretch justify-content-between flex-wrap gap-3 mb-3 p-3 rounded-3" style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.18);">
-          <!-- Левая колонка: Спидометр загрузки, справа от него значение с динамическим оттенком, а СНИЗУ — датчик температуры -->
-          <div class="d-flex flex-column justify-content-between gap-1.5" style="min-width: 250px; max-width: 300px;">
-            <div class="d-flex align-items-center gap-2.5">
-              <div id="sys-metric-gpu-gauge-${idx}" style="width: 120px; height: 68px; flex-shrink: 0;"></div>
+        <!-- Верхний баннер: Название слева, Спидометр и датчик температуры по центру, Сводная спецификация GPU справа -->
+        <div class="sys-card-top-banner p-3 rounded-3 mb-3">
+          <!-- Левая колонка: Модель графического процессора и экспресс-метрики KPI -->
+          <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
+            <div class="text-start mb-1.5 d-flex align-items-center">
+              <button type="button" class="sys-drill-btn" id="sys-drill-btn-gpu-${idx}" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-gpu-${idx}', ${idx})" title="Drill-down: Развернуть/скрыть все скрытые панели и датчики GPU">
+                <img src="/html/assets/red_drill.png?v=20261008_v1" alt="Дрель">
+              </button>
               <div>
-                <div class="sys-value text-warning" id="sys-metric-gpu-val-${idx}" style="font-size: 2.1rem; line-height: 1; font-weight: 800; transition: color 0.3s ease, text-shadow 0.3s ease;">0.0%</div>
-                <div class="text-light mt-1 font-monospace" style="font-size: 0.82rem; font-weight: 700;" id="sys-metric-gpu-core-temp-${idx}">GPU: -- °C</div>
-              </div>
-            </div>
-            <!-- Датчик температуры GPU Core расположен ПОД спидометром загрузки -->
-            <div id="sys-metric-gpu-temp-slider-${idx}" style="width: 100%;"></div>
-          </div>
-
-          <!-- Центральная колонка: Модель графического процессора и экспресс-метрики KPI -->
-          <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 px-3" style="min-width: 280px;">
-            <div class="text-center mb-1.5">
-              <span class="fw-bold text-warning" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
-              <div class="d-flex align-items-center justify-content-center gap-1.5 mt-0.5">
-                <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.70rem;">${vendor} · PCIe</span>
-                <span class="badge bg-warning-subtle text-warning border border-warning font-monospace" id="sys-gpu-status-badge-${idx}" style="font-size: 0.70rem;">● Ready</span>
+                <span class="fw-bold text-warning" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
+                <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                  <span class="badge bg-dark border border-secondary text-light font-monospace" id="sys-metric-gpu-vendor-badge-${idx}" style="font-size: 0.70rem;">${vendor} · PCIe</span>
+                  <span class="badge bg-warning-subtle text-warning border border-warning font-monospace" id="sys-gpu-status-badge-${idx}" style="font-size: 0.70rem;">● Ready</span>
+                </div>
               </div>
             </div>
             <div class="sys-banner-kpi-grid">
@@ -2391,31 +2458,45 @@
             </div>
           </div>
 
-          <!-- Правая колонка: Сводная таблица о GPU (кликабельна для запуска AI-аудита) -->
-          <div class="sys-gpu-specs-card p-2 rounded-2 d-flex flex-column justify-content-between" 
-               id="sys-gpu-specs-card-${idx}"
-               style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.12); min-width: 290px; max-width: 360px;"
-               onclick="window.inspectGpuSpecsWithAi && window.inspectGpuSpecsWithAi(${idx})"
-               title="Нажмите для вызова AI-аудита и экспертного анализа графического процессора">
-            <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: rgba(255, 255, 255, 0.08) !important;">
-              <span class="text-light fw-bold d-flex align-items-center gap-1" style="font-size: 0.78rem;">
-                <i class="bi bi-info-circle text-warning"></i>Характеристики GPU
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1" style="font-size: 0.62rem;"><i class="bi bi-stars me-0.5"></i>AI</span>
-              </span>
-              <span class="badge bg-dark border border-secondary text-warning font-monospace" style="font-size: 0.68rem;" id="sys-gpu-spec-directx-${idx}">DirectX 12</span>
+          <!-- Центральная колонка: Спидометр загрузки, справа от него значение с динамическим оттенком, а СНИЗУ — датчик температуры -->
+          <div class="sys-banner-col-gauge d-flex flex-column justify-content-between gap-1.5">
+            <div class="d-flex align-items-center gap-2.5">
+              <div id="sys-metric-gpu-gauge-${idx}" style="width: 120px; height: 68px; flex-shrink: 0;"></div>
+              <div>
+                <div class="sys-value text-warning" id="sys-metric-gpu-val-${idx}" style="font-size: 2.1rem; line-height: 1; font-weight: 800; transition: color 0.3s ease, text-shadow 0.3s ease;">0.0%</div>
+                <div class="text-light mt-1 font-monospace" style="font-size: 0.82rem; font-weight: 700;" id="sys-metric-gpu-core-temp-${idx}">GPU: -- °C</div>
+              </div>
             </div>
-            <div class="sys-gpu-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 0.74rem;">
-              <div class="d-flex justify-content-between"><span class="text-muted">VRAM Объем:</span><span class="text-light font-monospace fw-semibold" id="sys-gpu-spec-vram-${idx}">--</span></div>
-              <div class="d-flex justify-content-between"><span class="text-muted">Исп. VRAM:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-vram-used-${idx}">--</span></div>
-              <div class="d-flex justify-content-between"><span class="text-muted">Частота Core:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-core-clock-${idx}">--</span></div>
-              <div class="d-flex justify-content-between"><span class="text-muted">Частота Mem:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-mem-clock-${idx}">--</span></div>
-              <div class="d-flex justify-content-between" style="grid-column: span 2;"><span class="text-muted">Драйвер / API:</span><span class="text-info font-monospace fw-semibold" id="sys-gpu-spec-driver-${idx}">--</span></div>
+            <!-- Датчик температуры GPU Core расположен ПОД спидометром загрузки -->
+            <div id="sys-metric-gpu-temp-slider-${idx}" style="width: 100%;"></div>
+          </div>
+
+          <!-- Правая колонка: Сводная таблица о GPU (кликабельна для запуска AI-аудита) -->
+          <div class="sys-banner-col-specs">
+            <div class="sys-gpu-specs-card p-2 rounded-2 d-flex flex-column justify-content-between h-100" 
+                 id="sys-gpu-specs-card-${idx}"
+                 onclick="window.inspectGpuSpecsWithAi && window.inspectGpuSpecsWithAi(${idx})"
+                 title="Нажмите для вызова AI-аудита и экспертного анализа графического процессора">
+              <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom" style="border-color: var(--border-subtle) !important;">
+                <span class="text-light fw-bold d-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                  <i class="bi bi-info-circle text-warning"></i>Характеристики GPU
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace ms-1" style="font-size: 0.62rem;"><i class="bi bi-stars me-0.5"></i>AI</span>
+                </span>
+                <span class="badge bg-dark border border-secondary text-warning font-monospace" style="font-size: 0.68rem;" id="sys-gpu-spec-directx-${idx}">DirectX 12</span>
+              </div>
+              <div class="sys-gpu-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 0.74rem;">
+                <div class="d-flex justify-content-between"><span class="text-muted">VRAM Объем:</span><span class="text-light font-monospace fw-semibold" id="sys-gpu-spec-vram-${idx}">--</span></div>
+                <div class="d-flex justify-content-between"><span class="text-muted">Исп. VRAM:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-vram-used-${idx}">--</span></div>
+                <div class="d-flex justify-content-between"><span class="text-muted">Частота Core:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-core-clock-${idx}">--</span></div>
+                <div class="d-flex justify-content-between"><span class="text-muted">Частота Mem:</span><span class="text-warning font-monospace fw-semibold" id="sys-gpu-spec-mem-clock-${idx}">--</span></div>
+                <div class="d-flex justify-content-between" style="grid-column: span 2;"><span class="text-muted">Драйвер / API:</span><span class="text-info font-monospace fw-semibold" id="sys-gpu-spec-driver-${idx}">--</span></div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- График истории GPU (Загрузка %, Температура °C, Мощность / Память %) с логарифмической/линейной шкалой -->
-        <div class="sys-full-only p-2.5 mb-2.5 rounded-2" style="background: rgba(0, 0, 0, 0.4); border: 1.5px solid rgba(255, 255, 255, 0.15); position: relative;">
+        <div class="sys-full-only sys-history-panel p-2.5 mb-2.5 rounded-2">
           <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
               <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-warning me-1"></i>История GPU</span>
@@ -2434,7 +2515,7 @@
           <!-- Контейнер графика и интерактивного тултипа -->
           <div style="position: relative; width: 100%; height: 90px;" id="sys-gpu-spark-container-${idx}">
             <div id="sys-gpu-spark-${idx}" style="width: 100%; height: 100%;"></div>
-            <div id="sys-gpu-spark-tooltip-${idx}" style="display: none; position: absolute; top: 6px; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 4px 8px; font-size: 0.70rem; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.6); white-space: nowrap;"></div>
+            <div id="sys-gpu-spark-tooltip-${idx}" class="sys-spark-tooltip" style="display: none;"></div>
           </div>
         </div>
 
@@ -2445,16 +2526,12 @@
                title="Нажмите, чтобы развернуть или скрыть детализацию по подсистемам и сенсорам GPU"
                onclick="window.toggleSysGpuDetails && window.toggleSysGpuDetails(${idx})">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-              <span class="text-warning" style="font-size: 1rem;"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+              <button type="button" class="panel-toggle-drill collapsed me-1" id="sys-gpu-details-drill-btn-${idx}" tabindex="-1" style="pointer-events: none;">
+                <img src="/html/assets/red_drill.png?v=20261008_v1" alt="Дрель">
+              </button>
               <span class="fw-bold" style="font-size: 0.88rem; color: var(--text-color);">Детализация: Блоки, подсистемы и сенсоры GPU</span>
               <span class="badge bg-dark border border-secondary text-warning font-monospace ms-1" style="font-size: 0.72rem;" id="sys-gpu-engines-count-badge-${idx}">0 блоков</span>
               <span class="badge bg-dark border border-secondary text-danger font-monospace" style="font-size: 0.72rem;" id="sys-gpu-sensors-count-badge-${idx}">0 параметров</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-xs btn-outline-warning rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5" id="sys-gpu-details-action-btn-${idx}" type="button" style="pointer-events: none; font-size: 0.76rem;">
-                <i class="bi bi-chevron-down" id="sys-gpu-details-toggle-icon-${idx}"></i>
-                <span id="sys-gpu-details-toggle-text-${idx}">Развернуть детализацию</span>
-              </button>
             </div>
           </div>
 
@@ -2868,92 +2945,6 @@
         <div class="text-truncate" title="${escapeHtml(snap.alerts?.latest_alert || '')}">${escapeHtml(snap.alerts?.latest_alert || 'Система стабильна')}</div>
       `;
     }
-
-    renderProcessTable();
-    if (snap.network_activity) {
-      renderNetworkActivityTable(snap.network_activity);
-    }
-  }
-
-  function renderProcessTable() {
-    if (!latestTelemetrySnapshot || isSysPaused) return;
-    const filterInput = document.getElementById('sys-proc-search');
-    const filter = (filterInput?.value || '').toLowerCase().trim();
-    const tbody = document.getElementById('sys-proc-tbody');
-    if (!tbody) return;
-
-    const processes = latestTelemetrySnapshot.top_processes || [];
-    const filtered = processes.filter(p => {
-      if (!filter) return true;
-      return (
-        String(p.pid).includes(filter) ||
-        (p.name || '').toLowerCase().includes(filter) ||
-        (p.username && p.username.toLowerCase().includes(filter))
-      );
-    });
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Процессы не найдены</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = filtered.map((p, idx) => {
-      let cpuClass = '';
-      if (p.cpu_percent > 40) cpuClass = 'badge-cpu-high';
-      else if (p.cpu_percent > 15) cpuClass = 'badge-cpu-med';
-
-      return `
-        <tr class="sys-proc-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной AI-диагностики процесса">
-          <td class="font-monospace fw-semibold text-info">${p.pid}</td>
-          <td style="font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-color);" title="${escapeHtml(p.name || '')}">${escapeHtml(p.name || '')}</td>
-          <td class="text-muted">${escapeHtml(p.status || 'running')}</td>
-          <td style="text-align: right;" class="${cpuClass}">${Number(p.cpu_percent || 0).toFixed(1)}%</td>
-          <td style="text-align: right;" class="font-monospace text-success fw-semibold">${Number(p.memory_mb || 0).toFixed(1)} MB</td>
-          <td style="text-align: right;" class="font-monospace text-warning fw-semibold">${p.num_threads || 1}</td>
-          <td class="text-muted">${escapeHtml(p.username || 'SYSTEM')}</td>
-        </tr>
-      `;
-    }).join('');
-
-    tbody.querySelectorAll('.sys-proc-row').forEach(row => {
-      row.onclick = () => {
-        const idx = parseInt(row.getAttribute('data-idx'), 10);
-        const p = filtered[idx];
-        if (!p) return;
-
-        if (window.AITableModal) {
-          window.AITableModal.show({
-            icon: '⚙️',
-            title: p.name,
-            subtitle: `PID: ${p.pid} | ${p.username || 'SYSTEM'}`,
-            tableType: 'process',
-            badges: [
-              { text: `PID ${p.pid}`, class: 'badge bg-info text-dark' },
-              { text: p.status || 'running', class: 'badge bg-success' }
-            ],
-            metadata: [
-              { label: 'Имя процесса', value: p.name },
-              { label: 'Process ID (PID)', value: String(p.pid) },
-              { label: 'Пользователь / Учетная запись', value: p.username || 'SYSTEM' },
-              { label: 'Статус', value: p.status || 'Выполняется' },
-              { label: 'Загрузка CPU', value: `${Number(p.cpu_percent || 0).toFixed(1)}%` },
-              { label: 'Оперативная память', value: `${Number(p.memory_mb || 0).toFixed(1)} MB` },
-              { label: 'Количество потоков', value: String(p.num_threads || 1) },
-              { label: 'Исполняемый путь', value: p.exe || p.executable_path || 'Системный процесс Windows', isCode: true, fullWidth: true }
-            ],
-            rawTitle: 'Команда запуска / Аргументы',
-            rawContent: Array.isArray(p.cmdline) ? p.cmdline.join(' ') : (p.cmdline || p.exe || ''),
-            requestData: {
-              pid: p.pid,
-              cpu_percent: p.cpu_percent,
-              memory_mb: p.memory_mb,
-              username: p.username,
-              status: p.status
-            }
-          });
-        }
-      };
-    });
   }
 
   async function fetchNetworkActivity() {
@@ -3315,15 +3306,6 @@
   }
 
   function bindTabEvents() {
-    const btnPause = document.getElementById('btn-sys-pause-proc');
-    if (btnPause) {
-      btnPause.onclick = () => {
-        isSysPaused = !isSysPaused;
-        btnPause.innerText = isSysPaused ? 'Возобновить' : 'Пауза';
-        btnPause.className = isSysPaused ? 'btn btn-sm btn-warning rounded-pill px-3' : 'btn btn-sm btn-outline-secondary rounded-pill px-3';
-      };
-    }
-
     const btnRefreshSensors = document.getElementById('btn-sys-refresh-sensors');
     if (btnRefreshSensors) {
       btnRefreshSensors.onclick = () => fetchLhmSensors();
@@ -3409,11 +3391,6 @@
       };
     }
 
-    const searchProc = document.getElementById('sys-proc-search');
-    if (searchProc) {
-      searchProc.oninput = () => renderProcessTable();
-    }
-
     const btnAudit = document.getElementById('btn-sys-run-audit');
     if (btnAudit) {
       btnAudit.onclick = () => runAiDiagnostics();
@@ -3427,26 +3404,23 @@
       if (!sysContainer) return;
       if (isCompact) {
         sysContainer.classList.add('sys-compact-mode');
-        if (compactText) compactText.textContent = 'Развернуть';
         if (btnCompact) {
-          btnCompact.classList.add('btn-info', 'text-dark');
-          btnCompact.classList.remove('btn-outline-secondary');
+          btnCompact.classList.add('collapsed');
+          btnCompact.title = 'Развернуть все панели';
         }
       } else {
         sysContainer.classList.remove('sys-compact-mode');
-        if (compactText) compactText.textContent = 'Компактно';
         if (btnCompact) {
-          btnCompact.classList.remove('btn-info', 'text-dark');
-          btnCompact.classList.add('btn-outline-secondary');
+          btnCompact.classList.remove('collapsed');
+          btnCompact.title = 'Свернуть все панели';
         }
       }
     };
 
     if (btnCompact && sysContainer) {
-      const savedCompact = localStorage.getItem('sys_inspector_compact_mode') === 'true';
-      if (savedCompact) {
-        updateCompactUI(true);
-      }
+      const savedCompact = localStorage.getItem('sys_inspector_compact_mode');
+      const isCompact = savedCompact === null ? true : savedCompact === 'true';
+      updateCompactUI(isCompact);
       btnCompact.onclick = () => {
         const nextState = !sysContainer.classList.contains('sys-compact-mode');
         updateCompactUI(nextState);
@@ -4093,8 +4067,8 @@
   async function fetchLiveFileEvents() {
     try {
       const [resEvents, resTelem] = await Promise.all([
-        fetch('/api/sysadmin/file-audit/live-events?limit=30'),
-        fetch('/api/sysadmin/file-audit/telemetry').catch(() => null)
+        fetch('/api/v1/system/file-audit/live-events?limit=30'),
+        fetch('/api/v1/system/file-audit/telemetry').catch(() => null)
       ]);
 
       if (resTelem && resTelem.ok) {
@@ -4574,7 +4548,7 @@
 
   async function fetchExclusionsData() {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions');
+      const res = await fetch('/api/v1/system/file-audit/exclusions');
       if (res.ok) {
         currentExclusions = await res.json();
         renderExclusionsLists();
@@ -4588,7 +4562,7 @@
     if (!value || !value.trim()) return;
     const cleanVal = value.trim();
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/add', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, value: cleanVal })
@@ -4611,7 +4585,7 @@
   window._removeExclusionItem = async function(category, value) {
     if (!value) return;
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/remove', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, value })
@@ -4631,7 +4605,7 @@
 
   async function toggleExclusionsActive(enabled) {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/toggle', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled })
@@ -4678,7 +4652,7 @@
     }
 
     try {
-      const res = await fetch('/api/sysadmin/file-audit/watch-dirs');
+      const res = await fetch('/api/v1/system/file-audit/watch-dirs');
       if (res.ok) {
         const data = await res.json();
         stagedWatchDirs = data.watch_dirs && data.watch_dirs.length ? [...data.watch_dirs] : [currentWatchDir || 'C:\\'];
@@ -4817,7 +4791,7 @@
         btnApply.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Применение...';
 
         try {
-          const res = await fetch('/api/sysadmin/file-audit/watch-dirs', {
+          const res = await fetch('/api/v1/system/file-audit/watch-dirs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paths: stagedWatchDirs })
@@ -4909,11 +4883,9 @@
       await fetchMemoryIoFromApi();
       await fetchNetworkLoadFromApi();
       await fetchStorageLoadFromApi();
-      await fetchLhmSensors();
-      await fetchLiveFileEvents();
     };
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-hardware-load-inspector', pollHandler, seconds * 1000, { immediate: false });
+      window.registerTabPoller('tab-hardware-load-inspector', pollHandler, seconds * 1000, { pollerId: 'hw_load_inspector', immediate: false });
     } else {
       if (window._sysSensorInterval) {
         clearInterval(window._sysSensorInterval);
@@ -4969,33 +4941,30 @@
   async function initSystemInspectorTab() {
     console.log('[SystemInspectorTab] Initializing...');
     bindTabEvents();
-    await fetchCpuLoadFromApi();
-    await fetchGpuLoadFromApi();
-    await fetchMemoryIoFromApi();
-    await fetchNetworkLoadFromApi();
-    await fetchStorageLoadFromApi();
-    await fetchLhmSensors();
-    await fetchLiveFileEvents();
-    await fetchNetworkActivity();
+    if (window.isTabActive ? (window.isTabActive('tab-hardware-load-inspector') || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) : false) {
+      await fetchCpuLoadFromApi();
+      await fetchGpuLoadFromApi();
+      await fetchMemoryIoFromApi();
+      await fetchNetworkLoadFromApi();
+      await fetchStorageLoadFromApi();
 
-    try {
-      const snapRes = await fetch('/api/v1/system/summary');
-      if (snapRes.ok) {
-        latestTelemetrySnapshot = await snapRes.json();
-        updateTelemetryDashboard(latestTelemetrySnapshot);
+      try {
+        const snapRes = await fetch('/api/v1/system/summary');
+        if (snapRes.ok) {
+          latestTelemetrySnapshot = await snapRes.json();
+          updateTelemetryDashboard(latestTelemetrySnapshot);
+        }
+      } catch (e) {
+        console.warn('[SystemInspectorTab] Initial snapshot fetch failed:', e);
       }
-    } catch (e) {
-      console.warn('[SystemInspectorTab] Initial snapshot fetch failed:', e);
-    }
 
-    if (typeof connectSystemWebSocket === 'function') {
-      try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
+      if (typeof connectSystemWebSocket === 'function') {
+        try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
+      }
     }
 
     // Periodic sensor refresh
-    if (!window._sysSensorInterval) {
-      setupSysSensorInterval(_currentUiRefreshSeconds || 5);
-    }
+    setupSysSensorInterval(_currentUiRefreshSeconds || 5);
   }
 
   function activateSystemInspectorTab() {
@@ -5006,7 +4975,6 @@
     fetchMemoryIoFromApi();
     fetchNetworkLoadFromApi();
     fetchStorageLoadFromApi();
-    fetchLhmSensors();
     if (typeof connectSystemWebSocket === 'function') {
       try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
     }

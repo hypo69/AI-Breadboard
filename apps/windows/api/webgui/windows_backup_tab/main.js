@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/windows_backup_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 11:22:00
+ * Updated: 2026-10-08 03:45:00
  * =============================================================================
  */
 
@@ -291,7 +291,7 @@
       btnEnableAudit.onclick = async () => {
         if (confirm('Включить системный аудит файловой системы (auditpol /set /subcategory:File System)?')) {
           try {
-            const res = await fetch('/api/sysadmin/file-audit/policy', {
+            const res = await fetch('/api/v1/system/file-audit/policy', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ enable_success: true, enable_failure: true })
@@ -312,7 +312,7 @@
         const targetPath = prompt('Укажите путь к папке для настройки SACL аудита удаления:', 'c:\\Users\\onela\\AppData\\Local\\AI-Breadboard');
         if (targetPath) {
           try {
-            const res = await fetch('/api/sysadmin/file-audit/folder-sacl', {
+            const res = await fetch('/api/v1/system/file-audit/folder-sacl', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ path: targetPath, principal: 'Everyone', enable: true })
@@ -626,7 +626,7 @@
 
   async function loadFileDeletions() {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/deletions?hours=24&limit=100&deletions_only=true');
+      const res = await fetch('/api/v1/system/file-audit/deletions?hours=24&limit=100&deletions_only=true');
       if (!res.ok) return;
       const data = await res.json();
       const events = data.events || [];

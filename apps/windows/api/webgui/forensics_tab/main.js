@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/forensics_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -155,7 +155,9 @@
   function applyPoller(freq, runInitial = false) {
     stopPolling();
     if (freq === 'start' || freq === 'manual') {
-      if (runInitial) fetchForensicsActivity();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-forensics') : true)) {
+        fetchForensicsActivity();
+      }
       return;
     }
 
@@ -168,7 +170,9 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-forensics', fetchForensicsActivity, intervalMs, { pollerId, immediate: runInitial });
     } else {
-      if (runInitial) fetchForensicsActivity();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-forensics') : true)) {
+        fetchForensicsActivity();
+      }
       autoRefreshTimer = setInterval(() => {
         if (window.isTabActive ? window.isTabActive('tab-forensics') : true) {
           fetchForensicsActivity();
@@ -199,7 +203,7 @@
     }
   }
 
-  async function init() {
+  async function initForensicsTab() {
     bindEvents();
     const currentFreq = getFrequency();
     const select = document.getElementById('diag-forensics-poll-freq');
@@ -207,9 +211,24 @@
     applyPoller(currentFreq, true);
   }
 
+  window.initForensicsTab = initForensicsTab;
+  window.activateForensicsTab = () => {
+    applyPoller(getFrequency(), true);
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.isTabActive ? window.isTabActive('tab-forensics') : false) {
+        initForensicsTab();
+      } else {
+        bindEvents();
+      }
+    });
   } else {
-    setTimeout(init, 10);
+    if (window.isTabActive ? window.isTabActive('tab-forensics') : false) {
+      initForensicsTab();
+    } else {
+      bindEvents();
+    }
   }
 })();

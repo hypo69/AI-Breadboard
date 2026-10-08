@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 22:15:00
+ * Updated: 2026-10-08 04:24:00
  * =============================================================================
  */
 
@@ -31,6 +31,7 @@ import { initTheme } from './theme.js';
 import { initUserSettings } from './userSettings.js';
 import { initActivityTracker } from './activityTracker.js';
 import { initCacheUI } from './cache-ui.js';
+import { initModelTester, sendModelPing } from './model-tester.js';
 import { switchTab, loadTab, setupTabClicks } from './tab-core.js';
 import './api-cache.js'; // Подключаем универсальный API-кеш слой
 import './test-api-cache.js'; // Подключаем тестовый скрипт
@@ -38,6 +39,8 @@ import './test-api-cache.js'; // Подключаем тестовый скри�
 // Глобальный экспорт для вызова из вкладок
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
+window.sendModelPing = sendModelPing;
+window.initModelTester = initModelTester;
 window.applyTranslations = applyTranslations;
 
 // Карта вкладок: имя → [htmlUrl, jsUrl]
@@ -58,7 +61,6 @@ const TABS = {
   // Оборудование, Датчики и Телеметрия
   'about-system':             ['/html/about_system_tab/index.html',             '/html/about_system_tab/main.js'],
   'hardware-monitor':         ['/html/hardware_monitor_tab/index.html',         '/html/hardware_monitor_tab/main.js'],
-  'telemetry-history':        ['/html/telemetry_history_tab/index.html',        '/html/telemetry_history_tab/main.js'],
   'telemetry-research':       ['/html/telemetry_research_tab/index.html',       '/html/telemetry_research_tab/main.js'],
   'ai-benchmark':             ['/html/ai_benchmark_tab/index.html',             '/html/ai_benchmark_tab/main.js'],
   'process-leaks':            ['/html/process_leaks_tab/index.html',            '/html/process_leaks_tab/main.js'],
@@ -88,6 +90,7 @@ const TABS = {
   'registry-viewer':          ['/html/registry_viewer_tab/index.html',          '/html/registry_viewer_tab/main.js'],
   'software-manager':         ['/html/software_manager_tab/index.html',         '/html/software_manager_tab/main.js'],
   'user-directories':         ['/html/user_directories_tab/index.html',         '/html/user_directories_tab/main.js'],
+  'accounts-identity':        ['/html/accounts_identity_tab/index.html',        '/html/accounts_identity_tab/main.js'],
 
   // Безопасность и Целостность
   'firewall-manager':         ['/html/firewall_manager_tab/index.html',         '/html/firewall_manager_tab/main.js'],
@@ -100,7 +103,6 @@ const TABS = {
   // Сеть и Системные Логи
   'network':                  ['/html/network_tab/index.html',                  '/html/network_tab/main.js'],
   'performance-tracing':      ['/html/performance_tracing_tab/index.html',      '/html/performance_tracing_tab/main.js'],
-  'event-logs':               ['/html/event_logs_tab/index.html',               '/html/event_logs_tab/main.js'],
   'system-logs':              ['/html/system_logs_tab/index.html',              '/html/system_logs_tab/main.js'],
 };
 
@@ -154,10 +156,11 @@ async function init() {
   // 2. i18n (с автоматическим парсингом URL параметров: ?region=ru-ru, ?locale=ru-RU и т.д.)
   await initI18n();
 
-  // 3. Пользователь, активность, кеш
+  // 3. Пользователь, активность, кеш, быстрая проверка модели
   await initUserSettings();
   initActivityTracker();
   initCacheUI();
+  initModelTester();
 
   // 4. Единый обработчик кликов
   setupTabClicks();

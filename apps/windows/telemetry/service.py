@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 13:59:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -105,6 +105,7 @@ class TelemetryLoggerService:
         self._start_time: Optional[float] = None
         self._last_tick_time: Optional[float] = None
         self._last_hw_audit_time: Optional[float] = None
+        self._last_def_audit_time: Optional[float] = None
         self._last_rollup_time: Optional[float] = None
         self._last_db_cleanup_time: Optional[float] = None
         self._last_error: Optional[str] = None
@@ -213,6 +214,12 @@ class TelemetryLoggerService:
         except Exception as st_init_ex:
             logger.debug(f'Фиксация снимка автозапуска при старте телеметрии: {st_init_ex}')
 
+        # При старте телеметрии фиксируем снимок состояния Defender и безопасности в БД
+        try:
+            threading.Thread(target=self.collect_and_save_defender_state, name='DefenderInitCollector', daemon=True).start()
+        except Exception as def_init_ex:
+            logger.debug(f'Ошибка запуска инициализации Defender: {def_init_ex}')
+
         self._thread = threading.Thread(target=self._worker_loop, name='TelemetryLoggerWorker', daemon=True)
         self._thread.start()
         logger.info(f'Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, аудит железа: {self.hardware_audit_interval_sec}с, W64: {self.enable_w64}, БД: {self.storage.db_path})')
@@ -308,7 +315,12 @@ class TelemetryLoggerService:
                         self.collector.get_extended_system_audit()
                     except Exception as ext_ex:
                         logger.debug(f'Ошибка при периодическом расширенном аудите: {ext_ex}')
+                    try:
+                        self.collect_and_save_defender_state()
+                    except Exception as def_ex:
+                        logger.debug(f'Ошибка при периодическом аудите Defender: {def_ex}')
                     self._last_hw_audit_time = loop_start
+                    self._last_def_audit_time = loop_start
                 if self._last_rollup_time is None or loop_start - self._last_rollup_time >= self.rollup_interval_sec:
                     try:
                         self.run_rollups()
@@ -333,6 +345,37 @@ class TelemetryLoggerService:
             sleep_time = max(0.01, self.interval_sec - elapsed)
             if self._stop_event.wait(timeout=sleep_time):
                 break
+
+    def collect_and_save_defender_state(self) -> None:
+        """Опрашивает текущее состояние Microsoft Defender и сохраняет снимок в базу данных SQLite."""
+        try:
+            from apps.windows.modules.defender.core.defender_service import DefenderService
+            from apps.windows.modules.defender.core.asr_manager import ASRManager
+            from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+            from apps.windows.modules.defender.core.threat_manager import ThreatManager
+
+            def_svc = DefenderService()
+            asr_mgr = ASRManager(def_svc)
+            excl_aud = ExclusionsAuditor(def_svc)
+            threat_mgr = ThreatManager(def_svc)
+
+            status = def_svc.get_defender_status()
+            asr_rules = asr_mgr.get_asr_rules()
+            excl_report = excl_aud.audit_exclusions()
+            threats = threat_mgr.get_threats_history(limit=50)
+
+            all_exclusions = excl_report.path_exclusions + excl_report.extension_exclusions + excl_report.process_exclusions
+            snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
+            self.storage.save_defender_snapshot(
+                snapshot_id=snap_id,
+                defender_status=status,
+                exclusions=all_exclusions,
+                asr_rules=asr_rules,
+                threats=threats,
+            )
+            logger.debug(f'Снимок состояния Defender зафиксирован в БД ({snap_id})')
+        except Exception as e:
+            logger.debug(f'Ошибка сбора и сохранения состояния Defender: {e}')
 
     def run_rollups(self) -> Dict[str, Any]:
         """Принудительно запускает процедуры обобщения устаревших метрик процессов.

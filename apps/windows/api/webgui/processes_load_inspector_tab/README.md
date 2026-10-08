@@ -14,14 +14,14 @@
 
 - `GET /api/v1/system/summary` — срез топ-процессов и системных ресурсов.
 - `GET /api/v1/system/network-activity` — снимок активных сокетов и сетевой активности процессов.
-- `GET /api/sysadmin/file-audit/live-events` — поток последних файловых событий перехватчика.
-- `GET /api/sysadmin/file-audit/telemetry` — суммарная телеметрия дискового I/O и темпа событий.
-- `GET /api/sysadmin/file-audit/watch-dirs` — список отслеживаемых папок.
-- `POST /api/sysadmin/file-audit/watch-dirs` — установка отслеживаемых директорий.
-- `GET /api/sysadmin/file-audit/exclusions` — правила фильтрации и статистика спам-событий.
-- `POST /api/sysadmin/file-audit/exclusions/add` — добавление правила исключения.
-- `POST /api/sysadmin/file-audit/exclusions/remove` — удаление правила.
-- `POST /api/sysadmin/file-audit/exclusions/toggle` — включение/выключение фильтрации.
+- `GET /api/v1/system/file-audit/live-events` — поток последних файловых событий перехватчика.
+- `GET /api/v1/system/file-audit/telemetry` — суммарная телеметрия дискового I/O и темпа событий.
+- `GET /api/v1/system/file-audit/watch-dirs` — список отслеживаемых папок.
+- `POST /api/v1/system/file-audit/watch-dirs` — установка отслеживаемых директорий.
+- `GET /api/v1/system/file-audit/exclusions` — правила фильтрации и статистика спам-событий.
+- `POST /api/v1/system/file-audit/exclusions/add` — добавление правила исключения.
+- `POST /api/v1/system/file-audit/exclusions/remove` — удаление правила.
+- `POST /api/v1/system/file-audit/exclusions/toggle` — включение/выключение фильтрации.
 - `GET /api/sysadmin/filesystem/drives` — получение списка физических дисков хоста.
 - `GET /api/sysadmin/filesystem/browse` — проводник файловой системы для выбора папок.
 

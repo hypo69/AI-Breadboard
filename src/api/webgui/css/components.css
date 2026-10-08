@@ -13,7 +13,7 @@
  * Project: ai-breadboard
  * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-06 19:05:00
+ * Updated: 2026-10-08 02:56:00
  * =============================================================================
  */
 
@@ -23,20 +23,9 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   КАРТОЧКИ - ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ ВКЛАДОК
+   КАРТОЧКИ
    ═══════════════════════════════════════════════════════════════════════════ */
-.card,
-.ui-panel,
-.ui-kpi-card,
-.sys-card,
-.def-card,
-.sysctl-card,
-.scc-card,
-.winadmin-card,
-.about-sys-card,
-.hw-card,
-.net-card,
-.speed-gauge-card {
+.card {
   background-color: var(--card-bg);
   border: 1.5px solid var(--border-color);
   color: var(--card-text);
@@ -45,31 +34,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-.card:hover,
-.ui-panel:hover,
-.ui-kpi-card:hover,
-.sys-card:hover,
-.def-card:hover,
-.sysctl-card:hover,
-.scc-card:hover,
-.winadmin-card:hover,
-.about-sys-card:hover,
-.hw-card:hover,
-.net-card:hover,
-.speed-gauge-card:hover {
-  border-color: var(--nav-active);
-  box-shadow: var(--shadow-md);
-}
-
-.card-header,
-.ui-panel-header,
-.sys-panel-header,
-.def-panel-header,
-.sysctl-panel-header,
-.winadmin-panel-header,
-.about-sys-panel-header,
-.hw-panel-header,
-.net-panel-header {
+.card-header {
   background-color: var(--surface-2);
   border-bottom: 1.5px solid var(--border-color);
   color: var(--text-color);
@@ -374,80 +339,58 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ТАБЛИЦЫ - ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ ВКЛАДОК
+   ТАБЛИЦЫ
    ═══════════════════════════════════════════════════════════════════════════ */
-.table,
-.ui-spec-table,
-.about-sys-spec-table,
-.sysctl-spec-table,
-.def-spec-table,
-.winadmin-spec-table,
-.hw-table,
-.net-table {
+.table {
   --bs-table-color: var(--text-color);
   --bs-table-bg: transparent;
   --bs-table-border-color: var(--border-color);
   font-size: 0.82rem;
-  width: 100%;
-  margin-bottom: 0;
-  border-collapse: separate;
-  border-spacing: 0;
 }
 
 .table th,
-.ui-spec-table th,
-.about-sys-spec-table th,
-.sysctl-spec-table th,
-.def-spec-table th,
-.winadmin-spec-table th,
-.hw-table th,
-.net-table th {
-  padding: 8px 16px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid var(--border-subtle);
-  background: transparent;
+.table td {
+  padding: 0.4rem 0.6rem;
   vertical-align: middle;
 }
 
-.table td,
-.ui-spec-table td,
-.about-sys-spec-table td,
-.sysctl-spec-table td,
-.def-spec-table td,
-.winadmin-spec-table td,
-.hw-table td,
-.net-table td {
-  padding: 9px 14px;
-  border-bottom: 1px solid var(--border-subtle);
-  vertical-align: middle;
-  line-height: 1.45;
-  color: var(--text-color);
+.table-hover tbody tr:hover {
+  background-color: var(--nav-hover-bg);
 }
 
-.table tr:hover td,
-.ui-spec-table tr:hover td,
-.about-sys-spec-table tr:hover td,
-.sysctl-spec-table tr:hover td,
-.def-spec-table tr:hover td,
-.winadmin-spec-table tr:hover td,
-.hw-table tr:hover td,
-.net-table tr:hover td {
-  background: rgba(56, 189, 248, 0.04);
+.table-dark {
+  --bs-table-bg: var(--surface-2);
+  --bs-table-color: var(--text-color);
 }
 
-.table tr:last-child td,
-.ui-spec-table tr:last-child td,
-.about-sys-spec-table tr:last-child td,
-.sysctl-spec-table tr:last-child td,
-.def-spec-table tr:last-child td,
-.winadmin-spec-table tr:last-child td,
-.hw-table tr:last-child td,
-.net-table tr:last-child td {
-  border-bottom: none;
+[data-theme="dark"] .table-light,
+[data-theme="dark"] thead.table-light,
+[data-theme="dark"] thead.table-light th {
+  background-color: var(--surface-2) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table {
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+.table-responsive-adaptive {
+  height: auto;
+  min-height: 120px;
+  max-height: clamp(320px, 58vh, 720px);
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table-responsive-adaptive thead th,
+.table-sticky-header thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--surface-2);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -955,8 +898,24 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   КАСКАДНАЯ ДИЗАЙН-СИСТЕМА (UNIFIED CASCADING UI SYSTEM)
+   ГЛОБАЛЬНЫЕ УТИЛИТАРНЫЕ КЛАССЫ (UNIFIED UTILITY CLASSES)
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Универсальная карточка (для простых случаев) ─────────────────────── */
+.card-unified {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-unified:hover {
+  border-color: var(--nav-active);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── 1. KPI & Метрические карточки ───────────────────────────────────────── */
 
 /* ── 1. KPI & Метрические карточки ───────────────────────────────────────── */
 .ui-kpi-card {
@@ -1425,6 +1384,92 @@
   color: #e2e8f0 !important;
 }
 
+/* ── 10. Дерево спецификации оборудования (Hardware Specification Tree) ────── */
+.about-sys-wrapper {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
 
+.about-sys-tree-node {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  margin-bottom: 0.65rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.05));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
 
+.about-sys-tree-node:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.about-sys-tree-title {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--text-color);
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.about-sys-tree-title:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.about-sys-tree-body {
+  background: var(--surface-1);
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  padding: 0;
+}
+
+.about-sys-chevron {
+  font-size: 0.72rem;
+  color: var(--accent-color, #38bdf8);
+  transition: transform 0.2s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ── 10. Кнопка-иконка сворачивания/разворачивания таблиц (Красная дрель) ─── */
+.panel-toggle-drill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  line-height: 1;
+  vertical-align: middle;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  border-radius: 4px;
+}
+
+.panel-toggle-drill:hover {
+  opacity: 0.85;
+  transform: scale(1.15);
+}
+
+.panel-toggle-drill:active {
+  transform: scale(0.92);
+}
+
+.panel-toggle-drill img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.panel-toggle-drill.collapsed img {
+  opacity: 0.7;
+}
 

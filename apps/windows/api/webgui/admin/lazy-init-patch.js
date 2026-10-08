@@ -113,7 +113,7 @@ window.addEventListener('load', async () => {
     { tabName: 'user-assistant', appId: 'user_assistant', htmlUrl: `/html/user_assistant_tab/index.html`, jsUrl: `/html/user_assistant_tab/main.js` },
     { tabName: 'gcloud', appId: 'gcloud_monitor', htmlUrl: `/html/gcloud_tab/index.html`, jsUrl: `/html/gcloud_tab/main.js` },
     { tabName: 'website-monitor', appId: 'website_monitor', htmlUrl: `/html/website_monitor_tab/index.html`, jsUrl: `/html/website_monitor_tab/main.js` },
-    { tabName: 'system-control', appId: 'system_control_center', htmlUrl: `/html/system_control_tab/index.html?v=20260924_v1`, jsUrl: `/html/system_control_tab/main.js?v=20260924_v1` },
+    { tabName: 'system-control', appId: 'system_control_center', htmlUrl: `/html/system_control_tab/index.html?v=20261008_v1`, jsUrl: `/html/system_control_tab/main.js?v=20261008_v1` },
     { tabName: 'system-logs', appId: 'system_log_viewer', htmlUrl: `/html/system_logs_tab/index.html`, jsUrl: `/html/system_logs_tab/main.js` },
     { tabName: 'software-audit', appId: 'software_audit', htmlUrl: `/html/software_audit_tab/index.html`, jsUrl: `/html/software_audit_tab/main.js` },
     { tabName: 'registry-viewer', appId: 'registry_viewer', htmlUrl: `/html/registry_viewer_tab/index.html`, jsUrl: `/html/registry_viewer_tab/main.js` },

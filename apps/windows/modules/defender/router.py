@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 17:42:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -28,13 +28,13 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from logger import logger
 from apps.windows.telemetry.sqlite import TelemetryStorage
-from apps.windows.defender.core.ai_diagnostician import AIDiagnostician
-from apps.windows.defender.core.asr_manager import ASRManager
-from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
-from apps.windows.defender.core.defender_service import DefenderService
-from apps.windows.defender.core.event_correlator import EventCorrelator
-from apps.windows.defender.core.exclusions_auditor import ExclusionsAuditor
-from apps.windows.defender.core.models import (
+from apps.windows.modules.defender.core.ai_diagnostician import AIDiagnostician
+from apps.windows.modules.defender.core.asr_manager import ASRManager
+from apps.windows.modules.defender.core.cfa_manager import ControlledFolderAccessManager
+from apps.windows.modules.defender.core.defender_service import DefenderService
+from apps.windows.modules.defender.core.event_correlator import EventCorrelator
+from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+from apps.windows.modules.defender.core.models import (
     ASRRuleInfo,
     ControlledFolderAccessInfo,
     DefenderDiagnosticReport,
@@ -49,8 +49,8 @@ from apps.windows.defender.core.models import (
     SuspiciousProcessChain,
     ThreatRecord,
 )
-from apps.windows.defender.core.process_tree_watcher import ProcessTreeWatcher
-from apps.windows.defender.core.threat_manager import ThreatManager
+from apps.windows.modules.defender.core.process_tree_watcher import ProcessTreeWatcher
+from apps.windows.modules.defender.core.threat_manager import ThreatManager
 
 def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
     """Инициализация и сборка маршрутов FastAPI роутера Defender на базе SQLite.
@@ -74,7 +74,8 @@ def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
         exclusions_auditor=exclusions_aud,
         threat_manager=threat_mgr,
         event_correlator=event_corr,
-        process_watcher=process_watch
+        process_watcher=process_watch,
+        storage=store,
     )
 
     @router.get('/status', response_model=DefenderStatus, summary='Получить статус Microsoft Defender')
@@ -176,11 +177,23 @@ def init_router(storage: Optional[TelemetryStorage] = None) -> APIRouter:
         try:
             db_exc = store.get_latest_defender_exclusions()
             if db_exc:
-                items = [ExclusionItem.model_validate(x) if hasattr(ExclusionItem, 'model_validate') else x for x in db_exc]
-                return ExclusionsAuditReport(timestamp=datetime.now(timezone.utc).isoformat(), total_exclusions=len(items), exclusions=items, overall_risk='SAFE')
+                items = [ExclusionItem.model_validate(x) for x in db_exc]
+                path_exc = [x for x in items if x.type == 'path']
+                ext_exc = [x for x in items if x.type == 'extension']
+                proc_exc = [x for x in items if x.type == 'process']
+                susp_count = sum(1 for x in items if str(x.risk_level).lower() in ('critical', 'high'))
+                return ExclusionsAuditReport(
+                    total_exclusions=len(items),
+                    suspicious_count=susp_count,
+                    path_exclusions=path_exc,
+                    extension_exclusions=ext_exc,
+                    process_exclusions=proc_exc,
+                    summary_recommendation='Аудит исключений сформирован из SQLite базы данных телеметрии'
+                )
             live_exc = exclusions_aud.audit_exclusions()
             snap_id = f"snap_defender_{int(datetime.now(timezone.utc).timestamp())}"
-            store.save_defender_snapshot(snap_id, defender_svc.get_defender_status(), exclusions=live_exc.exclusions if hasattr(live_exc, 'exclusions') else [])
+            all_items = live_exc.path_exclusions + live_exc.extension_exclusions + live_exc.process_exclusions
+            store.save_defender_snapshot(snap_id, defender_svc.get_defender_status(), exclusions=all_items)
             return live_exc
         except Exception as e:
             logger.error(f'Ошибка аудита исключений: {e}')

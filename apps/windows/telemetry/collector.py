@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 18:33:00
+# Updated: 2026-10-08 02:08:00
 # =============================================================================
 
 from __future__ import annotations
@@ -565,6 +565,15 @@ class SystemCollector:
         token_collector = ProcessTokenCollector()
         token_info_map = {info.pid: info for info in token_collector.collect()}
 
+        # Классификация оконных процессов
+        from apps.windows.modules.process_manager.core.classifier import (
+            ProcessClassifier,
+            WINDOWS_SYSTEM_PROCESS_NAMES,
+            KNOWN_APP_FRIENDLY_NAMES,
+        )
+        classifier = ProcessClassifier()
+        windowed_pids, titles_map = classifier.get_windowed_pids_and_titles()
+
         procs: List[ProcessMetrics] = []
         if PSUTIL_AVAILABLE:
             handle_attr = 'num_handles' if os.name == 'nt' else 'num_fds'
@@ -575,8 +584,18 @@ class SystemCollector:
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
+            name_to_windowed = {
+                (info.get('name') or '').lower(): True
+                for p_id, info in proc_dict.items()
+                if p_id in windowed_pids
+            }
+
             for pid, info in proc_dict.items():
                 try:
+                    p_name = info.get('name') or 'unknown'
+                    low_name = p_name.lower()
+                    exe_low = (info.get('exe') or '').lower()
+
                     mem_info = info.get('memory_info')
                     rss_mb = round(mem_info.rss / (1024 * 1024), 1) if mem_info else 0.0
                     cpu_p = round(info.get('cpu_percent') or 0.0, 1)
@@ -592,7 +611,7 @@ class SystemCollector:
                     parent_name = parent_info.get('name') if parent_info else None
 
                     # Построение цепочки предков
-                    ancestors = [info.get('name') or str(pid)]
+                    ancestors = [p_name or str(pid)]
                     curr_pid = ppid
                     visited = {pid}
                     while curr_pid and curr_pid in proc_dict and curr_pid not in visited:
@@ -609,11 +628,25 @@ class SystemCollector:
 
                     raw_cmdline = info.get('cmdline')
                     cmdline_str = ' '.join(raw_cmdline) if isinstance(raw_cmdline, list) else (str(raw_cmdline) if raw_cmdline else None)
-                    launch_reason = self._classify_launch_reason(parent_name, info.get('name'), session_id, cmdline_str)
+                    launch_reason = self._classify_launch_reason(parent_name, p_name, session_id, cmdline_str)
+
+                    # Классификация категории
+                    has_win = pid in windowed_pids
+                    is_app = has_win or (low_name in name_to_windowed and low_name not in WINDOWS_SYSTEM_PROCESS_NAMES)
+                    if is_app:
+                        category = 'app'
+                    elif low_name in WINDOWS_SYSTEM_PROCESS_NAMES or ('c:\\windows\\system32' in exe_low and not has_win):
+                        category = 'windows'
+                    else:
+                        category = 'background'
+
+                    win_titles = titles_map.get(pid, [])
+                    first_title = win_titles[0] if win_titles else None
+                    friendly = classifier._get_friendly_name(p_name, win_titles)
 
                     procs.append(ProcessMetrics(
                         pid=pid,
-                        name=info.get('name') or 'unknown',
+                        name=p_name,
                         status=info.get('status') or 'running',
                         cpu_percent=cpu_p,
                         memory_mb=rss_mb,
@@ -632,6 +665,10 @@ class SystemCollector:
                         process_guid=process_guid,
                         ancestor_chain=ancestor_chain,
                         launch_reason=launch_reason,
+                        category=category,
+                        is_app=is_app,
+                        friendly_name=friendly,
+                        window_title=first_title,
                     ))
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
@@ -657,6 +694,9 @@ class SystemCollector:
                 process_guid=f'proc_{os.getpid()}_{int(time.time())}',
                 ancestor_chain='cmd.exe → python.exe',
                 launch_reason='terminal_cli',
+                category='background',
+                is_app=False,
+                friendly_name='Python',
             )
             token = token_info_map.get(p.pid)
             if token:

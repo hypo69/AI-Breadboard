@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -43,17 +43,27 @@ class SyncTab {
     // Установка обработчиков
     this.attachEventListeners();
     
-    // Загрузка данных
-    await this.updateStatus();
-    await this.updateStats();
+    // Загрузка данных при активной вкладке
+    if (window.isTabActive ? window.isTabActive('tab-sync') : false) {
+      await this.updateStatus();
+      await this.updateStats();
+    }
     
     // Установка автообновления
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-sync', () => this.updateStatus(), 5000, { pollerId: 'sync_status', immediate: false });
-      window.registerTabPoller('tab-sync', () => this.updateStats(), 30000, { pollerId: 'sync_stats', immediate: false });
+      window.registerTabPoller('tab-sync', () => this.updateStatus(), 5000, { pollerId: 'sync_status', immediate: true });
+      window.registerTabPoller('tab-sync', () => this.updateStats(), 30000, { pollerId: 'sync_stats', immediate: true });
     } else {
-      setInterval(() => this.updateStatus(), 5000);
-      setInterval(() => this.updateStats(), 30000);
+      setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-sync') : true) {
+          this.updateStatus();
+        }
+      }, 5000);
+      setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-sync') : true) {
+          this.updateStats();
+        }
+      }, 30000);
     }
     
     this.initialized = true;

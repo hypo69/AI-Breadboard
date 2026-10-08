@@ -12,10 +12,10 @@ Usage Examples:
 
 File: index.html
 Project: ai-breadboard
-Package: src/api/webgui/system_control_tab
+Package: windows/api/webgui/system_control_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 10:56:00
+Updated: 2026-10-08 03:58:00
 =============================================================================
 -->
 
@@ -216,6 +216,26 @@ Updated: 2026-10-06 10:56:00
   .badge-warn { background: #f59e0b !important; color: #000 !important; }
   .badge-inf { background: #10b981 !important; color: #fff !important; }
   .badge-verb { background: #64748b !important; color: #fff !important; }
+
+  .slc-table-resizer {
+    height: 8px;
+    cursor: row-resize;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+  .slc-table-resizer:hover, .slc-table-resizer.resizing {
+    background: #0ea5e9 !important;
+  }
+  .slc-table-resizer-grip {
+    width: 36px;
+    height: 3px;
+    background: var(--border-strong, #666);
+    border-radius: 2px;
+  }
 </style>
 
 <div class="scc-container">
@@ -223,21 +243,21 @@ Updated: 2026-10-06 10:56:00
   <div class="scc-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
       <div class="d-flex align-items-center gap-2">
-        <h5 class="mb-0 fw-bold">
+        <h5 class="mb-0 fw-bold" data-i18n="systemControl.headerTitle">
           📜 Windows System Logs & Activity Center
         </h5>
-        <span class="badge rounded-pill bg-primary px-2 py-1" style="font-size: 0.75rem;">Logs & Activity</span>
+        <span class="badge rounded-pill bg-primary px-2 py-1" style="font-size: 0.75rem;" data-i18n="systemControl.badgeLogsActivity">Logs & Activity</span>
       </div>
-      <div class="small text-muted mt-1">
+      <div class="small text-muted mt-1" data-i18n="systemControl.headerSubtitle">
         Комплексный мониторинг журналов событий Windows, семантический RAG-поиск, аудит аномалий и история активности системы.
       </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-      <span class="badge rounded-pill px-3 py-2" id="scc-elevation-badge">
+      <span class="badge rounded-pill px-3 py-2" id="scc-elevation-badge" data-i18n="systemControl.elevChecking">
         🔍 Проверка прав доступа...
       </span>
       <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-scc-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="systemControl.btnRefresh">Обновить</span>
       </button>
     </div>
   </div>
@@ -250,47 +270,50 @@ Updated: 2026-10-06 10:56:00
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <div class="d-flex align-items-center gap-1.5 me-1">
           <span class="fs-6">🛡️</span>
-          <span class="fw-bold small">Windows OS & System Log Center</span>
+          <span class="fw-bold small" data-i18n="systemControl.centerTitle">Windows OS & System Log Center</span>
         </div>
 
         <!-- Quick Metrics Pills -->
-        <div class="slc-metric-pill" title="Источники журналов">
-          <span class="text-muted small"><i class="bi bi-diagram-3 me-1"></i>Источники:</span>
+        <div class="slc-metric-pill" title="Источники журналов" data-i18n-title="systemControl.statSourcesTitle">
+          <span class="text-muted small"><i class="bi bi-diagram-3 me-1"></i><span data-i18n="systemControl.statSources">Источники:</span></span>
           <span class="fw-bold text-info font-monospace" id="slc-stat-sources">1,247</span>
         </div>
-        <div class="slc-metric-pill" title="Активный канал логов">
-          <span class="text-muted small"><i class="bi bi-folder-fill me-1"></i>Канал:</span>
+        <div class="slc-metric-pill" title="Активный канал логов" data-i18n-title="systemControl.statChannelTitle">
+          <span class="text-muted small"><i class="bi bi-folder-fill me-1"></i><span data-i18n="systemControl.statChannel">Канал:</span></span>
           <span class="fw-bold text-warning font-monospace text-truncate" id="slc-stat-channel" style="max-width: 140px;">System</span>
         </div>
-        <div class="slc-metric-pill" title="Загружено событий">
-          <span class="text-muted small"><i class="bi bi-list-ol me-1"></i>Загружено:</span>
+        <div class="slc-metric-pill" title="Загружено событий" data-i18n-title="systemControl.statLoadedTitle">
+          <span class="text-muted small"><i class="bi bi-list-ol me-1"></i><span data-i18n="systemControl.statLoaded">Загружено:</span></span>
           <span class="fw-bold text-primary font-monospace" id="slc-stat-events">0</span>
         </div>
-        <div class="slc-metric-pill" title="Ошибки и инциденты">
-          <span class="text-muted small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Ошибки:</span>
+        <div class="slc-metric-pill" title="Ошибки и инциденты" data-i18n-title="systemControl.statErrorsTitle">
+          <span class="text-muted small"><i class="bi bi-exclamation-triangle-fill me-1"></i><span data-i18n="systemControl.statErrors">Ошибки:</span></span>
           <span class="fw-bold text-danger font-monospace" id="slc-stat-incidents">0</span>
         </div>
       </div>
 
       <!-- Actions Toolbar -->
       <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn btn-outline-warning rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-scc-open-event-logs" style="font-size: 0.78rem;" title="Открыть встроенную панель журналов событий">
+          <i class="bi bi-journal-text"></i> <span data-i18n="systemControl.modeEventLogs">📝 Журналы событий</span>
+        </button>
         <button class="btn btn-outline-info rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-scan" style="font-size: 0.78rem;">
-          <i class="bi bi-radar"></i> <span>Сканировать</span>
+          <i class="bi bi-radar"></i> <span data-i18n="systemControl.btnScan">Сканировать</span>
         </button>
         <div class="form-check form-switch mb-0 d-inline-flex align-items-center" style="font-size: 0.78rem; min-height: auto;">
           <input class="form-check-input me-1" type="checkbox" role="switch" id="slc-live-switch" style="cursor: pointer;">
-          <label class="form-check-label text-muted small user-select-none" for="slc-live-switch">Live</label>
+          <label class="form-check-label text-muted small user-select-none" for="slc-live-switch" data-i18n="systemControl.live">Live</label>
         </div>
         <button class="btn btn-primary rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-refresh" style="font-size: 0.78rem;">
-          <i class="bi bi-arrow-clockwise"></i> <span>Обновить</span>
+          <i class="bi bi-arrow-clockwise"></i> <span data-i18n="systemControl.btnRefresh">Обновить</span>
         </button>
         <div class="dropdown">
           <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" style="font-size: 0.78rem;">
-            <i class="bi bi-download"></i> <span>Экспорт</span>
+            <i class="bi bi-download"></i> <span data-i18n="systemControl.btnExport">Экспорт</span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow" style="font-size: 0.8rem;">
-            <li><a class="dropdown-item" href="#" id="btn-slc-export-json"><i class="bi bi-filetype-json me-2"></i>JSON</a></li>
-            <li><a class="dropdown-item" href="#" id="btn-slc-export-csv"><i class="bi bi-filetype-csv me-2"></i>CSV</a></li>
+            <li><a class="dropdown-item" href="#" id="btn-slc-export-json"><i class="bi bi-filetype-json me-2"></i><span data-i18n="systemControl.exportJson">JSON</span></a></li>
+            <li><a class="dropdown-item" href="#" id="btn-slc-export-csv"><i class="bi bi-filetype-csv me-2"></i><span data-i18n="systemControl.exportCsv">CSV</span></a></li>
           </ul>
         </div>
       </div>
@@ -302,35 +325,38 @@ Updated: 2026-10-06 10:56:00
         <!-- Mode Tabs -->
         <ul class="nav nav-pills gap-1" id="slc-mode-tabs">
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn active py-0.5 px-2.5 small" data-mode="live">● Live Events</button>
+            <button class="nav-link slc-subtab-btn active py-0.5 px-2.5 small" data-mode="live" data-i18n="systemControl.modeLive">● Live Events</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="audit">🔬 Аудит (Smart Digest)</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="audit" data-i18n="systemControl.modeAudit">🔬 Аудит (Smart Digest)</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="rag">🧠 RAG Поиск</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="rag" data-i18n="systemControl.modeRag">🧠 RAG Поиск</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="errors">⚠️ Errors Only</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="errors" data-i18n="systemControl.modeErrors">⚠️ Errors Only</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="incidents">🧩 Incidents</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="incidents" data-i18n="systemControl.modeIncidents">🧩 Incidents</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="timeline">📊 Timeline</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="timeline" data-i18n="systemControl.modeTimeline">📊 Timeline</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="raw">📄 Raw Record</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="raw" data-i18n="systemControl.modeRaw">📄 Raw Record</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="activity">⚙️ App Activity Log</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="activity" data-i18n="systemControl.modeActivity">⚙️ App Activity Log</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small fw-semibold text-warning" data-mode="event-logs" id="subtab-btn-event-logs" data-i18n="systemControl.modeEventLogs">📝 Журналы событий (Event Logs)</button>
           </li>
         </ul>
 
         <!-- Action AI Button -->
         <div class="d-flex align-items-center gap-2">
           <button class="btn btn-sm btn-outline-warning rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-ask-ai" style="font-size: 0.78rem;">
-            <i class="bi bi-robot"></i> <span>Спросить ИИ</span>
+            <i class="bi bi-robot"></i> <span data-i18n="systemControl.btnAskAi">Спросить ИИ</span>
           </button>
         </div>
       </div>
@@ -340,12 +366,12 @@ Updated: 2026-10-06 10:56:00
         <div class="col-lg-4 col-md-5">
           <div class="input-group input-group-sm">
             <span class="input-group-text py-0 px-2"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
-            <input type="text" class="form-control form-control-sm py-1" id="slc-search-input" placeholder="Поиск по тексту, источнику..." style="font-size: 0.8rem;">
+            <input type="text" class="form-control form-control-sm py-1" id="slc-search-input" placeholder="Поиск по тексту, источнику..." data-i18n-placeholder="systemControl.searchPlaceholder" style="font-size: 0.8rem;">
           </div>
         </div>
         <div class="col-lg-2 col-md-2 col-6">
           <select class="form-select form-select-sm py-1" id="slc-level-select" style="font-size: 0.8rem;">
-            <option value="">Все уровни</option>
+            <option value="" data-i18n="systemControl.allLevels">Все уровни</option>
             <option value="Critical">Critical</option>
             <option value="Error">Error</option>
             <option value="Warning">Warning</option>
@@ -354,22 +380,22 @@ Updated: 2026-10-06 10:56:00
         </div>
         <div class="col-lg-2 col-md-2 col-6">
           <select class="form-select form-select-sm py-1" id="slc-hours-select" style="font-size: 0.8rem;">
-            <option value="1">За последний 1 час</option>
-            <option value="6">За последние 6 часов</option>
-            <option value="24" selected>За последние 24 часа</option>
-            <option value="168">За последние 7 дней</option>
-            <option value="0">За все доступное время</option>
+            <option value="1" data-i18n="systemControl.hours1">За последний 1 час</option>
+            <option value="6" data-i18n="systemControl.hours6">За последние 6 часов</option>
+            <option value="24" data-i18n="systemControl.hours24" selected>За последние 24 часа</option>
+            <option value="168" data-i18n="systemControl.hours168">За последние 7 дней</option>
+            <option value="0" data-i18n="systemControl.hoursAll">За все доступное время</option>
           </select>
         </div>
         <div class="col-lg-2 col-md-1.5 col-6">
-          <input type="number" class="form-control form-control-sm py-1" id="slc-eventid-input" placeholder="Event ID" style="font-size: 0.8rem;">
+          <input type="number" class="form-control form-control-sm py-1" id="slc-eventid-input" placeholder="Event ID" data-i18n-placeholder="systemControl.eventIdPlaceholder" style="font-size: 0.8rem;">
         </div>
         <div class="col-lg-2 col-md-1.5 col-6">
           <select class="form-select form-select-sm py-1" id="slc-limit-select" style="font-size: 0.8rem;">
-            <option value="50">50 записей</option>
-            <option value="100" selected>100 записей</option>
-            <option value="250">250 записей</option>
-            <option value="500">500 записей</option>
+            <option value="50" data-i18n="systemControl.limit50">50 записей</option>
+            <option value="100" data-i18n="systemControl.limit100" selected>100 записей</option>
+            <option value="250" data-i18n="systemControl.limit250">250 записей</option>
+            <option value="500" data-i18n="systemControl.limit500">500 записей</option>
           </select>
         </div>
       </div>
@@ -381,11 +407,11 @@ Updated: 2026-10-06 10:56:00
       <div class="col-lg-3" id="slc-channel-tree-sidebar">
         <div class="slc-panel h-100">
           <div class="slc-panel-header">
-            <span><i class="bi bi-folder2-open me-2 text-primary"></i>Каналы событий</span>
+            <span><i class="bi bi-folder2-open me-2 text-primary"></i><span data-i18n="systemControl.channelsTitle">Каналы событий</span></span>
             <span class="badge bg-secondary" id="slc-channel-count-badge">0</span>
           </div>
           <div class="p-2 border-bottom" style="border-color: var(--border-color) !important;">
-            <input type="text" class="form-control form-control-sm" id="slc-channel-filter-input" placeholder="Фильтр каналов...">
+            <input type="text" class="form-control form-control-sm" id="slc-channel-filter-input" placeholder="Фильтр каналов..." data-i18n-placeholder="systemControl.filterChannelsPlaceholder">
           </div>
           <div class="p-2 slc-tree-list" id="slc-channel-tree-container">
             <!-- Dynamic channels injected here -->
@@ -397,37 +423,40 @@ Updated: 2026-10-06 10:56:00
       <div class="col-lg-9" id="slc-main-stream-column">
         <div class="slc-panel h-100">
           <div class="slc-panel-header">
-            <span id="slc-main-view-title"><i class="bi bi-list-columns-reverse me-2 text-primary"></i>Поток событий Windows</span>
+            <span id="slc-main-view-title"><i class="bi bi-list-columns-reverse me-2 text-primary"></i><span data-i18n="systemControl.mainViewTitle">Поток событий Windows</span></span>
             <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="Провести аудит текущего журнала логов">
-                <i class="bi bi-shield-check me-1"></i> Аудит
+              <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="Провести аудит текущего журнала логов" data-i18n-title="systemControl.btnAuditTitle">
+                <i class="bi bi-shield-check me-1"></i> <span data-i18n="systemControl.btnAudit">Аудит</span>
               </button>
               <span class="badge bg-secondary" id="slc-stream-count-badge">0 записей</span>
             </div>
           </div>
 
           <!-- Table View Container -->
-          <div class="table-responsive" style="max-height: 560px; overflow-y: auto;" id="slc-table-container">
+          <div class="table-responsive" style="min-height: 140px; max-height: 560px; overflow-y: auto;" id="slc-table-container">
             <table class="slc-table">
               <thead>
                 <tr>
-                  <th style="width: 155px;">Время</th>
-                  <th style="width: 90px;">Уровень</th>
-                  <th style="width: 65px;">ID</th>
-                  <th style="width: 160px;">Поставщик</th>
-                  <th style="width: 65px;">PID</th>
-                  <th>Сообщение</th>
+                  <th style="width: 155px;" data-i18n="systemControl.colTime">Время</th>
+                  <th style="width: 90px;" data-i18n="systemControl.colLevel">Уровень</th>
+                  <th style="width: 65px;" data-i18n="systemControl.colId">ID</th>
+                  <th style="width: 160px;" data-i18n="systemControl.colProvider">Поставщик</th>
+                  <th style="width: 65px;" data-i18n="systemControl.colPid">PID</th>
+                  <th data-i18n="systemControl.colMessage">Сообщение</th>
                 </tr>
               </thead>
               <tbody id="slc-table-body">
                 <tr>
                   <td colspan="6" class="text-center text-muted py-4">
                     <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-                    Загрузка событий Windows...
+                    <span data-i18n="systemControl.loadingEvents">Загрузка событий Windows...</span>
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div id="slc-table-resizer" class="slc-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+            <div class="slc-table-resizer-grip"></div>
           </div>
 
           <!-- Audit Digest View Container -->
@@ -439,25 +468,25 @@ Updated: 2026-10-06 10:56:00
           <div class="p-3 d-none" id="slc-rag-container" style="max-height: 560px; overflow-y: auto;">
             <div class="slc-card mb-3 shadow-sm">
               <div class="slc-card-header p-2.5 d-flex justify-content-between align-items-center">
-                <span class="fw-bold text-primary"><i class="bi bi-search me-2"></i>Семантический RAG-поиск по логам</span>
+                <span class="fw-bold text-primary"><i class="bi bi-search me-2"></i><span data-i18n="systemControl.ragTitle">Семантический RAG-поиск по логам</span></span>
                 <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-slc-rag-rebuild">
-                  <i class="bi bi-arrow-repeat me-1"></i> Перестроить RAG-индекс
+                  <i class="bi bi-arrow-repeat me-1"></i> <span data-i18n="systemControl.btnRagRebuild">Перестроить RAG-индекс</span>
                 </button>
               </div>
               <div class="p-3">
                 <div class="input-group mb-2">
                   <span class="input-group-text"><i class="bi bi-chat-left-dots text-primary"></i></span>
-                  <input type="text" class="form-control" id="slc-rag-input" placeholder="Введите запрос (например: 'ошибки службы DCOM', 'сбои сети', 'Disk warning')...">
-                  <button class="btn btn-info px-4 fw-bold text-dark" id="btn-slc-rag-search">Найти</button>
+                  <input type="text" class="form-control" id="slc-rag-input" placeholder="Введите запрос (например: 'ошибки службы DCOM', 'сбои сети', 'Disk warning')..." data-i18n-placeholder="systemControl.ragInputPlaceholder">
+                  <button class="btn btn-info px-4 fw-bold text-dark" id="btn-slc-rag-search" data-i18n="systemControl.btnRagSearch">Найти</button>
                 </div>
-                <div class="small text-muted">
+                <div class="small text-muted" data-i18n="systemControl.ragHint">
                   Поиск использует динамический индекс кластеров и аномалий.
                 </div>
               </div>
             </div>
 
             <div id="slc-rag-results">
-              <div class="slc-card p-4 text-center text-muted">
+              <div class="slc-card p-4 text-center text-muted" data-i18n="systemControl.ragEmptyPrompt">
                 Введите запрос для поиска по динамическому RAG-индексу логов или нажмите «Перестроить RAG-индекс».
               </div>
             </div>
@@ -475,32 +504,156 @@ Updated: 2026-10-06 10:56:00
 
           <!-- Raw Record Container -->
           <div class="p-3 d-none" id="slc-raw-container" style="max-height: 560px; overflow-y: auto;">
-            <pre class="p-3 font-monospace small rounded border" style="background: var(--surface-2); color: var(--text-color); border-color: var(--border-color) !important;" id="slc-raw-text">Выберите событие из списка для просмотра данных.</pre>
+            <pre class="p-3 font-monospace small rounded border" style="background: var(--surface-2); color: var(--text-color); border-color: var(--border-color) !important;" id="slc-raw-text" data-i18n="systemControl.rawSelectPrompt">Выберите событие из списка для просмотра данных.</pre>
           </div>
 
           <!-- Application Activity Log View Container -->
           <div class="p-3 d-none" id="slc-activity-container" style="max-height: 560px; overflow-y: auto;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold"><i class="bi bi-journal-text me-1 text-primary"></i> Журнал активности</span>
+              <span class="fw-bold"><i class="bi bi-journal-text me-1 text-primary"></i> <span data-i18n="systemControl.activityTitle">Журнал активности</span></span>
               <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-scc-refresh-logs">
-                <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+                <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="systemControl.btnRefresh">Обновить</span>
               </button>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" style="min-height: 140px; max-height: 480px; overflow-y: auto;" id="scc-activity-table-container">
               <table class="slc-table">
                 <thead>
                   <tr>
-                    <th style="width: 180px;">Время</th>
-                    <th style="width: 160px;">Действие</th>
-                    <th>Объект</th>
-                    <th style="width: 120px;">Статус</th>
-                    <th style="width: 30%;">Подробности</th>
+                    <th style="width: 180px;" data-i18n="systemControl.colTime">Время</th>
+                    <th style="width: 160px;" data-i18n="systemControl.colAction">Действие</th>
+                    <th data-i18n="systemControl.colTarget">Объект</th>
+                    <th style="width: 120px;" data-i18n="systemControl.colStatus">Статус</th>
+                    <th style="width: 30%;" data-i18n="systemControl.colDetails">Подробности</th>
                   </tr>
                 </thead>
                 <tbody id="scc-logs-tbody">
-                  <tr><td colspan="5" class="text-center text-muted p-3">Загрузка журнала активности...</td></tr>
+                  <tr><td colspan="5" class="text-center text-muted p-3" data-i18n="systemControl.loadingActivity">Загрузка журнала активности...</td></tr>
                 </tbody>
               </table>
+            </div>
+            <div id="scc-activity-table-resizer" class="slc-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+              <div class="slc-table-resizer-grip"></div>
+            </div>
+          </div>
+
+          <!-- Event Logs (WevtAPI & Log Intelligence) Container Panel -->
+          <div class="p-3 d-none" id="slc-event-logs-container">
+            <!-- Top Stat Cards -->
+            <div class="row g-2 mb-3">
+              <div class="col-6 col-md-3">
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatCritical">Критические ошибки (Critical) 🚨</div>
+                  <div class="fs-4 fw-bold mt-1 text-danger font-monospace" id="el-critical-count">--</div>
+                  <div class="small text-muted mt-1" id="el-critical-sub" data-i18n="systemControl.elStatCriticalSub">Уровень 1 (WevtAPI)</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatErrors">Ошибки (Errors) ⚠️</div>
+                  <div class="fs-4 fw-bold mt-1 text-warning font-monospace" id="el-error-count">--</div>
+                  <div class="small text-muted mt-1" id="el-error-sub" data-i18n="systemControl.elStatErrorsSub">Уровень 2 (WevtAPI)</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatHealth">Здоровье ОС (Health Score) 🛡️</div>
+                  <div class="fs-4 fw-bold mt-1 text-success font-monospace" id="el-health-score">--</div>
+                  <div class="small text-muted mt-1" id="el-health-sub" data-i18n="systemControl.elStatHealthSub">Data Researcher EDA</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatRedundancy">Избыточность / Шум (Rdup) 📉</div>
+                  <div class="fs-4 fw-bold mt-1 text-info font-monospace" id="el-redundancy-pct">--</div>
+                  <div class="small text-muted mt-1" id="el-redundancy-sub" data-i18n="systemControl.elStatRedundancySub">Дедупликация шаблонов</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action & Intelligence Bar -->
+            <div class="slc-panel mb-3 p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="el-refresh-btn">
+                  <i class="bi bi-arrow-clockwise"></i>
+                  <span data-i18n="systemControl.btnRefresh">Обновить</span>
+                </button>
+                <select class="form-select form-select-sm" id="el-channel-select" style="width: 180px;">
+                  <option value="System">Журнал System</option>
+                  <option value="Application">Журнал Application</option>
+                  <option value="Security">Журнал Security</option>
+                </select>
+                <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="el-intel-analyze-btn">
+                  <i class="bi bi-cpu"></i>
+                  <span data-i18n="systemControl.elBtnIntel">Log Intelligence (EDA)</span>
+                </button>
+                <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1.5" id="el-intel-audit-btn">
+                  <i class="bi bi-shield-shaded"></i>
+                  <span data-i18n="systemControl.elBtnAudit">Полный аудит</span>
+                </button>
+              </div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="text" class="form-control form-control-sm" id="el-rag-query-input" placeholder="RAG поиск (напр: сбой сети)..." data-i18n-placeholder="systemControl.elRagPlaceholder" style="width: 240px;">
+                <button class="btn btn-sm btn-info text-dark fw-semibold" id="el-rag-search-btn" title="Искать в RAG">
+                  <i class="bi bi-search"></i>
+                </button>
+                <input type="text" class="form-control form-control-sm" id="el-search-input" placeholder="Фильтр таблицы..." data-i18n-placeholder="systemControl.elFilterPlaceholder" style="width: 170px;">
+              </div>
+            </div>
+
+            <!-- Intelligence Digest Banner (Hidden by default) -->
+            <div id="el-intel-banner" class="alert alert-dark border-info shadow-sm mb-3 d-none" style="background: var(--surface-2); color: var(--text-color); border-color: var(--border-color) !important;">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-info text-dark fw-bold font-monospace" id="el-strategy-badge">STRATEGY</span>
+                    <strong class="fs-6" id="el-intel-title" style="color: var(--text-color);">Аналитический вердикт Log Intelligence</strong>
+                  </div>
+                  <div class="small font-monospace text-muted" id="el-intel-rationale">--</div>
+                  <div class="small text-warning mt-1" id="el-intel-recommendation"></div>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-secondary font-monospace" id="el-chunks-badge">0 RAG chunks</span>
+                  <button class="btn-close ms-2" id="el-intel-close-btn" aria-label="Close"></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- RAG Search Results Panel (Hidden by default) -->
+            <div id="el-rag-results-card" class="slc-card shadow-sm mb-3 d-none border-info">
+              <div class="slc-card-header d-flex justify-content-between align-items-center py-2 px-3">
+                <span class="fw-semibold text-info"><i class="bi bi-brain me-2"></i><span data-i18n="systemControl.elRagResultsTitle">Результаты Adaptive Log RAG</span></span>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="el-rag-close-btn" data-i18n="systemControl.elRagClose">Закрыть</button>
+              </div>
+              <div class="card-body p-2" id="el-rag-results-body">
+                <!-- Dynamic Search Items -->
+              </div>
+            </div>
+
+            <!-- Event Logs Table -->
+            <div class="slc-card shadow-sm">
+              <div class="slc-card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <span class="fw-semibold"><i class="bi bi-journal-text text-primary me-2"></i><span data-i18n="systemControl.elViewerTitle">Записи системного журнала (Event Viewer)</span></span>
+                <span class="badge bg-secondary font-monospace" id="el-table-badge">0 событий</span>
+              </div>
+              <div class="table-responsive" style="min-height: 140px; max-height: 520px; overflow-y: auto;" id="el-table-container">
+                <table class="slc-table" id="el-table">
+                  <thead class="sticky-top">
+                    <tr>
+                      <th style="width: 100px;" data-i18n="systemControl.elColLevel">Уровень</th>
+                      <th style="width: 160px;" data-i18n="systemControl.elColTime">Время</th>
+                      <th style="width: 180px;" data-i18n="systemControl.elColProvider">Источник (Provider)</th>
+                      <th style="width: 80px;" data-i18n="systemControl.elColEventId">Event ID</th>
+                      <th data-i18n="systemControl.elColDescription">Описание события</th>
+                    </tr>
+                  </thead>
+                  <tbody id="el-tbody">
+                    <tr><td colspan="5" class="text-center text-muted py-4" data-i18n="systemControl.elLoading">Чтение журнала событий через WevtAPI...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div id="el-table-resizer" class="slc-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+                <div class="slc-table-resizer-grip"></div>
+              </div>
             </div>
           </div>
 
@@ -514,38 +667,38 @@ Updated: 2026-10-06 10:56:00
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content" style="background: var(--surface-1); color: var(--text-color); border: 1px solid var(--border-color);">
         <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
-          <h5 class="modal-title fw-bold text-primary" id="slc-modal-title">Детали события Windows</h5>
+          <h5 class="modal-title fw-bold text-primary" id="slc-modal-title" data-i18n="systemControl.modalTitle">Детали события Windows</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="row g-2 mb-3 small font-monospace">
-            <div class="col-sm-6"><strong class="text-muted">Время:</strong> <span id="slc-modal-time"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Уровень:</strong> <span id="slc-modal-level"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Event ID:</strong> <span id="slc-modal-id"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Поставщик:</strong> <span id="slc-modal-provider"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Компьютер:</strong> <span id="slc-modal-computer"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">PID:</strong> <span id="slc-modal-pid"></span></div>
-            <div class="col-sm-12"><strong class="text-muted">Канал:</strong> <span id="slc-modal-channel"></span></div>
+            <div class="col-sm-6"><strong class="text-muted" data-i18n="systemControl.modalTime">Время:</strong> <span id="slc-modal-time"></span></div>
+            <div class="col-sm-6"><strong class="text-muted" data-i18n="systemControl.modalLevel">Уровень:</strong> <span id="slc-modal-level"></span></div>
+            <div class="col-sm-6"><strong class="text-muted" data-i18n="systemControl.modalEventId">Event ID:</strong> <span id="slc-modal-id"></span></div>
+            <div class="col-sm-6"><strong class="text-muted" data-i18n="systemControl.modalProvider">Поставщик:</strong> <span id="slc-modal-provider"></span></div>
+            <div class="col-sm-6"><strong class="text-muted" data-i18n="systemControl.modalComputer">Компьютер:</strong> <span id="slc-modal-computer"></span></div>
+            <div class="col-sm-6"><strong class="text-muted" data-i18n="systemControl.modalPid">PID:</strong> <span id="slc-modal-pid"></span></div>
+            <div class="col-sm-12"><strong class="text-muted" data-i18n="systemControl.modalChannel">Канал:</strong> <span id="slc-modal-channel"></span></div>
           </div>
 
           <div class="p-3 mb-3 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
-            <h6 class="small text-uppercase text-muted fw-bold mb-2">Текст события</h6>
+            <h6 class="small text-uppercase text-muted fw-bold mb-2" data-i18n="systemControl.modalMessageHeader">Текст события</h6>
             <div class="small font-monospace" id="slc-modal-message" style="white-space: pre-wrap; word-break: break-word; color: var(--text-color);"></div>
           </div>
 
           <!-- AI Diagnostic Response Section -->
           <div class="p-3 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;" id="slc-modal-ai-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="fw-bold text-primary mb-0"><i class="bi bi-robot me-1"></i> Контекстный анализ ИИ</h6>
-              <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-slc-modal-diagnose">Анализ контекста</button>
+              <h6 class="fw-bold text-primary mb-0"><i class="bi bi-robot me-1"></i> <span data-i18n="systemControl.modalAiHeader">Контекстный анализ ИИ</span></h6>
+              <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-slc-modal-diagnose" data-i18n="systemControl.modalBtnDiagnose">Анализ контекста</button>
             </div>
-            <div class="small text-muted" id="slc-modal-ai-explanation">
+            <div class="small text-muted" id="slc-modal-ai-explanation" data-i18n="systemControl.modalAiPrompt">
               Нажмите «Анализ контекста», чтобы провести диагностику выбранной записи.
             </div>
           </div>
         </div>
         <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" data-i18n="systemControl.modalBtnClose">Закрыть</button>
         </div>
       </div>
     </div>

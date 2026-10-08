@@ -15,7 +15,7 @@
  * Package: windows/api/webgui/system_control_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 19:30:00
+ * Updated: 2026-10-08 03:58:00
  * =============================================================================
  */
 
@@ -932,11 +932,12 @@
     if (badge) badge.textContent = `${filtered.length} из ${elEventsList.length} событий`;
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">События не найдены</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">${escapeHtml(t('systemControl.noEvents', 'События не найдены'))}</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = filtered.slice(0, 150).map(e => {
+    const itemsToRender = filtered.slice(0, 150);
+    tbody.innerHTML = itemsToRender.map((e, idx) => {
       const level = (e.level || 'Information').toLowerCase();
       let badgeClass = 'bg-secondary';
       if (level.includes('crit') || level.includes('err')) badgeClass = 'bg-danger text-white';
@@ -944,15 +945,35 @@
       else if (level.includes('info')) badgeClass = 'bg-info text-dark';
 
       return `
-        <tr>
+        <tr class="slc-el-table-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для просмотра подробностей события">
           <td><span class="badge ${badgeClass}">${escapeHtml(e.level || 'Info')}</span></td>
           <td class="text-muted small font-monospace">${escapeHtml(e.time_created || e.timestamp || '-')}</td>
-          <td class="fw-semibold text-light small">${escapeHtml(e.provider_name || e.provider || 'Windows')}</td>
+          <td class="fw-semibold small" style="color: var(--text-color);">${escapeHtml(e.provider_name || e.provider || 'Windows')}</td>
           <td class="font-monospace text-warning small">${escapeHtml(String(e.event_id || e.id || '-'))}</td>
-          <td class="text-light small" style="max-width: 500px; word-break: break-word;">${escapeHtml(e.message || '-')}</td>
+          <td class="small text-truncate" style="max-width: 500px; color: var(--text-color);">${escapeHtml(e.message || '-')}</td>
         </tr>
       `;
     }).join('');
+
+    // Привязываем клики по строкам для просмотра деталей и ИИ-диагностики
+    tbody.querySelectorAll('.slc-el-table-row').forEach(row => {
+      row.onclick = () => {
+        const idx = parseInt(row.getAttribute('data-idx'), 10);
+        const item = itemsToRender[idx];
+        if (item) {
+          showEventDetails({
+            timestamp: item.time_created || item.timestamp,
+            level: item.level,
+            event_id: item.event_id || item.id,
+            provider: item.provider_name || item.provider,
+            computer: item.computer || item.machine_name || '',
+            process_id: item.process_id || item.pid,
+            channel: item.channel || (document.getElementById('el-channel-select')?.value || 'System'),
+            message: item.message,
+          });
+        }
+      };
+    });
   }
 
   function initEventLogsPanel() {
@@ -996,6 +1017,49 @@
       const card = document.getElementById('el-rag-results-card');
       if (card) card.classList.add('d-none');
     });
+
+    initTableResizers();
+  }
+
+  /**
+   * Инициализация ползунков изменения высоты таблиц журнала и событий.
+   */
+  function initTableResizers() {
+    function setupResizer(resizerId, containerId, defaultMaxHeight = 520, minH = 140, maxH = 1500) {
+      const resizer = document.getElementById(resizerId);
+      const container = document.getElementById(containerId);
+      if (!resizer || !container || resizer._resizerBound) return;
+      resizer._resizerBound = true;
+
+      let startY = 0, startHeight = 0;
+      const onMouseMove = (e) => {
+        const delta = e.clientY - startY;
+        const newH = Math.max(minH, Math.min(maxH, startHeight + delta));
+        container.style.maxHeight = 'none';
+        container.style.height = `${newH}px`;
+      };
+      const onMouseUp = () => {
+        resizer.classList.remove('resizing');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+      resizer.onmousedown = (e) => {
+        e.preventDefault();
+        startY = e.clientY;
+        startHeight = container.getBoundingClientRect().height || parseInt(window.getComputedStyle(container).height, 10) || defaultMaxHeight;
+        resizer.classList.add('resizing');
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      };
+      resizer.ondblclick = () => {
+        container.style.height = '';
+        container.style.maxHeight = `${defaultMaxHeight}px`;
+      };
+    }
+
+    setupResizer('el-table-resizer', 'el-table-container', 520, 140, 1500);
+    setupResizer('slc-table-resizer', 'slc-table-container', 560, 140, 1500);
+    setupResizer('scc-activity-table-resizer', 'scc-activity-table-container', 480, 140, 1500);
   }
 
   function setMode(mode) {
@@ -1009,6 +1073,9 @@
     const activityContainer = document.getElementById('slc-activity-container');
     const eventLogsContainer = document.getElementById('slc-event-logs-container');
     const filterRow = document.getElementById('slc-filter-row');
+    const sidebar = document.getElementById('slc-channel-tree-sidebar');
+    const mainStreamCol = document.getElementById('slc-main-stream-column');
+    const mainStreamHeader = document.querySelector('#slc-main-stream-column .slc-panel-header');
 
     if (tableContainer) tableContainer.classList.add('d-none');
     if (auditContainer) auditContainer.classList.add('d-none');
@@ -1019,6 +1086,23 @@
     if (activityContainer) activityContainer.classList.add('d-none');
     if (eventLogsContainer) eventLogsContainer.classList.add('d-none');
     if (filterRow) filterRow.classList.remove('d-none');
+
+    // Управление шириной колонок и сайдбаром каналов
+    if (mode === 'event-logs') {
+      if (sidebar) sidebar.classList.add('d-none');
+      if (mainStreamCol) {
+        mainStreamCol.classList.remove('col-lg-9');
+        mainStreamCol.classList.add('col-12');
+      }
+      if (mainStreamHeader) mainStreamHeader.classList.add('d-none');
+    } else {
+      if (sidebar) sidebar.classList.remove('d-none');
+      if (mainStreamCol) {
+        mainStreamCol.classList.remove('col-12');
+        mainStreamCol.classList.add('col-lg-9');
+      }
+      if (mainStreamHeader) mainStreamHeader.classList.remove('d-none');
+    }
 
     document.querySelectorAll('#slc-mode-tabs button').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
@@ -1096,12 +1180,14 @@
    */
   function initSystemControlTab() {
     window.applyTranslations?.();
-    fetchStatus();
-    scanChannels();
-    loadEvents();
+    if (window.isTabActive ? window.isTabActive('tab-system-control') : true) {
+      fetchStatus();
+      scanChannels();
+      loadEvents();
+    }
 
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-system-control_logs', loadEvents, 4000, { immediate: true });
+      window.registerTabPoller('tab-system-control', loadEvents, 4000, { pollerId: 'tab-system-control_logs', immediate: true });
     }
 
     // Слушатель глобального изменения языка в приложении
@@ -1122,6 +1208,7 @@
     });
 
     initEventLogsPanel();
+    initTableResizers();
 
     if (isSCCInitialized) return;
     isSCCInitialized = true;
@@ -1159,12 +1246,25 @@
       };
     }
 
+    // Кнопка быстрого открытия встроенной панели журналов событий
+    const openEventLogsBtn = document.getElementById('btn-scc-open-event-logs');
+    if (openEventLogsBtn) {
+      openEventLogsBtn.onclick = () => {
+        setMode('event-logs');
+      };
+    }
+
     // Кнопка аудита
     const auditBtn = document.getElementById('btn-slc-audit');
     if (auditBtn) {
       auditBtn.onclick = () => {
         setMode('audit');
       };
+    }
+
+    // Авто-активация режима по хэшу/параметру
+    if (location.hash.includes('event-logs') || location.search.includes('event-logs') || location.search.includes('panel=event-logs')) {
+      setMode('event-logs');
     }
 
     // Фильтр каналов в дереве
@@ -1222,11 +1322,20 @@
     if (liveSwitch) {
       liveSwitch.onchange = (e) => {
         if (e.target.checked) {
-          if (liveIntervalTimer) clearInterval(liveIntervalTimer);
-          liveIntervalTimer = setInterval(loadEvents, 3000);
+          if (window.registerTabPoller) {
+            window.registerTabPoller('tab-system-control', loadEvents, 3000, { pollerId: 'tab-system-control_live', immediate: true });
+          } else {
+            if (liveIntervalTimer) clearInterval(liveIntervalTimer);
+            liveIntervalTimer = setInterval(loadEvents, 3000);
+          }
         } else {
-          if (liveIntervalTimer) clearInterval(liveIntervalTimer);
-          liveIntervalTimer = null;
+          if (window.unregisterTabPoller) {
+            window.unregisterTabPoller('tab-system-control_live');
+          }
+          if (liveIntervalTimer) {
+            clearInterval(liveIntervalTimer);
+            liveIntervalTimer = null;
+          }
         }
       };
     }

@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 14:13:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -27,13 +27,13 @@ from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
-from apps.windows.defender.core.ai_diagnostician import AIDiagnostician
-from apps.windows.defender.core.asr_manager import ASRManager
-from apps.windows.defender.core.cfa_manager import ControlledFolderAccessManager
-from apps.windows.defender.core.defender_service import DefenderService
-from apps.windows.defender.core.event_correlator import EventCorrelator
-from apps.windows.defender.core.exclusions_auditor import ExclusionsAuditor
-from apps.windows.defender.core.models import (
+from apps.windows.modules.defender.core.ai_diagnostician import AIDiagnostician
+from apps.windows.modules.defender.core.asr_manager import ASRManager
+from apps.windows.modules.defender.core.cfa_manager import ControlledFolderAccessManager
+from apps.windows.modules.defender.core.defender_service import DefenderService
+from apps.windows.modules.defender.core.event_correlator import EventCorrelator
+from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+from apps.windows.modules.defender.core.models import (
     DefenderEventRecord,
     DefenderTaskInfo,
     DefenderTaskStatus,
@@ -45,9 +45,9 @@ from apps.windows.defender.core.models import (
     ScanType,
     ThreatSeverity,
 )
-from apps.windows.defender.core.process_tree_watcher import ProcessTreeWatcher
-from apps.windows.defender.core.threat_manager import ThreatManager
-from apps.windows.defender.router import init_router
+from apps.windows.modules.defender.core.process_tree_watcher import ProcessTreeWatcher
+from apps.windows.modules.defender.core.threat_manager import ThreatManager
+from apps.windows.modules.defender.router import init_router
 
 @pytest.fixture
 def mock_defender_service() -> DefenderService:

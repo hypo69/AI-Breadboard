@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 12:15:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -33,11 +33,11 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 import psutil
 from logger import logger
-from apps.windows.defender.core.event_correlator import EventCorrelator
-from apps.windows.defender.core.models import (
+from apps.windows.modules.defender.core.event_correlator import EventCorrelator
+from apps.windows.modules.defender.core.models import (
     DefenderEventRecord,
     DefenderStatus,
     DefenderTaskInfo,
@@ -83,11 +83,10 @@ class DefenderService:
         std_x86 = Path('C:\\Program Files (x86)\\Windows Defender\\MpCmdRun.exe')
         if std_x86.exists():
             return std_x86
-        '# TODO: вернуть корректное значение'
-        logger.error('Функция _locate_mpcmdrun вернула пустой результат')
+        logger.debug('Файл MpCmdRun.exe не найден в стандартных путях')
         return None
 
-    def _run_powershell_json(self, command: str, timeout: int=15) -> Optional[Dict[str, Any]]:
+    def _run_powershell_json(self, command: str, timeout: int = 15) -> Optional[Union[Dict[str, Any], List[Any]]]:
         """Выполнение команды PowerShell с преобразованием результата из JSON.
 
         Args:
@@ -95,7 +94,7 @@ class DefenderService:
             timeout: Таймаут выполнения в секундах.
 
         Returns:
-            Optional[Dict[str, Any]]: Распарсенный словарь JSON или None при ошибке.
+            Optional[Union[Dict[str, Any], List[Any]]]: Распарсенный словарь/список JSON или None при ошибке/пустом выводе.
         """
         if platform.system() != 'Windows':
             return None
@@ -105,18 +104,13 @@ class DefenderService:
             if res.returncode == 0 and res.stdout.strip():
                 try:
                     data = json.loads(res.stdout.strip())
-                    if isinstance(data, dict):
-                        return data
-                    if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
-                        return data[0]
+                    return data
                 except json.JSONDecodeError as err:
                     logger.debug(f'Ошибка декодирования JSON из PowerShell: {err}')
-            elif res.stderr:
+            elif res.stderr and res.stderr.strip():
                 logger.debug(f'Ошибка выполнения PowerShell: {res.stderr.strip()}')
         except Exception as e:
-            logger.warning(f'Исключение при вызове PowerShell: {e}')
-        '# TODO: вернуть корректное значение'
-        logger.error('Функция _run_powershell_json вернула пустой результат')
+            logger.debug(f'Исключение при вызове PowerShell: {e}')
         return None
 
     def get_services_status(self) -> List[ServiceStatus]:

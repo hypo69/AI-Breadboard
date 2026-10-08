@@ -7,7 +7,7 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/apps/modules/tabs-config.js?v=20261006_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/apps/modules/tabs-config.js?v=20261008_v1" type="module"></script>
  *
  *   JavaScript Import:
  *     import { APP_TAB_DEFS, TC_EXCLUDES } from '/windows/api/webgui/apps/modules/tabs-config.js';
@@ -17,20 +17,21 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 19:30:00
+ * Updated: 2026-10-08 04:06:00
+ * =============================================================================
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261006_v14', js: '/html/about_system_tab/main.js?v=20261006_v14' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261008_v1', js: '/html/about_system_tab/main.js?v=20261008_v1' },
   { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20261006_v8', js: '/html/scenarios_tab/main.js?v=20261006_v8' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-  { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v13', js: '/html/system_inspector_tab/main.js?v=20261006_v13' },
-  { id: 'processes_load_inspector', tab: 'processes-load-inspector', tabId: 'tab-processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261006_v2', js: '/html/processes_load_inspector_tab/main.js?v=20261006_v2' },
+  { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261008_v1', js: '/html/system_inspector_tab/main.js?v=20261008_v1' },
+  { id: 'processes_load_inspector', tab: 'processes-load-inspector', tabId: 'tab-processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261008_v1', js: '/html/processes_load_inspector_tab/main.js?v=20261008_v1' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
   { id: 'focus_settings', tab: 'focus-settings', tabId: 'tab-focus-settings', html: '/html/focus_settings_tab/index.html?v=20261006_v1', js: '/html/focus_settings_tab/main.js?v=20261006_v1' },
   { id: 'system32_commands', tab: 'system32-commands', tabId: 'tab-system32-commands', html: '/html/system32_commands_tab/index.html?v=20261006_v1', js: '/html/system32_commands_tab/main.js?v=20261006_v1' },
-  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261006_v15', js: '/html/system_control_tab/main.js?v=20261006_v15' },
+  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261008_v1', js: '/html/system_control_tab/main.js?v=20261008_v1' },
   { id: 'post_install_wizard', tab: 'post-install-wizard', tabId: 'tab-post-install-wizard', html: '/html/post_install_wizard_tab/index.html?v=20261006_v1', js: '/html/post_install_wizard_tab/main.js?v=20261006_v1' },
   { id: 'maintenance_recovery', tab: 'maintenance-recovery', tabId: 'tab-maintenance-recovery', html: '/html/maintenance_recovery_tab/index.html?v=20261006_v1', js: '/html/maintenance_recovery_tab/main.js?v=20261006_v1' },
   { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
@@ -53,7 +54,6 @@ export const APP_TAB_DEFS = [
   { id: 'ninite_updater', tab: 'ninite-updater', tabId: 'tab-ninite-updater', html: '/html/ninite_updater_tab/index.html?v=20260924_v2', js: '/html/ninite_updater_tab/main.js?v=20260924_v2' },
   { id: 'file_recovery', tab: 'file-recovery', tabId: 'tab-file-recovery', html: '/html/file_recovery_tab/index.html', js: '/html/file_recovery_tab/main.js' },
   { id: 'file_history_ai_search', tab: 'file-history-search', tabId: 'tab-file-history-search', html: '/html/file_history_ai_search_tab/index.html?v=20260928_v1', js: '/html/file_history_ai_search_tab/main.js?v=20260928_v1' },
-  { id: 'telemetry_history', tab: 'telemetry-history', tabId: 'tab-telemetry-history', html: '/html/telemetry_history_tab/index.html?v=20261006_v2', js: '/html/telemetry_history_tab/main.js?v=20261006_v2' },
   { id: 'telemetry_research', tab: 'telemetry-research', tabId: 'tab-telemetry-research', html: '/html/telemetry_research_tab/index.html?v=20260924_v1', js: '/html/telemetry_research_tab/main.js?v=20260924_v1' },
   { id: 'telemetry_config', tab: 'telemetry-config', tabId: 'tab-telemetry-config', html: '/html/telemetry_config_tab/index.html?v=20261006_v1', js: '/html/telemetry_config_tab/main.js?v=20261006_v1' },
   { id: 'process_leaks', tab: 'process-leaks', tabId: 'tab-process-leaks', html: '/html/process_leaks_tab/index.html?v=20260924_v1', js: '/html/process_leaks_tab/main.js?v=20260924_v1' },
@@ -81,9 +81,11 @@ export const APP_TAB_DEFS = [
   { id: 'firewall_manager', tab: 'firewall-manager', tabId: 'tab-firewall-manager', html: '/html/firewall_manager_tab/index.html?v=20261001_v1', js: '/html/firewall_manager_tab/main.js?v=20261001_v1' },
   { id: 'security_acl', tab: 'security-acl', tabId: 'tab-security-acl', html: '/html/security_acl_tab/index.html?v=20261001_v1', js: '/html/security_acl_tab/main.js?v=20261001_v1' },
   { id: 'performance_tracing', tab: 'performance-tracing', tabId: 'tab-performance-tracing', html: '/html/performance_tracing_tab/index.html?v=20261001_v1', js: '/html/performance_tracing_tab/main.js?v=20261001_v1' },
-  { id: 'event_logs', tab: 'event-logs', tabId: 'tab-event-logs', html: '/html/event_logs_tab/index.html?v=20261001_v1', js: '/html/event_logs_tab/main.js?v=20261001_v1' },
+  { id: 'log_settings', tab: 'log-settings', tabId: 'tab-log-settings', html: '/html/log_settings_tab/index.html?v=20261008_v1', js: '/html/log_settings_tab/main.js?v=20261008_v1' },
   { id: 'software_manager', tab: 'software-manager', tabId: 'tab-software-manager', html: '/html/software_manager_tab/index.html?v=20261004_v2', js: '/html/software_manager_tab/main.js?v=20261004_v2' },
   { id: 'taskbar_controller', tab: 'taskbar-controller', tabId: 'tab-taskbar-controller', html: '/html/taskbar_tab/index.html?v=20261006_v1', js: '/html/taskbar_tab/main.js?v=20261006_v1' },
+  { id: 'accounts_identity', tab: 'accounts-identity', tabId: 'tab-accounts-identity', html: '/html/accounts_identity_tab/index.html?v=20261008_v1', js: '/html/accounts_identity_tab/main.js?v=20261008_v1' },
+  { id: 'power_lifecycle', tab: 'power-lifecycle', tabId: 'tab-power-lifecycle', html: '/html/power_lifecycle_tab/index.html?v=20261008_v1', js: '/html/power_lifecycle_tab/main.js?v=20261008_v1' },
 ];
 
 export const TC_EXCLUDES = new Set([

@@ -1,93 +1,176 @@
 <!--
 =============================================================================
-Process Name: Windows Web Interface - Index View
+Process Name: Windows Process Manager - Task Manager Index View
 =============================================================================
 Description:
-  Шаблон клиентского веб-интерфейса index.
+  Клиентский веб-интерфейс диспетчера задач и процессов Windows с разделением
+  на категории: Apps (Приложения с окнами), Background processes (Фоновые процессы)
+  и Windows processes (Системные процессы), группировкой подпроцессов и деревом окон.
 
 Usage Examples:
     Web Route:
       /windows/api/webgui/process_manager_tab/index.html
 
     Tab Frame Integration:
-      <iframe src="/windows/api/webgui/process_manager_tab/index.html" class="w-100 h-100 border-0"></iframe>
+      <iframe src="/windows/api/webgui/process_manager_tab/index.html?v=20261008_v1" class="w-100 h-100 border-0"></iframe>
 
 File: index.html
 Project: ai-breadboard
 Package: windows/api/webgui/process_manager_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-08 02:10:00
 =============================================================================
 -->
+
+<style>
+  .pm-group-header {
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s ease-in-out;
+  }
+  .pm-group-header:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+  .pm-chevron {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    width: 14px;
+    margin-right: 6px;
+    color: var(--bs-secondary, #6c757d);
+  }
+  .pm-chevron.expanded {
+    transform: rotate(90deg);
+    color: var(--bs-primary, #0d6efd);
+  }
+  .pm-sub-row {
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 0.82rem;
+    border-left: 3px solid rgba(13, 110, 253, 0.4);
+  }
+  .pm-section-badge {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .pm-type-tag {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #a0aec0;
+  }
+  .pm-card-hover {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
+  .pm-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+</style>
 
 <!-- Process Manager Tab -->
 <div class="container-fluid py-2 px-3">
   <!-- Top Stat Cards -->
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Всего процессов ⚡</div>
-        <div class="fs-4 fw-bold mt-1 text-primary" id="pm-total-count">--</div>
-        <div class="small text-muted mt-1" id="pm-total-sub">tasklist / wmic</div>
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3 pm-card-hover" id="pm-filter-card-apps">
+        <div class="text-muted small text-uppercase fw-semibold d-flex justify-content-between align-items-center">
+          <span>Приложения (Apps)</span>
+          <i class="bi bi-window-stack text-primary"></i>
+        </div>
+        <div class="fs-4 fw-bold mt-1 text-primary" id="pm-apps-count">--</div>
+        <div class="small text-muted mt-1" id="pm-apps-sub">Оконные программы</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Потоков (Threads) 🧵</div>
-        <div class="fs-4 fw-bold mt-1 text-info" id="pm-threads-count">--</div>
-        <div class="small text-muted mt-1" id="pm-threads-sub">Активные треды</div>
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3 pm-card-hover" id="pm-filter-card-bg">
+        <div class="text-muted small text-uppercase fw-semibold d-flex justify-content-between align-items-center">
+          <span>Фоновые (Background)</span>
+          <i class="bi bi-gear-wide-connected text-info"></i>
+        </div>
+        <div class="fs-4 fw-bold mt-1 text-info" id="pm-bg-count">--</div>
+        <div class="small text-muted mt-1" id="pm-bg-sub">Фоновые службы и демоны</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Использование ОЗУ 🧠</div>
-        <div class="fs-4 fw-bold mt-1 text-success" id="pm-ram-usage">--</div>
-        <div class="small text-muted mt-1" id="pm-ram-sub">Working Set (Память)</div>
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3 pm-card-hover" id="pm-filter-card-win">
+        <div class="text-muted small text-uppercase fw-semibold d-flex justify-content-between align-items-center">
+          <span>Windows процессы</span>
+          <i class="bi bi-microsoft text-warning"></i>
+        </div>
+        <div class="fs-4 fw-bold mt-1 text-warning" id="pm-win-count">--</div>
+        <div class="small text-muted mt-1" id="pm-win-sub">Системные процессы ОС</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Дескрипторы (Handles) 🗝️</div>
-        <div class="fs-4 fw-bold mt-1 text-warning" id="pm-handles-count">--</div>
-        <div class="small text-muted mt-1" id="pm-handles-sub">Открытые хэндлы</div>
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3 pm-card-hover" id="pm-filter-card-all">
+        <div class="text-muted small text-uppercase fw-semibold d-flex justify-content-between align-items-center">
+          <span>Всего процессов</span>
+          <i class="bi bi-cpu text-success"></i>
+        </div>
+        <div class="fs-4 fw-bold mt-1 text-success" id="pm-total-count">--</div>
+        <div class="small text-muted mt-1" id="pm-ram-usage">Память: --</div>
       </div>
     </div>
   </div>
 
-  <!-- Action Bar -->
+  <!-- Action Bar & Filter Controls -->
   <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="pm-refresh-btn">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="pm-refresh-btn">
         <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить процессы</span>
+        <span>Обновить</span>
+      </button>
+
+      <!-- Category Filter Pills -->
+      <div class="btn-group btn-group-sm" role="group" id="pm-category-filter-group">
+        <input type="radio" class="btn-check" name="pm-cat-filter" id="pm-filter-all" autocomplete="off" checked value="all">
+        <label class="btn btn-outline-secondary" for="pm-filter-all">Все</label>
+
+        <input type="radio" class="btn-check" name="pm-cat-filter" id="pm-filter-apps" autocomplete="off" value="app">
+        <label class="btn btn-outline-primary" for="pm-filter-apps">Apps</label>
+
+        <input type="radio" class="btn-check" name="pm-cat-filter" id="pm-filter-bg" autocomplete="off" value="background">
+        <label class="btn btn-outline-info" for="pm-filter-bg">Background</label>
+
+        <input type="radio" class="btn-check" name="pm-cat-filter" id="pm-filter-win-radio" autocomplete="off" value="windows">
+        <label class="btn btn-outline-warning" for="pm-filter-win-radio">Windows</label>
+      </div>
+
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="pm-toggle-expand-btn" title="Свернуть / Развернуть все группы">
+        <i class="bi bi-arrows-expand"></i>
+        <span id="pm-expand-btn-text">Развернуть все</span>
       </button>
     </div>
+
     <div class="d-flex align-items-center gap-2">
-      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="pm-search-input" placeholder="Поиск по имени процесса или PID..." style="width: 260px;">
+      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="pm-search-input" placeholder="Поиск приложения, процесса или PID..." style="width: 280px;">
     </div>
   </div>
 
-  <!-- Process Table -->
+  <!-- Process Table (Task Manager Style) -->
   <div class="card bg-dark text-white border-secondary shadow-sm">
     <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
-      <span class="fw-semibold"><i class="bi bi-cpu text-primary me-2"></i>Диспетчер процессов Windows</span>
+      <span class="fw-semibold"><i class="bi bi-layout-text-window-reverse text-primary me-2"></i>Диспетчер процессов и приложений Windows</span>
       <span class="badge bg-secondary" id="pm-table-badge">0 процессов</span>
     </div>
-    <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
-      <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="pm-table">
-        <thead class="sticky-top bg-dark">
+    <div class="card-body p-0 table-responsive" style="max-height: 600px; overflow-y: auto;">
+      <table class="table table-dark table-hover align-middle mb-0 small" id="pm-table">
+        <thead class="sticky-top bg-dark border-bottom border-secondary">
           <tr class="text-secondary">
-            <th>PID</th>
-            <th>Имя процесса</th>
-            <th>Сессия</th>
-            <th>Использование памяти</th>
-            <th>Статус</th>
-            <th class="text-end">Действия</th>
+            <th style="min-width: 280px;">Имя процесса / Приложения</th>
+            <th style="width: 100px;">PID</th>
+            <th style="width: 140px;">Тип / Статус</th>
+            <th style="width: 100px;">CPU %</th>
+            <th style="width: 120px;">Память (RAM)</th>
+            <th style="width: 120px;" class="text-end">Действия</th>
           </tr>
         </thead>
         <tbody id="pm-tbody">
-          <tr><td colspan="6" class="text-center text-muted py-4">Опрос активных процессов...</td></tr>
+          <tr><td colspan="6" class="text-center text-muted py-4">Опрос активных приложений и процессов...</td></tr>
         </tbody>
       </table>
     </div>

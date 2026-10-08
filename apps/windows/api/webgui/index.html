@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 22:15:00
+Updated: 2026-10-08 04:24:00
 =============================================================================
 -->
 
@@ -29,8 +29,8 @@ Updated: 2026-10-06 22:15:00
   <title>AI Assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20261006_v10" rel="stylesheet">
-  <script src="/html/js/toast.js?v=20261006_v10"></script>
+  <link href="/html/css/main.css?v=20261008_v1" rel="stylesheet">
+  <script src="/html/js/toast.js?v=20261008_v1"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -66,6 +66,42 @@ Updated: 2026-10-06 22:15:00
       <span id="chat-model-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-1 shadow-sm border" style="font-size: 0.8rem; display: none; cursor: pointer;" title="Текущая модель ИИ">
         🤖 Загрузка...
       </span>
+
+      <!-- Model Quick Test Dropdown Trigger & Popover -->
+      <div class="dropdown" id="model-ping-dropdown-wrapper">
+        <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" 
+                id="btn-model-ping-gear" 
+                type="button" 
+                data-bs-toggle="dropdown" 
+                data-bs-auto-close="outside" 
+                aria-expanded="false" 
+                title="Проверка доступности модели" 
+                style="width: 28px; height: 28px;">
+          <i class="bi bi-gear"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end shadow-lg border border-secondary-subtle p-3" aria-labelledby="btn-model-ping-gear" style="min-width: 360px; max-width: 460px; z-index: 1060;">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fw-bold small d-flex align-items-center gap-1.5 text-body">
+              <i class="bi bi-cpu text-primary"></i>
+              <span>Проверка доступности модели</span>
+            </span>
+          </div>
+          <div class="mb-2">
+            <input type="text" class="form-control form-control-sm" id="model-ping-input" value="Проверка доступности модели" placeholder="Введите сообщение...">
+          </div>
+          <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 px-3" id="btn-model-ping-send" type="button">
+              <i class="bi bi-send-fill" id="model-ping-btn-icon"></i>
+              <span id="model-ping-btn-text">Отправить</span>
+            </button>
+          </div>
+          <div id="model-ping-response-container" style="display: none;">
+            <label class="form-label small text-muted mb-1 fw-semibold">Ответ модели:</label>
+            <div id="model-ping-response" class="small p-2 rounded bg-body-tertiary border text-break font-monospace" style="max-height: 220px; overflow-y: auto; white-space: pre-wrap; font-size: 0.8rem; user-select: text;"></div>
+          </div>
+        </div>
+      </div>
+
       <span id="chat-search-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-1 shadow-sm border" style="font-size: 0.8rem; display: none;" title="Провайдер поиска">
       </span>
 
@@ -211,10 +247,6 @@ Updated: 2026-10-06 22:15:00
               <span class="fs-6">⚡</span>
               <span class="fw-medium" data-i18n="tabs.sensorLogs">Датчики и сенсоры (LHM)</span>
             </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-telemetry-history" data-bs-target="#tab-telemetry-history" type="button">
-              <span class="fs-6">📈</span>
-              <span class="fw-medium">История и графики</span>
-            </button>
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-telemetry-research" data-bs-target="#tab-telemetry-research" type="button">
               <span class="fs-6">🔬</span>
               <span class="fw-medium">Исследования телеметрии</span>
@@ -352,6 +384,10 @@ Updated: 2026-10-06 22:15:00
               <span class="fs-6">📁</span>
               <span class="fw-medium" data-i18n="tabs.userDirectories">Директории пользователей</span>
             </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-accounts-identity" data-bs-target="#tab-accounts-identity" type="button">
+              <span class="fs-6">👥</span>
+              <span class="fw-medium">Учетные записи (Users & Identity)</span>
+            </button>
           </div>
         </div>
 
@@ -404,13 +440,18 @@ Updated: 2026-10-06 22:15:00
               <span class="fs-6">📊</span>
               <span class="fw-medium">Трассировка ETW (logman)</span>
             </button>
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-event-logs" data-bs-target="#tab-event-logs" type="button">
-              <span class="fs-6">📝</span>
-              <span class="fw-medium">Журналы событий (Event Logs)</span>
-            </button>
+
             <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-system-logs" data-bs-target="#tab-system-logs" type="button">
               <span class="fs-6">📜</span>
               <span class="fw-medium" data-i18n="tabs.systemLogs">Логи операционной системы</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-log-settings" data-bs-target="#tab-log-settings" type="button">
+              <span class="fs-6">📋</span>
+              <span class="fw-medium">Параметры и настройка журналов</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-power-lifecycle" data-bs-target="#tab-power-lifecycle" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium">Сессии питания и перезагрузки</span>
             </button>
           </div>
         </div>
@@ -478,7 +519,6 @@ Updated: 2026-10-06 22:15:00
     <div id="tab-scenarios" class="tab-pane fade"></div>
     <div id="tab-about-system" class="tab-pane fade"></div>
     <div id="tab-hardware-monitor" class="tab-pane fade"></div>
-    <div id="tab-telemetry-history" class="tab-pane fade"></div>
     <div id="tab-telemetry-research" class="tab-pane fade"></div>
     <div id="tab-telemetry-config" class="tab-pane fade"></div>
     <div id="tab-ai-benchmark" class="tab-pane fade"></div>
@@ -512,14 +552,17 @@ Updated: 2026-10-06 22:15:00
     <div id="tab-windows-backup" class="tab-pane fade"></div>
     <div id="tab-network" class="tab-pane fade"></div>
     <div id="tab-performance-tracing" class="tab-pane fade"></div>
-    <div id="tab-event-logs" class="tab-pane fade"></div>
+
     <div id="tab-system-logs" class="tab-pane fade"></div>
+    <div id="tab-log-settings" class="tab-pane fade"></div>
+    <div id="tab-power-lifecycle" class="tab-pane fade"></div>
     <div id="tab-rag" class="tab-pane fade"></div>
     <div id="tab-telegram-rag" class="tab-pane fade"></div>
     <div id="tab-models" class="tab-pane fade"></div>
     <div id="tab-news" class="tab-pane fade"></div>
     <div id="tab-plugins" class="tab-pane fade"></div>
     <div id="tab-admin" class="tab-pane fade"></div>
+    <div id="tab-accounts-identity" class="tab-pane fade"></div>
     <div id="tab-help" class="tab-pane fade"></div>
   </div>
 </div>
@@ -527,9 +570,9 @@ Updated: 2026-10-06 22:15:00
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/html/js/ai_table_modal.js"></script>
-<script src="/html/js/chatService.js?v=20261006_v7"></script>
-<script src="/html/js/window-api.js?v=20261006_v7"></script>
-<script type="module" src="/html/js/main.js?v=20261006_v7"></script>
+<script src="/html/js/chatService.js?v=20261008_v2"></script>
+<script src="/html/js/window-api.js?v=20261008_v2"></script>
+<script type="module" src="/html/js/main.js?v=20261008_v2"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">

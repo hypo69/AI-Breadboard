@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:50:00
+# Updated: 2026-10-08 03:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -398,6 +398,49 @@ def run_telemetry_service(
 
             known_pids = {pid: data['name'] for pid, data in current_proc_map.items()}
 
+            # Классификация процессов на Apps, Background и Windows
+            from apps.windows.modules.process_manager.core.classifier import (
+                ProcessClassifier,
+                WINDOWS_SYSTEM_PROCESS_NAMES,
+                KNOWN_APP_FRIENDLY_NAMES,
+            )
+            classifier = ProcessClassifier()
+            windowed_pids, titles_map = classifier.get_windowed_pids_and_titles()
+
+            name_to_windowed = {
+                (data['name'] or '').lower(): True
+                for p_id, data in current_proc_map.items()
+                if p_id in windowed_pids
+            }
+
+            # Группировка процессов по категориям
+            app_groups: Dict[str, List[Dict[str, Any]]] = {}
+            bg_groups: Dict[str, List[Dict[str, Any]]] = {}
+            win_groups: Dict[str, List[Dict[str, Any]]] = {}
+
+            for mem_rss, p, info in raw_procs:
+                pid = info.get('pid', 0)
+                p_name = info.get('name') or 'unknown'
+                low_name = p_name.lower()
+                has_win = pid in windowed_pids
+                is_app = (
+                    has_win or
+                    (low_name in name_to_windowed and low_name not in WINDOWS_SYSTEM_PROCESS_NAMES) or
+                    (low_name in KNOWN_APP_FRIENDLY_NAMES and low_name not in WINDOWS_SYSTEM_PROCESS_NAMES)
+                )
+
+                entry = {'pid': pid, 'name': p_name, 'mem_rss': mem_rss, 'proc': p, 'info': info, 'has_win': has_win}
+                if is_app:
+                    app_groups.setdefault(p_name, []).append(entry)
+                elif low_name in WINDOWS_SYSTEM_PROCESS_NAMES:
+                    win_groups.setdefault(p_name, []).append(entry)
+                else:
+                    bg_groups.setdefault(p_name, []).append(entry)
+
+            apps_count = len(app_groups)
+            bg_count = len(bg_groups)
+            win_count = len(win_groups)
+
             raw_procs.sort(key=lambda x: x[0], reverse=True)
             top_candidates = raw_procs[:top_processes]
             top_procs: List[ProcessMetrics] = []
@@ -410,8 +453,47 @@ def run_telemetry_service(
                 mem_mb = round(mem_rss / (1024 * 1024), 1)
                 raw_user = info.get('username')
                 clean_user = raw_user if isinstance(raw_user, str) else ''
-                top_procs.append(ProcessMetrics(pid=info.get('pid', 0), name=info.get('name') or 'unknown', cpu_percent=proc_cpu, memory_mb=mem_mb, threads_count=1, status='running', username=clean_user))
-            snapshot = SystemSnapshot(timestamp=now_iso, hostname=hostname, uptime_seconds=round(time.time() - boot_time, 1), cpu=cpu_metrics, memory=mem_metrics, gpus=gpu_metrics_list, disks=disk_partitions, network=net_metrics_list, top_processes=top_procs)
+                p_id = info.get('pid', 0)
+                p_name = info.get('name') or 'unknown'
+                low_name = p_name.lower()
+                has_win = p_id in windowed_pids
+                is_app = (
+                    has_win or
+                    (low_name in name_to_windowed and low_name not in WINDOWS_SYSTEM_PROCESS_NAMES) or
+                    (low_name in KNOWN_APP_FRIENDLY_NAMES and low_name not in WINDOWS_SYSTEM_PROCESS_NAMES)
+                )
+                cat = 'app' if is_app else ('windows' if low_name in WINDOWS_SYSTEM_PROCESS_NAMES else 'background')
+                win_titles = titles_map.get(p_id, [])
+                friendly = classifier._get_friendly_name(p_name, win_titles)
+
+                top_procs.append(ProcessMetrics(
+                    pid=p_id,
+                    name=p_name,
+                    cpu_percent=proc_cpu,
+                    memory_mb=mem_mb,
+                    threads_count=1,
+                    status='running',
+                    username=clean_user,
+                    category=cat,
+                    is_app=is_app,
+                    friendly_name=friendly,
+                    window_title=win_titles[0] if win_titles else None,
+                ))
+
+            snapshot = SystemSnapshot(
+                timestamp=now_iso,
+                hostname=hostname,
+                uptime_seconds=round(time.time() - boot_time, 1),
+                cpu=cpu_metrics,
+                memory=mem_metrics,
+                gpus=gpu_metrics_list,
+                disks=disk_partitions,
+                network=net_metrics_list,
+                top_processes=top_procs,
+                apps_count=apps_count,
+                background_count=bg_count,
+                windows_count=win_count,
+            )
             try:
                 storage.save_snapshot(snapshot, top_n=top_processes)
             except Exception as db_err:
@@ -429,7 +511,29 @@ def run_telemetry_service(
                     pass
 
             disk_vol_str = ", ".join([f"{d.mountpoint} {d.used_gb:.0f}/{d.total_gb:.0f}GB ({d.percent}%)" for d in disk_partitions[:3]]) or "N/A"
-            top_procs_summary = ", ".join([f"{p.name} ({p.memory_mb:.0f}MB, {p.cpu_percent:.1f}% CPU)" for p in top_procs[:4]])
+
+            # Формирование информативной сводки по Apps и Background processes
+            def _format_group_summary(groups: Dict[str, List[Dict[str, Any]]], top_n: int = 4) -> str:
+                sorted_g = sorted(
+                    groups.items(),
+                    key=lambda item: sum(x['mem_rss'] for x in item[1]),
+                    reverse=True
+                )[:top_n]
+                items = []
+                for name, p_list in sorted_g:
+                    total_mb = sum(x['mem_rss'] for x in p_list) / (1024 * 1024)
+                    cnt_str = f" ({len(p_list)})" if len(p_list) > 1 else ""
+                    friendly = classifier._get_friendly_name(name)
+                    if total_mb >= 1024:
+                        mem_str = f"{total_mb / 1024:.1f} GB"
+                    else:
+                        mem_str = f"{total_mb:.0f} MB"
+                    items.append(f"{friendly}{cnt_str} [{mem_str}]")
+                return ", ".join(items) if items else "Нет процессов"
+
+            apps_summary = _format_group_summary(app_groups, top_n=4)
+            bg_summary = _format_group_summary(bg_groups, top_n=3)
+            win_summary = _format_group_summary(win_groups, top_n=2)
 
             logger.info(f"📊 [ТЕЛЕМЕТРИЯ #{tick}] Режим: {mode.upper()} | {datetime.now().strftime('%H:%M:%S')}")
             logger.info(f"   ├─ 🖥️ CPU: {cpu_pct:.1f}% @ {freq_mhz:.0f}MHz ({cpu_metrics.physical_cores}P/{cpu_metrics.logical_cores}L) | RAM: {mem_metrics.used_gb:.1f}/{mem_metrics.total_gb:.1f}GB ({mem_metrics.percent}%)")
@@ -438,7 +542,9 @@ def run_telemetry_service(
                 logger.info(f"   ├─ 🎮 GPU: {g0.name} | Нагрузка: {g0.load_percent or 0.0}% | Температура: {g0.temperature_celsius or 0.0}°C")
             logger.info(f"   ├─ 💾 Диски: Чтение {disk_read_kb:.1f} KB/s | Запись {disk_write_kb:.1f} KB/s | Занято: {disk_vol_str}")
             logger.info(f"   ├─ 📡 Сеть: ↓{net_recv_kb:.1f} KB/s | ↑{net_sent_kb:.1f} KB/s | Активность: {active_win_str}")
-            logger.info(f"   ├─ ⚡ Топ процессов: {top_procs_summary}")
+            logger.info(f"   ├─ 📱 Apps ({apps_count}): {apps_summary}")
+            logger.info(f"   ├─ ⚙️  Background ({bg_count}): {bg_summary}")
+            logger.info(f"   ├─ 🪟 Windows ({win_count}): {win_summary}")
             logger.info(f"   └─ 📥 Буфер БД: снимок #{tick} добавлен (в буфере: {storage.get_buffered_count()} записей, БД: {Path(db_path).name})")
 
             # Автоматическое переключение из тяжелого режима в легкий при непрерывной работе 5 дней (432 000с)
@@ -524,6 +630,17 @@ def run_telemetry_service(
                                 last_heavy_disk_scan_time = h_now
                             except Exception as d_err:
                                 logger.debug(f"Ошибка тяжелого сканирования накопителей: {d_err}")
+
+                        # Инкрементальный сбор событий журнала безопасности Windows (Security.evtx)
+                        if h_collectors.get('security_events', True):
+                            try:
+                                from apps.windows.telemetry.security_collector import WindowsSecurityCollector
+                                sec_coll = WindowsSecurityCollector(storage=storage)
+                                sec_rep = sec_coll.collect_incremental(batch_size=500, max_records=2000, save_raw=False)
+                                if sec_rep.total_events_ingested > 0:
+                                    logger.info(f"🛡️ [SECURITY LOG] Инкрементально собрано {sec_rep.total_events_ingested} событий безопасности (RecordID: {sec_rep.last_record_id})")
+                            except Exception as sec_err:
+                                logger.debug(f"Ошибка сбора событий безопасности: {sec_err}")
 
                         heavy_dur = time.time() - heavy_start
                         logger.info(f'✅ [{mode.upper()}] Периодический тяжелый опрос завершен за {heavy_dur:.2f}с (Всего сенсоров: {len(heavy_readings_total)})')

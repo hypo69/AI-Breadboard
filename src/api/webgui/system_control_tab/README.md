@@ -1,6 +1,6 @@
 # Вкладка System Logs & Activity Center (Журналы событий и активность)
 
-**Путь:** `src/api/webgui/system_control_tab/`
+**Путь:** `apps/windows/api/webgui/system_control_tab/`
 
 ## Описание
 Вкладка **System Logs & Activity Center** предоставляет интерфейс для мониторинга потока системных событий Windows, работы с каналами логов, семантического RAG-поиска, аудита аномалий, анализа инцидентов и просмотра истории операций.

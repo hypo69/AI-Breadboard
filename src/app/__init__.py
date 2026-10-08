@@ -28,7 +28,7 @@
 # Package: src.app
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 00:55:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -227,7 +227,7 @@ def register_routers(app: FastAPI, state: 'AppState') -> None:
             logger.debug(f'Windows focus policy router not registered: {e}')
     if is_app_enabled('windows_defender'):
         try:
-            from apps.windows.defender.router import init_router as init_windows_defender_router
+            from apps.windows.modules.defender.router import init_router as init_windows_defender_router
             app.include_router(init_windows_defender_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows defender router not registered: {e}')

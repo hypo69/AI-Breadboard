@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 17:30:00
+# Updated: 2026-10-08 02:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1265,6 +1265,123 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
         );
     ''')
 
+    # 65. Нормализованные события безопасности Windows (security_events)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS security_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_record_id INTEGER DEFAULT 0,
+            event_id INTEGER NOT NULL,
+            timestamp TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            computer TEXT,
+            channel TEXT DEFAULT 'Security',
+            level TEXT DEFAULT 'Information',
+            subject_user TEXT,
+            subject_domain TEXT,
+            subject_sid TEXT,
+            target_user TEXT,
+            target_domain TEXT,
+            target_sid TEXT,
+            process_id INTEGER DEFAULT 0,
+            process_name TEXT,
+            parent_process_id INTEGER DEFAULT 0,
+            parent_process_name TEXT,
+            command_line TEXT,
+            logon_id TEXT,
+            logon_type INTEGER,
+            elevated_token INTEGER,
+            source_ip TEXT,
+            source_port INTEGER,
+            object_name TEXT,
+            status_code TEXT,
+            message TEXT,
+            event_data_json TEXT,
+            ingested_at TEXT NOT NULL
+        );
+    ''')
+
+    # 66. Сырые события безопасности Windows (security_events_raw)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS security_events_raw (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_record_id INTEGER DEFAULT 0,
+            event_id INTEGER NOT NULL,
+            timestamp TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            channel TEXT DEFAULT 'Security',
+            raw_xml TEXT NOT NULL,
+            ingested_at TEXT NOT NULL
+        );
+    ''')
+
+    # 67. Закладки инкрементального сбора событий (security_collector_bookmarks)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS security_collector_bookmarks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            channel TEXT NOT NULL UNIQUE,
+            last_record_id INTEGER DEFAULT 0,
+            bookmark_xml TEXT,
+            last_timestamp TEXT,
+            updated_at REAL NOT NULL
+        );
+    ''')
+
+    # 68. События питания и жизненного цикла Windows (power_events)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS power_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id INTEGER NOT NULL,
+            provider TEXT,
+            channel TEXT DEFAULT 'System',
+            timestamp TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            event_type TEXT NOT NULL,
+            shutdown_type TEXT,
+            user TEXT,
+            domain TEXT,
+            process TEXT,
+            process_id INTEGER,
+            reason TEXT,
+            reason_code TEXT,
+            comment TEXT,
+            unexpected INTEGER DEFAULT 0,
+            bugcheck_code TEXT,
+            bugcheck_params_json TEXT,
+            boot_id TEXT,
+            details_json TEXT,
+            raw_xml TEXT,
+            UNIQUE(event_id, timestamp, provider) ON CONFLICT REPLACE
+        );
+    ''')
+
+    # 69. Реконструированные сессии питания ОС (power_sessions)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS power_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT UNIQUE NOT NULL,
+            boot_time TEXT NOT NULL,
+            boot_timestamp REAL,
+            shutdown_time TEXT,
+            shutdown_timestamp REAL,
+            uptime_seconds REAL,
+            uptime_human TEXT,
+            shutdown_type TEXT DEFAULT 'Active',
+            initiator TEXT,
+            process TEXT,
+            reason TEXT,
+            reason_code TEXT,
+            comment TEXT,
+            clean_shutdown INTEGER DEFAULT 1,
+            unexpected_shutdown INTEGER DEFAULT 0,
+            bugcheck TEXT,
+            boot_event_id INTEGER DEFAULT 12,
+            shutdown_event_id INTEGER,
+            initiator_chain_json TEXT,
+            events_json TEXT,
+            created_at REAL NOT NULL
+        );
+    ''')
+
     # Индексы для ускорения выборок
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_created_at ON system_snapshots(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_archives_created_at ON startup_audit_archives(created_at);')
@@ -1362,6 +1479,30 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sw_storage_app ON software_storage_locations(app_id);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sw_config_app ON software_config_files(app_id);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sw_net_app_ts ON software_network_snapshots(timestamp, app_id);')
+
+    # Индексы для подсистемы безопасности Security Event Log
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_event_id ON security_events(event_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_timestamp ON security_events(timestamp);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_created_at ON security_events(created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_user ON security_events(subject_user);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_target_user ON security_events(target_user);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_process ON security_events(process_name);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_pid ON security_events(process_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_security_record_id ON security_events(event_record_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_sec_raw_record_id ON security_events_raw(event_record_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_sec_raw_created_at ON security_events_raw(created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_sec_bm_channel ON security_collector_bookmarks(channel);')
+
+    # Индексы для подсистемы событий питания и сессий
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_events_eid ON power_events(event_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_events_ts ON power_events(timestamp);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_events_type ON power_events(event_type);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_events_user ON power_events(user);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_events_proc ON power_events(process);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_sessions_boot_time ON power_sessions(boot_time);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_sessions_shutdown_type ON power_sessions(shutdown_type);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_sessions_clean ON power_sessions(clean_shutdown, unexpected_shutdown);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_sessions_initiator ON power_sessions(initiator);')
 
     _run_migrations(cursor)
     conn.commit()

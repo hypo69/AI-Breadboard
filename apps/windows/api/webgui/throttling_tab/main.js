@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/throttling_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -151,7 +151,9 @@
   function applyPoller(freq, runInitial = false) {
     stopPolling();
     if (freq === 'start' || freq === 'manual') {
-      if (runInitial) fetchKernelThrottling();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-throttling') : true)) {
+        fetchKernelThrottling();
+      }
       return;
     }
 
@@ -164,7 +166,9 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-throttling', fetchKernelThrottling, intervalMs, { pollerId, immediate: runInitial });
     } else {
-      if (runInitial) fetchKernelThrottling();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-throttling') : true)) {
+        fetchKernelThrottling();
+      }
       autoRefreshTimer = setInterval(() => {
         if (window.isTabActive ? window.isTabActive('tab-throttling') : true) {
           fetchKernelThrottling();
@@ -195,7 +199,7 @@
     }
   }
 
-  async function init() {
+  async function initThrottlingTab() {
     bindEvents();
     const currentFreq = getFrequency();
     const select = document.getElementById('diag-throttling-poll-freq');
@@ -203,9 +207,24 @@
     applyPoller(currentFreq, true);
   }
 
+  window.initThrottlingTab = initThrottlingTab;
+  window.activateThrottlingTab = () => {
+    applyPoller(getFrequency(), true);
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.isTabActive ? window.isTabActive('tab-throttling') : false) {
+        initThrottlingTab();
+      } else {
+        bindEvents();
+      }
+    });
   } else {
-    setTimeout(init, 10);
+    if (window.isTabActive ? window.isTabActive('tab-throttling') : false) {
+      initThrottlingTab();
+    } else {
+      bindEvents();
+    }
   }
 })();

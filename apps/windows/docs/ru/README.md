@@ -185,7 +185,6 @@ http://localhost:8090/
 **Системные:**
 - ℹ️ О системе (`tab-about-system`)
 - 🧩 Управление плагинами (`tab-plugins`)
-- 📊 История телеметрии (`tab-telemetry-history`)
 - 🔬 Исследование телеметрии (`tab-telemetry-research`)
 - 💻 Мониторинг оборудования (`tab-hardware-monitor`)
 - и др. (всего 42)

@@ -114,17 +114,17 @@ python -m apps.windows.sysadmin --mode server
 - `GET /api/sysadmin/filesystem/browse?path=<PATH>` — получение списка подкаталогов по указанному пути.
 
 ### Аудит файловой системы и Multi-Directory Live Watcher
-- `GET /api/sysadmin/file-audit/watch-dirs` — получение списка всех текущих отслеживаемых папок.
-- `POST /api/sysadmin/file-audit/watch-dirs` — установка и сохранение нового списка отслеживаемых директорий.
-- `POST /api/sysadmin/file-audit/watch-dirs/add` — добавление отдельной папки в мониторинг.
-- `POST /api/sysadmin/file-audit/watch-dirs/remove` — удаление папки из мониторинга.
-- `GET /api/sysadmin/file-audit/live-events` — поток событий реального времени (`ReadDirectoryChangesW`).
-- `GET /api/sysadmin/file-audit/telemetry` — программные метрики темпа и аппаратные сенсоры дисков.
-- `GET /api/sysadmin/file-audit/policy` — проверка статуса `auditpol /subcategory:'File System'`.
-- `POST /api/sysadmin/file-audit/policy` — включение/отключение системного аудита `File System`.
-- `GET /api/sysadmin/file-audit/folder-sacl?path=<PATH>` — проверка SACL на указанной папке.
-- `POST /api/sysadmin/file-audit/folder-sacl` — настройка SACL аудита удаления на папку.
-- `GET /api/sysadmin/file-audit/deletions?hours=24` — извлечение и сопоставление событий 4663/4660 из Security Log.
+- `GET /api/v1/system/file-audit/watch-dirs` — получение списка всех текущих отслеживаемых папок.
+- `POST /api/v1/system/file-audit/watch-dirs` — установка и сохранение нового списка отслеживаемых директорий.
+- `POST /api/v1/system/file-audit/watch-dirs/add` — добавление отдельной папки в мониторинг.
+- `POST /api/v1/system/file-audit/watch-dirs/remove` — удаление папки из мониторинга.
+- `GET /api/v1/system/file-audit/live-events` — поток событий реального времени (`ReadDirectoryChangesW`).
+- `GET /api/v1/system/file-audit/telemetry` — программные метрики темпа и аппаратные сенсоры дисков.
+- `GET /api/v1/system/file-audit/policy` — проверка статуса `auditpol /subcategory:'File System'`.
+- `POST /api/v1/system/file-audit/policy` — включение/отключение системного аудита `File System`.
+- `GET /api/v1/system/file-audit/folder-sacl?path=<PATH>` — проверка SACL на указанной папке.
+- `POST /api/v1/system/file-audit/folder-sacl` — настройка SACL аудита удаления на папку.
+- `GET /api/v1/system/file-audit/deletions?hours=24` — извлечение и сопоставление событий 4663/4660 из Security Log.
 
 ---
 

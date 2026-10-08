@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.win32_ffi
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 06:52:00
+# Updated: 2026-10-08 02:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -29,12 +29,40 @@ import sys
 import winreg
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from logger import logger
+
+# Константы EvtQuery и EvtRender
 EVT_QUERY_CHANNEL_PATH = 1
 EVT_QUERY_FILE_PATH = 2
 EVT_QUERY_REVERSE_DIRECTION = 512
+EVT_QUERY_FORWARD_DIRECTION = 256
 EVT_RENDER_EVENT_XML = 1
+EVT_RENDER_BOOKMARK_XML = 2
+
+# Константы EvtSeek
+EVT_SEEK_ORIGIN_SET = 1
+EVT_SEEK_ORIGIN_CURRENT = 2
+EVT_SEEK_ORIGIN_END = 3
+EVT_SEEK_ORIGIN_BOOKMARK = 4
+EVT_SEEK_RELATIVE_TO_BOOKMARK = 8
+EVT_SEEK_AFTER_BOOKMARK = 16
+EVT_SEEK_STRICT = 0x10000
+
+# Константы EvtSubscribe
+EVT_SUBSCRIBE_TO_FUTURE_EVENTS = 1
+EVT_SUBSCRIBE_START_AT_OLDEST = 2
+EVT_SUBSCRIBE_START_AFTER_BOOKMARK = 3
+EVT_SUBSCRIBE_TOLERATE_QUERY_ERRORS = 0x1000
+EVT_SUBSCRIBE_STRICT = 0x10000
+
+# Callback тип для EvtSubscribe
+EVT_SUBSCRIBE_CALLBACK = ctypes.WINFUNCTYPE(
+    wintypes.DWORD,
+    wintypes.DWORD,
+    wintypes.LPVOID,
+    wintypes.HANDLE
+)
 CHANNEL_DESCRIPTIONS: Dict[str, str] = {'System': 'Системный журнал Windows: события ядра ОС, системных служб, драйверов устройств, сбоев питания и сетевого стека.', 'Application': 'Журнал приложений: события, предупреждения, сбои и ошибки пользовательских и серверных программ (Crash, Faults).', 'Security': 'Журнал безопасности: аудит входов в систему (Logon/Logoff), права доступа, повышение привилегий UAC и политики безопасности.', 'Setup': 'Журнал установки: логи процесса установки операционной системы, обновлений Windows и накопительных пакетов KB.', 'Microsoft-Windows-WindowsUpdateClient/Operational': 'Клиент обновления Windows Update: загрузка, верификация и установка патчей, исправления безопасности и драйверов.', 'Microsoft-Windows-Kernel-PnP/Configuration': 'Конфигурация оборудования Plug and Play: подключение новых устройств, установка драйверов, коды ошибок 10/43.', 'Microsoft-Windows-Kernel-Power/Operational': 'Питание ядра Windows: переходы в сон/гибернацию, сбои питания (Event 41), изменение состояний батареи и ACPI.', 'Microsoft-Windows-TaskScheduler/Operational': 'Планировщик заданий: запуск, завершение, сбои и выполнение фоновых регламентных задач Windows.', 'Microsoft-Windows-Windows Defender/Operational': 'Антивирус Microsoft Defender: обнаружение угроз, сканирование в реальном времени, обновление антивирусных сигнатур.', 'Microsoft-Windows-Hyper-V-Compute-Operational': 'Платформа виртуализации Hyper-V: жизненный цикл виртуальных машин, контейнеров WSL2 и виртуальных адаптеров.', 'Microsoft-Windows-Windows Firewall With Advanced Security/Firewall': 'Брандмауэр Windows: блокировки входящего/исходящего трафика, сетевые правила фильтрации и аномалии сокетов.', 'Microsoft-Windows-Diagnostics-Performance/Operational': 'Диагностика производительности: анализ времени загрузки Windows, выключения и зависания системных компонентов.', 'Microsoft-Windows-Bits-Client/Operational': 'Фоновая интеллектуальная служба передачи (BITS): загрузка файлов и обновлений по сети с контролем канала.', 'Microsoft-Windows-DNS-Client/Operational': 'DNS-клиент Windows: резолвинг доменных имен, таймауты DNS серверов и сетевые кэширования.', 'Microsoft-Windows-CodeIntegrity/Operational': 'Контроль целостности кода: проверка цифровых подписей драйверов и исполняемых системных файлов.', 'Microsoft-Windows-PowerShell/Operational': 'Исполнение скриптов PowerShell: запуск командлетов, сценариев автоматизации и модулей администрирования.', 'Microsoft-Windows-Sysmon/Operational': 'Microsoft System Monitor (Sysmon): глубокая телеметрия создания процессов (Event 1), сети (Event 3), файловых операций (11/23/26) и хэшей исполняемых файлов.'}
 
 @dataclass
@@ -55,6 +83,7 @@ class WevtAPI:
         self._available = False
         self.wevtapi: Optional[ctypes.WinDLL] = None
         self._publisher_cache: Dict[str, Optional[wintypes.HANDLE]] = {}
+        self._active_subscriptions: List[Tuple[wintypes.HANDLE, Any]] = []
         if sys.platform == 'win32':
             try:
                 self.wevtapi = ctypes.windll.LoadLibrary('wevtapi.dll')
@@ -87,6 +116,14 @@ class WevtAPI:
         self.wevtapi.EvtOpenPublisherMetadata.restype = wintypes.HANDLE
         self.wevtapi.EvtFormatMessage.argtypes = [wintypes.HANDLE, wintypes.HANDLE, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
         self.wevtapi.EvtFormatMessage.restype = wintypes.BOOL
+        self.wevtapi.EvtCreateBookmark.argtypes = [wintypes.LPCWSTR]
+        self.wevtapi.EvtCreateBookmark.restype = wintypes.HANDLE
+        self.wevtapi.EvtUpdateBookmark.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        self.wevtapi.EvtUpdateBookmark.restype = wintypes.BOOL
+        self.wevtapi.EvtSeek.argtypes = [wintypes.HANDLE, ctypes.c_int64, wintypes.HANDLE, wintypes.DWORD, wintypes.DWORD]
+        self.wevtapi.EvtSeek.restype = wintypes.BOOL
+        self.wevtapi.EvtSubscribe.argtypes = [wintypes.HANDLE, wintypes.HANDLE, wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.HANDLE, wintypes.LPVOID, EVT_SUBSCRIBE_CALLBACK, wintypes.DWORD]
+        self.wevtapi.EvtSubscribe.restype = wintypes.HANDLE
 
     def is_available(self) -> bool:
         """Проверить доступность wevtapi.dll в текущей системе."""
@@ -206,7 +243,7 @@ class WevtAPI:
             pass
         return res
 
-    def read_events(self, channel: str='System', limit: int=100, level: str='', search: str='', event_id: int | list[int] | tuple[int, ...] | set[int] = 0, hours: int=24) -> List[Dict[str, Any]]:
+    def read_events(self, channel: str='System', limit: int=100, level: str='', search: str='', event_id: int | list[int] | tuple[int, ...] | set[int] = 0, hours: int=24, format_message: bool=True) -> List[Dict[str, Any]]:
         """Быстрое чтение событий из указанного канала через EvtQuery / EvtRender."""
         if not self._available or not self.wevtapi:
             return []
@@ -248,7 +285,7 @@ class WevtAPI:
                     for i in range(returned.value):
                         h_ev = event_handles[i]
                         if h_ev:
-                            ev_dict = self._render_event_xml(h_ev, channel)
+                            ev_dict = self._render_event_xml(h_ev, channel, format_message=format_message)
                             if ev_dict:
                                 if search:
                                     s_lower = search.lower()
@@ -328,7 +365,7 @@ class WevtAPI:
         """Деструктор для гарантированного освобождения ресурсов."""
         self.close()
 
-    def _render_event_xml(self, h_event: wintypes.HANDLE, channel: str) -> Optional[Dict[str, Any]]:
+    def _render_event_xml(self, h_event: wintypes.HANDLE, channel: str, format_message: bool = True) -> Optional[Dict[str, Any]]:
         """Отрендерить событие в XML строку и разобрать в словарь."""
         if not self.wevtapi:
             return None
@@ -345,7 +382,7 @@ class WevtAPI:
         if not xml_str:
             return None
         res = self._parse_event_xml(xml_str, channel)
-        if res:
+        if res and format_message:
             prov = res.get('provider', '')
             if prov:
                 formatted = self.format_event_message(h_event, prov, flag=1)
@@ -585,6 +622,286 @@ class WevtAPI:
 
         all_events.sort(key=lambda x: str(x.get('timestamp', '')), reverse=True)
         return all_events[:limit]
+
+    def create_bookmark(self, bookmark_xml: Optional[str] = None) -> Optional[wintypes.HANDLE]:
+        """Создать дескриптор закладки (Bookmark) для инкрементального позиционирования.
+
+        Args:
+            bookmark_xml: Исходная XML-строка закладки или None для новой пустой закладки.
+
+        Returns:
+            Optional[wintypes.HANDLE]: Дескриптор закладки или None.
+        """
+        if not self._available or not self.wevtapi:
+            return None
+        try:
+            h_bookmark = self.wevtapi.EvtCreateBookmark(bookmark_xml if bookmark_xml else None)
+            return h_bookmark if h_bookmark else None
+        except Exception as ex:
+            logger.debug(f'[WevtAPI] Ошибка создания закладки: {ex}')
+            return None
+
+    def update_bookmark(self, bookmark_handle: wintypes.HANDLE, event_handle: wintypes.HANDLE) -> bool:
+        """Обновить позицию закладки по текущему событию.
+
+        Args:
+            bookmark_handle: Дескриптор закладки.
+            event_handle: Дескриптор обработанного события.
+
+        Returns:
+            bool: True в случае успешного обновления.
+        """
+        if not self._available or not self.wevtapi or not bookmark_handle or not event_handle:
+            return False
+        try:
+            return bool(self.wevtapi.EvtUpdateBookmark(bookmark_handle, event_handle))
+        except Exception as ex:
+            logger.debug(f'[WevtAPI] Ошибка обновления закладки: {ex}')
+            return False
+
+    def render_bookmark(self, bookmark_handle: wintypes.HANDLE) -> Optional[str]:
+        """Отрендерить текущее состояние закладки в XML строку.
+
+        Args:
+            bookmark_handle: Дескриптор закладки.
+
+        Returns:
+            Optional[str]: XML-представление закладки для сохранения в SQLite/файле.
+        """
+        if not self._available or not self.wevtapi or not bookmark_handle:
+            return None
+        used = wintypes.DWORD()
+        prop_count = wintypes.DWORD()
+        self.wevtapi.EvtRender(None, bookmark_handle, EVT_RENDER_BOOKMARK_XML, 0, None, ctypes.byref(used), ctypes.byref(prop_count))
+        err = ctypes.GetLastError()
+        if err != 122 or used.value == 0:
+            return None
+        buf = ctypes.create_unicode_buffer(used.value // 2 + 2)
+        if self.wevtapi.EvtRender(None, bookmark_handle, EVT_RENDER_BOOKMARK_XML, used.value, ctypes.byref(buf), ctypes.byref(used), ctypes.byref(prop_count)):
+            return buf.value.strip()
+        return None
+
+    def seek_bookmark(self, h_query: wintypes.HANDLE, bookmark_handle: wintypes.HANDLE, flags: int = EVT_SEEK_AFTER_BOOKMARK) -> bool:
+        """Переместить указатель чтения в выборке относительно сохраненной закладки.
+
+        Args:
+            h_query: Дескриптор открытой выборки EvtQuery.
+            bookmark_handle: Дескриптор закладки.
+            flags: Флаги позиционирования (по умолчанию EVT_SEEK_AFTER_BOOKMARK).
+
+        Returns:
+            bool: True в случае успешного позиционирования.
+        """
+        if not self._available or not self.wevtapi or not h_query or not bookmark_handle:
+            return False
+        try:
+            return bool(self.wevtapi.EvtSeek(h_query, 0, bookmark_handle, 0, flags))
+        except Exception as ex:
+            logger.debug(f'[WevtAPI] Ошибка позиционирования по закладке: {ex}')
+            return False
+
+    def read_events_incremental(
+        self,
+        channel: str = 'Security',
+        query_xpath: str = '*',
+        bookmark_xml: Optional[str] = None,
+        batch_size: int = 100,
+        format_message: bool = False,
+        forward: bool = True,
+    ) -> Tuple[List[Dict[str, Any]], Optional[str], int]:
+        """Инкрементальное чтение событий из журнала с использованием закладки (Bookmark).
+
+        Args:
+            channel: Имя канала Windows Event Log (например, 'Security', 'System').
+            query_xpath: XPath-фильтр для выборки событий.
+            bookmark_xml: XML сохраненной закладки с прошлого сеанса сбора.
+            batch_size: Максимальное количество событий за один опрос.
+            format_message: Форматировать ли локализованные строки через publisher metadata.
+            forward: Читать вперед по хронологии (True) или назад (False).
+
+        Returns:
+            Tuple[List[Dict[str, Any]], Optional[str], int]:
+                (список событий, обновленный bookmark_xml, максимальный event_record_id).
+        """
+        if not self._available or not self.wevtapi:
+            return [], None, 0
+
+        flags = EVT_QUERY_CHANNEL_PATH
+        if not forward:
+            flags |= EVT_QUERY_REVERSE_DIRECTION
+
+        h_query = None
+        h_bookmark = None
+        events: List[Dict[str, Any]] = []
+        max_record_id = 0
+
+        try:
+            h_query = self.wevtapi.EvtQuery(None, channel, query_xpath, flags)
+            if not h_query:
+                return [], None, 0
+
+            # Создаем или восстанавливаем закладку
+            h_bookmark = self.create_bookmark(bookmark_xml)
+
+            # Если закладка была передана, позиционируемся за ней
+            if h_bookmark and bookmark_xml:
+                self.seek_bookmark(h_query, h_bookmark, EVT_SEEK_AFTER_BOOKMARK)
+
+            event_handles = (wintypes.HANDLE * batch_size)()
+            returned = wintypes.DWORD(0)
+
+            if self.wevtapi.EvtNext(h_query, batch_size, event_handles, 2000, 0, ctypes.byref(returned)):
+                for i in range(returned.value):
+                    h_ev = event_handles[i]
+                    if h_ev:
+                        ev_dict = self._render_event_xml(h_ev, channel, format_message=format_message)
+                        if ev_dict:
+                            events.append(ev_dict)
+                            rec_id = int(ev_dict.get('record_id', 0) or 0)
+                            if rec_id > max_record_id:
+                                max_record_id = rec_id
+                        # Обновляем закладку на последнее событие
+                        if h_bookmark:
+                            self.update_bookmark(h_bookmark, h_ev)
+                        self.wevtapi.EvtClose(h_ev)
+
+            new_bookmark_xml = self.render_bookmark(h_bookmark) if h_bookmark else None
+            return events, new_bookmark_xml, max_record_id
+
+        except Exception as ex:
+            logger.debug(f'[WevtAPI] Ошибка инкрементального чтения ({channel}): {ex}')
+            return [], None, 0
+        finally:
+            if h_bookmark:
+                self.wevtapi.EvtClose(h_bookmark)
+            if h_query:
+                self.wevtapi.EvtClose(h_query)
+
+    def subscribe_events(
+        self,
+        channel: str = 'Security',
+        query_xpath: str = '*',
+        callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        bookmark_xml: Optional[str] = None,
+        start_at_oldest: bool = False,
+    ) -> Optional[wintypes.HANDLE]:
+        """Оформить подписку на входящий поток событий канала через EvtSubscribe.
+
+        Args:
+            channel: Канал журнала событий (например, 'Security').
+            query_xpath: XPath-фильтр подписки.
+            callback: Функция обратного вызова при получении события.
+            bookmark_xml: Закладка для возобновления подписки.
+            start_at_oldest: Читать с самого старого события при отсутствии закладки.
+
+        Returns:
+            Optional[wintypes.HANDLE]: Дескриптор подписки или None.
+        """
+        if not self._available or not self.wevtapi or not callback:
+            return None
+
+        h_bookmark = self.create_bookmark(bookmark_xml) if bookmark_xml else None
+        flags = EVT_SUBSCRIBE_TOLERATE_QUERY_ERRORS
+        if h_bookmark:
+            flags |= EVT_SUBSCRIBE_START_AFTER_BOOKMARK
+        elif start_at_oldest:
+            flags |= EVT_SUBSCRIBE_START_AT_OLDEST
+        else:
+            flags |= EVT_SUBSCRIBE_TO_FUTURE_EVENTS
+
+        def _native_callback(action: int, user_context: wintypes.LPVOID, h_event: wintypes.HANDLE) -> int:
+            if action == 1 and h_event:  # EvtSubscribeActionDeliver
+                try:
+                    ev_dict = self._render_event_xml(h_event, channel, format_message=False)
+                    if ev_dict:
+                        callback(ev_dict)
+                except Exception as ex:
+                    logger.debug(f'[WevtAPI] Ошибка в subscribe callback: {ex}')
+            return 0
+
+        c_cb = EVT_SUBSCRIBE_CALLBACK(_native_callback)
+        try:
+            h_sub = self.wevtapi.EvtSubscribe(
+                None,
+                None,
+                channel,
+                query_xpath,
+                h_bookmark,
+                None,
+                c_cb,
+                flags
+            )
+            if h_sub:
+                self._active_subscriptions.append((h_sub, c_cb))
+                return h_sub
+        except Exception as ex:
+            logger.debug(f'[WevtAPI] Ошибка EvtSubscribe ({channel}): {ex}')
+        finally:
+            if h_bookmark:
+                self.wevtapi.EvtClose(h_bookmark)
+        return None
+
+    def unsubscribe(self, h_sub: wintypes.HANDLE) -> bool:
+        """Отменить активную подписку на события."""
+        if not self._available or not self.wevtapi or not h_sub:
+            return False
+        try:
+            self._active_subscriptions = [s for s in self._active_subscriptions if s[0] != h_sub]
+            return bool(self.wevtapi.EvtClose(h_sub))
+        except Exception:
+            return False
+
+    def check_channel_access(self, channel_name: str = 'Security') -> Dict[str, Any]:
+        """Проверить доступность и привилегии для чтения канала Windows Event Log.
+
+        Args:
+            channel_name: Имя канала (по умолчанию 'Security').
+
+        Returns:
+            Dict[str, Any]: Словарь с информацией о доступе, ошибках и количестве записей.
+        """
+        if not self._available or not self.wevtapi:
+            return {
+                'accessible': False,
+                'channel': channel_name,
+                'error': 'wevtapi.dll недоступна в текущей среде',
+                'record_count': 0,
+            }
+
+        h_log = self.wevtapi.EvtOpenLog(None, channel_name, 1)
+        if not h_log:
+            err = ctypes.GetLastError()
+            err_msg = f'Win32 Error {err}'
+            if err == 5:
+                err_msg = 'Отказано в доступе (ERROR_ACCESS_DENIED, код 5). Требуются права Администратора или SeSecurityPrivilege.'
+            elif err == 1314:
+                err_msg = 'Клиент не обладает требуемыми привилегиями (ERROR_PRIVILEGE_NOT_HELD, код 1314).'
+            return {
+                'accessible': False,
+                'channel': channel_name,
+                'error': err_msg,
+                'error_code': err,
+                'record_count': 0,
+            }
+
+        rec_count = 0
+        try:
+            buf = (ctypes.c_byte * 128)()
+            used = wintypes.DWORD(0)
+            if self.wevtapi.EvtGetLogInfo(h_log, 5, 128, ctypes.byref(buf), ctypes.byref(used)):
+                rec_count = struct.unpack('<Q', bytes(buf)[:8])[0]
+        except Exception:
+            pass
+        finally:
+            self.wevtapi.EvtClose(h_log)
+
+        return {
+            'accessible': True,
+            'channel': channel_name,
+            'error': None,
+            'error_code': 0,
+            'record_count': rec_count,
+        }
 
 
 __all__ = ['WevtAPI', 'ChannelMetadata', 'CHANNEL_DESCRIPTIONS']

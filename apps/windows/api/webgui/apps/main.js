@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/apps
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 19:05:00
+ * Updated: 2026-10-08 04:24:00
  * =============================================================================
  */
 
@@ -25,6 +25,7 @@
 
 import { setupGlobalApi, setupThemeAndLang } from './modules/init-interface.js';
 import { fetchAppsStatus, updateModelBadge } from './modules/status-manager.js';
+import { initModelTester, sendModelPing } from './modules/model-tester.js';
 import { APP_TAB_DEFS } from './modules/tabs-config.js';
 import { applyTranslations } from '../js/i18n.js';
 import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.js';
@@ -32,6 +33,8 @@ import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.js';
 // Глобальный экспорт
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
+window.sendModelPing = sendModelPing;
+window.initModelTester = initModelTester;
 
 // Карта: tabId → пути (из tabs-config, не генерируем)
 const TAB_PATHS = Object.fromEntries(
@@ -589,6 +592,9 @@ async function init() {
   const statusData = await fetchAppsStatus();
   await updateModelBadge(statusData);
   const appsMap = statusData?.apps || {};
+
+  // Инициализация быстрой проверки доступности модели
+  initModelTester();
 
   // Меню из конфига
   const cfg = await buildMenu(appsMap).catch(() => null);

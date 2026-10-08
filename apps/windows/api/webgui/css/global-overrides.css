@@ -1,0 +1,804 @@
+/**
+ * =============================================================================
+ * Process Name: Windows Web Styles - Global Overrides Stylesheet
+ * =============================================================================
+ * Description:
+ *   Глобальные переопределения стилей для минимизации дублирования CSS-классов.
+ *   Использует наследование и глобальные селекторы вместо повторения стилей.
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/windows/api/webgui/css/global-overrides.css?v=20261008_v1">
+ *
+ * File: global-overrides.css
+ * Project: ai-breadboard
+ * Package: windows/api/webgui/css
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-08 01:36:00
+ * =============================================================================
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ГЛОБАЛЬНЫЕ ПЕРЕОПРЕДЕЛЕНИЯ - AI Breadboard WebGUI
+   Минимизация дублирования стилей через наследование и глобальные селекторы
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Универсальные карточки (KPI, Panel, Spec) ──────────────────────────── */
+
+/* Все карточки с классом .ui-kpi-card наследуют базовые стили */
+.ui-kpi-card,
+.about-sys-card,
+.def-card,
+.sysctl-card,
+.scc-card,
+.winadmin-card,
+.sys-card {
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--kpi-padding, 0.65rem 0.9rem);
+  min-height: var(--kpi-min-height, 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ui-kpi-card:hover,
+.about-sys-card:hover,
+.def-card:hover,
+.sysctl-card:hover,
+.scc-card:hover,
+.winadmin-card:hover,
+.sys-card:hover {
+  border-color: var(--kpi-accent, var(--nav-active));
+  box-shadow: var(--shadow-sm, 0 3px 10px rgba(0, 0, 0, 0.25));
+}
+
+/* ── 2. Универсальные заголовки карточек ───────────────────────────────────── */
+
+.ui-kpi-label,
+.about-sys-label,
+.def-card-label,
+.sysctl-label,
+.scc-label,
+.winadmin-label,
+.sys-label {
+  font-size: var(--kpi-label-size, 0.72rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 1.2;
+}
+
+/* ── 3. Универсальные значения в карточках ─────────────────────────────────── */
+
+.ui-kpi-value,
+.about-sys-value,
+.def-card-value,
+.sysctl-value,
+.scc-value,
+.winadmin-value,
+.sys-value {
+  font-size: var(--kpi-val-size, 1.25rem);
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+/* ── 4. Универсальные подзаголовки в карточках ─────────────────────────────── */
+
+.ui-kpi-sub,
+.about-sys-sub,
+.def-card-sub,
+.sysctl-sub,
+.scc-sub,
+.winadmin-sub,
+.sys-sub {
+  font-size: var(--kpi-sub-size, 0.72rem);
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* ── 5. Универсальные панели ───────────────────────────────────────────────── */
+
+.ui-panel,
+.about-sys-panel,
+.def-panel,
+.sysctl-panel,
+.winadmin-panel,
+.sys-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+/* ── 6. Универсальные заголовки панелей ────────────────────────────────────── */
+
+.ui-panel-header,
+.about-sys-panel-header,
+.def-panel-header,
+.sysctl-panel-header,
+.winadmin-panel-header,
+.sys-panel-header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── 7. Универсальные таблицы спецификаций ─────────────────────────────────── */
+
+.ui-spec-table,
+.about-sys-spec-table,
+.sysctl-spec-table,
+.def-spec-table,
+.winadmin-spec-table,
+.spec-table-unified {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 0.82rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ui-spec-table th,
+.about-sys-spec-table th,
+.sysctl-spec-table th,
+.def-spec-table th,
+.winadmin-spec-table th,
+.spec-table-unified th {
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  vertical-align: middle;
+}
+
+.ui-spec-table td,
+.about-sys-spec-table td,
+.sysctl-spec-table td,
+.def-spec-table td,
+.winadmin-spec-table td,
+.spec-table-unified td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  line-height: 1.45;
+  color: var(--text-color);
+}
+
+.ui-spec-table tr:hover td,
+.about-sys-spec-table tr:hover td,
+.sysctl-spec-table tr:hover td,
+.def-spec-table tr:hover td,
+.winadmin-spec-table tr:hover td,
+.spec-table-unified tr:hover td {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.ui-spec-table tr:last-child td,
+.about-sys-spec-table tr:last-child td,
+.sysctl-spec-table tr:last-child td,
+.def-spec-table tr:last-child td,
+.winadmin-spec-table tr:last-child td,
+.spec-table-unified tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── 8. Универсальные ключи и значения в таблицах ──────────────────────────── */
+
+.ui-spec-key,
+.about-sys-spec-key,
+.sysctl-spec-key,
+.def-spec-key,
+.winadmin-spec-key,
+.spec-key-unified {
+  color: var(--text-muted);
+  width: 230px;
+  min-width: 210px;
+  max-width: 260px;
+  white-space: nowrap;
+  font-weight: 500;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  vertical-align: middle;
+}
+
+.ui-spec-key i,
+.about-sys-spec-key i,
+.sysctl-spec-key i,
+.def-spec-key i,
+.winadmin-spec-key i,
+.spec-key-unified i {
+  margin-right: 8px;
+  font-size: 0.92rem;
+  vertical-align: -1px;
+}
+
+.ui-spec-val,
+.about-sys-spec-val,
+.sysctl-spec-val,
+.def-spec-val,
+.winadmin-spec-val,
+.spec-val-unified {
+  color: var(--text-color);
+  font-weight: 500;
+  font-family: var(--font-mono, monospace);
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+/* ── 9. Универсальные бейджи статусов ──────────────────────────────────────── */
+
+.ui-badge,
+.status-badge-unified,
+.about-sys-badge-ok,
+.about-sys-badge-warn,
+.diag-badge-critical,
+.diag-badge-warning,
+.diag-badge-normal {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-xs, 4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.2;
+}
+
+.ui-badge-success,
+.about-sys-badge-ok,
+.diag-badge-normal {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+}
+
+.ui-badge-danger,
+.diag-badge-critical {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
+}
+
+.ui-badge-warning,
+.about-sys-badge-warn,
+.diag-badge-warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+.ui-badge-info {
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+  border: 1px solid var(--status-info-border);
+}
+
+/* ── 10. Универсальные панели диагностики ──────────────────────────────────── */
+
+.diag-panel,
+.ui-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+.diag-panel-header,
+.ui-panel-header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── 11. Универсальные карточки метрик ─────────────────────────────────────── */
+
+.diag-meter-card,
+.ui-kpi-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+}
+
+/* ── 12. Универсальные заголовки деревьев и узлы ──────────────────────────── */
+
+.about-sys-tree-node {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  margin-bottom: 0.65rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.05));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.about-sys-tree-node:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.about-sys-tree-title,
+.ui-module-title {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--text-color);
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.about-sys-tree-title:hover,
+.ui-module-title:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.about-sys-tree-body {
+  background: var(--surface-1);
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  padding: 0;
+}
+
+.about-sys-chevron {
+  font-size: 0.72rem;
+  color: var(--accent-color, #38bdf8);
+  transition: transform 0.2s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ── 13. Универсальные строки свойств ──────────────────────────────────────── */
+
+.about-sys-prop-row,
+.ui-prop-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 320px) 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  transition: background 0.12s ease;
+  min-width: 0;
+}
+
+.about-sys-prop-row:hover,
+.ui-prop-row:hover {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.about-sys-prop-row:last-child,
+.ui-prop-row:last-child {
+  border-bottom: none;
+}
+
+/* ── 14. Универсальные ключи свойств ───────────────────────────────────────── */
+
+.about-sys-prop-key,
+.ui-prop-key {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.82rem;
+  user-select: text;
+  word-break: break-word;
+}
+
+.about-sys-prop-key::after,
+.ui-prop-key::after {
+  content: "";
+}
+
+/* ── 15. Универсальные значения свойств ────────────────────────────────────── */
+
+.about-sys-prop-val,
+.ui-prop-val {
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.82rem;
+  word-break: break-word;
+  user-select: text;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  min-width: 0;
+}
+
+/* ── 16. Универсальные прогресс-бары ───────────────────────────────────────── */
+
+.about-sys-progress-track,
+.ui-progress-track {
+  background: var(--surface-2);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.about-sys-progress-bar,
+.ui-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ── 17. Универсальные навигационные панели ────────────────────────────────── */
+
+.about-subtabs-nav,
+.ui-subnav {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.5rem;
+}
+
+.about-subtab-btn,
+.ui-subnav-btn {
+  transition: all 0.18s ease;
+  font-size: 0.78rem;
+}
+
+.about-subtab-btn.active,
+.ui-subnav-btn.active {
+  background: var(--nav-active);
+  color: #0f172a;
+  border-color: var(--nav-active);
+  font-weight: 700;
+}
+
+/* ── 18. Универсальные панели с верхним хедером ────────────────────────────── */
+
+.about-sys-top-header,
+.ui-top-header {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── 19. Универсальные карточки с анимацией ────────────────────────────────── */
+
+.about-ai-copilot-banner,
+.ui-banner-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(20, 35, 60, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 10px;
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── 20. Универсальные иконки пульсации ────────────────────────────────────── */
+
+.about-ai-pulse-icon,
+.ui-pulse-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── 21. Универсальные блоки этапов ────────────────────────────────────────── */
+
+.about-ai-stages-box,
+.ui-stages-box {
+  background: rgba(10, 15, 29, 0.7);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.about-ai-stage-row,
+.ui-stage-row {
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.about-ai-stage-row:hover,
+.ui-stage-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── 22. Универсальные панели с прокруткой ─────────────────────────────────── */
+
+.diag-panel,
+.ui-scroll-panel {
+  overflow-y: auto;
+}
+
+/* ── 23. Универсальные панели с фиксированной высотой ──────────────────────── */
+
+.h-100 {
+  height: 100%;
+}
+
+/* ── 24. Универсальные панели с адаптивной высотой ─────────────────────────── */
+
+@media (min-width: 768px) {
+  .col-md-6 .ui-panel,
+  .col-md-6 .ui-kpi-card {
+    min-height: 150px;
+  }
+}
+
+@media (min-width: 992px) {
+  .col-lg-6 .ui-panel,
+  .col-lg-6 .ui-kpi-card {
+    min-height: 200px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .col-xl-8 .ui-panel {
+    min-height: 300px;
+  }
+  .col-xl-4 .ui-panel {
+    min-height: 250px;
+  }
+}
+
+/* ── 25. Универсальные панели с hover-эффектами ────────────────────────────── */
+
+.ui-panel:hover,
+.ui-kpi-card:hover,
+.ui-badge:hover {
+  transition: all 0.15s ease;
+}
+
+/* ── 26. Универсальные панели с фиксированным отступом ────────────────────── */
+
+.ui-panel,
+.ui-kpi-card {
+  margin-bottom: 0.75rem;
+}
+
+/* ── 27. Универсальные панели с адаптивной шириной ─────────────────────────── */
+
+@media (max-width: 767px) {
+  .ui-panel,
+  .ui-kpi-card {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* ── 28. Универсальные панели с адаптивным отступом ────────────────────────── */
+
+@media (max-width: 575px) {
+  .ui-panel,
+  .ui-kpi-card {
+    padding: 0.5rem;
+  }
+}
+
+/* ── 29. Универсальные панели с адаптивным заголовком ──────────────────────── */
+
+@media (max-width: 575px) {
+  .ui-panel-header,
+  .ui-kpi-label {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* ── 30. Универсальные панели с адаптивным значением ──────────────────────── */
+
+@media (max-width: 575px) {
+  .ui-kpi-value,
+  .ui-spec-val {
+    font-size: 1.1rem;
+  }
+}
+
+/* ── 31. Универсальные панели с адаптивным ключом ──────────────────────────── */
+
+@media (max-width: 575px) {
+  .ui-spec-key {
+    font-size: 0.75rem;
+    width: 100%;
+  }
+}
+
+/* ── 32. Универсальные панели с адаптивной таблицей ────────────────────────── */
+
+@media (max-width: 575px) {
+  .ui-spec-table th,
+  .ui-spec-table td {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+/* ── 33. Универсальные панели с адаптивным бейджем ─────────────────────────── */
+
+@media (max-width: 575px) {
+  .ui-badge,
+  .about-sys-badge-ok,
+  .about-sys-badge-warn {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
+/* ── 34. Универсальные панели с адаптивным заголовком панели ───────────────── */
+
+@media (max-width: 575px) {
+  .ui-panel-header {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* ── 35. Универсальные панели с адаптивным значением свойства ──────────────── */
+
+@media (max-width: 575px) {
+  .ui-prop-val {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── 36. Универсальные панели с адаптивным ключом свойства ─────────────────── */
+
+@media (max-width: 575px) {
+  .ui-prop-key {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── 37. Универсальные панели с адаптивным заголовком дерева ───────────────── */
+
+@media (max-width: 575px) {
+  .ui-tree-title {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+}
+
+/* ── 38. Универсальные панели с адаптивным значением прогресс-бара ────────── */
+
+@media (max-width: 575px) {
+  .ui-progress-track {
+    height: 6px;
+  }
+}
+
+/* ── 39. Универсальные панели с адаптивным значением карточки ──────────────── */
+
+@media (max-width: 575px) {
+  .ui-kpi-card {
+    min-height: 60px;
+    padding: 0.5rem 0.7rem;
+  }
+}
+
+/* ── 40. Универсальные панели с адаптивным значением заголовка карточки ────── */
+
+@media (max-width: 575px) {
+  .ui-kpi-label {
+    font-size: 0.65rem;
+  }
+}
+
+/* ── 41. Универсальные панели с адаптивным значением подзаголовка карточки ── */
+
+@media (max-width: 575px) {
+  .ui-kpi-sub {
+    font-size: 0.6rem;
+  }
+}
+
+/* ── 42. Универсальные панели с адаптивным значением заголовка панели ──────── */
+
+@media (max-width: 575px) {
+  .ui-panel-header {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+/* ── 43. Универсальные панели с адаптивным значением таблицы ───────────────── */
+
+@media (max-width: 575px) {
+  .ui-spec-table {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── 44. Универсальные панели с адаптивным значением бейджа ────────────────── */
+
+@media (max-width: 575px) {
+  .ui-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+  }
+}
+
+/* ── 45. Универсальные панели с адаптивным значением заголовка ─────────────── */
+
+@media (max-width: 575px) {
+  .ui-module-title {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── 46. Универсальные панели с адаптивным значением заголовка дерева ──────── */
+
+@media (max-width: 575px) {
+  .ui-tree-title {
+    font-size: 0.7rem;
+  }
+}
+
+/* ── 47. Универсальные панели с адаптивным значением значения ──────────────── */
+
+@media (max-width: 575px) {
+  .ui-value {
+    font-size: 1rem;
+  }
+}
+
+/* ── 48. Универсальные панели с адаптивным значением ключа ─────────────────── */
+
+@media (max-width: 575px) {
+  .ui-key {
+    font-size: 0.7rem;
+  }
+}
+
+/* ── 49. Универсальные панели с адаптивным значением заголовка панели ──────── */
+
+@media (max-width: 575px) {
+  .ui-header {
+    font-size: 0.7rem;
+  }
+}
+
+/* ── 50. Универсальные панели с адаптивным значением заголовка карточки ────── */
+
+@media (max-width: 575px) {
+  .ui-card-header {
+    font-size: 0.7rem;
+  }
+}

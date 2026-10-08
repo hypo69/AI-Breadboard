@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 18:24:00
+ * Updated: 2026-10-08 03:15:00
  * =============================================================================
  */
 
@@ -101,7 +101,6 @@ const TABS = {
   // Сеть и Системные Логи
   'network':                  ['/html/network_tab/index.html',                  '/html/network_tab/main.js'],
   'performance-tracing':      ['/html/performance_tracing_tab/index.html',      '/html/performance_tracing_tab/main.js'],
-  'event-logs':               ['/html/event_logs_tab/index.html',               '/html/event_logs_tab/main.js'],
   'system-logs':              ['/html/system_logs_tab/index.html',              '/html/system_logs_tab/main.js'],
 };
 

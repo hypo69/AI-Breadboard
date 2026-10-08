@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_logs_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -800,9 +800,11 @@
    * Main initializer for System Log Center tab.
    */
   function initSystemLogsTab() {
-    performSystemScan().then(() => {
-      loadEvents();
-    });
+    if (window.isTabActive ? window.isTabActive('tab-system-logs') : false) {
+      performSystemScan().then(() => {
+        loadEvents();
+      });
+    }
 
     const scanBtn = document.getElementById('btn-slc-scan');
     if (scanBtn) {
@@ -918,9 +920,9 @@
       liveSwitch.onchange = () => {
         if (window.registerTabPoller && window.unregisterTabPoller) {
           if (liveSwitch.checked) {
-            window.registerTabPoller('tab-system-logs', loadEvents, 4000, { immediate: true });
+            window.registerTabPoller('tab-system-logs', loadEvents, 4000, { pollerId: 'tab-system-logs_live', immediate: true });
           } else {
-            window.unregisterTabPoller('tab-system-logs_default');
+            window.unregisterTabPoller('tab-system-logs_live');
           }
         } else {
           if (liveSwitch.checked) {
@@ -933,6 +935,10 @@
       };
     }
   }
+
+  window.activateSystemLogsTab = () => {
+    performSystemScan().then(() => loadEvents());
+  };
 
   // Export initializer for admin UI
   window.initSystemLogsTab = initSystemLogsTab;

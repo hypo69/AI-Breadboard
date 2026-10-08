@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 06:25:00
+# Updated: 2026-10-08 03:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -119,7 +119,7 @@ def test_sysadmin_telemetry_and_filesystem_endpoints(tmp_path: Path) -> None:
     app.include_router(sysadmin_router)
     client = TestClient(app)
     with patch('apps.windows.sysadmin.router._save_configured_watch_dirs'):
-        res_telem = client.get('/api/sysadmin/file-audit/telemetry')
+        res_telem = client.get('/api/v1/system/file-audit/telemetry')
         assert res_telem.status_code == 200
         data_telem = res_telem.json()
         assert 'events_rate_per_sec' in data_telem
@@ -136,10 +136,10 @@ def test_sysadmin_telemetry_and_filesystem_endpoints(tmp_path: Path) -> None:
         browse_data = res_browse.json()
         assert 'directories' in browse_data
         assert any((d['name'] == 'subfolder1' for d in browse_data['directories']))
-        res_get_dirs = client.get('/api/sysadmin/file-audit/watch-dirs')
+        res_get_dirs = client.get('/api/v1/system/file-audit/watch-dirs')
         assert res_get_dirs.status_code == 200
         assert 'watch_dirs' in res_get_dirs.json()
-        res_set_dirs = client.post('/api/sysadmin/file-audit/watch-dirs', json={'paths': [str(test_sub)]})
+        res_set_dirs = client.post('/api/v1/system/file-audit/watch-dirs', json={'paths': [str(test_sub)]})
         assert res_set_dirs.status_code == 200
         assert str(test_sub.resolve()) in res_set_dirs.json()['watch_dirs']
 
@@ -175,7 +175,7 @@ def test_sysadmin_exclusions_api_endpoints() -> None:
     app.include_router(sysadmin_router)
     client = TestClient(app)
     with patch('apps.windows.sysadmin.router._save_configured_exclusions'):
-        res_get = client.get('/api/sysadmin/file-audit/exclusions')
+        res_get = client.get('/api/v1/system/file-audit/exclusions')
         assert res_get.status_code == 200
         ex_data = res_get.json()
         assert 'enabled' in ex_data
@@ -184,21 +184,21 @@ def test_sysadmin_exclusions_api_endpoints() -> None:
         assert 'patterns' in ex_data
         assert 'processes' in ex_data
         assert 'filtered_count' in ex_data
-        res_add = client.post('/api/sysadmin/file-audit/exclusions/add', json={'category': 'extensions', 'value': '.pytest_temp'})
+        res_add = client.post('/api/v1/system/file-audit/exclusions/add', json={'category': 'extensions', 'value': '.pytest_temp'})
         assert res_add.status_code == 200
         assert res_add.json()['success'] is True
         assert '.pytest_temp' in res_add.json()['exclusions']['extensions']
-        res_del = client.post('/api/sysadmin/file-audit/exclusions/remove', json={'category': 'extensions', 'value': '.pytest_temp'})
+        res_del = client.post('/api/v1/system/file-audit/exclusions/remove', json={'category': 'extensions', 'value': '.pytest_temp'})
         assert res_del.status_code == 200
         assert res_del.json()['success'] is True
         assert '.pytest_temp' not in res_del.json()['exclusions']['extensions']
-        res_toggle = client.post('/api/sysadmin/file-audit/exclusions/toggle', json={'enabled': False})
+        res_toggle = client.post('/api/v1/system/file-audit/exclusions/toggle', json={'enabled': False})
         assert res_toggle.status_code == 200
         assert res_toggle.json()['enabled'] is False
-        res_toggle_on = client.post('/api/sysadmin/file-audit/exclusions/toggle', json={'enabled': True})
+        res_toggle_on = client.post('/api/v1/system/file-audit/exclusions/toggle', json={'enabled': True})
         assert res_toggle_on.status_code == 200
         assert res_toggle_on.json()['enabled'] is True
-        res_events = client.get('/api/sysadmin/file-audit/live-events')
+        res_events = client.get('/api/v1/system/file-audit/live-events')
         assert res_events.status_code == 200
         ev_data = res_events.json()
         assert 'filtered_count' in ev_data

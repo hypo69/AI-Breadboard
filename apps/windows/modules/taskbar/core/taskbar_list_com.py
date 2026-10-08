@@ -17,7 +17,7 @@
 # Package: apps.windows.modules.taskbar.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 17:30:00
+# Updated: 2026-10-08 04:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ class TaskbarList3Wrapper:
                 self._com_instance.HrInit()
             self._initialized = True
         except Exception as exc:
-            logger.debug(f"[TaskbarList3] Не удалось инициализировать comtypes ITaskbarList3: {exc}")
+            logger.error(f"[TaskbarList3] Не удалось инициализировать comtypes ITaskbarList3: {exc}")
             self._initialized = False
 
     def set_progress_state(self, hwnd: int, state: TaskbarProgressFlag) -> bool:

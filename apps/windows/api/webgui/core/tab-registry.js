@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/core
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 21:54:00
+ * Updated: 2026-10-08 04:06:00
  * =============================================================================
  */
 
@@ -31,11 +31,11 @@ export const TAB_DEFINITIONS = [
   { id: 'chat', label: 'Чат', i18nKey: 'auto___8c77e4', icon: '💬', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', label: 'Сеть', i18nKey: 'auto___f6df40', icon: '🌐', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
   { id: 'system_inspector', label: 'Инспектор системы', i18nKey: 'auto___4324be', icon: 'bi-graph-up-arrow', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261006_v14', js: '/html/system_inspector_tab/main.js?v=20261006_v14' },
-  { id: 'processes_load_inspector', label: 'Активность процессов', icon: 'bi-activity', tab: 'processes-load-inspector', tabId: 'tab-processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261006_v2', js: '/html/processes_load_inspector_tab/main.js?v=20261006_v2' },
+  { id: 'processes_load_inspector', label: 'Активность процессов', icon: 'bi-activity', tab: 'processes-load-inspector', tabId: 'tab-processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261008_v1', js: '/html/processes_load_inspector_tab/main.js?v=20261008_v1' },
   { id: 'windows_sysadmin', label: 'Windows Sysadmin', icon: 'bi-server', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
   { id: 'focus_settings', label: 'Фокусировка (Focus)', icon: 'bi-circle-half', tab: 'focus-settings', tabId: 'tab-focus-settings', html: '/html/focus_settings_tab/index.html?v=20261006_v1', js: '/html/focus_settings_tab/main.js?v=20261006_v1' },
   { id: 'system32_commands', label: 'Команды System32', icon: '🛠️', tab: 'system32-commands', tabId: 'tab-system32-commands', html: '/html/system32_commands_tab/index.html?v=20261006_v1', js: '/html/system32_commands_tab/main.js?v=20261006_v1' },
-  { id: 'system_control_center', label: 'System Logs & Activity', i18nKey: 'tabs.systemControl', icon: 'bi-journal-text', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261006_v14', js: '/html/system_control_tab/main.js?v=20261006_v14' },
+  { id: 'system_control_center', label: 'System Logs & Activity', i18nKey: 'tabs.systemControl', icon: 'bi-journal-text', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261008_v1', js: '/html/system_control_tab/main.js?v=20261008_v1' },
   { id: 'post_install_wizard', label: 'Post-Install Wizard', icon: '⚡', tab: 'post-install-wizard', tabId: 'tab-post-install-wizard', html: '/html/post_install_wizard_tab/index.html?v=20261006_v1', js: '/html/post_install_wizard_tab/main.js?v=20261006_v1' },
   { id: 'maintenance_recovery', label: 'Maintenance & Recovery', icon: '🛠️', tab: 'maintenance-recovery', tabId: 'tab-maintenance-recovery', html: '/html/maintenance_recovery_tab/index.html?v=20261006_v1', js: '/html/maintenance_recovery_tab/main.js?v=20261006_v1' },
   { id: 'system_log_viewer', label: 'Логи системы', i18nKey: 'auto___6e28ee', icon: '📋', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
@@ -59,7 +59,6 @@ export const TAB_DEFINITIONS = [
   { id: 'ninite_updater', label: 'Ninite Updater', icon: '🔄', tab: 'ninite-updater', tabId: 'tab-ninite-updater', html: '/html/ninite_updater_tab/index.html?v=20260924_v2', js: '/html/ninite_updater_tab/main.js?v=20260924_v2' },
   { id: 'file_recovery', label: 'Восстановление файлов', i18nKey: 'auto___8f9984', icon: '🩹', tab: 'file-recovery', tabId: 'tab-file-recovery', html: '/html/file_recovery_tab/index.html', js: '/html/file_recovery_tab/main.js' },
   { id: 'file_history_ai_search', label: 'Поиск файлов AI', i18nKey: 'auto__ai_2d3bf7', icon: '🔍', tab: 'file-history-search', tabId: 'tab-file-history-search', html: '/html/file_history_ai_search_tab/index.html?v=20260928_v1', js: '/html/file_history_ai_search_tab/main.js?v=20260928_v1' },
-  { id: 'telemetry_history', label: 'История телеметрии', i18nKey: 'auto___adb56b', icon: 'bi-graph-up', tab: 'telemetry-history', tabId: 'tab-telemetry-history', html: '/html/telemetry_history_tab/index.html?v=20260924_v1', js: '/html/telemetry_history_tab/main.js?v=20260924_v1' },
   { id: 'telemetry_research', label: 'Исследование телеметрии', i18nKey: 'auto___025fa1', icon: '🔬', tab: 'telemetry-research', tabId: 'tab-telemetry-research', html: '/html/telemetry_research_tab/index.html?v=20260924_v1', js: '/html/telemetry_research_tab/main.js?v=20260924_v1' },
   { id: 'process_leaks', label: 'Утечки процессов', i18nKey: 'auto___6e10ab', icon: '⚠️', tab: 'process-leaks', tabId: 'tab-process-leaks', html: '/html/process_leaks_tab/index.html?v=20260924_v1', js: '/html/process_leaks_tab/main.js?v=20260924_v1' },
   { id: 'forensics', label: 'Форензика', i18nKey: 'auto___82e8f9', icon: '🛡️', tab: 'forensics', tabId: 'tab-forensics', html: '/html/forensics_tab/index.html?v=20260924_v1', js: '/html/forensics_tab/main.js?v=20260924_v1' },
@@ -71,7 +70,6 @@ export const TAB_DEFINITIONS = [
   { id: 'models', label: 'Модели', i18nKey: 'auto___44bfc5', icon: '🤖', tab: 'models', tabId: 'tab-models', html: '/html/models_tab/index.html', js: '/html/models_tab/main.js' },
   { id: 'agents', label: 'Агенты', i18nKey: 'auto___af1850', icon: '🧩', tab: 'agents', tabId: 'tab-agents', html: '/html/agents_tab/index.html', js: '/html/agents_tab/main.js' },
   { id: 'skills', label: 'Навыки', i18nKey: 'auto___56221b', icon: '⚡', tab: 'skills', tabId: 'tab-skills', html: '/html/skills_tab/index.html', js: '/html/skills_tab/main.js' },
-  { id: 'mcp', label: 'MCP Серверы', i18nKey: 'auto_mcp__8f43dd', icon: '🔌', tab: 'mcp', tabId: 'tab-mcp', html: '/html/mcp_tab/index.html', js: '/html/mcp_tab/main.js' },
   { id: 'ai_benchmark', label: 'AI Benchmark', icon: '⏱️', tab: 'ai-benchmark', tabId: 'tab-ai-benchmark', html: '/html/ai_benchmark_tab/index.html?v=20260926_v1', js: '/html/ai_benchmark_tab/main.js?v=20260926_v1' }
 ];
 

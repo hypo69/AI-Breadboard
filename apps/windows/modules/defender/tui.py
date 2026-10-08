@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -27,8 +27,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from apps.windows.defender.core.ai_diagnostician import AIDiagnostician
-from apps.windows.defender.core.models import ExclusionRiskLevel, ProtectionState
+from apps.windows.modules.defender.core.ai_diagnostician import AIDiagnostician
+from apps.windows.modules.defender.core.models import ExclusionRiskLevel, ProtectionState
 
 class DefenderTUI:
     """Консольный визуализатор для Defender Security Center."""

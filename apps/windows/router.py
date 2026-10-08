@@ -16,10 +16,10 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 18:15:00
+# Updated: 2026-10-08 02:15:00
 # =============================================================================
 
-"""# Description:"""
+"""Роутер диагностики, управления окнами, персонализации, идентификации и безопасности Windows."""
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request
@@ -37,10 +37,12 @@ from apps.windows.core.root_cause_engine import RootCauseEngine
 from apps.windows.core.safe_executor import SafeExecutor
 from apps.windows.modules.window_control_plane.router import router as window_mgmt_router
 from apps.windows.modules.personalization.router import router as personalization_router
+from apps.windows.modules.accounts_identity.router import router as accounts_identity_router
 
 router = APIRouter(prefix='/api/windows', tags=['windows-diagnostics'])
 router.include_router(window_mgmt_router, prefix='/window-management', tags=['Window Management'])
 router.include_router(personalization_router, prefix='/personalization', tags=['Personalization'])
+router.include_router(accounts_identity_router, tags=['Accounts & Identity'])
 
 _diagnostician = WindowsAIDiagnostician()
 _investigator = WindowsAIRootCauseAnalyzer()
@@ -441,6 +443,101 @@ async def get_reboots_stored_history(limit: int = 50) -> List[Dict[str, Any]]:
     from apps.windows.telemetry.sqlite import TelemetryStorage
     storage = TelemetryStorage.get_instance(read_only=True)
     return storage.get_reboot_history(limit=limit)
+
+
+# =============================================================================
+# Подсистема событий безопасности Windows Security Event Log
+# =============================================================================
+
+@router.get('/security/status')
+async def get_security_status() -> Dict[str, Any]:
+    """Статус доступности журнала безопасности Security.evtx и политик аудита."""
+    from apps.windows.telemetry.security_collector import WindowsSecurityCollector
+    collector = WindowsSecurityCollector()
+    status = collector.check_access_and_audit()
+    return status.model_dump()
+
+
+@router.get('/security/events')
+async def get_security_events(
+    event_id: Optional[int] = None,
+    user: Optional[str] = None,
+    process_name: Optional[str] = None,
+    pid: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Dict[str, Any]]:
+    """Выборка нормализованных событий безопасности из telemetry.db."""
+    from apps.windows.telemetry.sqlite import TelemetryStorage
+    storage = TelemetryStorage.get_instance(read_only=True)
+    return storage.get_security_events(
+        event_id=event_id,
+        user=user,
+        process_name=process_name,
+        pid=pid,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.post('/security/collect')
+async def trigger_security_incremental_collection(
+    batch_size: int = 500,
+    max_records: int = 2000,
+    save_raw: bool = False,
+) -> Dict[str, Any]:
+    """Запуск инкрементального сбора новых событий безопасности через закладку."""
+    from apps.windows.telemetry.security_collector import WindowsSecurityCollector
+    collector = WindowsSecurityCollector()
+    report = collector.collect_incremental(batch_size=batch_size, max_records=max_records, save_raw=save_raw)
+    return report.model_dump()
+
+
+@router.get('/security/tail')
+async def get_security_live_tail(
+    limit: int = 20,
+    event_id: Optional[int] = None,
+    search: str = '',
+) -> List[Dict[str, Any]]:
+    """Свежий срез последних событий безопасности в реальном времени (live tail)."""
+    from apps.windows.telemetry.security_collector import WindowsSecurityCollector
+    collector = WindowsSecurityCollector()
+    events = collector.get_live_tail(limit=limit, event_id=event_id, search=search)
+    return [e.model_dump() for e in events]
+
+
+@router.get('/security/failed-logons')
+async def get_security_failed_logons(limit: int = 50, hours: int = 24) -> List[Dict[str, Any]]:
+    """Неудачные попытки входа и сбои аутентификации (Event 4625, 4771)."""
+    from apps.windows.telemetry.sqlite import TelemetryStorage
+    storage = TelemetryStorage.get_instance(read_only=True)
+    return storage.get_security_failed_logons(limit=limit, hours=hours)
+
+
+@router.get('/security/process-creations')
+async def get_security_process_creations(
+    process_name: Optional[str] = None,
+    user: Optional[str] = None,
+    limit: int = 50,
+) -> List[Dict[str, Any]]:
+    """История запусков процессов (Event 4688) с командной строкой."""
+    from apps.windows.telemetry.sqlite import TelemetryStorage
+    storage = TelemetryStorage.get_instance(read_only=True)
+    return storage.get_security_process_creations(process_name=process_name, user=user, limit=limit)
+
+
+@router.get('/security/correlation')
+async def get_security_correlation(
+    pid: Optional[int] = None,
+    user: Optional[str] = None,
+    limit: int = 50,
+) -> List[Dict[str, Any]]:
+    """Корреляция событий безопасности со снимками телеметрии и процессами."""
+    from apps.windows.telemetry.security_collector import WindowsSecurityCollector
+    collector = WindowsSecurityCollector()
+    correlations = collector.correlate_security_with_telemetry(pid=pid, user=user, limit=limit)
+    return [c.model_dump() for c in correlations]
+
 
 def init_router(app: Optional[Any]=None, state: Optional[Any]=None) -> APIRouter:
     """Инициализация FastAPI роутера."""

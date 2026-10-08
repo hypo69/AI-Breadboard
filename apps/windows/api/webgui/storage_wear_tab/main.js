@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 07:41:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -213,7 +213,9 @@
   function applyPoller(freq, runInitial = false) {
     stopPolling();
     if (freq === 'start' || freq === 'manual') {
-      if (runInitial) fetchStorageBatteryWear();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-storage-wear') : true)) {
+        fetchStorageBatteryWear();
+      }
       return;
     }
 
@@ -226,7 +228,9 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-storage-wear', fetchStorageBatteryWear, intervalMs, { pollerId, immediate: runInitial });
     } else {
-      if (runInitial) fetchStorageBatteryWear();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-storage-wear') : true)) {
+        fetchStorageBatteryWear();
+      }
       autoRefreshTimer = setInterval(() => {
         if (window.isTabActive ? window.isTabActive('tab-storage-wear') : true) {
           fetchStorageBatteryWear();
@@ -257,7 +261,7 @@
     }
   }
 
-  async function init() {
+  async function initStorageWearTab() {
     bindEvents();
     const currentFreq = getFrequency();
     const select = document.getElementById('diag-wear-poll-freq');
@@ -265,9 +269,24 @@
     applyPoller(currentFreq, true);
   }
 
+  window.initStorageWearTab = initStorageWearTab;
+  window.activateStorageWearTab = () => {
+    applyPoller(getFrequency(), true);
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.isTabActive ? window.isTabActive('tab-storage-wear') : false) {
+        initStorageWearTab();
+      } else {
+        bindEvents();
+      }
+    });
   } else {
-    setTimeout(init, 10);
+    if (window.isTabActive ? window.isTabActive('tab-storage-wear') : false) {
+      initStorageWearTab();
+    } else {
+      bindEvents();
+    }
   }
 })();

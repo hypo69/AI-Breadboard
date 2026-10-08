@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Apps Windows Api -   Main  
+# Process Name: AI-Breadboard Apps Windows Api - Main
 # =============================================================================
 # Description:
-#   __main__.py
+#   Точка входа и запуск внутреннего FastAPI сервера Windows System API (TC)
+#   через uvicorn с поддержкой форматирования логов с временными метками.
 #
 # Usage Examples:
 #   CLI:
@@ -18,20 +19,40 @@
 # Package: apps.windows.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 01:30:00
 # =============================================================================
 
 from __future__ import annotations
-"""__main__.py"""
+"""Точка входа внутреннего FastAPI-сервиса Windows System API."""
 
 import argparse
+import copy
 import sys
 from pathlib import Path
+from typing import Any, Dict
 
 # Добавляем корень проекта в sys.path, чтобы работали импорты src.*, apps.*
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+
+
+def _build_log_config() -> Dict[str, Any]:
+    """Формирует конфигурацию логирования uvicorn с временными метками.
+
+    Returns:
+        Dict[str, Any]: Конфигурация логирования uvicorn с форматом даты и времени.
+    """
+    import uvicorn.config
+
+    log_config: Dict[str, Any] = copy.deepcopy(uvicorn.config.LOGGING_CONFIG)
+    log_config['formatters']['default']['fmt'] = '%(asctime)s %(levelprefix)s %(message)s'
+    log_config['formatters']['default']['datefmt'] = '%Y-%m-%d %H:%M:%S'
+    log_config['formatters']['access']['fmt'] = (
+        '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    )
+    log_config['formatters']['access']['datefmt'] = '%Y-%m-%d %H:%M:%S'
+    return log_config
 
 
 def _parse_args() -> argparse.Namespace:
@@ -104,6 +125,7 @@ def main() -> None:
         port=args.port,
         reload=args.reload,
         log_level=args.log_level,
+        log_config=_build_log_config(),
         # Заголовок сервера не раскрываем
         server_header=False,
         access_log=True,
@@ -112,3 +134,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+

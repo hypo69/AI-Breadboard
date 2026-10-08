@@ -13,7 +13,7 @@
  * Project: ai-breadboard
  * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-06 19:05:00
+ * Updated: 2026-10-08 02:56:00
  * =============================================================================
  */
 
@@ -1384,6 +1384,92 @@
   color: #e2e8f0 !important;
 }
 
+/* ── 10. Дерево спецификации оборудования (Hardware Specification Tree) ────── */
+.about-sys-wrapper {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
 
+.about-sys-tree-node {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  margin-bottom: 0.65rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.05));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
 
+.about-sys-tree-node:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.about-sys-tree-title {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--text-color);
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.about-sys-tree-title:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.about-sys-tree-body {
+  background: var(--surface-1);
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  padding: 0;
+}
+
+.about-sys-chevron {
+  font-size: 0.72rem;
+  color: var(--accent-color, #38bdf8);
+  transition: transform 0.2s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ── 10. Кнопка-иконка сворачивания/разворачивания таблиц (Красная дрель) ─── */
+.panel-toggle-drill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  line-height: 1;
+  vertical-align: middle;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  border-radius: 4px;
+}
+
+.panel-toggle-drill:hover {
+  opacity: 0.85;
+  transform: scale(1.15);
+}
+
+.panel-toggle-drill:active {
+  transform: scale(0.92);
+}
+
+.panel-toggle-drill img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.panel-toggle-drill.collapsed img {
+  opacity: 0.7;
+}
 

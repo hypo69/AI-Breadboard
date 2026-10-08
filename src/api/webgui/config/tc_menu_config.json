@@ -59,6 +59,14 @@
         "tab": "tab-scenarios",
         "order": 7,
         "visible": true
+      },
+      {
+        "id": "power_lifecycle",
+        "label": "Сессии питания",
+        "icon": "⚡",
+        "tab": "tab-power-lifecycle",
+        "order": 8,
+        "visible": true
       }
     ],
     "sidebarItems": [
@@ -420,14 +428,7 @@
         "order": 43,
         "visible": true
       },
-      {
-        "id": "event_logs",
-        "label": "Журналы событий (Event Logs)",
-        "icon": "📝",
-        "tab": "tab-event-logs",
-        "order": 44,
-        "visible": true
-      },
+
       {
         "id": "software_manager",
         "label": "Пакетный менеджер (Winget)",

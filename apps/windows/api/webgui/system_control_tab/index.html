@@ -15,7 +15,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/system_control_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 19:30:00
+Updated: 2026-10-08 03:58:00
 =============================================================================
 -->
 
@@ -216,6 +216,26 @@ Updated: 2026-10-06 19:30:00
   .badge-warn { background: #f59e0b !important; color: #000 !important; }
   .badge-inf { background: #10b981 !important; color: #fff !important; }
   .badge-verb { background: #64748b !important; color: #fff !important; }
+
+  .slc-table-resizer {
+    height: 8px;
+    cursor: row-resize;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+  .slc-table-resizer:hover, .slc-table-resizer.resizing {
+    background: #0ea5e9 !important;
+  }
+  .slc-table-resizer-grip {
+    width: 36px;
+    height: 3px;
+    background: var(--border-strong, #666);
+    border-radius: 2px;
+  }
 </style>
 
 <div class="scc-container">
@@ -274,6 +294,9 @@ Updated: 2026-10-06 19:30:00
 
       <!-- Actions Toolbar -->
       <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn btn-outline-warning rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-scc-open-event-logs" style="font-size: 0.78rem;" title="Открыть встроенную панель журналов событий">
+          <i class="bi bi-journal-text"></i> <span data-i18n="systemControl.modeEventLogs">📝 Журналы событий</span>
+        </button>
         <button class="btn btn-outline-info rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-scan" style="font-size: 0.78rem;">
           <i class="bi bi-radar"></i> <span data-i18n="systemControl.btnScan">Сканировать</span>
         </button>
@@ -326,7 +349,7 @@ Updated: 2026-10-06 19:30:00
             <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="activity" data-i18n="systemControl.modeActivity">⚙️ App Activity Log</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small" data-mode="event-logs" data-i18n="systemControl.modeEventLogs">📝 Event Logs (WevtAPI)</button>
+            <button class="nav-link slc-subtab-btn py-0.5 px-2.5 small fw-semibold text-warning" data-mode="event-logs" id="subtab-btn-event-logs" data-i18n="systemControl.modeEventLogs">📝 Журналы событий (Event Logs)</button>
           </li>
         </ul>
 
@@ -410,7 +433,7 @@ Updated: 2026-10-06 19:30:00
           </div>
 
           <!-- Table View Container -->
-          <div class="table-responsive" style="max-height: 560px; overflow-y: auto;" id="slc-table-container">
+          <div class="table-responsive" style="min-height: 140px; max-height: 560px; overflow-y: auto;" id="slc-table-container">
             <table class="slc-table">
               <thead>
                 <tr>
@@ -431,6 +454,9 @@ Updated: 2026-10-06 19:30:00
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div id="slc-table-resizer" class="slc-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+            <div class="slc-table-resizer-grip"></div>
           </div>
 
           <!-- Audit Digest View Container -->
@@ -489,7 +515,7 @@ Updated: 2026-10-06 19:30:00
                 <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="systemControl.btnRefresh">Обновить</span>
               </button>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" style="min-height: 140px; max-height: 480px; overflow-y: auto;" id="scc-activity-table-container">
               <table class="slc-table">
                 <thead>
                   <tr>
@@ -505,95 +531,98 @@ Updated: 2026-10-06 19:30:00
                 </tbody>
               </table>
             </div>
+            <div id="scc-activity-table-resizer" class="slc-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+              <div class="slc-table-resizer-grip"></div>
+            </div>
           </div>
 
           <!-- Event Logs (WevtAPI & Log Intelligence) Container Panel -->
-          <div class="p-3 d-none" id="slc-event-logs-container" style="max-height: 560px; overflow-y: auto;">
+          <div class="p-3 d-none" id="slc-event-logs-container">
             <!-- Top Stat Cards -->
             <div class="row g-2 mb-3">
               <div class="col-6 col-md-3">
-                <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-                  <div class="text-muted small text-uppercase fw-semibold">Критические ошибки (Critical) 🚨</div>
-                  <div class="fs-4 fw-bold mt-1 text-danger" id="el-critical-count">--</div>
-                  <div class="small text-muted mt-1" id="el-critical-sub">Level 1 (WevtAPI)</div>
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatCritical">Критические ошибки (Critical) 🚨</div>
+                  <div class="fs-4 fw-bold mt-1 text-danger font-monospace" id="el-critical-count">--</div>
+                  <div class="small text-muted mt-1" id="el-critical-sub" data-i18n="systemControl.elStatCriticalSub">Уровень 1 (WevtAPI)</div>
                 </div>
               </div>
               <div class="col-6 col-md-3">
-                <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-                  <div class="text-muted small text-uppercase fw-semibold">Ошибки (Errors) ⚠️</div>
-                  <div class="fs-4 fw-bold mt-1 text-warning" id="el-error-count">--</div>
-                  <div class="small text-muted mt-1" id="el-error-sub">Level 2 (WevtAPI)</div>
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatErrors">Ошибки (Errors) ⚠️</div>
+                  <div class="fs-4 fw-bold mt-1 text-warning font-monospace" id="el-error-count">--</div>
+                  <div class="small text-muted mt-1" id="el-error-sub" data-i18n="systemControl.elStatErrorsSub">Уровень 2 (WevtAPI)</div>
                 </div>
               </div>
               <div class="col-6 col-md-3">
-                <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-                  <div class="text-muted small text-uppercase fw-semibold">Здоровье ОС (Health Score) 🛡️</div>
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatHealth">Здоровье ОС (Health Score) 🛡️</div>
                   <div class="fs-4 fw-bold mt-1 text-success font-monospace" id="el-health-score">--</div>
-                  <div class="small text-muted mt-1" id="el-health-sub">Data Researcher EDA</div>
+                  <div class="small text-muted mt-1" id="el-health-sub" data-i18n="systemControl.elStatHealthSub">Data Researcher EDA</div>
                 </div>
               </div>
               <div class="col-6 col-md-3">
-                <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-                  <div class="text-muted small text-uppercase fw-semibold">Избыточность / Шум (Rdup) 📉</div>
+                <div class="slc-card h-100 shadow-sm p-3">
+                  <div class="text-muted small text-uppercase fw-semibold" data-i18n="systemControl.elStatRedundancy">Избыточность / Шум (Rdup) 📉</div>
                   <div class="fs-4 fw-bold mt-1 text-info font-monospace" id="el-redundancy-pct">--</div>
-                  <div class="small text-muted mt-1" id="el-redundancy-sub">Дедупликация шаблонов</div>
+                  <div class="small text-muted mt-1" id="el-redundancy-sub" data-i18n="systemControl.elStatRedundancySub">Дедупликация шаблонов</div>
                 </div>
               </div>
             </div>
 
             <!-- Action & Intelligence Bar -->
-            <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+            <div class="slc-panel mb-3 p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="el-refresh-btn">
                   <i class="bi bi-arrow-clockwise"></i>
-                  <span>Обновить</span>
+                  <span data-i18n="systemControl.btnRefresh">Обновить</span>
                 </button>
-                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="el-channel-select" style="width: 180px;">
+                <select class="form-select form-select-sm" id="el-channel-select" style="width: 180px;">
                   <option value="System">Журнал System</option>
                   <option value="Application">Журнал Application</option>
                   <option value="Security">Журнал Security</option>
                 </select>
                 <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="el-intel-analyze-btn">
                   <i class="bi bi-cpu"></i>
-                  <span>Log Intelligence (EDA)</span>
+                  <span data-i18n="systemControl.elBtnIntel">Log Intelligence (EDA)</span>
                 </button>
                 <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1.5" id="el-intel-audit-btn">
                   <i class="bi bi-shield-shaded"></i>
-                  <span>Полный аудит</span>
+                  <span data-i18n="systemControl.elBtnAudit">Полный аудит</span>
                 </button>
               </div>
               <div class="d-flex align-items-center gap-2 flex-wrap">
-                <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="el-rag-query-input" placeholder="RAG поиск (напр: сбой сети)..." style="width: 240px;">
-                <button class="btn btn-sm btn-info text-dark fw-semibold" id="el-rag-search-btn">
+                <input type="text" class="form-control form-control-sm" id="el-rag-query-input" placeholder="RAG поиск (напр: сбой сети)..." data-i18n-placeholder="systemControl.elRagPlaceholder" style="width: 240px;">
+                <button class="btn btn-sm btn-info text-dark fw-semibold" id="el-rag-search-btn" title="Искать в RAG">
                   <i class="bi bi-search"></i>
                 </button>
-                <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="el-search-input" placeholder="Фильтр таблицы..." style="width: 170px;">
+                <input type="text" class="form-control form-control-sm" id="el-search-input" placeholder="Фильтр таблицы..." data-i18n-placeholder="systemControl.elFilterPlaceholder" style="width: 170px;">
               </div>
             </div>
 
             <!-- Intelligence Digest Banner (Hidden by default) -->
-            <div id="el-intel-banner" class="alert alert-dark border-info shadow-sm mb-3 d-none">
+            <div id="el-intel-banner" class="alert alert-dark border-info shadow-sm mb-3 d-none" style="background: var(--surface-2); color: var(--text-color); border-color: var(--border-color) !important;">
               <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                 <div>
                   <div class="d-flex align-items-center gap-2 mb-1">
                     <span class="badge bg-info text-dark fw-bold font-monospace" id="el-strategy-badge">STRATEGY</span>
-                    <strong class="text-light fs-6" id="el-intel-title">Аналитический вердикт Log Intelligence</strong>
+                    <strong class="fs-6" id="el-intel-title" style="color: var(--text-color);">Аналитический вердикт Log Intelligence</strong>
                   </div>
-                  <div class="small text-secondary font-monospace" id="el-intel-rationale">--</div>
+                  <div class="small font-monospace text-muted" id="el-intel-rationale">--</div>
                   <div class="small text-warning mt-1" id="el-intel-recommendation"></div>
                 </div>
                 <div class="text-end">
                   <span class="badge bg-secondary font-monospace" id="el-chunks-badge">0 RAG chunks</span>
-                  <button class="btn-close btn-close-white ms-2" id="el-intel-close-btn" aria-label="Close"></button>
+                  <button class="btn-close ms-2" id="el-intel-close-btn" aria-label="Close"></button>
                 </div>
               </div>
             </div>
 
             <!-- RAG Search Results Panel (Hidden by default) -->
-            <div id="el-rag-results-card" class="card bg-dark text-white border-info shadow-sm mb-3 d-none">
-              <div class="card-header border-info bg-black d-flex justify-content-between align-items-center py-2 px-3">
-                <span class="fw-semibold text-info"><i class="bi bi-brain me-2"></i>Результаты Adaptive Log RAG</span>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="el-rag-close-btn">Закрыть</button>
+            <div id="el-rag-results-card" class="slc-card shadow-sm mb-3 d-none border-info">
+              <div class="slc-card-header d-flex justify-content-between align-items-center py-2 px-3">
+                <span class="fw-semibold text-info"><i class="bi bi-brain me-2"></i><span data-i18n="systemControl.elRagResultsTitle">Результаты Adaptive Log RAG</span></span>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="el-rag-close-btn" data-i18n="systemControl.elRagClose">Закрыть</button>
               </div>
               <div class="card-body p-2" id="el-rag-results-body">
                 <!-- Dynamic Search Items -->
@@ -601,26 +630,29 @@ Updated: 2026-10-06 19:30:00
             </div>
 
             <!-- Event Logs Table -->
-            <div class="card bg-dark text-white border-secondary shadow-sm">
-              <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
-                <span class="fw-semibold"><i class="bi bi-journal-text text-primary me-2"></i>Записи системного журнала (Event Viewer)</span>
+            <div class="slc-card shadow-sm">
+              <div class="slc-card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <span class="fw-semibold"><i class="bi bi-journal-text text-primary me-2"></i><span data-i18n="systemControl.elViewerTitle">Записи системного журнала (Event Viewer)</span></span>
                 <span class="badge bg-secondary font-monospace" id="el-table-badge">0 событий</span>
               </div>
-              <div class="card-body p-0 table-responsive" style="max-height: 480px; overflow-y: auto;">
-                <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="el-table">
-                  <thead class="sticky-top bg-dark">
-                    <tr class="text-secondary">
-                      <th>Уровень</th>
-                      <th>Время</th>
-                      <th>Источник (Provider)</th>
-                      <th>Event ID</th>
-                      <th>Описание события</th>
+              <div class="table-responsive" style="min-height: 140px; max-height: 520px; overflow-y: auto;" id="el-table-container">
+                <table class="slc-table" id="el-table">
+                  <thead class="sticky-top">
+                    <tr>
+                      <th style="width: 100px;" data-i18n="systemControl.elColLevel">Уровень</th>
+                      <th style="width: 160px;" data-i18n="systemControl.elColTime">Время</th>
+                      <th style="width: 180px;" data-i18n="systemControl.elColProvider">Источник (Provider)</th>
+                      <th style="width: 80px;" data-i18n="systemControl.elColEventId">Event ID</th>
+                      <th data-i18n="systemControl.elColDescription">Описание события</th>
                     </tr>
                   </thead>
                   <tbody id="el-tbody">
-                    <tr><td colspan="5" class="text-center text-muted py-4">Чтение журнала событий через WevtAPI...</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-4" data-i18n="systemControl.elLoading">Чтение журнала событий через WevtAPI...</td></tr>
                   </tbody>
                 </table>
+              </div>
+              <div id="el-table-resizer" class="slc-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+                <div class="slc-table-resizer-grip"></div>
               </div>
             </div>
           </div>

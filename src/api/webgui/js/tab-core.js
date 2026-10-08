@@ -262,15 +262,13 @@ export function switchTab(tabId) {
 
   // Активация новой вкладки в следующем фрейме анимации
   requestAnimationFrame(() => {
-    const initFn = window[`init${name[0].toUpperCase() + name.slice(1)}Tab`];
-    if (typeof initFn === 'function') {
-      try { initFn(); } catch (err) { console.debug('init tab hook error:', err); }
-    }
+    try {
+      window[`init${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+    } catch (err) { console.debug('init tab hook error:', err); }
     
-    const activateFn = window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`];
-    if (typeof activateFn === 'function') {
-      try { activateFn(); } catch (err) { console.debug('activate tab hook error:', err); }
-    }
+    try {
+      window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+    } catch (err) { console.debug('activate tab hook error:', err); }
     
     document.dispatchEvent(new CustomEvent('tab:activated', { detail: { tabId: id, name } }));
   });

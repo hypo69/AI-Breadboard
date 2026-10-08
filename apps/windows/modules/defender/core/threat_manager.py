@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -24,8 +24,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 from logger import logger
-from apps.windows.defender.core.defender_service import DefenderService
-from apps.windows.defender.core.models import ThreatRecord, ThreatSeverity
+from apps.windows.modules.defender.core.defender_service import DefenderService
+from apps.windows.modules.defender.core.models import ThreatRecord, ThreatSeverity
 
 class ThreatManager:
     """Менеджер обнаруженных угроз и журнала инцидентов Defender."""

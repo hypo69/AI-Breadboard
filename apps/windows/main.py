@@ -13,7 +13,7 @@
 #
 #     res = load_tc_config()
 #
-# Updated: 2026-10-06 18:35:00
+# Updated: 2026-10-08 01:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -701,6 +701,17 @@ def run_standalone_server(
     print(f'  Reload:    {"ВКЛ" if reload else "ВЫКЛ"}')
     print('=' * 70 + '\n')
 
+    import copy
+    import uvicorn.config
+
+    log_config = copy.deepcopy(uvicorn.config.LOGGING_CONFIG)
+    log_config['formatters']['default']['fmt'] = '%(asctime)s %(levelprefix)s %(message)s'
+    log_config['formatters']['default']['datefmt'] = '%Y-%m-%d %H:%M:%S'
+    log_config['formatters']['access']['fmt'] = (
+        '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    )
+    log_config['formatters']['access']['datefmt'] = '%Y-%m-%d %H:%M:%S'
+
     uvicorn.run(
         'apps.windows.main:app' if reload else app,
         host=host,
@@ -710,6 +721,7 @@ def run_standalone_server(
         ssl_certfile=ssl_certfile,
         ssl_keyfile=ssl_keyfile,
         log_level='info',
+        log_config=log_config,
     )
 
 

@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ from __future__ import annotations
 import os
 from typing import List, Optional
 from logger import logger
-from apps.windows.defender.core.defender_service import DefenderService
-from apps.windows.defender.core.models import ControlledFolderAccessInfo, ProtectionState
+from apps.windows.modules.defender.core.defender_service import DefenderService
+from apps.windows.modules.defender.core.models import ControlledFolderAccessInfo, ProtectionState
 
 class ControlledFolderAccessManager:
     """Менеджер Controlled Folder Access (CFA)."""

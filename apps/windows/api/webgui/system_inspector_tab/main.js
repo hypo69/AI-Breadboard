@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 21:52:00
+ * Updated: 2026-10-08 03:51:00
  * =============================================================================
  */
 
@@ -373,23 +373,17 @@
 
   function toggleSysCpuDetails() {
     const box = document.getElementById('sys-cpu-details-collapse');
-    const icon = document.getElementById('sys-cpu-details-toggle-icon');
-    const text = document.getElementById('sys-cpu-details-toggle-text');
-    const btn = document.getElementById('sys-cpu-details-action-btn');
+    const drillBtn = document.getElementById('sys-cpu-details-drill-btn');
     const parentBtn = document.getElementById('sys-cpu-details-toggle-btn');
     if (!box) return;
     const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
     if (isHidden) {
       box.style.display = 'flex';
-      if (icon) icon.className = 'bi bi-chevron-up';
-      if (text) text.textContent = 'Свернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-info text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.remove('collapsed');
       if (parentBtn) parentBtn.classList.add('expanded');
     } else {
       box.style.display = 'none';
-      if (icon) icon.className = 'bi bi-chevron-down';
-      if (text) text.textContent = 'Развернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-outline-info rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.add('collapsed');
       if (parentBtn) parentBtn.classList.remove('expanded');
     }
   }
@@ -398,23 +392,17 @@
 
   function toggleSysGpuDetails(idx = 0) {
     const box = document.getElementById(`sys-gpu-details-collapse-${idx}`) || document.getElementById('sys-gpu-details-collapse');
-    const icon = document.getElementById(`sys-gpu-details-toggle-icon-${idx}`) || document.getElementById('sys-gpu-details-toggle-icon');
-    const text = document.getElementById(`sys-gpu-details-toggle-text-${idx}`) || document.getElementById('sys-gpu-details-toggle-text');
-    const btn = document.getElementById(`sys-gpu-details-action-btn-${idx}`) || document.getElementById('sys-gpu-details-action-btn');
+    const drillBtn = document.getElementById(`sys-gpu-details-drill-btn-${idx}`) || document.getElementById('sys-gpu-details-drill-btn');
     const parentBtn = document.getElementById(`sys-gpu-details-toggle-btn-${idx}`) || document.getElementById('sys-gpu-details-toggle-btn');
     if (!box) return;
     const isHidden = box.style.display === 'none' || getComputedStyle(box).display === 'none';
     if (isHidden) {
       box.style.display = 'flex';
-      if (icon) icon.className = 'bi bi-chevron-up';
-      if (text) text.textContent = 'Свернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-warning text-dark rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.remove('collapsed');
       if (parentBtn) parentBtn.classList.add('expanded');
     } else {
       box.style.display = 'none';
-      if (icon) icon.className = 'bi bi-chevron-down';
-      if (text) text.textContent = 'Развернуть детализацию';
-      if (btn) btn.className = 'btn btn-xs btn-outline-warning rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5';
+      if (drillBtn) drillBtn.classList.add('collapsed');
       if (parentBtn) parentBtn.classList.remove('expanded');
     }
   }
@@ -2440,14 +2428,7 @@
           <div class="sys-banner-col-info d-flex flex-column align-items-start justify-content-center">
             <div class="text-start mb-1.5 d-flex align-items-center">
               <button type="button" class="sys-drill-btn" id="sys-drill-btn-gpu-${idx}" onclick="window.toggleSysCardDrill && window.toggleSysCardDrill('sys-card-gpu-${idx}', ${idx})" title="Drill-down: Развернуть/скрыть все скрытые панели и датчики GPU">
-                <svg class="sys-drill-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M14 9V4H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h9z"/>
-                  <path d="M14 6.5h3.5v3H14"/>
-                  <path d="M17.5 8h4.5"/>
-                  <path d="M6 11v5a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6"/>
-                  <path d="M5.5 18h7v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3z"/>
-                  <path d="M10 13.5h1.5"/>
-                </svg>
+                <img src="/html/assets/red_drill.png?v=20261008_v1" alt="Дрель">
               </button>
               <div>
                 <span class="fw-bold text-warning" style="font-size: 1.20rem; font-weight: 800; letter-spacing: 0.5px; text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);" id="sys-metric-gpu-model-${idx}">${gpuName}</span>
@@ -2545,16 +2526,12 @@
                title="Нажмите, чтобы развернуть или скрыть детализацию по подсистемам и сенсорам GPU"
                onclick="window.toggleSysGpuDetails && window.toggleSysGpuDetails(${idx})">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-              <span class="text-warning" style="font-size: 1rem;"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+              <button type="button" class="panel-toggle-drill collapsed me-1" id="sys-gpu-details-drill-btn-${idx}" tabindex="-1" style="pointer-events: none;">
+                <img src="/html/assets/red_drill.png?v=20261008_v1" alt="Дрель">
+              </button>
               <span class="fw-bold" style="font-size: 0.88rem; color: var(--text-color);">Детализация: Блоки, подсистемы и сенсоры GPU</span>
               <span class="badge bg-dark border border-secondary text-warning font-monospace ms-1" style="font-size: 0.72rem;" id="sys-gpu-engines-count-badge-${idx}">0 блоков</span>
               <span class="badge bg-dark border border-secondary text-danger font-monospace" style="font-size: 0.72rem;" id="sys-gpu-sensors-count-badge-${idx}">0 параметров</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-xs btn-outline-warning rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1.5" id="sys-gpu-details-action-btn-${idx}" type="button" style="pointer-events: none; font-size: 0.76rem;">
-                <i class="bi bi-chevron-down" id="sys-gpu-details-toggle-icon-${idx}"></i>
-                <span id="sys-gpu-details-toggle-text-${idx}">Развернуть детализацию</span>
-              </button>
             </div>
           </div>
 
@@ -3427,17 +3404,15 @@
       if (!sysContainer) return;
       if (isCompact) {
         sysContainer.classList.add('sys-compact-mode');
-        if (compactText) compactText.textContent = 'Развернуть';
         if (btnCompact) {
-          btnCompact.classList.add('btn-info', 'text-dark');
-          btnCompact.classList.remove('btn-outline-secondary');
+          btnCompact.classList.add('collapsed');
+          btnCompact.title = 'Развернуть все панели';
         }
       } else {
         sysContainer.classList.remove('sys-compact-mode');
-        if (compactText) compactText.textContent = 'Компактно';
         if (btnCompact) {
-          btnCompact.classList.remove('btn-info', 'text-dark');
-          btnCompact.classList.add('btn-outline-secondary');
+          btnCompact.classList.remove('collapsed');
+          btnCompact.title = 'Свернуть все панели';
         }
       }
     };
@@ -4092,8 +4067,8 @@
   async function fetchLiveFileEvents() {
     try {
       const [resEvents, resTelem] = await Promise.all([
-        fetch('/api/sysadmin/file-audit/live-events?limit=30'),
-        fetch('/api/sysadmin/file-audit/telemetry').catch(() => null)
+        fetch('/api/v1/system/file-audit/live-events?limit=30'),
+        fetch('/api/v1/system/file-audit/telemetry').catch(() => null)
       ]);
 
       if (resTelem && resTelem.ok) {
@@ -4573,7 +4548,7 @@
 
   async function fetchExclusionsData() {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions');
+      const res = await fetch('/api/v1/system/file-audit/exclusions');
       if (res.ok) {
         currentExclusions = await res.json();
         renderExclusionsLists();
@@ -4587,7 +4562,7 @@
     if (!value || !value.trim()) return;
     const cleanVal = value.trim();
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/add', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, value: cleanVal })
@@ -4610,7 +4585,7 @@
   window._removeExclusionItem = async function(category, value) {
     if (!value) return;
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/remove', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, value })
@@ -4630,7 +4605,7 @@
 
   async function toggleExclusionsActive(enabled) {
     try {
-      const res = await fetch('/api/sysadmin/file-audit/exclusions/toggle', {
+      const res = await fetch('/api/v1/system/file-audit/exclusions/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled })
@@ -4677,7 +4652,7 @@
     }
 
     try {
-      const res = await fetch('/api/sysadmin/file-audit/watch-dirs');
+      const res = await fetch('/api/v1/system/file-audit/watch-dirs');
       if (res.ok) {
         const data = await res.json();
         stagedWatchDirs = data.watch_dirs && data.watch_dirs.length ? [...data.watch_dirs] : [currentWatchDir || 'C:\\'];
@@ -4816,7 +4791,7 @@
         btnApply.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Применение...';
 
         try {
-          const res = await fetch('/api/sysadmin/file-audit/watch-dirs', {
+          const res = await fetch('/api/v1/system/file-audit/watch-dirs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paths: stagedWatchDirs })
@@ -4910,7 +4885,7 @@
       await fetchStorageLoadFromApi();
     };
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-hardware-load-inspector', pollHandler, seconds * 1000, { immediate: false });
+      window.registerTabPoller('tab-hardware-load-inspector', pollHandler, seconds * 1000, { pollerId: 'hw_load_inspector', immediate: false });
     } else {
       if (window._sysSensorInterval) {
         clearInterval(window._sysSensorInterval);
@@ -4966,30 +4941,30 @@
   async function initSystemInspectorTab() {
     console.log('[SystemInspectorTab] Initializing...');
     bindTabEvents();
-    await fetchCpuLoadFromApi();
-    await fetchGpuLoadFromApi();
-    await fetchMemoryIoFromApi();
-    await fetchNetworkLoadFromApi();
-    await fetchStorageLoadFromApi();
+    if (window.isTabActive ? (window.isTabActive('tab-hardware-load-inspector') || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) : false) {
+      await fetchCpuLoadFromApi();
+      await fetchGpuLoadFromApi();
+      await fetchMemoryIoFromApi();
+      await fetchNetworkLoadFromApi();
+      await fetchStorageLoadFromApi();
 
-    try {
-      const snapRes = await fetch('/api/v1/system/summary');
-      if (snapRes.ok) {
-        latestTelemetrySnapshot = await snapRes.json();
-        updateTelemetryDashboard(latestTelemetrySnapshot);
+      try {
+        const snapRes = await fetch('/api/v1/system/summary');
+        if (snapRes.ok) {
+          latestTelemetrySnapshot = await snapRes.json();
+          updateTelemetryDashboard(latestTelemetrySnapshot);
+        }
+      } catch (e) {
+        console.warn('[SystemInspectorTab] Initial snapshot fetch failed:', e);
       }
-    } catch (e) {
-      console.warn('[SystemInspectorTab] Initial snapshot fetch failed:', e);
-    }
 
-    if (typeof connectSystemWebSocket === 'function') {
-      try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
+      if (typeof connectSystemWebSocket === 'function') {
+        try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
+      }
     }
 
     // Periodic sensor refresh
-    if (!window._sysSensorInterval) {
-      setupSysSensorInterval(_currentUiRefreshSeconds || 5);
-    }
+    setupSysSensorInterval(_currentUiRefreshSeconds || 5);
   }
 
   function activateSystemInspectorTab() {

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 07:22:00
+ * Updated: 2026-10-08 01:36:00
  * =============================================================================
  */
 
@@ -290,32 +290,34 @@
   background-color: var(--surface-1);
   border: 1px solid var(--border-color);
   border-left: none;
-  border-radius: 0 8px 8px 0;
-  padding: 10px 6px;
+  border-radius: 0 6px 6px 0;
+  padding: 6px 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   color: var(--nav-text);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
   user-select: none;
+  opacity: 0.65;
 }
 
 .left-drawer-tab-trigger:hover {
   background-color: var(--nav-hover-bg);
   color: var(--nav-active);
-  padding-right: 10px;
-  box-shadow: var(--shadow-lg);
+  padding-right: 6px;
+  box-shadow: var(--shadow-md);
+  opacity: 1;
 }
 
 .left-drawer-tab-text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 

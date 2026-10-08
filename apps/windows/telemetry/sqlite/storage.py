@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 19:49:00
+# Updated: 2026-10-08 04:11:00
 # =============================================================================
 
 from __future__ import annotations
@@ -942,14 +942,14 @@ class TelemetryStorage:
     def get_latest_defender_status(self) -> Optional[Dict[str, Any]]:
         return self._reader.get_latest_defender_status()
 
-    def get_latest_defender_exclusions(self) -> List[Dict[str, Any]]:
-        return self._reader.get_latest_defender_exclusions()
+    def get_latest_defender_exclusions(self, limit: int = 200) -> List[Dict[str, Any]]:
+        return self._reader.get_latest_defender_exclusions(limit=limit)
 
     def get_latest_defender_asr_rules(self) -> List[Dict[str, Any]]:
         return self._reader.get_latest_defender_asr_rules()
 
-    def get_latest_defender_threats(self) -> List[Dict[str, Any]]:
-        return self._reader.get_latest_defender_threats()
+    def get_latest_defender_threats(self, limit: int = 50) -> List[Dict[str, Any]]:
+        return self._reader.get_latest_defender_threats(limit=limit)
 
     def get_latest_defender_diagnostics(self) -> Dict[str, Any]:
         return self._reader.get_latest_defender_diagnostics()
@@ -973,5 +973,128 @@ class TelemetryStorage:
 
     def get_software_app_details_from_db(self, app_id: str) -> Optional[Dict[str, Any]]:
         return self._reader.get_software_app_details_from_db(app_id=app_id)
+
+    # 10. Security Events & Audit
+    def save_security_events(
+        self,
+        events: List[Any],
+        save_raw: bool = False,
+        raw_events: Optional[List[Any]] = None,
+    ) -> int:
+        """Сохраняет события безопасности Windows в SQLite."""
+        return self._writer.save_security_events(events, save_raw=save_raw, raw_events=raw_events)
+
+    def save_security_bookmark(
+        self,
+        channel: str,
+        last_record_id: int,
+        bookmark_xml: Optional[str] = None,
+        last_timestamp: str = '',
+    ) -> None:
+        """Сохраняет состояние закладки сбора событий в SQLite."""
+        self._writer.save_security_bookmark(
+            channel=channel,
+            last_record_id=last_record_id,
+            bookmark_xml=bookmark_xml,
+            last_timestamp=last_timestamp,
+        )
+
+    def get_security_events(
+        self,
+        event_id: Optional[int] = None,
+        user: Optional[str] = None,
+        process_name: Optional[str] = None,
+        pid: Optional[int] = None,
+        limit: int = 100,
+        offset: int = 0,
+        since_epoch: Optional[float] = None,
+    ) -> List[Dict[str, Any]]:
+        """Выборка нормализованных событий безопасности Windows."""
+        return self._reader.get_security_events(
+            event_id=event_id,
+            user=user,
+            process_name=process_name,
+            pid=pid,
+            limit=limit,
+            offset=offset,
+            since_epoch=since_epoch,
+        )
+
+    def get_security_failed_logons(self, limit: int = 50, hours: int = 24) -> List[Dict[str, Any]]:
+        """Выборка неудачных попыток входа (Event 4625, 4771)."""
+        return self._reader.get_security_failed_logons(limit=limit, hours=hours)
+
+    def get_security_process_creations(
+        self,
+        process_name: Optional[str] = None,
+        user: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """Выборка запусков процессов (Event 4688) с командной строкой."""
+        return self._reader.get_security_process_creations(
+            process_name=process_name,
+            user=user,
+            limit=limit,
+        )
+
+    def get_security_bookmark(self, channel: str = 'Security') -> Optional[Dict[str, Any]]:
+        """Получить сохраненную закладку канала."""
+        return self._reader.get_security_bookmark(channel=channel)
+
+    def get_security_stats(self) -> Dict[str, Any]:
+        """Получить сводную статистику по событиям безопасности."""
+        return self._reader.get_security_stats()
+
+    def save_power_events(self, events: List[Any]) -> int:
+        """Сохраняет события питания в SQLite."""
+        return self._writer.save_power_events(events)
+
+    def save_power_sessions(self, sessions: List[Any]) -> int:
+        """Сохраняет реконструированные сессии питания в SQLite."""
+        return self._writer.save_power_sessions(sessions)
+
+    def get_power_sessions(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        shutdown_type: Optional[str] = None,
+        unexpected_only: bool = False,
+        clean_only: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """Извлечь список сессий питания операционной системы."""
+        return self._reader.get_power_sessions(
+            limit=limit,
+            offset=offset,
+            shutdown_type=shutdown_type,
+            unexpected_only=unexpected_only,
+            clean_only=clean_only,
+        )
+
+    def get_power_session_by_id(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Извлечь детальную информацию по конкретной сессии питания."""
+        return self._reader.get_power_session_by_id(session_id=session_id)
+
+    def get_power_events(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        event_id: Optional[Union[int, List[int]]] = None,
+        event_type: Optional[str] = None,
+        hours: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Извлечь события питания и жизненного цикла."""
+        return self._reader.get_power_events(
+            limit=limit,
+            offset=offset,
+            event_id=event_id,
+            event_type=event_type,
+            hours=hours,
+        )
+
+    def get_power_summary(self) -> Dict[str, Any]:
+        """Получить сводную статистику по сессиям и событиям питания."""
+        return self._reader.get_power_summary()
+
+
 
 

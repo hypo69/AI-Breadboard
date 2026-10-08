@@ -78,12 +78,13 @@
         "order": 9,
         "visible": true
       },
+
       {
-        "id": "event_logs",
-        "label": "Журналы событий (Event Logs)",
-        "icon": "📝",
-        "tab": "tab-event-logs",
-        "order": 10,
+        "id": "power_lifecycle",
+        "label": "Сессии питания",
+        "icon": "⚡",
+        "tab": "tab-power-lifecycle",
+        "order": 11,
         "visible": true
       }
     ],

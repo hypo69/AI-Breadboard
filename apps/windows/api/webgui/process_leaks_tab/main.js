@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/process_leaks_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 12:19:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
@@ -147,14 +147,12 @@
     }
     if (autoRefreshTimer) {
       clearInterval(autoRefreshTimer);
-      autoRefreshTimer = null;
-    }
-  }
-
   function applyPoller(freq, runInitial = false) {
     stopPolling();
     if (freq === 'start' || freq === 'manual') {
-      if (runInitial) fetchProcessLeaks();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-process-leaks') : true)) {
+        fetchProcessLeaks();
+      }
       return;
     }
 
@@ -167,7 +165,9 @@
     if (window.registerTabPoller) {
       window.registerTabPoller('tab-process-leaks', fetchProcessLeaks, intervalMs, { pollerId, immediate: runInitial });
     } else {
-      if (runInitial) fetchProcessLeaks();
+      if (runInitial && (window.isTabActive ? window.isTabActive('tab-process-leaks') : true)) {
+        fetchProcessLeaks();
+      }
       autoRefreshTimer = setInterval(() => {
         if (window.isTabActive ? window.isTabActive('tab-process-leaks') : true) {
           fetchProcessLeaks();
@@ -220,7 +220,7 @@
     }
   }
 
-  async function init() {
+  async function initProcessLeaksTab() {
     bindEvents();
     const currentFreq = getFrequency();
     const select = document.getElementById('diag-leaks-poll-freq');
@@ -228,9 +228,24 @@
     applyPoller(currentFreq, true);
   }
 
+  window.initProcessLeaksTab = initProcessLeaksTab;
+  window.activateProcessLeaksTab = () => {
+    applyPoller(getFrequency(), true);
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.isTabActive ? window.isTabActive('tab-process-leaks') : false) {
+        initProcessLeaksTab();
+      } else {
+        bindEvents();
+      }
+    });
   } else {
-    setTimeout(init, 10);
+    if (window.isTabActive ? window.isTabActive('tab-process-leaks') : false) {
+      initProcessLeaksTab();
+    } else {
+      bindEvents();
+    }
   }
 })();

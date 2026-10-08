@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 13:55:00
+# Updated: 2026-10-08 02:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -25,9 +25,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
 from apps.windows.modules.startup.core.models import StartupArchiveEntry, StartupChangeItem
+
 
 
 class CpuInventoryInfo(BaseModel):
@@ -299,6 +300,12 @@ class ProcessMetrics(BaseModel):
     process_guid: Optional[str] = Field(default=None, description='Уникальный GUID экземпляра процесса (PID + CreationTime)')
     ancestor_chain: Optional[str] = Field(default=None, description='Цепочка предков запуска (напр. explorer -> pwsh -> python)')
     launch_reason: Optional[str] = Field(default=None, description='Определенный вектор/причина запуска (Служба, Задача, Терминал, Проводник)')
+    # Классификация процессов (Apps, Background processes, Windows processes)
+    category: str = Field(default='background', description='Категория процесса: app, background, windows')
+    is_app: bool = Field(default=False, description='Флаг интерактивного оконного приложения')
+    friendly_name: Optional[str] = Field(default=None, description='Дружелюбное имя приложения (например Google Chrome)')
+    window_title: Optional[str] = Field(default=None, description='Заголовок активного окна процесса')
+    instance_count: int = Field(default=1, description='Количество связанных экземпляров процесса')
 
 
 class ProcessTokenInfo(BaseModel):
@@ -561,6 +568,9 @@ class SystemSnapshot(BaseModel):
     alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description='System health and reliability alerts')
     sensors: List[HardwareSensor] = Field(default_factory=list, description='Hardware sensor readings')
     top_processes: List[ProcessMetrics] = Field(default_factory=list, description='Top active processes')
+    apps_count: int = Field(default=0, description='Количество запущенных оконных приложений (Apps)')
+    background_count: int = Field(default=0, description='Количество фоновых процессов (Background processes)')
+    windows_count: int = Field(default=0, description='Количество системных процессов Windows (Windows processes)')
     hardware_audit: Dict[str, Any] = Field(default_factory=dict, description='Full hardware audit data (manufacturer, serial, etc.)')
 
 class WindowsFeaturesSnapshot(BaseModel):
@@ -955,6 +965,176 @@ class ExtendedSystemAuditReport(BaseModel):
     startup: StartupTelemetrySummary = Field(default_factory=StartupTelemetrySummary, description='Сводка автозагрузки')
     vss: VssTelemetrySummary = Field(default_factory=VssTelemetrySummary, description='Сводка теневых копий VSS')
     users: UserAccountsTelemetrySummary = Field(default_factory=UserAccountsTelemetrySummary, description='Сводка локальных пользователей')
+
+
+class SecurityEventItem(BaseModel):
+    """Нормализованная запись журнала безопасности Windows (Security Event Log)."""
+    id: Optional[int] = Field(default=None, description='Идентификатор в базе данных')
+    event_record_id: int = Field(default=0, description='EventRecordID в журнале Windows')
+    event_id: int = Field(..., description='Идентификатор типа события (Event ID, например 4688, 4624)')
+    timestamp: str = Field(default='', description='Время возникновения события (ISO/локальное)')
+    created_at: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp(), description='Unix epoch timestamp')
+    computer: str = Field(default='', description='Имя компьютера')
+    channel: str = Field(default='Security', description='Канал журнала')
+    level: str = Field(default='Information', description='Уровень важности')
+
+    # Субъект (кто инициировал действие)
+    subject_user: str = Field(default='', description='Имя пользователя инициатора')
+    subject_domain: str = Field(default='', description='Домен инициатора')
+    subject_sid: str = Field(default='', description='SID инициатора')
+
+    # Целевой субъект (над кем/чем действие)
+    target_user: str = Field(default='', description='Имя целевого пользователя')
+    target_domain: str = Field(default='', description='Домен целевого пользователя')
+    target_sid: str = Field(default='', description='SID целевого пользователя')
+
+    # Процессы и запуск (Event ID 4688, 4689)
+    process_id: int = Field(default=0, description='PID процесса')
+    process_name: str = Field(default='', description='Имя или путь процесса')
+    parent_process_id: int = Field(default=0, description='PID родительского процесса')
+    parent_process_name: str = Field(default='', description='Имя родительского процесса')
+    command_line: str = Field(default='', description='Командная строка запуска')
+
+    # Сессия и сеть (4624, 4625, Kerberos)
+    logon_id: str = Field(default='', description='Идентификатор сеанса входа LogonID')
+    logon_type: Optional[int] = Field(default=None, description='Тип входа (2=Interactive, 3=Network, 10=RDP и т.д.)')
+    elevated_token: Optional[int] = Field(default=None, description='Признак повышенных прав (Elevation)')
+    source_ip: str = Field(default='', description='Исходный IP адрес')
+    source_port: Optional[int] = Field(default=None, description='Исходный сетевой порт')
+
+    # Объекты и статус
+    object_name: str = Field(default='', description='Имя затронутого объекта или службы')
+    status_code: str = Field(default='', description='Код статуса/ошибки (Status/SubStatus)')
+    message: str = Field(default='', description='Человекочитаемое описание события')
+    event_data: Dict[str, Any] = Field(default_factory=dict, description='Словарь всех извлеченных полей события')
+    ingested_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время сохранения в телеметрию')
+
+
+class SecurityEventRaw(BaseModel):
+    """Сырая запись события журнала безопасности для повторного анализа."""
+    id: Optional[int] = Field(default=None, description='Идентификатор в базе')
+    event_record_id: int = Field(default=0, description='EventRecordID в журнале Windows')
+    event_id: int = Field(..., description='Идентификатор типа события')
+    timestamp: str = Field(default='', description='Время события')
+    created_at: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp(), description='Unix epoch timestamp')
+    channel: str = Field(default='Security', description='Канал журнала')
+    raw_xml: str = Field(default='', description='Исходный XML события')
+    ingested_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время захвата')
+
+
+class SecurityBookmarkState(BaseModel):
+    """Состояние закладки инкрементального сбора."""
+    channel: str = Field(default='Security', description='Имя канала')
+    last_record_id: int = Field(default=0, description='Последний обработанный EventRecordID')
+    bookmark_xml: Optional[str] = Field(default=None, description='XML закладки WevtAPI')
+    last_timestamp: str = Field(default='', description='Время последнего события')
+    updated_at: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp(), description='Время обновления')
+
+
+class SecurityAuditStatus(BaseModel):
+    """Статус аудита безопасности Windows и доступности журнала Security."""
+    accessible: bool = Field(default=False, description='Доступен ли журнал Security текущему процессу')
+    record_count: int = Field(default=0, description='Всего записей в журнале Security')
+    process_creation_audit_enabled: bool = Field(default=False, description='Включен ли аудит создания процессов (Event 4688)')
+    command_line_audit_enabled: bool = Field(default=False, description='Включено ли включение CommandLine в Event 4688')
+    error: Optional[str] = Field(default=None, description='Ошибка доступа при наличии')
+    last_record_id: int = Field(default=0, description='Последний обработанный EventRecordID в телеметрии')
+    total_ingested_events: int = Field(default=0, description='Количество событий в telemetry.db')
+
+
+class SecurityCorrelationItem(BaseModel):
+    """Результат корреляции событий безопасности с метриками телеметрии."""
+    timestamp: str = Field(default='', description='Временная метка')
+    event_type: str = Field(default='', description='Тип события (ProcessCreate, Logon, etc.)')
+    user: str = Field(default='', description='Пользователь')
+    process_name: str = Field(default='', description='Процесс')
+    pid: int = Field(default=0, description='PID')
+    parent_process_name: str = Field(default='', description='Родительский процесс')
+    command_line: str = Field(default='', description='Команда')
+    cpu_percent: Optional[float] = Field(default=None, description='Нагрузка CPU в этот момент')
+    ram_mb: Optional[float] = Field(default=None, description='Использование RAM процессом')
+    disk_spike: bool = Field(default=False, description='Всплеск дисковой активности')
+    network_spike: bool = Field(default=False, description='Всплеск сетевой активности')
+    notes: List[str] = Field(default_factory=list, description='Аналитические заметки')
+
+
+class SecurityCollectorReport(BaseModel):
+    """Сводный отчет работы сборщика событий безопасности."""
+    channel: str = Field(default='Security', description='Канал')
+    total_events_ingested: int = Field(default=0, description='Количество сохраненных событий')
+    last_record_id: int = Field(default=0, description='Последний EventRecordID')
+    bookmark_xml: Optional[str] = Field(default=None, description='XML закладки')
+    events_by_id: Dict[int, int] = Field(default_factory=dict, description='Распределение событий по Event ID')
+    errors: List[str] = Field(default_factory=list, description='Ошибки во время сбора')
+    events: List[SecurityEventItem] = Field(default_factory=list, description='Список собранных событий')
+
+
+class PowerEventRecord(BaseModel):
+    """Модель отдельного события жизненного цикла и питания Windows."""
+    id: Optional[int] = Field(default=None, description='Идентификатор в базе данных')
+    event_id: int = Field(..., description='Event ID (1074, 13, 6006, 6008, 41, 12, 6005, 6009, 1001, 19, 42, 107)')
+    provider: str = Field(default='', description='Имя провайдера (User32, Kernel-General, EventLog, Kernel-Power, etc.)')
+    channel: str = Field(default='System', description='Имя канала')
+    timestamp: str = Field(default='', description='Временная метка ISO/текст')
+    created_at: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp(), description='Epoch timestamp')
+    event_type: str = Field(default='event', description='Тип события: boot, shutdown_clean, shutdown_planned, shutdown_unexpected, sleep, wake, bsod, update_install')
+    shutdown_type: Optional[str] = Field(default=None, description='Тип выключения: restart, power off, shutdown, unexpected, etc.')
+    user: Optional[str] = Field(default=None, description='Пользователь / инициатор (User)')
+    domain: Optional[str] = Field(default=None, description='Домен или имя хоста инициатора')
+    process: Optional[str] = Field(default=None, description='Исполняемый процесс (shutdown.exe, explorer.exe, wmiprvse.exe)')
+    process_id: Optional[int] = Field(default=None, description='Идентификатор процесса (PID)')
+    reason: Optional[str] = Field(default=None, description='Причина выключения / перезагрузки')
+    reason_code: Optional[str] = Field(default=None, description='Код причины (например, 0x80020010)')
+    comment: Optional[str] = Field(default=None, description='Пользовательский комментарий к выключению')
+    unexpected: bool = Field(default=False, description='Флаг неожиданного выключения / потери питания')
+    bugcheck_code: Optional[str] = Field(default=None, description='Код BugCheck (BSOD)')
+    bugcheck_params_json: Optional[str] = Field(default=None, description='Параметры BugCheck')
+    boot_id: Optional[str] = Field(default=None, description='Идентификатор загрузочной сессии')
+    details_json: Union[Dict[str, Any], str] = Field(default_factory=dict, description='Дополнительные извлеченные атрибуты')
+    raw_xml: Optional[str] = Field(default=None, description='Исходный XML события')
+
+
+class PowerSessionRecord(BaseModel):
+    """Модель реконструированной сессии работы операционной системы (Power Session)."""
+    id: Optional[int] = Field(default=None, description='Идентификатор в базе данных')
+    session_id: str = Field(..., description='Уникальный идентификатор сессии (например PS-20261006-042606)')
+    boot_time: str = Field(..., description='Время старта/загрузки операционной системы')
+    boot_timestamp: float = Field(default=0.0, description='Epoch timestamp старта')
+    shutdown_time: Optional[str] = Field(default=None, description='Время выключения/перезагрузки (None для активной сессии)')
+    shutdown_timestamp: Optional[float] = Field(default=None, description='Epoch timestamp выключения')
+    uptime_seconds: float = Field(default=0.0, description='Длительность сессии в секундах')
+    uptime_human: str = Field(default='', description='Человекочитаемый аптайм (например: 14ч 35м 31с)')
+    shutdown_type: str = Field(default='Active', description='Тип завершения: Active, Restart, Shutdown, Unexpected, Sleep/Wake')
+    initiator: Optional[str] = Field(default=None, description='Инициатор выключения (DOMAIN\\User или SYSTEM)')
+    process: Optional[str] = Field(default=None, description='Процесс инициатор (shutdown.exe, explorer.exe, etc.)')
+    reason: Optional[str] = Field(default=None, description='Текст причины выключения')
+    reason_code: Optional[str] = Field(default=None, description='Шестнадцатеричный код причины')
+    comment: Optional[str] = Field(default=None, description='Комментарий')
+    clean_shutdown: bool = Field(default=True, description='Штатное корректное выключение')
+    unexpected_shutdown: bool = Field(default=False, description='Внезапное выключение / потеря питания')
+    bugcheck: Optional[str] = Field(default=None, description='Информация о BSOD / BugCheck')
+    boot_event_id: int = Field(default=12, description='Event ID события загрузки (12, 6005, etc.)')
+    shutdown_event_id: Optional[int] = Field(default=None, description='Event ID события выключения (1074, 13, 6006, 41, 6008)')
+    initiator_chain: List[str] = Field(default_factory=list, description='Цепочка корреляции инициатора (User -> WMI -> wmiprvse -> shutdown)')
+    events: List[Dict[str, Any]] = Field(default_factory=list, description='Список связанных событий в этой сессии')
+    created_at: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp(), description='Время создания записи')
+
+
+class PowerLifecycleSummary(BaseModel):
+    """Сводные метрики жизненного цикла питания и аптайма."""
+    current_boot_time: str = Field(default='', description='Время текущей загрузки ОС')
+    current_uptime_seconds: float = Field(default=0.0, description='Текущий аптайм в секундах')
+    current_uptime_human: str = Field(default='', description='Текущий аптайм в строковом формате')
+    total_sessions_count: int = Field(default=0, description='Всего зафиксировано сессий')
+    clean_shutdowns_count: int = Field(default=0, description='Штатных выключений/перезагрузок')
+    unexpected_shutdowns_count: int = Field(default=0, description='Внезапных сбоев питания / падений')
+    bsod_count: int = Field(default=0, description='Количество критических BSOD BugCheck')
+    last_shutdown_type: Optional[str] = Field(default=None, description='Тип последнего выключения')
+    last_initiator: Optional[str] = Field(default=None, description='Инициатор последнего выключения')
+    last_reason: Optional[str] = Field(default=None, description='Причина последнего выключения')
+    sessions: List[PowerSessionRecord] = Field(default_factory=list, description='Список последних сессий питания')
+
+
 
 
 

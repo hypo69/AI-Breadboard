@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.sysadmin
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 23:02:00
+# Updated: 2026-10-08 03:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -39,7 +39,9 @@ from src.api.routers.core.router_auth import require_admin_user
 from .src.directory_watcher import DirectoryWatcher, get_directory_watcher
 from .src.file_auditor import WindowsFileAuditor
 from .src.state import SecurityEvent, SystemAdminState
-router = APIRouter(prefix='/api/sysadmin', tags=['sysadmin'])
+router = APIRouter()
+sysadmin_router = APIRouter(prefix='/api/sysadmin', tags=['sysadmin'])
+file_audit_router = APIRouter(prefix='/api/v1/system/file-audit', tags=['file-audit'])
 _csv_logger = AppCsvLogger('windows_sysadmin')
 state = SystemAdminState()
 file_auditor = WindowsFileAuditor()
@@ -133,7 +135,7 @@ def _save_configured_exclusions(exclusions_data: Dict[str, Any]) -> None:
     except Exception as e:
         logger.error(f'Не удалось сохранить exclusions в config.json: {e}')
 
-@router.get('/status')
+@sysadmin_router.get('/status')
 async def get_status(request: None=None) -> dict:
     """Получить общий статус системного администрирования и аудита."""
     state.refresh()
@@ -147,13 +149,13 @@ async def get_status(request: None=None) -> dict:
     _csv_logger.log_poll(poll_type='sysadmin_status', metric_name='user_count', value=len(state.users), unit='count', status='OK', details={'ad_connected': state.ad_connected, 'ad_status': state.ad_status}, filename='windows_sysadmin_status_polls.csv')
     return res
 
-@router.get('/users')
+@sysadmin_router.get('/users')
 async def get_users(request: None=None) -> dict:
     """Получить список активных сессий пользователей."""
     state.refresh()
     return {'users': [{'username': u.username, 'session_id': u.session_id, 'status': u.status, 'login_time': u.login_time, 'ip_address': u.ip_address, 'process_count': u.process_count} for u in state.users]}
 
-@router.get('/accounts')
+@sysadmin_router.get('/accounts')
 async def get_accounts(filter_type: Optional[str]=Query('all', description='Фильтр: all, active, hidden, admins, disabled'), request: None=None) -> dict:
     """Получить исчерпывающий список учетных записей Windows (локальные, скрытые, служебные)."""
     state.refresh()
@@ -168,7 +170,7 @@ async def get_accounts(filter_type: Optional[str]=Query('all', description='Фи
         accounts = [a for a in accounts if not a.enabled]
     return {'total': len(state.accounts), 'filtered_count': len(accounts), 'filter': filter_type, 'accounts': [asdict(a) for a in accounts]}
 
-@router.get('/accounts/{username}')
+@sysadmin_router.get('/accounts/{username}')
 async def get_account_details(username: str, request: None=None) -> dict:
     """Получить полное досье и конфигурацию учетной записи Windows."""
     state.refresh()
@@ -177,7 +179,7 @@ async def get_account_details(username: str, request: None=None) -> dict:
             return asdict(acc)
     raise HTTPException(status_code=404, detail=f'Учетная запись {username} не найдена')
 
-@router.get('/accounts/{username}/metrics')
+@sysadmin_router.get('/accounts/{username}/metrics')
 async def get_account_metrics(username: str, request: None=None) -> dict:
     """Получить расширенные динамические метрики учетной записи (ресурсы, процессы, безопасность)."""
     state.refresh()
@@ -205,13 +207,13 @@ async def get_account_metrics(username: str, request: None=None) -> dict:
     user_processes.sort(key=lambda p: p['memory_mb'], reverse=True)
     return {'username': account.name, 'is_logged_in': account.is_logged_in, 'is_admin': account.is_admin, 'is_hidden': account.is_hidden, 'enabled': account.enabled, 'total_processes': len(user_processes), 'total_memory_rss_mb': account.memory_rss_mb, 'total_cpu_percent': account.cpu_percent, 'profile_path': account.profile_path, 'profile_size_mb': account.profile_size_mb, 'groups': account.groups, 'top_processes': user_processes[:15]}
 
-@router.get('/events')
+@sysadmin_router.get('/events')
 async def get_events(hours: int=Query(24, ge=1, le=168), request: None=None) -> dict:
     """Получить список недавних событий безопасности."""
     state.refresh()
     return {'events': [{'timestamp': e.timestamp.isoformat(), 'event_id': e.event_id, 'level': e.level, 'source': e.source, 'description': e.description} for e in state.events[:50]]}
 
-@router.get('/filesystem/drives')
+@sysadmin_router.get('/filesystem/drives')
 async def get_system_drives() -> dict:
     """Получить список доступных логических накопителей Windows."""
     drives = []
@@ -232,7 +234,7 @@ async def get_system_drives() -> dict:
         drives = [{'mountpoint': 'C:\\', 'device': 'C:\\', 'fstype': 'NTFS', 'total_gb': 0, 'free_gb': 0, 'percent_used': 0}]
     return {'drives': drives}
 
-@router.get('/filesystem/browse')
+@sysadmin_router.get('/filesystem/browse')
 async def browse_directory(path: str=Query(..., description='Абсолютный путь к исследуемой директории'), show_hidden: bool=Query(False, description='Отображать ли скрытые папки')) -> dict:
     """Получить список подкаталогов для навигации в модальном окне выбора папок."""
     target_path = os.path.abspath(path.strip())
@@ -272,13 +274,13 @@ async def browse_directory(path: str=Query(..., description='Абсолютны�
     directories.sort(key=lambda d: d['name'].lower())
     return {'current_path': target_path, 'parent_path': parent_path, 'directories_count': len(directories), 'directories': directories}
 
-@router.get('/file-audit/policy')
+@file_audit_router.get('/policy')
 async def get_file_audit_policy() -> dict:
     """Получить статус системной политики аудита файловой системы (auditpol)."""
     status = await asyncio.to_thread(file_auditor.get_audit_policy_status)
     return asdict(status)
 
-@router.post('/file-audit/policy')
+@file_audit_router.post('/policy')
 async def set_file_audit_policy(body: AuditPolicyRequest) -> dict:
     """Включить или отключить аудит File System в Windows Security."""
     result = await asyncio.to_thread(file_auditor.set_audit_policy, enable_success=body.enable_success, enable_failure=body.enable_failure)
@@ -287,13 +289,13 @@ async def set_file_audit_policy(body: AuditPolicyRequest) -> dict:
         raise HTTPException(status_code=400, detail=result.get('error') or result.get('stderr') or 'Failed to set auditpol policy')
     return result
 
-@router.get('/file-audit/folder-sacl')
+@file_audit_router.get('/folder-sacl')
 async def get_folder_sacl(path: str=Query(..., description='Путь к целевой папке')) -> dict:
     """Проверить наличие правил аудита (SACL) для указанной директории."""
     sacl_status = await asyncio.to_thread(file_auditor.get_folder_sacl, path)
     return asdict(sacl_status)
 
-@router.post('/file-audit/folder-sacl')
+@file_audit_router.post('/folder-sacl')
 async def configure_folder_sacl(body: SaclConfigRequest) -> dict:
     """Настроить правило аудита удаления (Delete/SACL) для папки."""
     result = await asyncio.to_thread(file_auditor.configure_folder_sacl, folder_path=body.path, principal=body.principal, enable=body.enable)
@@ -302,20 +304,20 @@ async def configure_folder_sacl(body: SaclConfigRequest) -> dict:
         raise HTTPException(status_code=400, detail=result.get('Error') or 'Failed to configure folder SACL')
     return result
 
-@router.get('/file-audit/deletions')
+@file_audit_router.get('/deletions')
 async def get_deletion_events(hours: int=Query(24, ge=1, le=168), limit: int=Query(100, ge=1, le=500), deletions_only: bool=Query(True)) -> dict:
     """Получить события аудита удаления файлов из Security Event Log (4663, 4660, 4656)."""
     events = await asyncio.to_thread(file_auditor.fetch_deletion_events, hours=hours, max_events=limit)
     filtered = [e for e in events if e.is_deletion] if deletions_only else events
     return {'total_fetched': len(events), 'deletions_count': len([e for e in events if e.is_deletion]), 'events': [asdict(e) for e in filtered]}
 
-@router.get('/file-audit/watch-dirs')
+@file_audit_router.get('/watch-dirs')
 async def get_live_watch_dirs() -> dict:
     """Получить список всех отслеживаемых директорий."""
     watcher = get_directory_watcher()
     return {'watch_dirs': watcher.get_watch_dirs(), 'is_running': watcher._is_running, 'events_count': len(watcher.events_history)}
 
-@router.post('/file-audit/watch-dirs')
+@file_audit_router.post('/watch-dirs')
 async def set_live_watch_dirs(payload: WatchDirsRequest) -> dict:
     """Установить новый список отслеживаемых директорий и сохранить в config.json."""
     if not payload.paths:
@@ -327,7 +329,7 @@ async def set_live_watch_dirs(payload: WatchDirsRequest) -> dict:
     _save_configured_watch_dirs(watcher.get_watch_dirs())
     return {'success': True, 'watch_dirs': watcher.get_watch_dirs(), 'message': f'Мониторинг запущен для {len(watcher.get_watch_dirs())} папок'}
 
-@router.post('/file-audit/watch-dirs/add')
+@file_audit_router.post('/watch-dirs/add')
 async def add_live_watch_dir(payload: WatchDirRequest) -> dict:
     """Добавить папку в список отслеживаемых на лету."""
     target_path = os.path.abspath(payload.path.strip())
@@ -340,7 +342,7 @@ async def add_live_watch_dir(payload: WatchDirRequest) -> dict:
     _save_configured_watch_dirs(watcher.get_watch_dirs())
     return {'success': True, 'watch_dirs': watcher.get_watch_dirs(), 'message': f'Папка добавлена в мониторинг: {target_path}'}
 
-@router.post('/file-audit/watch-dirs/remove')
+@file_audit_router.post('/watch-dirs/remove')
 async def remove_live_watch_dir(payload: WatchDirRequest) -> dict:
     """Удалить папку из списка отслеживаемых."""
     target_path = os.path.abspath(payload.path.strip())
@@ -351,13 +353,13 @@ async def remove_live_watch_dir(payload: WatchDirRequest) -> dict:
     _save_configured_watch_dirs(watcher.get_watch_dirs())
     return {'success': success, 'watch_dirs': watcher.get_watch_dirs(), 'message': f'Папка удалена из мониторинга: {target_path}'}
 
-@router.get('/file-audit/exclusions')
+@file_audit_router.get('/exclusions')
 async def get_watcher_exclusions() -> dict:
     """Получить текущие правила исключений и статистику отфильтрованных событий."""
     watcher = get_directory_watcher()
     return watcher.get_exclusions()
 
-@router.post('/file-audit/exclusions')
+@file_audit_router.post('/exclusions')
 async def set_watcher_exclusions(payload: ExclusionsConfigRequest) -> dict:
     """Сохранить полную конфигурацию правил исключений и обновить watcher."""
     watcher = get_directory_watcher()
@@ -366,7 +368,7 @@ async def set_watcher_exclusions(payload: ExclusionsConfigRequest) -> dict:
     _save_configured_exclusions(ex_dict)
     return {'success': True, 'exclusions': watcher.get_exclusions(), 'message': 'Правила исключений успешно обновлены'}
 
-@router.post('/file-audit/exclusions/add')
+@file_audit_router.post('/exclusions/add')
 async def add_watcher_exclusion(payload: AddExclusionRequest) -> dict:
     """Добавить элемент в правила исключений (paths, extensions, patterns, processes)."""
     watcher = get_directory_watcher()
@@ -375,7 +377,7 @@ async def add_watcher_exclusion(payload: AddExclusionRequest) -> dict:
         _save_configured_exclusions(watcher.exclusions.to_dict())
     return {'success': success, 'exclusions': watcher.get_exclusions(), 'message': f"Правило исключения {('добавлено' if success else 'уже существует или невалидно')}: {payload.value}"}
 
-@router.post('/file-audit/exclusions/remove')
+@file_audit_router.post('/exclusions/remove')
 async def remove_watcher_exclusion(payload: RemoveExclusionRequest) -> dict:
     """Удалить элемент из правил исключений."""
     watcher = get_directory_watcher()
@@ -384,7 +386,7 @@ async def remove_watcher_exclusion(payload: RemoveExclusionRequest) -> dict:
         _save_configured_exclusions(watcher.exclusions.to_dict())
     return {'success': success, 'exclusions': watcher.get_exclusions(), 'message': f"Правило исключения {('удалено' if success else 'не найдено')}: {payload.value}"}
 
-@router.post('/file-audit/exclusions/toggle')
+@file_audit_router.post('/exclusions/toggle')
 async def toggle_watcher_exclusions(payload: ToggleExclusionsRequest) -> dict:
     """Включить или выключить фильтрацию исключений."""
     watcher = get_directory_watcher()
@@ -392,7 +394,7 @@ async def toggle_watcher_exclusions(payload: ToggleExclusionsRequest) -> dict:
     _save_configured_exclusions(watcher.exclusions.to_dict())
     return {'success': True, 'enabled': new_state, 'exclusions': watcher.get_exclusions(), 'message': f"Фильтрация исключений {('включена' if new_state else 'отключена')}"}
 
-@router.get('/file-audit/live-events')
+@file_audit_router.get('/live-events')
 async def get_live_file_events(limit: int = Query(50, ge=1, le=200)) -> dict:
     """Получить события файловой системы в реальном времени (из SQLite телеметрии или активного watcher)."""
     watcher = get_directory_watcher(auto_start=False)
@@ -434,13 +436,13 @@ async def get_live_file_events(limit: int = Query(50, ge=1, le=200)) -> dict:
         'events': live_events,
     }
 
-@router.get('/file-audit/telemetry')
+@file_audit_router.get('/telemetry')
 async def get_file_watcher_telemetry() -> dict:
     """Получить программные и аппаратные сенсоры телеметрии файлового вотчера."""
     watcher = get_directory_watcher()
     return await asyncio.to_thread(watcher.get_telemetry_snapshot)
 
-@router.post('/file-audit/watch-dir')
+@file_audit_router.post('/watch-dir')
 async def set_live_watch_dir(payload: WatchDirRequest) -> dict:
     """Одиночное изменение отслеживаемой папки (для обратной совместимости)."""
     target_path = os.path.abspath(payload.path.strip())
@@ -453,7 +455,7 @@ async def set_live_watch_dir(payload: WatchDirRequest) -> dict:
     _save_configured_watch_dirs(watcher.get_watch_dirs())
     return {'success': True, 'watch_dir': watcher.watch_dir, 'watch_dirs': watcher.get_watch_dirs(), 'message': f'Отслеживаемая папка успешно переключена на: {target_path}'}
 
-@router.get('/users/{username}')
+@sysadmin_router.get('/users/{username}')
 async def get_user(username: str, request: None=None) -> dict:
     """Получить данные конкретной пользовательской сессии."""
     state.refresh()
@@ -462,7 +464,7 @@ async def get_user(username: str, request: None=None) -> dict:
             return {'username': user.username, 'session_id': user.session_id, 'status': user.status, 'login_time': user.login_time, 'ip_address': user.ip_address, 'process_count': user.process_count}
     raise HTTPException(status_code=404, detail=f'User {username} not found')
 
-@router.post('/users/{username}/disconnect')
+@sysadmin_router.post('/users/{username}/disconnect')
 async def disconnect_user(username: str, request: None=None) -> dict:
     """Отключить пользовательскую сессию (требуются права администратора)."""
     require_admin_user(None)
@@ -472,13 +474,17 @@ async def disconnect_user(username: str, request: None=None) -> dict:
             return {'success': True, 'message': f'User {username} disconnected'}
     raise HTTPException(status_code=404, detail=f'User {username} not found')
 
-@router.get('/ad/status')
+@sysadmin_router.get('/ad/status')
 async def get_ad_status(request: None=None) -> dict:
     """Получить статус подключения к Active Directory."""
     state.refresh()
     return {'hostname': state.hostname, 'domain': state.domain, 'ad_connected': state.ad_connected, 'ad_status': state.ad_status}
 
+router.include_router(sysadmin_router)
+router.include_router(file_audit_router)
+
 def init_router() -> APIRouter:
     """Инициализация FastAPI роутера для Windows System Administrator & File Auditing."""
     return router
-__all__ = ['init_router', 'router']
+
+__all__ = ['init_router', 'router', 'sysadmin_router', 'file_audit_router']

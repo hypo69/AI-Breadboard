@@ -53,14 +53,6 @@
         "visible": true
       },
       {
-        "id": "telemetry_history",
-        "label": "История и графики",
-        "icon": "bi-graph-up",
-        "tab": "tab-telemetry-history",
-        "order": 7,
-        "visible": true
-      },
-      {
         "id": "scenarios",
         "label": "Чат и сценарии",
         "i18n": "tabs.scenarios",
@@ -76,6 +68,14 @@
         "icon": "🛠️",
         "tab": "tab-system32-commands",
         "order": 9,
+        "visible": true
+      },
+      {
+        "id": "power_lifecycle",
+        "label": "Сессии питания",
+        "icon": "⚡",
+        "tab": "tab-power-lifecycle",
+        "order": 10,
         "visible": true
       }
     ],
@@ -243,14 +243,6 @@
         "icon": "⚡",
         "tab": "tab-autolog",
         "order": 20,
-        "visible": true
-      },
-      {
-        "id": "telemetry_history",
-        "label": "Визуализация истории",
-        "icon": "📈",
-        "tab": "tab-telemetry-history",
-        "order": 21,
         "visible": true
       },
       {
@@ -438,14 +430,7 @@
         "order": 43,
         "visible": true
       },
-      {
-        "id": "event_logs",
-        "label": "Журналы событий (Event Logs)",
-        "icon": "📝",
-        "tab": "tab-event-logs",
-        "order": 44,
-        "visible": true
-      },
+
       {
         "id": "software_manager",
         "label": "Пакетный менеджер (Winget)",
@@ -468,6 +453,14 @@
         "icon": "🛠️",
         "tab": "tab-maintenance-recovery",
         "order": 47,
+        "visible": true
+      },
+      {
+        "id": "log_settings",
+        "label": "Параметры и настройка журналов",
+        "icon": "bi-sliders",
+        "tab": "tab-log-settings",
+        "order": 48,
         "visible": true
       }
     ]

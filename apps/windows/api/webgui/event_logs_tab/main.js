@@ -18,12 +18,12 @@
  * Package: windows/api/webgui/event_logs_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 02:28:00
+ * Updated: 2026-10-08 02:00:00
  * =============================================================================
  */
 
-// Updated: 2026-10-06 21:50:00
 const registerTabPoller = window.registerTabPoller || function() {};
+const isTabActive = window.isTabActive || (() => true);
 
 let isInitialized = false;
 let eventsList = [];
@@ -39,6 +39,7 @@ function escapeHtml(str) {
 }
 
 export async function fetchEventLogsSummary() {
+  if (!isTabActive('tab-event-logs')) return;
   const channelSelect = document.getElementById('el-channel-select');
   const channel = channelSelect ? channelSelect.value : 'System';
 
@@ -271,13 +272,19 @@ export function initEventLogsTab() {
   });
 
   registerTabPoller('tab-event-logs', fetchEventLogsSummary, 15000, { immediate: true });
-  // Первичная загрузка (на случай отсутствия registerTabPoller)
+  if (isTabActive('tab-event-logs')) {
+    fetchEventLogsSummary();
+  }
+}
+
+export function activateEventLogsTab() {
   fetchEventLogsSummary();
 }
 
 window.initEventLogsTab = initEventLogsTab;
+window.activateEventLogsTab = activateEventLogsTab;
 
 // Автоинициализация: загрузчик вкладок только подключает скрипт
-if (document.getElementById('el-tbody')) {
+if (document.getElementById('el-tbody') && isTabActive('tab-event-logs')) {
   initEventLogsTab();
 }

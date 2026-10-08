@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import re
 from typing import List, Optional
 import psutil
 from logger import logger
-from apps.windows.defender.core.models import SuspiciousProcessChain, ThreatSeverity
+from apps.windows.modules.defender.core.models import SuspiciousProcessChain, ThreatSeverity
 
 class ProcessTreeWatcher:
     """Анализатор дерева процессов и цепочек запуска."""

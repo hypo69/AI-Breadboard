@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.defender.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 12:15:00
+# Updated: 2026-10-08 04:11:30
 # =============================================================================
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ import subprocess
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from logger import logger
-from apps.windows.defender.core.models import DefenderEventRecord
+from apps.windows.modules.defender.core.models import DefenderEventRecord
 
 class EventCorrelator:
     """Сборщик и коррелятор событий Windows Defender."""
