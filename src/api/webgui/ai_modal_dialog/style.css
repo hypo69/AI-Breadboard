@@ -1,0 +1,103 @@
+/**
+ * =============================================================================
+ * Process Name: Windows WebGUI - AI Modal Dialog Styles
+ * =============================================================================
+ * Description:
+ *   Стили и визуальные эффекты универсального всплывающего окна ИИ-анализатора.
+ *   Полная интеграция с системой тем оформления через CSS-переменные.
+ *
+ * File: style.css
+ * Project: ai-breadboard
+ * Package: src.api.webgui.ai_modal_dialog
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-08 12:42:00
+ * =============================================================================
+ */
+
+#universal-ai-table-modal .modal-content,
+#universal-ai-prompt-editor-modal .modal-content {
+  background-color: var(--modal-bg);
+  color: var(--modal-text);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md, 8px);
+}
+
+#universal-ai-table-modal .modal-header,
+#universal-ai-prompt-editor-modal .modal-header {
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+#universal-ai-table-modal .modal-footer,
+#universal-ai-prompt-editor-modal .modal-footer {
+  background-color: var(--surface-2);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+#uai-modal-ai-section,
+.uai-ai-section {
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: var(--radius-sm, 6px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#uai-modal-ai-section:hover,
+.uai-ai-section:hover {
+  border-color: var(--nav-active);
+  box-shadow: var(--shadow-sm);
+}
+
+#uai-modal-raw-container,
+.uai-raw-container {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-subtle, var(--border-color));
+  color: var(--text-color);
+  border-radius: var(--radius-sm, 6px);
+}
+
+#uai-modal-raw-content,
+.uai-raw-content {
+  color: var(--text-color);
+  font-family: var(--font-mono, monospace);
+}
+
+#uai-approval-container {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: var(--radius-sm, 6px);
+  transition: all 0.25s ease;
+}
+
+.uai-callout-box {
+  background-color: var(--surface-2);
+  border: 1px dashed var(--border-color);
+  color: var(--text-color);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.uai-recommendation-box {
+  background-color: var(--alert-warning-bg, var(--surface-2));
+  border: 1px solid var(--alert-warning-border, var(--border-color));
+  color: var(--alert-warning-text, var(--text-color));
+  border-radius: var(--radius-sm, 6px);
+}
+
+.uai-verified-box {
+  background-color: var(--alert-success-bg, var(--surface-2));
+  border: 1px solid var(--alert-success-border, var(--border-color));
+  color: var(--alert-success-text, var(--text-color));
+  border-radius: var(--radius-sm, 6px);
+}
+
+.btn-xs {
+  padding: 0.1rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}

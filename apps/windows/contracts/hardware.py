@@ -14,7 +14,7 @@
 # Package: apps.windows.contracts
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:39:00
+# Updated: 2026-10-08 12:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ class CpuInventoryInfo(BaseModel):
     features: List[str] = Field(default_factory=list)
 
 
-class CpuMetrics(BaseModel):
+class ContractCpuMetrics(BaseModel):
     """CPU usage and architecture metrics."""
     model: str = Field(default="", description="CPU model name")
     architecture: str = Field(default="x86_64", description="CPU architecture")
@@ -84,7 +84,7 @@ class RamModuleInventoryInfo(BaseModel):
     configured_voltage: Optional[float] = None
 
 
-class MemoryMetrics(BaseModel):
+class ContractMemoryMetrics(BaseModel):
     """RAM and Swap memory metrics."""
     total_gb: float = Field(default=0.0, description="Total physical RAM in GB")
     available_gb: float = Field(default=0.0, description="Available RAM in GB")
@@ -128,7 +128,7 @@ class GpuInventoryInfo(BaseModel):
     is_primary: bool = True
 
 
-class GpuMetrics(BaseModel):
+class ContractGpuMetrics(BaseModel):
     """GPU accelerator telemetry and compute backends."""
     name: str = Field(default="Unknown GPU", description="GPU device model name")
     vendor: str = Field(default="", description="GPU vendor name (NVIDIA, AMD, Intel, etc.)")
@@ -192,7 +192,7 @@ class StorageDriveInventoryInfo(BaseModel):
     partitions_count: int = 1
 
 
-class DiskPartitionMetrics(BaseModel):
+class ContractDiskPartitionMetrics(BaseModel):
     """Storage partition metrics."""
     device: str = Field(default="", description="Partition mount device or drive letter")
     mountpoint: str = Field(default="", description="Mount point path")
@@ -203,7 +203,7 @@ class DiskPartitionMetrics(BaseModel):
     percent: float = Field(default=0.0, description="Utilization percentage")
 
 
-class DiskIoMetrics(BaseModel):
+class ContractDiskIoMetrics(BaseModel):
     """Disk read and write I/O rates."""
     read_bytes_per_sec: float = Field(default=0.0, description="Read throughput")
     write_bytes_per_sec: float = Field(default=0.0, description="Write throughput")
@@ -271,7 +271,7 @@ class SystemHardwareInventory(BaseModel):
 
 
 @dataclass
-class HardwareSensor:
+class ContractHardwareSensor:
     """Датчик аппаратного мониторинга."""
     identifier: str
     name: str

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/windows_admin_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 07:09:00
+ * Updated: 2026-10-08 11:46:00
  * =============================================================================
  */
 
@@ -86,16 +86,16 @@
         tbody.innerHTML = accounts.map((u, idx) => {
           // Вычисление бейджей
           const badges = [];
-          if (u.is_admin) badges.push('<span class="badge badge-admin me-1">Admin</span>');
-          if (u.is_hidden) badges.push('<span class="badge badge-hidden me-1">Скрытый</span>');
-          if (!u.enabled) badges.push('<span class="badge badge-disabled me-1">Отключен</span>');
+          if (u.is_admin) badges.push('<span class="badge bg-warning-subtle text-warning border border-warning-subtle me-1">Admin</span>');
+          if (u.is_hidden) badges.push('<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-1">Скрытый</span>');
+          if (!u.enabled) badges.push('<span class="badge bg-danger-subtle text-danger border border-danger-subtle me-1">Отключен</span>');
 
           // Статус
-          let statusBadge = '<span class="badge bg-secondary">Офлайн</span>';
+          let statusBadge = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Офлайн</span>';
           if (u.is_logged_in) {
-            statusBadge = '<span class="badge bg-success-subtle text-success border border-success">● В сети</span>';
+            statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle">● В сети</span>';
           } else if (!u.enabled) {
-            statusBadge = '<span class="badge badge-disabled me-1">Отключен</span>';
+            statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle me-1">Отключен</span>';
           }
 
           // Ресурсы
@@ -208,11 +208,11 @@
     ];
 
     const badges = [
-      { text: u.is_logged_in ? 'Online' : 'Offline', class: u.is_logged_in ? 'badge bg-success' : 'badge bg-secondary' }
+      { text: u.is_logged_in ? 'Online' : 'Offline', class: u.is_logged_in ? 'badge bg-success-subtle text-success border border-success-subtle' : 'badge bg-secondary-subtle text-secondary border border-secondary-subtle' }
     ];
-    if (u.is_admin) badges.push({ text: 'Администратор', class: 'badge bg-warning text-dark' });
-    if (u.is_hidden) badges.push({ text: 'Скрытый', class: 'badge bg-purple text-white' });
-    if (!u.enabled) badges.push({ text: 'Отключен', class: 'badge bg-danger' });
+    if (u.is_admin) badges.push({ text: 'Администратор', class: 'badge bg-warning-subtle text-warning border border-warning-subtle' });
+    if (u.is_hidden) badges.push({ text: 'Скрытый', class: 'badge bg-secondary-subtle text-secondary border border-secondary-subtle' });
+    if (!u.enabled) badges.push({ text: 'Отключен', class: 'badge bg-danger-subtle text-danger border border-danger-subtle' });
 
     window.AITableModal.show({
       icon: '👤',
@@ -274,7 +274,7 @@
                 subtitle: `Уровень: ${e.level} | ${e.timestamp || ''}`,
                 tableType: 'generic',
                 badges: [
-                  { text: e.level || 'Info', class: 'badge bg-info text-dark' }
+                  { text: e.level || 'Info', class: e.level === 'Warning' ? 'badge bg-warning-subtle text-warning border border-warning-subtle' : (e.level === 'Error' ? 'badge bg-danger-subtle text-danger border border-danger-subtle' : 'badge bg-info-subtle text-info border border-info-subtle') }
                 ],
                 metadata: [
                   { label: 'Event ID', value: String(e.event_id) },

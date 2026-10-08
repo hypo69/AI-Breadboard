@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 04:11:00
+# Updated: 2026-10-08 13:31:00
 # =============================================================================
 
 from __future__ import annotations
@@ -2220,6 +2220,182 @@ class TelemetryReader:
                 'last_initiator': last_initiator,
                 'last_reason': last_reason,
             }
+
+    def get_process_pid_snapshot(self, pid: int) -> Optional[Dict[str, Any]]:
+        """Извлекает последний канонический снимок метрик процесса по PID (< 5 мс)."""
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT * FROM process_pid_snapshots WHERE pid = ? ORDER BY snapshot_id DESC LIMIT 1',
+                (pid,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_process_file_events(
+        self,
+        pid: Optional[int] = None,
+        directory: Optional[str] = None,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Извлекает события файловой активности с фильтрацией по PID и/или директории."""
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            conditions = []
+            params: List[Any] = []
+            if pid is not None:
+                conditions.append('pid = ?')
+                params.append(pid)
+            if directory:
+                conditions.append('target_directory LIKE ?')
+                params.append(f'%{directory}%')
+
+            where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ''
+            query = f"SELECT * FROM process_file_events {where_clause} ORDER BY event_id DESC LIMIT ?"
+            params.append(limit)
+
+            cursor.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_telemetry_time_ranges(self) -> Dict[str, Any]:
+        """Определяет временные границы данных в таблице system_snapshots и формирует список доступных интервалов.
+
+        Returns:
+            Dict[str, Any]: Метаданные диапазона времени и доступные интервалы (секунды, минуты, часы, дни, недели, месяцы, все).
+        """
+        import time
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT MIN(created_at) as min_ts, MAX(created_at) as max_ts, COUNT(*) as cnt '
+                'FROM system_snapshots;'
+            )
+            row = cursor.fetchone()
+
+            min_ts = row['min_ts'] if row and row['min_ts'] is not None else None
+            max_ts = row['max_ts'] if row and row['max_ts'] is not None else None
+            total_cnt = int(row['cnt']) if row and row['cnt'] is not None else 0
+
+            now = time.time()
+            span_seconds = 0.0
+            if min_ts is not None and max_ts is not None:
+                span_seconds = max(0.0, float(max_ts - min_ts), float(now - min_ts))
+
+            # Полное определение временных интервалов
+            intervals_definition = [
+                {'id': 'seconds', 'label': 'Секунды', 'seconds': 120, 'min_span': 0},
+                {'id': 'minutes', 'label': 'Минуты', 'seconds': 3600, 'min_span': 60},
+                {'id': 'hours', 'label': 'Часы', 'seconds': 86400, 'min_span': 3600},
+                {'id': 'days', 'label': 'Дни', 'seconds': 86400 * 7, 'min_span': 86400},
+                {'id': 'weeks', 'label': 'Недели', 'seconds': 86400 * 30, 'min_span': 86400 * 7},
+                {'id': 'months', 'label': 'Месяцы', 'seconds': 86400 * 365, 'min_span': 86400 * 30},
+                {'id': 'all', 'label': 'Все', 'seconds': None, 'min_span': 0},
+            ]
+
+            available_intervals = []
+            for item in intervals_definition:
+                is_avail = (span_seconds >= item['min_span']) if item['min_span'] > 0 else True
+                if item['id'] == 'all':
+                    is_avail = True
+
+                if is_avail:
+                    available_intervals.append({
+                        'id': item['id'],
+                        'label': item['label'],
+                        'seconds': item['seconds'],
+                        'is_available': True,
+                    })
+
+            return {
+                'status': 'ok',
+                'min_created_at': min_ts,
+                'max_created_at': max_ts,
+                'span_seconds': round(span_seconds, 1),
+                'total_snapshots': total_cnt,
+                'intervals': available_intervals,
+                'available_ids': [i['id'] for i in available_intervals],
+            }
+
+    def get_history_by_interval(
+        self,
+        interval: str = 'seconds',
+        metric: str = 'all',
+        limit: int = 120
+    ) -> List[Dict[str, Any]]:
+        """Выбирает исторические точки системных снимков под указанный интервал с downsampling.
+
+        Args:
+            interval: Временной интервал ('seconds', 'minutes', 'hours', 'days', 'weeks', 'months', 'all').
+            metric: Категория метрики ('all', 'cpu', 'gpu', 'ram', 'net', 'storage').
+            limit: Максимальное количество возвращаемых точек.
+
+        Returns:
+            List[Dict[str, Any]]: Хронологический список точек телеметрии от старых к новым.
+        """
+        import time
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            now = time.time()
+            interval_lower = (interval or 'seconds').lower().strip()
+
+            since_ts = None
+            if interval_lower == 'seconds':
+                since_ts = now - 120
+            elif interval_lower == 'minutes':
+                since_ts = now - 3600
+            elif interval_lower == 'hours':
+                since_ts = now - 86400
+            elif interval_lower == 'days':
+                since_ts = now - (86400 * 7)
+            elif interval_lower == 'weeks':
+                since_ts = now - (86400 * 30)
+            elif interval_lower == 'months':
+                since_ts = now - (86400 * 365)
+            elif interval_lower == 'all':
+                since_ts = None
+
+            if since_ts is not None:
+                cursor.execute(
+                    'SELECT id, timestamp, created_at, cpu_total_percent, cpu_frequency_mhz, '
+                    'memory_total_gb, memory_used_gb, memory_percent, swap_percent, '
+                    'gpu_load_percent, gpu_temp_c, disk_read_bytes_sec, disk_write_bytes_sec, '
+                    'network_sent_bytes_sec, network_recv_bytes_sec '
+                    'FROM system_snapshots WHERE created_at >= ? ORDER BY id ASC;',
+                    (since_ts,)
+                )
+            else:
+                cursor.execute(
+                    'SELECT id, timestamp, created_at, cpu_total_percent, cpu_frequency_mhz, '
+                    'memory_total_gb, memory_used_gb, memory_percent, swap_percent, '
+                    'gpu_load_percent, gpu_temp_c, disk_read_bytes_sec, disk_write_bytes_sec, '
+                    'network_sent_bytes_sec, network_recv_bytes_sec '
+                    'FROM system_snapshots ORDER BY id ASC;'
+                )
+
+            rows = [dict(r) for r in cursor.fetchall()]
+
+            if not rows:
+                cursor.execute(
+                    'SELECT id, timestamp, created_at, cpu_total_percent, cpu_frequency_mhz, '
+                    'memory_total_gb, memory_used_gb, memory_percent, swap_percent, '
+                    'gpu_load_percent, gpu_temp_c, disk_read_bytes_sec, disk_write_bytes_sec, '
+                    'network_sent_bytes_sec, network_recv_bytes_sec '
+                    'FROM system_snapshots ORDER BY id DESC LIMIT ?;',
+                    (limit,)
+                )
+                rows = [dict(r) for r in cursor.fetchall()]
+                rows.reverse()
+
+            if len(rows) > limit:
+                step = len(rows) / float(limit)
+                downsampled = [rows[int(i * step)] for i in range(limit)]
+                if rows[-1] not in downsampled:
+                    downsampled[-1] = rows[-1]
+                rows = downsampled
+
+            return rows
+
+
 
 
 

@@ -6,7 +6,7 @@ The `gemini` provider manages cloud-based multi-modal inference via Google Gener
 ---
 
 ## Capabilities
-- **Chat / Reasoning**: `gemini-3.7-flash`, `gemini-2.5-pro`, `gemini-flash-latest`
+- **Chat / Reasoning**: `gemini-3.7-flash`, `gemini-2.5-pro`, `gemini-3.5-flash-lite`
 - **Vision & Multi-modal**: Text, images, audio, video analysis
 - **Embeddings**: Vector embeddings for RAG pipelines
 - **Code Execution & Tools**: Function calling and structured tool dispatch

@@ -53,10 +53,10 @@ def _get_active_config_path() -> Path:
 _GLOBAL_CONFIG_PATH: Path = __root__ / 'config.json'
 _GEMINI_CONFIG_PATH: Path = __root__ / 'src' / 'ai' / 'gemini' / 'config.json'
 _CACHED_MODELS: Dict[str, List[str]] = {}
-_DEFAULT_GEMINI_FALLBACK: List[str] = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
-_GEMINI_PRIORITY_ORDER: List[str] = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
-_DEFAULT_GEMINI_CLI_FALLBACK: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-flash-latest', 'gemini-pro-latest']
-_GEMINI_CLI_PRIORITY_ORDER: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-flash-latest', 'gemini-pro-latest']
+_DEFAULT_GEMINI_FALLBACK: List[str] = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+_GEMINI_PRIORITY_ORDER: List[str] = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+_DEFAULT_GEMINI_CLI_FALLBACK: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-3.5-flash-lite', 'gemini-pro-latest']
+_GEMINI_CLI_PRIORITY_ORDER: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-3.5-flash-lite', 'gemini-pro-latest']
 
 def _normalize_model_name(name: str) -> str:
     """Normalize model identifier for consistent comparison."""
@@ -220,7 +220,7 @@ def _fetch_gemini_models_sync(api_key: str='', include_unsupported: bool=False) 
         return combined
     pool: List[str] = [m for m in combined if m not in unsupported]
     if not pool:
-        pool = ['gemini-flash-latest', 'gemini-pro-latest']
+        pool = ['gemini-3.5-flash-lite', 'gemini-pro-latest']
     return pool
 
 def _fetch_foundry_models_sync(base_url: str='', include_unsupported: bool=False) -> List[str]:

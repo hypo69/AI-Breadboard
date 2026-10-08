@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 01:59:00
+# Updated: 2026-10-08 11:55:00
 # =============================================================================
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from __future__ import annotations
 import sqlite3
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -271,6 +271,12 @@ class TelemetryMaintenance:
             cursor.execute('DELETE FROM ram_telemetry_samples WHERE created_at < ?', (threshold_epoch,))
             cursor.execute('DELETE FROM gpu_telemetry_samples WHERE created_at < ?', (threshold_epoch,))
             cursor.execute('DELETE FROM network_adapter_samples WHERE created_at < ?', (threshold_epoch,))
+
+            # Очистка посекундных снимков process_pid_snapshots и файловых событий старше 24 часов
+            pid_snap_threshold_str = (datetime.now(timezone.utc) - timedelta(days=min(days, 1))).isoformat()
+            cursor.execute('DELETE FROM process_pid_snapshots WHERE timestamp < ?', (pid_snap_threshold_str,))
+            cursor.execute('DELETE FROM process_file_events WHERE timestamp < ?', (pid_snap_threshold_str,))
+
             conn.commit()
             deleted_count = len(old_ids)
             logger.info(f'Очищено {deleted_count} устаревших снимков телеметрии (старше {days} дн.)')

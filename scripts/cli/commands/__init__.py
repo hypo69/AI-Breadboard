@@ -16,7 +16,7 @@
 # Package: scripts.cli.commands
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:27:07
+# Updated: 2026-10-08 12:00:00
 # =============================================================================
 
 from __future__ import annotations
@@ -34,6 +34,7 @@ from .plugins import register_plugins_parser, run_plugins_command
 from .sys_param import register_sys_param_parser, run_sys_param_command
 from .telemetry import register_telemetry_parser, run_telemetry_command
 from .network import register_network_parser, run_network_command
+from .ui import register_ui_parser, run_ui_command
 
 # Utility for launching external commands
 from ..utils import run_command
@@ -70,6 +71,7 @@ COMMAND_HANDLERS: Dict[str, Callable[[argparse.Namespace], int]] = {
     'sys-param': run_sys_param_command,
     'telemetry': run_telemetry_command,
     'network': run_network_command,
+    'ui': run_ui_command,
 }
 
 
@@ -84,6 +86,7 @@ def register_all_parsers(subparsers: argparse._SubParsersAction) -> None:
     register_sys_param_parser(subparsers)
     register_telemetry_parser(subparsers)
     register_network_parser(subparsers)
+    register_ui_parser(subparsers)
     register_headers_parser(subparsers)  # регистрация новой команды
 
     # Assist CLI Gateway
@@ -103,4 +106,5 @@ __all__ = [
     'run_sys_param_command',
     'run_telemetry_command',
     'run_network_command',
+    'run_ui_command',
 ]

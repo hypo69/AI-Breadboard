@@ -17,12 +17,12 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 10:25:00
+ * Updated: 2026-10-08 12:35:00
  * =============================================================================
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261008_v1', js: '/html/about_system_tab/main.js?v=20261008_v1' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261008_v2', js: '/html/about_system_tab/main.js?v=20261008_v2' },
   { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20261006_v8', js: '/html/scenarios_tab/main.js?v=20261006_v8' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
@@ -86,7 +86,7 @@ export const APP_TAB_DEFS = [
   { id: 'taskbar_controller', tab: 'taskbar-controller', tabId: 'tab-taskbar-controller', html: '/html/taskbar_tab/index.html?v=20261006_v1', js: '/html/taskbar_tab/main.js?v=20261006_v1' },
   { id: 'accounts_identity', tab: 'accounts-identity', tabId: 'tab-accounts-identity', html: '/html/accounts_identity_tab/index.html?v=20261008_v1', js: '/html/accounts_identity_tab/main.js?v=20261008_v1' },
   { id: 'power_lifecycle', tab: 'power-lifecycle', tabId: 'tab-power-lifecycle', html: '/html/power_lifecycle_tab/index.html?v=20261008_v2', js: '/html/power_lifecycle_tab/main.js?v=20261008_v2' },
-  { id: 'app_logs', tab: 'app-logs', tabId: 'tab-app-logs', html: '/html/app_logs_tab/index.html?v=20261008_v1', js: '/html/app_logs_tab/main.js?v=20261008_v1' },
+  { id: 'app_logs', tab: 'app-logs', tabId: 'tab-app-logs', html: '/html/app_logs_tab/index.html?v=20261008_v2', js: '/html/app_logs_tab/main.js?v=20261008_v2' },
 ];
 
 export const TC_EXCLUDES = new Set([

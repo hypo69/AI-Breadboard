@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 08:26:00
+# Updated: 2026-10-08 12:52:00
 # =============================================================================
 
 from __future__ import annotations
@@ -972,11 +972,12 @@ async def query_system_summary_full(storage: TelemetryStorage, process_limit: in
             }]
 
     # Monitors
-    if not snap.get("monitors"):
-        try:
-            from apps.windows.telemetry import SystemCollector
-            snap["monitors"] = [m.model_dump() for m in SystemCollector().get_monitors()]
-        except Exception:
+    try:
+        from apps.windows.telemetry import SystemCollector
+        live_monitors = SystemCollector().get_monitors()
+        if live_monitors:
+            snap["monitors"] = [m.model_dump() for m in live_monitors]
+        elif not snap.get("monitors"):
             snap["monitors"] = [{
                 "device": "\\\\.\\DISPLAY1",
                 "name": "Dell 24 Monitor (HDMI)",
@@ -985,7 +986,27 @@ async def query_system_summary_full(storage: TelemetryStorage, process_limit: in
                 "height": 1080,
                 "frequency_hz": 60,
                 "is_primary": True,
+                "orientation": "горизонтальная",
             }]
+    except Exception as exc:
+        logger.debug(f"[router_about_system] Fallback monitors query: {exc}")
+        if not snap.get("monitors"):
+            snap["monitors"] = [{
+                "device": "\\\\.\\DISPLAY1",
+                "name": "Dell 24 Monitor (HDMI)",
+                "adapter": "NVIDIA GeForce GT 710",
+                "width": 1920,
+                "height": 1080,
+                "frequency_hz": 60,
+                "is_primary": True,
+                "orientation": "горизонтальная",
+            }]
+
+    for m in snap.get("monitors", []):
+        if isinstance(m, dict) and not m.get("orientation"):
+            w = int(m.get("width", 1920) or 1920)
+            h = int(m.get("height", 1080) or 1080)
+            m["orientation"] = "вертикальная" if h > w else "горизонтальная"
 
     # Updates
     if not snap.get("updates"):
@@ -1323,9 +1344,21 @@ def query_hardware_tree_from_db(storage: TelemetryStorage) -> List[Dict[str, Any
     for p in phys_disks:
         disk_props[f"Накопитель {p.get('device_id', '')}"] = f"{p.get('model', '')} ({p.get('size_gb', 0)} GB, {p.get('media_type', 'Disk')}, Здоровье: {p.get('health_status', 'OK')})"
 
+    try:
+        from apps.windows.telemetry import SystemCollector
+        live_mons = SystemCollector().get_monitors()
+        if live_mons:
+            monitors = [m.model_dump() for m in live_mons]
+    except Exception:
+        pass
+
     mon_props: Dict[str, Any] = {}
     for idx, m in enumerate(monitors, 1):
-        mon_props[f"Дисплей #{idx}"] = f"{m.get('name', 'Monitor')} ({m.get('width', 1920)}x{m.get('height', 1080)} @ {m.get('frequency_hz', 60)}Hz)"
+        w = int(m.get("width", 1920) or 1920)
+        h = int(m.get("height", 1080) or 1080)
+        orient = m.get("orientation") or ("вертикальная" if h > w else "горизонтальная")
+        is_prim = " [Основной]" if m.get("is_primary") else ""
+        mon_props[f"Дисплей #{idx}"] = f"{m.get('name', 'Monitor')} ({w}x{h} @ {m.get('frequency_hz', 60)}Hz, {orient}{is_prim})"
 
     net_props: Dict[str, Any] = {}
     for idx, n in enumerate(network, 1):
@@ -1337,12 +1370,18 @@ def query_hardware_tree_from_db(storage: TelemetryStorage) -> List[Dict[str, Any
         "Время непрерывной работы": f"{round(float(snap.get('uptime_seconds') or 0) / 3600, 1)} часов",
     }
 
+    mon_names = [
+        f"{m.get('name', 'Monitor')} ({m.get('width', 1920)}x{m.get('height', 1080)} @ {m.get('frequency_hz', 60)}Hz, {m.get('orientation') or ('вертикальная' if int(m.get('height', 1080) or 1080) > int(m.get('width', 1920) or 1920) else 'горизонтальная')}{' [Основной]' if m.get('is_primary') else ''})"
+        for m in monitors
+    ]
+    mon_summary = ", ".join(mon_names) if mon_names else "Дисплеи не обнаружены"
+
     return [
         {"category": "Процессор (CPU)", "name": cpu_model, "properties": cpu_props},
         {"category": "Системная память (RAM)", "name": f"{mem_total} GB RAM", "properties": ram_props},
         {"category": "Видеоадаптеры (GPU)", "name": gpus[0].get("name", "GPU"), "properties": gpu_props},
         {"category": "Дисковые устройства", "name": f"Логических томов: {len(disks)}", "properties": disk_props},
-        {"category": "Мониторы и дисплеи", "name": monitors[0].get("name", "Monitor"), "properties": mon_props},
+        {"category": "Мониторы и дисплеи", "name": mon_summary, "properties": mon_props},
         {"category": "Сетевые адаптеры", "name": "Network Controllers", "properties": net_props},
         {"category": "Операционная система", "name": snap.get("os_name", "Windows"), "properties": os_props},
     ]
@@ -1352,7 +1391,7 @@ async def query_hardware_tree_full(storage: TelemetryStorage, force_refresh: boo
     """Извлекает иерархическое дерево оборудования из SystemCollector или telemetry.db."""
     # 1. Попытка получить живое подробное дерево через SystemCollector
     try:
-        from apps.windows.telemetry.collector import SystemCollector
+        from apps.windows.telemetry import SystemCollector
         collector = SystemCollector(storage=storage)
         nodes = await collector.get_hardware_tree_async(force=force_refresh)
         if nodes:

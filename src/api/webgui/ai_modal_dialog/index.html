@@ -1,0 +1,147 @@
+<!--
+=============================================================================
+Process Name: Windows WebGUI - AI Modal Dialog Template
+=============================================================================
+Description:
+  Шаблон разметки универсального модального окна AI-анализатора и редактора промптов.
+  Использует адаптивные CSS-переменные темы оформления без жестко зашитых фонов.
+
+Usage Examples:
+  HTML Integration:
+    <div id="ai-modal-dialog-container">...</div>
+
+File: index.html
+Project: ai-breadboard
+Package: src.api.webgui.ai_modal_dialog
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-08 12:43:00
+=============================================================================
+-->
+
+<!-- Universal AI Table & Diagnostic Modal Dialog -->
+<div class="modal fade" id="universal-ai-table-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header py-2 px-3">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="fs-5 text-info" id="uai-modal-icon">🔍</span>
+          <h5 class="modal-title fw-bold text-info mb-0" id="uai-modal-title">Детали записи</h5>
+          <div id="uai-modal-badges" class="d-flex align-items-center gap-1"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body py-3 px-3">
+        <!-- Metadata Grid -->
+        <div class="row g-2 mb-3 small" id="uai-modal-metadata-grid"></div>
+
+        <!-- Raw / Code Content Section -->
+        <div class="card p-3 mb-3 uai-raw-container d-none" id="uai-modal-raw-container" style="display: none;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h6 class="small text-uppercase text-muted fw-bold mb-0" id="uai-modal-raw-title">Контекст / Данные</h6>
+          </div>
+          <div class="small font-monospace uai-raw-content" id="uai-modal-raw-content" style="white-space: pre-wrap; word-break: break-all;"></div>
+        </div>
+
+        <!-- AI Contextual Diagnostic Card -->
+        <div class="card border-info p-3 uai-ai-section" id="uai-modal-ai-section">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <h6 class="fw-bold text-info mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
+              <span class="badge border border-info text-info small px-2 py-0.5" id="uai-modal-web-status" title="Сведения обогащаются поиском в интернете">
+                <i class="bi bi-globe me-1"></i>Web Grounding
+              </span>
+            </div>
+            <div class="d-flex align-items-center gap-1.5">
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить промпт для этого типа таблицы">
+                <i class="bi bi-gear-fill me-1"></i>Промпт
+              </button>
+              <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ" style="display: none;">
+                <i class="bi bi-arrow-clockwise me-1"></i>Обновить
+              </button>
+            </div>
+          </div>
+          <div class="small" id="uai-modal-ai-explanation"></div>
+        </div>
+      </div>
+      <div class="modal-footer py-2 px-3 d-flex justify-content-between">
+        <div id="uai-modal-custom-actions" class="d-flex gap-1.5 flex-wrap"></div>
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Prompt Editor Modal Dialog -->
+<div class="modal fade" id="universal-ai-prompt-editor-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header py-2 px-3">
+        <div class="d-flex align-items-center gap-2">
+          <span class="fs-5 text-warning">⚙️</span>
+          <h5 class="modal-title fw-bold text-warning mb-0">Редактор промпта диагностики</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body py-3 px-3">
+        <div class="row g-2 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label small text-secondary fw-bold mb-1">Тип таблицы / сущности</label>
+            <select class="form-select form-select-sm" id="uai-prompt-type-select">
+              <option value="software">software (Установленное ПО)</option>
+              <option value="process">process (Процессы Windows)</option>
+              <option value="service">service (Службы Windows)</option>
+              <option value="task">task (Задачи планировщика)</option>
+              <option value="network">network (Сетевой мониторинг)</option>
+              <option value="registry">registry (Реестр Windows)</option>
+              <option value="user">user (Пользователи и группы)</option>
+              <option value="website">website (Мониторинг сайтов)</option>
+              <option value="rag_doc">rag_doc (RAG База знаний)</option>
+              <option value="disk">disk (Диски и тома)</option>
+              <option value="startup">startup (Автозагрузка)</option>
+              <option value="generic">generic (Общий шаблон)</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small text-secondary fw-bold mb-1">Название шаблона</label>
+            <input type="text" class="form-control form-control-sm" id="uai-prompt-name-input" placeholder="Название шаблона">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small text-secondary fw-bold mb-1">Системная инструкция (System Instruction)</label>
+          <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-system-input" rows="2" placeholder="Роль и поведение модели..."></textarea>
+        </div>
+
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small text-secondary fw-bold mb-0">Шаблон текста промпта (Prompt Template)</label>
+            <div class="d-flex gap-1" id="uai-prompt-variables-bar">
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{title}')">{title}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{subtitle}')">{subtitle}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{metadata}')">{metadata}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{raw_data}')">{raw_data}</button>
+            </div>
+          </div>
+          <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-template-input" rows="8" placeholder="Текст промпта с плейсхолдерами..."></textarea>
+          <div class="form-text small text-secondary" style="font-size: 0.75rem;">
+            Используйте переменные <code>{title}</code>, <code>{subtitle}</code>, <code>{metadata}</code>, <code>{raw_data}</code> для автоматической подстановки контекста строки таблицы.
+          </div>
+        </div>
+
+        <div id="uai-prompt-status-msg" class="small mt-2" style="display: none;"></div>
+      </div>
+      <div class="modal-footer py-2 px-3 d-flex justify-content-between">
+        <button type="button" class="btn btn-sm btn-outline-danger" id="btn-uai-prompt-reset">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Сбросить по умолчанию
+        </button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          <button type="button" class="btn btn-sm btn-primary" id="btn-uai-prompt-save">
+            <i class="bi bi-check2 me-1"></i>Сохранить промпт
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

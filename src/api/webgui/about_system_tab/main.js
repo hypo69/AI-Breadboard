@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 02:56:00
+ * Updated: 2026-10-08 12:38:00
  * =============================================================================
  */
 
@@ -36,7 +36,7 @@
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
 // Copyright: © 2026 hypo69
-// Updated: 2026-10-04 00:22:00
+// Updated: 2026-10-08 12:35:00
 // =============================================================================
 
 (function () {
@@ -45,7 +45,6 @@
   let currentDisks = [];
   let isLiveActive = true;
   let liveIntervalId = null;
-  let wearAutoRefreshTimer = null;
   let isUpdating = false;
   let isAiRunning = false;
   let activeHistoryMetric = 'all';
@@ -191,8 +190,8 @@
     // Проверка доступности кеша
     await updateCacheStatus();
 
-    // Инициализация индивидуальных опросников и выпадающих списков частоты для всех панелей
-    initPanelPollers();
+    // Первичная загрузка данных вкладки
+    refreshAllData(false);
 
     // Запуск таймера часов и статуса кеша
     startLiveStream();
@@ -295,9 +294,6 @@
         isLiveActive = !isLiveActive;
         if (window.setTabPollerEnabled) {
           window.setTabPollerEnabled('tab-about-system_clock', isLiveActive);
-          Object.keys(panelPollingRegistry).forEach(pollId => {
-            window.setTabPollerEnabled(`tab-about-system_${pollId}`, isLiveActive);
-          });
         }
         const icon = document.getElementById('icon-about-sys-live');
         const txt = document.getElementById('txt-about-sys-live');
@@ -362,31 +358,6 @@
     const btnWearRefresh = document.getElementById('btn-diag-wear-refresh');
     if (btnWearRefresh) {
       btnWearRefresh.onclick = () => fetchStorageBatteryWear(true);
-    }
-
-    const wearAutoSwitch = document.getElementById('diag-wear-auto-refresh');
-    if (wearAutoSwitch) {
-      wearAutoSwitch.onchange = (e) => {
-        if (e.target.checked) {
-          if (window.registerTabPoller) {
-            window.registerTabPoller('tab-about-system', () => fetchStorageBatteryWear(true), 10000, { pollerId: 'about_sys_wear', immediate: true });
-          } else {
-            wearAutoRefreshTimer = setInterval(() => {
-              if (window.isTabActive ? window.isTabActive('tab-about-system') : true) {
-                fetchStorageBatteryWear(true);
-              }
-            }, 10000);
-          }
-        } else {
-          if (window.unregisterTabPoller) {
-            window.unregisterTabPoller('about_sys_wear');
-          }
-          if (wearAutoRefreshTimer) {
-            clearInterval(wearAutoRefreshTimer);
-            wearAutoRefreshTimer = null;
-          }
-        }
-      };
     }
 
     // Inline Edit: Hostname
@@ -1007,7 +978,10 @@
   }
 
   async function fetchHardwareSpecs(forceNetwork = false) {
-    await fetchHardwareSpec(forceNetwork);
+    await Promise.allSettled([
+      fetchSystemSummary(forceNetwork ? false : true),
+      fetchHardwareSpec(forceNetwork)
+    ]);
   }
 
   async function fetchUserEnvSecurity(forceNetwork = false) {
@@ -1016,22 +990,6 @@
       fetchSystemControlStatus(forceNetwork),
       fetchBackupStatus(forceNetwork)
     ]);
-  }
-
-  async function fetchDisksVolumes(forceNetwork = false) {
-    await fetchSystemSummary(forceNetwork ? false : true);
-  }
-
-  async function fetchWearPanel(forceNetwork = false) {
-    await fetchStorageBatteryWear(forceNetwork);
-  }
-
-  async function fetchBatteryPanel(forceNetwork = false) {
-    await fetchStorageBatteryWear(forceNetwork);
-  }
-
-  async function fetchHwTreePanel(forceNetwork = false) {
-    await fetchHardwareSpec(forceNetwork);
   }
 
   /**
@@ -1044,116 +1002,6 @@
       fetchKpiCheckpoints(forceNetwork),
       fetchKpiStorage(forceNetwork)
     ]);
-  }
-
-  /**
-   * Реестр панелей и частоты их опроса
-   */
-  const panelPollingRegistry = {
-    'about_kpi_os': { fn: fetchKpiOs, defaultFreq: 'manual' },
-    'about_kpi_sec': { fn: fetchKpiSecurity, defaultFreq: 'manual' },
-    'about_kpi_prot': { fn: fetchKpiCheckpoints, defaultFreq: 'manual' },
-    'about_kpi_stor': { fn: fetchKpiStorage, defaultFreq: 'manual' },
-    'about_hw_specs': { fn: fetchHardwareSpecs, defaultFreq: 'start' },
-    'about_user_env': { fn: fetchUserEnvSecurity, defaultFreq: 'manual' },
-    'about_disks': { fn: fetchDisksVolumes, defaultFreq: 'manual' },
-    'about_wear': { fn: fetchWearPanel, defaultFreq: 'manual' },
-    'about_battery': { fn: fetchBatteryPanel, defaultFreq: 'manual' },
-    'about_hw_tree': { fn: fetchHwTreePanel, defaultFreq: 'start' }
-  };
-
-  const panelTimers = new Map();
-
-  function getPanelFrequency(pollId) {
-    try {
-      const saved = localStorage.getItem(`poll_freq_${pollId}`);
-      if (saved !== null && saved !== undefined && saved !== '') return saved;
-    } catch (_) {}
-    return panelPollingRegistry[pollId]?.defaultFreq || 'start';
-  }
-
-  function setPanelFrequency(pollId, freq) {
-    try {
-      localStorage.setItem(`poll_freq_${pollId}`, freq);
-    } catch (_) {}
-    applyPanelPoller(pollId, freq, false);
-  }
-
-  function stopPanelPoller(pollId) {
-    const pollerId = `tab-about-system_${pollId}`;
-    if (window.unregisterTabPoller) {
-      window.unregisterTabPoller(pollerId);
-    }
-    if (panelTimers.has(pollId)) {
-      clearInterval(panelTimers.get(pollId));
-      panelTimers.delete(pollId);
-    }
-  }
-
-  function applyPanelPoller(pollId, freq, runInitial = false) {
-    stopPanelPoller(pollId);
-    const config = panelPollingRegistry[pollId];
-    if (!config) return;
-
-    if (freq === 'start') {
-      if (runInitial) {
-        config.fn();
-      }
-      return;
-    }
-
-    if (freq === 'manual') {
-      if (runInitial) {
-        config.fn();
-      }
-      return;
-    }
-
-    const intervalSec = parseInt(freq, 10);
-    if (isNaN(intervalSec) || intervalSec <= 0) return;
-
-    const intervalMs = intervalSec * 1000;
-    const pollerId = `tab-about-system_${pollId}`;
-
-    if (window.registerTabPoller) {
-      window.registerTabPoller('tab-about-system', async () => {
-        if (isLiveActive && !isUpdating) {
-          await config.fn();
-        }
-      }, intervalMs, { pollerId, immediate: runInitial });
-    } else {
-      if (runInitial) config.fn();
-      const timer = setInterval(async () => {
-        if (isLiveActive && !isUpdating) {
-          await config.fn();
-        }
-      }, intervalMs);
-      panelTimers.set(pollId, timer);
-    }
-  }
-
-  function initPanelPollers() {
-    document.querySelectorAll('.poll-freq-select').forEach(select => {
-      const pollId = select.dataset.pollId;
-      if (!pollId) return;
-
-      const currentFreq = getPanelFrequency(pollId);
-      select.value = currentFreq;
-
-      select.onchange = (e) => {
-        const newFreq = e.target.value;
-        setPanelFrequency(pollId, newFreq);
-        if (newFreq !== 'manual' && newFreq !== 'start') {
-          panelPollingRegistry[pollId]?.fn(true);
-        }
-        if (window.showToast) {
-          const label = select.options[select.selectedIndex]?.text || newFreq;
-          window.showToast(`Частота опроса обновлена: ${label}`, 'info');
-        }
-      };
-
-      applyPanelPoller(pollId, currentFreq, true);
-    });
   }
 
   async function pollLiveTelemetry() {
@@ -1312,10 +1160,23 @@
       if (Array.isArray(snap.monitors) && snap.monitors.length > 0) {
         const monShorts = snap.monitors.map(m => {
           const prim = m.is_primary ? ' [Основной]' : '';
-          return `${m.name || 'Monitor'} (${m.width}x${m.height}@${m.frequency_hz}Hz${prim})`;
+          const name = m.name || 'Monitor';
+          let orient = 'горизонтальная';
+          if (m.orientation) {
+            const low = String(m.orientation).toLowerCase();
+            orient = (low.includes('port') || low.includes('верт')) ? 'вертикальная' : 'горизонтальная';
+          } else if (Number(m.height || 0) > Number(m.width || 0)) {
+            orient = 'вертикальная';
+          }
+          return `${name} (${m.width}x${m.height} @ ${m.frequency_hz}Hz, ${orient}${prim})`;
         });
-        setText('about-ident-monitors', monShorts.join(', '));
-        setText('about-spec-monitors', monShorts.join(', '));
+        const monSummary = monShorts.join(', ');
+        setText('about-ident-monitors', monSummary);
+        setText('about-spec-monitors', monSummary);
+        const specMonEl = document.getElementById('about-spec-monitors');
+        if (specMonEl) {
+          specMonEl.title = monSummary;
+        }
       }
 
       // 5. Windows Updates Block
@@ -1682,6 +1543,9 @@
     const synthesisStatus = document.getElementById('about-ai-synthesis-status');
     const actionsBox = document.getElementById('about-ai-actions-box');
     const actionsList = document.getElementById('about-ai-actions-list');
+    const instructionText = document.getElementById('about-ai-instruction-text');
+    const promptText = document.getElementById('about-ai-prompt-text');
+    const rawText = document.getElementById('about-ai-raw-text');
 
     const liveStatusText = document.getElementById('about-ai-live-status-text');
     const chipLhm = document.getElementById('chip-sensor-lhm');
@@ -1856,6 +1720,17 @@
         if (res) {
           cardsState[i] = res;
           completedGroups.push(res);
+
+          // Обновление инспекторов точного промпта и системной инструкции в модальном окне
+          if (promptText && res.generated_prompt) {
+            promptText.textContent = `[${res.title}]\n${res.generated_prompt}`;
+          }
+          if (instructionText && res.system_instruction) {
+            instructionText.textContent = res.system_instruction;
+          }
+          if (rawText && res.raw_response) {
+            rawText.textContent = `[${res.title}]\n${res.raw_response}`;
+          }
         } else {
           cardsState[i].status = 'warning';
           cardsState[i].summary = 'Ответ не получен, используются базовые метрики.';
@@ -1906,6 +1781,19 @@
       });
 
       if (progressBar) progressBar.style.width = '100%';
+
+      // Обновление инспекторов промпта и системной инструкции для финального синтеза
+      if (synthesis) {
+        if (promptText && synthesis.generated_prompt) {
+          promptText.textContent = `[Синтез итогового заключения]\n${synthesis.generated_prompt}`;
+        }
+        if (instructionText && synthesis.system_instruction) {
+          instructionText.textContent = synthesis.system_instruction;
+        }
+        if (rawText && synthesis.raw_response) {
+          rawText.textContent = `[Синтез]\n${synthesis.raw_response}`;
+        }
+      }
 
       // Обновление итогового Health Badge
       const score = Number(synthesis.health_score || 100);

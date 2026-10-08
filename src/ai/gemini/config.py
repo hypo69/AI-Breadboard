@@ -16,13 +16,14 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 10:46:40
 # =============================================================================
 
 """Модуль реализации компонента `GoogleGenerativeAIConfigMixin` системы AI-Breadboard."""
 
+import json
 import re
-from typing import Any
+from typing import Any, Optional
 from google.genai import types
 from logger import logger
 
@@ -69,7 +70,7 @@ class GoogleGenerativeAIConfigMixin:
     """Миксин для построения конфигурации запросов Google Generative AI.
 
     Предоставляет методы для генерации объекта GenerateContentConfig,
-    нормализации текста и логирования параметров исходящих запросов.
+    нормализации текста и логирования параметров исходящих запросов и входящих ответов.
     """
 
     def _build_content_config(
@@ -181,13 +182,13 @@ class GoogleGenerativeAIConfigMixin:
         self,
         method: str,
         model: str,
-        q: str,
+        q: str = '',
         history: Any = None,
         system_instruction: str = '',
         tools: Any = None,
         generation_config: dict = {},
     ) -> None:
-        """Логирование структуры, объёма промпта и параметров исходящего запроса.
+        """Логирование структуры, полного промпта, системной инструкции и параметров исходящего запроса.
 
         Args:
             method (str): Имя вызывающего метода API (например, 'ask', 'chat_stream').
@@ -199,25 +200,7 @@ class GoogleGenerativeAIConfigMixin:
             generation_config (dict): Переопределения параметров генерации. Значение по умолчанию: {}.
         """
         try:
-            q_len: int = len(q) if q else 0
-            q_preview: str = q[:120] + '...' if q and len(q) > 120 else q or ''
             inst: str = system_instruction or getattr(self, 'system_instruction', '') or ''
-            inst_len: int = len(inst)
-            inst_preview: str = inst[:80] + '...' if inst and len(inst) > 80 else inst
-            history_count: int = len(history) if history else 0
-            history_chars: int = 0
-            if history:
-                for item in history:
-                    if isinstance(item, dict):
-                        parts = item.get('parts', [])
-                        if isinstance(parts, list):
-                            for p in parts:
-                                if isinstance(p, dict):
-                                    history_chars += len(str(p.get('text', '')))
-                                else:
-                                    history_chars += len(str(p))
-                        elif isinstance(parts, str):
-                            history_chars += len(parts)
             tools_list: list = list(tools) if tools else []
             tools_summary: list[str] = []
             for t in tools_list:
@@ -227,13 +210,47 @@ class GoogleGenerativeAIConfigMixin:
                     tools_summary.append('custom_functions')
                 else:
                     tools_summary.append(type(t).__name__)
-            logger.info(
-                f'Gemini Outgoing [{method}] -> Model: "{model}" | '
-                f'Prompt ({q_len} chars): {q_preview!r} | '
-                f'History: {history_count} msgs (~{history_chars} chars) | '
-                f'SysInstruction ({inst_len} chars): {inst_preview!r} | '
-                f'Tools: {tools_summary or "none"} | '
-                f'GenConfig: {generation_config or "{}"}'
+
+            history_info = ""
+            if history:
+                history_count = len(history)
+                history_info = f"\nChat History ({history_count} items):\n{json.dumps(history, ensure_ascii=False, indent=2, default=str)}"
+
+            log_msg = (
+                f"Gemini Request [{method}] -> Model: \"{model}\"\n"
+                f"System Instruction: {inst or '<none>'}\n"
+                f"Prompt: {q}\n"
+                f"Generation Config: {json.dumps(generation_config or {}, ensure_ascii=False)}\n"
+                f"Tools: {tools_summary or 'none'}"
+                f"{history_info}"
             )
+            logger.info(log_msg)
         except Exception as log_ex:
             logger.debug(f'Gemini: Failed to log request payload details: {log_ex}')
+
+    def _log_response_details(
+        self,
+        method: str,
+        model: str,
+        response_text: Any,
+        attempt: int = 1,
+        extra: Optional[dict] = None,
+    ) -> None:
+        """Логирование полученного ответа от модели Gemini.
+
+        Args:
+            method (str): Имя вызывающего метода API (например, 'ask', 'chat', 'chat_stream').
+            model (str): Идентификатор модели Gemini.
+            response_text (Any): Полученный текст ответа или структура данных.
+            attempt (int): Номер попытки. Значение по умолчанию: 1.
+            extra (Optional[dict]): Дополнительные параметры (метаданные, токены и т.д.). Значение по умолчанию: None.
+        """
+        try:
+            extra_str = f" | Extra: {json.dumps(extra, ensure_ascii=False)}" if extra else ""
+            formatted_resp = response_text if isinstance(response_text, str) else json.dumps(response_text, ensure_ascii=False, indent=2, default=str)
+            logger.info(
+                f"Gemini Response [{method}] <- Model: \"{model}\" (attempt {attempt}){extra_str}:\n"
+                f"{formatted_resp}"
+            )
+        except Exception as log_ex:
+            logger.debug(f"Gemini: Failed to log response details: {log_ex}")

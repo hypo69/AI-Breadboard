@@ -38,7 +38,7 @@ class Breadboard_Client {
 
         // Add model and prompt defaults if not set in payload
         if (empty($payload['model'])) {
-            $payload['model'] = Config::get('model', 'gemini-flash-latest');
+            $payload['model'] = Config::get('model', 'gemini-3.5-flash-lite');
         }
         if (empty($payload['provider'])) {
             $payload['provider'] = Config::get('provider', 'gemini');

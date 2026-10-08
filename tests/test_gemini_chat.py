@@ -37,10 +37,10 @@ class TestGeminiChat:
 
     def test_normalize_model_id(self):
         """Verify model identifier normalization."""
-        assert GeminiChatBase.normalize_model_id('') == 'gemini-flash-latest'
+        assert GeminiChatBase.normalize_model_id('') == 'gemini-3.5-flash-lite'
         assert GeminiChatBase.normalize_model_id('gemini:gemini-3.7-flash') == 'gemini-3.7-flash'
         assert GeminiChatBase.normalize_model_id('models/gemini-2.5-pro') == 'gemini-2.5-pro'
-        assert GeminiChatBase.normalize_model_id('gemini-flash-latest') == 'gemini-flash-latest'
+        assert GeminiChatBase.normalize_model_id('gemini-3.5-flash-lite') == 'gemini-3.5-flash-lite'
 
     def test_capabilities_and_availability(self):
         """Verify provider capabilities and availability checking."""
@@ -68,7 +68,7 @@ class TestGeminiChat:
     @pytest.mark.asyncio
     async def test_stream_chat_alias(self):
         """Verify stream_chat acts as an alias to chat_stream."""
-        chat = GeminiChatBase(model_id='gemini-flash-latest')
+        chat = GeminiChatBase(model_id='gemini-3.5-flash-lite')
 
         async def _fake_stream(q, **kwargs):
             for token in ['Chunk1', 'Chunk2']:
@@ -110,8 +110,8 @@ class TestGeminiChat:
 
     def test_model_id_and_system_prompt_properties(self):
         """Verify model_id and system_prompt property updates."""
-        chat = GeminiChatBase(model_id='gemini-flash-latest', system_prompt='Initial prompt')
-        assert chat.model_id == 'gemini-flash-latest'
+        chat = GeminiChatBase(model_id='gemini-3.5-flash-lite', system_prompt='Initial prompt')
+        assert chat.model_id == 'gemini-3.5-flash-lite'
         assert chat.system_instruction == 'Initial prompt'
         chat.model_id = 'gemini:gemini-3.7-flash'
         assert chat.model_id == 'gemini-3.7-flash'

@@ -80,7 +80,7 @@ class Admin_Settings {
             'enabled'            => isset($_POST['enabled']),
             'api_url'            => sanitize_text_field($_POST['api_url'] ?? ''),
             'api_key'            => sanitize_text_field($_POST['api_key'] ?? ''),
-            'model'              => sanitize_text_field($_POST['model'] ?? 'gemini-flash-latest'),
+            'model'              => sanitize_text_field($_POST['model'] ?? 'gemini-3.5-flash-lite'),
             'provider'           => sanitize_text_field($_POST['provider'] ?? 'gemini'),
             'bot_user_id'        => absint($_POST['bot_user_id'] ?? 0),
             'auto_approve'       => isset($_POST['auto_approve']),
@@ -165,7 +165,7 @@ class Admin_Settings {
                             <th scope="row"><label for="model"><?php esc_html_e('Model Name', 'ai-responder'); ?></label></th>
                             <td>
                                 <input type="text" name="model" id="model" value="<?php echo esc_attr($settings['model']); ?>" class="regular-text">
-                                <p class="description"><?php esc_html_e('Examples: gemini-flash-latest, gemini-2.5-pro, foundry:phi-3.5-mini-instruct, ollama:llama3.1', 'ai-responder'); ?></p>
+                                <p class="description"><?php esc_html_e('Examples: gemini-3.5-flash-lite, gemini-2.5-pro, foundry:phi-3.5-mini-instruct, ollama:llama3.1', 'ai-responder'); ?></p>
                             </td>
                         </tr>
                         <tr>

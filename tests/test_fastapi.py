@@ -70,7 +70,7 @@ class TestRouterAuth:
         mock_request = Mock(spec=Request)
         mock_request.cookies = {'auth_token': token}
         with patch('src.user_manager.user_manager.get_user_by_email', return_value={'id': 1, 'email': 'test@example.com'}):
-            with patch('src.user_manager.user_manager.get_user_settings', return_value={'user_id': 1, 'theme': 'dark', 'model': 'gemini-flash-latest'}):
+            with patch('src.user_manager.user_manager.get_user_settings', return_value={'user_id': 1, 'theme': 'dark', 'model': 'gemini-3.5-flash-lite'}):
                 res = await get_settings(mock_request)
                 assert 'search_engine' in res
                 assert res['search_engine'] in ['gemini_cli', 'gemini', 'agy', 'langchain', 'playwright']
@@ -136,11 +136,11 @@ class TestRouterChat:
         mock_model.chat_stream = mock_stream
         router = init_router(mock_model, mock_model, {})
         chat_endpoint = next((r.endpoint for r in router.routes if r.path in ('', '/', '/api/chat')))
-        req = ChatRequest(message='привет', history=[], generation_config={'search_engine': 'gemini_cli', 'model': 'gemini-flash-latest'})
+        req = ChatRequest(message='привет', history=[], generation_config={'search_engine': 'gemini_cli', 'model': 'gemini-3.5-flash-lite'})
         mock_fastapi_req = Mock(spec=Request)
         mock_fastapi_req.cookies = {}
         mock_fastapi_req.client = Mock(host='127.0.0.1')
-        with patch('src.api.routers.core.router_chat._extract_user_auth', return_value=('user1', '', 'gemini-flash-latest', {})), patch('src.api.routers.core.router_chat.get_chat_model', return_value=mock_model):
+        with patch('src.api.routers.core.router_chat._extract_user_auth', return_value=('user1', '', 'gemini-3.5-flash-lite', {})), patch('src.api.routers.core.router_chat.get_chat_model', return_value=mock_model):
             resp = await chat_endpoint(chat_req=req, request=mock_fastapi_req)
             chunks = []
             async for chunk in resp.body_iterator:

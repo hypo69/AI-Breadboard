@@ -2,7 +2,7 @@
   "enabled": true,
   "api_url": "https://kino.davidka.net/api/chat/comment-responder",
   "api_key": "",
-  "model": "gemini-flash-latest",
+  "model": "gemini-3.5-flash-lite",
   "provider": "gemini",
   "bot_user_id": 0,
   "auto_approve": true,

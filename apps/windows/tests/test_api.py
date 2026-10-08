@@ -4,6 +4,7 @@
 # =============================================================================
 # Description:
 #   Модульные тесты для низкоуровневых обёрток Win32 (Kernel32, Psapi)
+#   и внутреннего FastAPI сервера TC/Windows API.
 #
 # Usage Examples:
 #   CLI:
@@ -11,17 +12,15 @@
 #   Python API:
 #     from apps.windows.tests.test_api import TestKernel32API
 #
-#     service = TestKernel32API()
-#
 # File: test_api.py
 # Project: ai-breadboard
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 13:36:00
 # =============================================================================
 
-"""Модульные тесты для низкоуровневых обёрток Win32 (Kernel32, Psapi)"""
+"""Модульные тесты для низкоуровневых обёрток Win32 (Kernel32, Psapi) и внутреннего API."""
 
 import unittest
 from apps.windows.telemetry.win32_ffi import Kernel32API, PsapiAPI
@@ -98,6 +97,63 @@ class TestInternalApp(unittest.TestCase):
         self.assertEqual(res_internal.status_code, 200)
         self.assertEqual(res_internal.json().get('status'), 'ok')
 
+    def test_auth_settings_endpoints(self):
+        """Проверка эндпоинтов /auth/settings и /api/v1/auth/settings."""
+        from fastapi.testclient import TestClient
+        from apps.windows.api.internal_app import create_internal_app
+
+        app = create_internal_app()
+        client = TestClient(app)
+
+        res_get = client.get('/auth/settings')
+        self.assertEqual(res_get.status_code, 200)
+        self.assertEqual(res_get.json().get('status'), 'ok')
+
+        res_get_v1 = client.get('/api/v1/auth/settings')
+        self.assertEqual(res_get_v1.status_code, 200)
+        self.assertEqual(res_get_v1.json().get('status'), 'ok')
+
+        res_post = client.post('/auth/settings', json={'theme': 'dark', 'model': 'gemini-3.1-flash'})
+        self.assertEqual(res_post.status_code, 200)
+        self.assertEqual(res_post.json().get('status'), 'ok')
+
+    def test_apps_status_endpoints(self):
+        """Проверка эндпоинтов /api/v1/apps/status?profile=tc."""
+        from fastapi.testclient import TestClient
+        from apps.windows.api.internal_app import create_internal_app
+
+        app = create_internal_app()
+        client = TestClient(app)
+
+        res = client.get('/api/v1/apps/status?profile=tc')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data.get('status'), 'ok')
+        self.assertIn('apps', data)
+
+    def test_favicon_endpoint(self):
+        """Проверка эндпоинта /favicon.ico."""
+        from fastapi.testclient import TestClient
+        from apps.windows.api.internal_app import create_internal_app
+
+        app = create_internal_app()
+        client = TestClient(app)
+
+        res = client.get('/favicon.ico')
+        self.assertIn(res.status_code, [200, 204])
+
+    def test_telemetry_instances_active_endpoint(self):
+        """Проверка эндпоинта /api/v1/telemetry/instances/active."""
+        from fastapi.testclient import TestClient
+        from apps.windows.api.internal_app import create_internal_app
+
+        app = create_internal_app()
+        client = TestClient(app)
+
+        res = client.get('/api/v1/telemetry/instances/active?limit=10')
+        self.assertEqual(res.status_code, 200)
+        self.assertIsInstance(res.json(), list)
+
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main()

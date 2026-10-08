@@ -19,7 +19,7 @@
 # Package: src.ai.agents
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:58:00
+# Updated: 2026-10-08 22:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -52,6 +52,74 @@ from .tools import (
     windows_manage_sys_param,
     windows_safe_probe,
     windows_execute_powershell,
+    windows_manage_optional_feature,
+    windows_manage_accounts_identity,
+    windows_identity_explain,
+    windows_identity_explain_pid,
+    windows_identity_audit_security,
+    windows_identity_manage_account,
+    windows_identity_audit_events,
+    windows_identity_graph_build,
+    windows_backup_health_check,
+    windows_backup_file_history,
+    windows_backup_vss_snapshots,
+    windows_backup_user_folders,
+    windows_backup_version_control,
+    windows_boot_recovery_audit,
+    windows_boot_recovery_action,
+    windows_defender_status_scan,
+    windows_defender_audit_security,
+    windows_defender_ai_diagnostics,
+    windows_event_log_query,
+    windows_event_log_intelligence,
+    windows_event_log_action,
+    windows_firewall_audit,
+    windows_firewall_rule_action,
+    windows_focus_status_profiles,
+    windows_focus_session_action,
+    windows_focus_notifications,
+    windows_hardware_monitor,
+    windows_hardware_inventory,
+    windows_hardware_benchmark,
+    windows_network_scan_lan,
+    windows_network_usage_stats,
+    windows_network_speedtest,
+    windows_performance_tracing_audit,
+    windows_performance_collector_action,
+    windows_personalization_overview,
+    windows_personalization_theme_action,
+    windows_personalization_cursor_wallpaper,
+    windows_process_list,
+    windows_process_action,
+    windows_programs_history_report,
+    windows_programs_history_audit,
+    windows_registry_read,
+    windows_registry_search,
+    windows_registry_action,
+    windows_security_acl_audit,
+    windows_security_acl_action,
+    windows_services_list,
+    windows_services_action,
+    windows_servicing_integrity_audit,
+    windows_servicing_integrity_action,
+    windows_software_list,
+    windows_software_action,
+    windows_startup_audit,
+    windows_startup_action,
+    windows_storage_audit,
+    windows_storage_action,
+    windows_sysadmin_audit,
+    windows_sysadmin_action,
+    windows_checkpoints_audit,
+    windows_checkpoints_action,
+    windows_system_control_audit,
+    windows_system_control_action,
+    windows_task_scheduler_audit,
+    windows_task_scheduler_action,
+    windows_taskbar_audit,
+    windows_taskbar_action,
+    windows_control_plane_audit,
+    windows_control_plane_action,
 )
 from .mcp_client import MCPClientManager
 
@@ -67,6 +135,72 @@ class WindowsControllerAgent:
     - Управление параметрами системы SafeOps (windows_manage_sys_param)
     - Безопасные PowerShell/WMI запросы (windows_safe_probe)
     - Прямое выполнение команд и скриптов PowerShell (windows_execute_powershell)
+    - Управление опциональными компонентами Windows DISM/Features (windows_manage_optional_feature)
+    - Досье безопасности субъектов, процессов и LSA-прав (windows_identity_explain, windows_identity_explain_pid)
+    - Аудит администраторов, RDP и неиспользуемых SID/профилей (windows_identity_audit_security)
+    - Управление пользователями, группами и политиками паролей (windows_identity_manage_account)
+    - Журнал событий безопасности входов и прав (windows_identity_audit_events)
+    - Построение графа связей доступов (windows_identity_graph_build)
+    - Диагностика и отчёт здоровья бэкапов (windows_backup_health_check)
+    - Управление службой и поиском в Истории файлов (windows_backup_file_history)
+    - Просмотр теневых копий томов VSS (windows_backup_vss_snapshots)
+    - Аудит и перенос папок пользователя (windows_backup_user_folders)
+    - Управление двухслойным версионированием файлов (windows_backup_version_control)
+    - Аудит загрузчика BCD и среды восстановления WinRE (windows_boot_recovery_audit)
+    - Управление таймаутом BCD и WinRE по протоколу SafeOps (windows_boot_recovery_action)
+    - Мониторинг защиты Real-Time, запуск сканирования и обновление сигнатур Defender (windows_defender_status_scan)
+    - Аудит ASR правил, эвристический анализ исключений и история угроз Defender (windows_defender_audit_security)
+    - Итоговый отчёт аналитической защищенности Security Score (windows_defender_ai_diagnostics)
+    - Выборка и фильтрация событий журналов Windows Event Log (windows_event_log_query)
+    - Профайлинг журналов, индикаторы SHI/R_dup и RAG-поиск сбоев (windows_event_log_intelligence)
+    - Экспорт .evtx и очистка каналов по протоколу SafeOps (windows_event_log_action)
+    - Аудит профилей и правил сетевого экрана брандмауэра (windows_firewall_audit)
+    - Безопасное выполнение действий с правилами брандмауэра SafeOps (windows_firewall_rule_action)
+    - Просмотр состояния и профилей фокусировки Focus Policy Engine (windows_focus_status_profiles)
+    - Запуск и остановка сессий фокусировки по протоколу SafeOps (windows_focus_session_action)
+    - Перехват и выборка подавленных тост-уведомлений за фокус-сессию (windows_focus_notifications)
+    - Телеметрия и мониторинг оборудования в реальном времени (windows_hardware_monitor)
+    - Аппаратная инвентаризация и S.M.A.R.T. дисков (windows_hardware_inventory)
+    - Стресс-тесты SafeOps и замеры скорости ИИ-инференса (windows_hardware_benchmark)
+    - Сканирование устройств LAN и активный ARP/SSDP свип подсетей (windows_network_scan_lan)
+    - Сетевая статистика адаптеров и трафика процессов (windows_network_usage_stats)
+    - Замер скорости, задержки под нагрузкой и Bufferbloat Speedtest (windows_network_speedtest)
+    - Моментальные замеры счетчиков производительности и сессий ETW (windows_performance_tracing_audit)
+    - Управление сборщиками данных ETW по протоколу SafeOps (windows_performance_collector_action)
+    - Обзор параметров персонализации и списка тем Windows (windows_personalization_overview)
+    - Применение тем, переключение темного режима и акцентного цвета (windows_personalization_theme_action)
+    - Настройка указателя мыши и обоев рабочего стола (windows_personalization_cursor_wallpaper)
+    - Инспекция процессов, ресурсов и их категоризация (windows_process_list)
+    - Принудительное завершение процессов по PID с поддержкой dry_run/SafeOps (windows_process_action)
+    - Глубокий отчёт о ПО и найденных артефактах выполнения в профилях (windows_programs_history_report)
+    - Быстрый аудит установленных программ из реестра Windows (windows_programs_history_audit)
+    - Чтение ключей, параметров и встроенных закладок реестра (windows_registry_read)
+    - Поиск ключей и параметров в реестре Windows по шаблону (windows_registry_search)
+    - Редактирование, создание и удаление ключей/параметров реестра (windows_registry_action)
+    - Аудит BitLocker, UAC уровня и списков доступа ACL файлов/папок (windows_security_acl_audit)
+    - Настройка и изменение прав доступа ACL к файлам и папкам SafeOps (windows_security_acl_action)
+    - Инспекция, поиск и аудит системных служб Windows из SQLite и SCM (windows_services_list)
+    - Управление состоянием служб Windows SafeOps (windows_services_action)
+    - Аудит целостности системного хранилища WinSxS, компонентов DISM и проверок SFC (windows_servicing_integrity_audit)
+    - Восстановление и очистка компонентов DISM/SFC по протоколу SafeOps (windows_servicing_integrity_action)
+    - Список установленного ПО, поиск пакетов WinGet и проверка обновлений (windows_software_list)
+    - Установка, обновление и удаление пакетов ПО через WinGet SafeOps (windows_software_action)
+    - Аудит автозагрузки Windows (реестр Run, папки автозапуска, планировщик) (windows_startup_audit)
+    - Управление состоянием элементов автозапуска SafeOps (windows_startup_action)
+    - Инспекция и аудит дисковых накопителей и томов Windows (windows_storage_audit)
+    - Выполнение административных операций над хранилищем SafeOps (windows_storage_action)
+    - Аудит пользователей Windows, профилей, прав доступа и политики аудита (windows_sysadmin_audit)
+    - Административные действия над пользователями и политиками безопасности SafeOps (windows_sysadmin_action)
+    - Инспекция готовности контрольных точек и трех механизмов восстановления Windows (windows_checkpoints_audit)
+    - Создание и управление контрольными точками восстановления SafeOps (windows_checkpoints_action)
+    - Сводный аудит и телеметрия единого центра управления Windows (windows_system_control_audit)
+    - Системные действия и оптимизации в центре управления SafeOps (windows_system_control_action)
+    - Инспекция и аудит задач планировщика Windows Task Scheduler (windows_task_scheduler_audit)
+    - Управление состоянием и запуск заданий планировщика SafeOps (windows_task_scheduler_action)
+    - Инспекция панели задач, окон и закрепленных программ Windows (windows_taskbar_audit)
+    - Выполнение команд управления панелью задач SafeOps (windows_taskbar_action)
+    - Аудит и поиск по 295 параметрам подсистемы управления окнами Windows (windows_control_plane_audit)
+    - Изменение параметров управления окнами, прилипанием и фокусировкой SafeOps (windows_control_plane_action)
     - Поиск документации и регламентов (rag_search, web_search)
     """
 
@@ -95,12 +229,81 @@ class WindowsControllerAgent:
             windows_manage_sys_param,
             windows_safe_probe,
             windows_execute_powershell,
+            windows_manage_optional_feature,
+            windows_manage_accounts_identity,
+            windows_identity_explain,
+            windows_identity_explain_pid,
+            windows_identity_audit_security,
+            windows_identity_manage_account,
+            windows_identity_audit_events,
+            windows_identity_graph_build,
+            windows_backup_health_check,
+            windows_backup_file_history,
+            windows_backup_vss_snapshots,
+            windows_backup_user_folders,
+            windows_backup_version_control,
+            windows_boot_recovery_audit,
+            windows_boot_recovery_action,
+            windows_defender_status_scan,
+            windows_defender_audit_security,
+            windows_defender_ai_diagnostics,
+            windows_event_log_query,
+            windows_event_log_intelligence,
+            windows_event_log_action,
+            windows_firewall_audit,
+            windows_firewall_rule_action,
+            windows_focus_status_profiles,
+            windows_focus_session_action,
+            windows_focus_notifications,
+            windows_hardware_monitor,
+            windows_hardware_inventory,
+            windows_hardware_benchmark,
+            windows_network_scan_lan,
+            windows_network_usage_stats,
+            windows_network_speedtest,
+            windows_performance_tracing_audit,
+            windows_performance_collector_action,
+            windows_personalization_overview,
+            windows_personalization_theme_action,
+            windows_personalization_cursor_wallpaper,
+            windows_process_list,
+            windows_process_action,
+            windows_programs_history_report,
+            windows_programs_history_audit,
+            windows_registry_read,
+            windows_registry_search,
+            windows_registry_action,
+            windows_security_acl_audit,
+            windows_security_acl_action,
+            windows_services_list,
+            windows_services_action,
+            windows_servicing_integrity_audit,
+            windows_servicing_integrity_action,
+            windows_software_list,
+            windows_software_action,
+            windows_startup_audit,
+            windows_startup_action,
+            windows_storage_audit,
+            windows_storage_action,
+            windows_sysadmin_audit,
+            windows_sysadmin_action,
+            windows_checkpoints_audit,
+            windows_checkpoints_action,
+            windows_system_control_audit,
+            windows_system_control_action,
+            windows_task_scheduler_audit,
+            windows_task_scheduler_action,
+            windows_taskbar_audit,
+            windows_taskbar_action,
+            windows_control_plane_audit,
+            windows_control_plane_action,
             rag_search,
             web_search,
             python_eval,
             file_read,
         ]
         logger.info(f'[WindowsControllerAgent] Инициализирован: llm={self.llm_type}, max_steps={self.max_steps}, timeout={self.timeout}')
+
 
     def _get_llm(self) -> Any:
         """Ленивая инициализация LLM-модели."""

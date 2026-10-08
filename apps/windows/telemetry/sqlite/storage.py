@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 04:11:00
+# Updated: 2026-10-08 13:31:00
 # =============================================================================
 
 from __future__ import annotations
@@ -174,6 +174,15 @@ class TelemetryStorage:
 
     def _get_connection(self) -> sqlite3.Connection:
         """Создает и настраивает соединение с базой данных SQLite."""
+        return self._cm.get_connection()
+
+    def get_connection(self) -> sqlite3.Connection:
+        """Возвращает активное подключение к SQLite базе данных."""
+        return self._cm.get_connection()
+
+    @property
+    def connection(self) -> sqlite3.Connection:
+        """Свойство прямого доступа к подключению SQLite."""
         return self._cm.get_connection()
 
     @property
@@ -576,6 +585,14 @@ class TelemetryStorage:
 
     def get_telemetry_spikes(self, sensor_id: Optional[str] = None, start_epoch: Optional[float] = None, limit: int = 100) -> List[Dict[str, Any]]:
         return self._reader.get_telemetry_spikes(sensor_id=sensor_id, start_epoch=start_epoch, limit=limit)
+
+    def get_telemetry_time_ranges(self) -> Dict[str, Any]:
+        """Возвращает временные диапазоны и доступные интервалы из БД телеметрии."""
+        return self._reader.get_telemetry_time_ranges()
+
+    def get_history_by_interval(self, interval: str = 'seconds', metric: str = 'all', limit: int = 120) -> List[Dict[str, Any]]:
+        """Возвращает исторические срезы снимков под указанный интервал."""
+        return self._reader.get_history_by_interval(interval=interval, metric=metric, limit=limit)
 
     # -------------------------------------------------------------------------
     # Делегирование методов хранилища накопителей (Storage Subsystem)
@@ -1094,6 +1111,28 @@ class TelemetryStorage:
     def get_power_summary(self) -> Dict[str, Any]:
         """Получить сводную статистику по сессиям и событиям питания."""
         return self._reader.get_power_summary()
+
+    def get_process_pid_snapshot(self, pid: int) -> Optional[Dict[str, Any]]:
+        """Получить последний снимок метрик процесса по PID (< 5 мс)."""
+        return self._reader.get_process_pid_snapshot(pid=pid)
+
+    def get_process_file_events(
+        self,
+        pid: Optional[int] = None,
+        directory: Optional[str] = None,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Получить события файловой активности процесса."""
+        return self._reader.get_process_file_events(pid=pid, directory=directory, limit=limit)
+
+    def insert_process_pid_snapshots(self, snapshots: List[Union[Dict[str, Any], Any]]) -> int:
+        """Сохранить снимки метрик процессов по PID."""
+        return self._writer.insert_process_pid_snapshots(snapshots=snapshots)
+
+    def insert_process_file_events(self, events: List[Union[Dict[str, Any], Any]]) -> int:
+        """Сохранить события файловой активности."""
+        return self._writer.insert_process_file_events(events=events)
+
 
 
 

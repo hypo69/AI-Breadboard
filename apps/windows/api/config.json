@@ -2,7 +2,7 @@
   "server": {
     "host": "127.0.0.1",
     "port": 8001,
-    "title": "AI-Breadboard Windows Internal API",
+    "title": "Test Computer/Windows API",
     "description": "Сервис TC/Windows: телеметрия, дашборды, диагностика."
   },
   "routers": [
@@ -266,6 +266,24 @@
         "factory": "init_router",
         "enabled": true,
         "description": "Каталог атомарных возможностей Windows CLI и API (/api/v1/capabilities/*)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_process_activity",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Отслеживание активности процессов (/api/v1/telemetry/instances/*)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_telemetry",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Телеметрия процессов и системы (/api/v1/telemetry/*)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_keys",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Управление API ключами и квоты Gemini (/api/keys/*)"
     }
   ]
 }

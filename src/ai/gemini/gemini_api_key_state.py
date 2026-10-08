@@ -85,18 +85,17 @@ def _load_keys_file() -> Dict[str, Dict[str, Any]]:
     """
     if _KEYS_FILE.exists():
         try:
-            content = _KEYS_FILE.read_text(encoding='utf-8').strip()
-            if content:
-                data = json.loads(content)
-                if isinstance(data, dict):
-                    normalized: Dict[str, Dict[str, Any]] = {}
-                    for k, v in data.items():
-                        if isinstance(v, dict):
-                            val = v.get('value') or v.get('api_key') or ''
-                            normalized[k] = {'value': str(val), 'last_run': str(v.get('last_run') or ''), 'status': str(v.get('status') or 'active'), 'exhausted_at': str(v.get('exhausted_at') or '')}
-                        elif isinstance(v, str):
-                            normalized[k] = {'value': v, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
-                    return normalized
+            from src.utils.jjson import j_loads
+            data = j_loads(_KEYS_FILE)
+            if data and isinstance(data, dict):
+                normalized: Dict[str, Dict[str, Any]] = {}
+                for k, v in data.items():
+                    if isinstance(v, dict):
+                        val = v.get('value') or v.get('api_key') or ''
+                        normalized[k] = {'value': str(val), 'last_run': str(v.get('last_run') or ''), 'status': str(v.get('status') or 'active'), 'exhausted_at': str(v.get('exhausted_at') or '')}
+                    elif isinstance(v, str):
+                        normalized[k] = {'value': v, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
+                return normalized
         except Exception as ex:
             logger.warning(f'Error reading {_KEYS_FILE}: {ex}')
     bootstrapped = _bootstrap_from_env()
@@ -151,9 +150,10 @@ def _save_keys_file(data: Dict[str, Dict[str, Any]]) -> bool:
         bool: True on success, False on failure.
     """
     try:
+        from src.utils.jjson import j_dumps
         _ensure_secrets_dir()
         _KEYS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        _KEYS_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
+        j_dumps(data, file_path=_KEYS_FILE, ensure_ascii=False)
         return True
     except Exception as ex:
         logger.error(f'Failed to save keys to {_KEYS_FILE}: {ex}')
@@ -248,6 +248,7 @@ def mark_exhausted(key_name: str) -> None:
     """
     if not key_name:
         return
+    now_str = _now_iso()
     keys_data = _load_keys_file()
     target_name = key_name
     if target_name not in keys_data:
@@ -256,8 +257,7 @@ def mark_exhausted(key_name: str) -> None:
                 target_name = name
                 break
     if target_name not in keys_data:
-        keys_data[target_name] = {'value': key_name, 'last_run': '', 'status': 'exhausted'}
-    now_str = _now_iso()
+        keys_data[target_name] = {'value': key_name, 'last_run': '', 'status': 'exhausted', 'exhausted_at': now_str}
     keys_data[target_name]['status'] = 'exhausted'
     keys_data[target_name]['exhausted_at'] = now_str
     _save_keys_file(keys_data)

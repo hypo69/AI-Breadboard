@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:50:00
+# Updated: 2026-10-08 12:06:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1382,7 +1382,140 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
         );
     ''')
 
+    # 70. Паспорт программы (process_definition)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS process_definition (
+            definition_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            executable_path TEXT NOT NULL UNIQUE,
+            sha256 TEXT,
+            company_name TEXT,
+            file_description TEXT,
+            icon_base64 TEXT,
+            first_seen TEXT NOT NULL,
+            last_seen TEXT NOT NULL
+        );
+    ''')
+
+    # 71. Единичный инстанс процесса (process_instance - Process Intelligence & PID Recycling Resolution)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS process_instance (
+            instance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            definition_id INTEGER NOT NULL,
+            pid INTEGER NOT NULL,
+            parent_instance_id INTEGER,
+            name TEXT NOT NULL,
+            executable_path TEXT NOT NULL,
+            command_line TEXT,
+            start_time TEXT NOT NULL,
+            exit_time TEXT,
+            exit_code INTEGER,
+            session_id INTEGER DEFAULT 1,
+            user_name TEXT,
+            integrity_level TEXT,
+            status TEXT NOT NULL DEFAULT 'RUNNING',
+            UNIQUE (pid, start_time),
+            FOREIGN KEY (parent_instance_id) REFERENCES process_instance(instance_id),
+            FOREIGN KEY (definition_id) REFERENCES process_definition(definition_id)
+        );
+    ''')
+
+    # 72. Срезы телеметрии во времени (process_sample)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS process_sample (
+            sample_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            instance_id INTEGER NOT NULL,
+            timestamp TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            cpu_percent REAL DEFAULT 0.0,
+            cpu_user_time REAL DEFAULT 0.0,
+            cpu_kernel_time REAL DEFAULT 0.0,
+            thread_count INTEGER DEFAULT 1,
+            working_set_mb REAL DEFAULT 0.0,
+            private_bytes_mb REAL DEFAULT 0.0,
+            page_faults_sec REAL DEFAULT 0.0,
+            gpu_load_percent REAL DEFAULT 0.0,
+            gpu_vram_mb REAL DEFAULT 0.0,
+            disk_read_bytes_sec REAL DEFAULT 0.0,
+            disk_write_bytes_sec REAL DEFAULT 0.0,
+            disk_iops REAL DEFAULT 0.0,
+            handle_count INTEGER DEFAULT 0,
+            gdi_objects INTEGER DEFAULT 0,
+            user_objects INTEGER DEFAULT 0,
+            sockets_count INTEGER DEFAULT 0,
+            sockets_json TEXT,
+            FOREIGN KEY (instance_id) REFERENCES process_instance(instance_id) ON DELETE CASCADE
+        );
+    ''')
+
+    # 73. Лента файловых операций процесса (process_file_events)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS process_file_events (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pid INTEGER NOT NULL DEFAULT 0,
+            process_name TEXT NOT NULL DEFAULT '',
+            action_type TEXT NOT NULL DEFAULT '', -- 'CREATE', 'MODIFY', 'DELETE', 'RENAME'
+            target_directory TEXT NOT NULL DEFAULT '',
+            file_path TEXT NOT NULL,
+            bytes_affected INTEGER DEFAULT 0,
+            instance_id INTEGER,
+            timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+            created_at REAL DEFAULT 0.0,
+            FOREIGN KEY (instance_id) REFERENCES process_instance(instance_id) ON DELETE CASCADE
+        );
+    ''')
+
+    # 74. Единая таблица снимков ресурсов и активности процессов по PID (Per-PID Telemetry Engine)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS process_pid_snapshots (
+            snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pid INTEGER NOT NULL,
+            process_name TEXT NOT NULL,
+            executable_path TEXT,
+            
+            -- Процессор (CPU)
+            cpu_percent REAL NOT NULL DEFAULT 0.0,
+            user_time_ms INTEGER NOT NULL DEFAULT 0,
+            kernel_time_ms INTEGER NOT NULL DEFAULT 0,
+            thread_count INTEGER NOT NULL DEFAULT 1,
+            
+            -- Память (RAM)
+            working_set_bytes INTEGER NOT NULL DEFAULT 0,
+            private_bytes INTEGER NOT NULL DEFAULT 0,
+            page_faults_count INTEGER DEFAULT 0,
+            
+            -- Графика (GPU)
+            gpu_vram_bytes INTEGER DEFAULT 0,
+            gpu_utilization REAL DEFAULT 0.0,
+            
+            -- Дисковый I/O
+            read_bytes_total INTEGER DEFAULT 0,
+            write_bytes_total INTEGER DEFAULT 0,
+            read_ops_total INTEGER DEFAULT 0,
+            write_ops_total INTEGER DEFAULT 0,
+            
+            -- Сетевой трафик
+            net_bytes_sent_total INTEGER DEFAULT 0,
+            net_bytes_recv_total INTEGER DEFAULT 0,
+            
+            -- Системные дескрипторы и GUI-ресурсы
+            handle_count INTEGER DEFAULT 0,
+            gdi_objects INTEGER DEFAULT 0,
+            user_objects INTEGER DEFAULT 0,
+            
+            timestamp TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    ''')
+
     # Индексы для ускорения выборок
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_def_path ON process_definition(executable_path);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_inst_pid_start ON process_instance(pid, start_time);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_inst_status ON process_instance(status);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_inst_parent ON process_instance(parent_instance_id);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_inst_name ON process_instance(name);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_sample_inst_time ON process_sample(instance_id, created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_sample_time ON process_sample(created_at);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_fe_inst_time ON process_file_events(instance_id, created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_snapshots_created_at ON system_snapshots(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_archives_created_at ON startup_audit_archives(created_at);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_startup_archives_archive_id ON startup_audit_archives(archive_id);')
@@ -1505,6 +1638,13 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_power_sessions_initiator ON power_sessions(initiator);')
 
     _run_migrations(cursor)
+
+    # Индексы для Per-PID Telemetry Engine и отслеживания файлов
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_pid_time ON process_pid_snapshots(pid, timestamp);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_name_time ON process_pid_snapshots(process_name, timestamp);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_file_events_pid ON process_file_events(pid);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_file_events_dir ON process_file_events(target_directory, timestamp);')
+
     conn.commit()
 
 
@@ -1600,3 +1740,40 @@ def _run_migrations(cursor: sqlite3.Cursor) -> None:
                 cursor.execute(f"ALTER TABLE process_snapshots ADD COLUMN {col_name} {col_def}")
     except Exception as exc:
         logger.warning(f'Миграция process_snapshots: {exc}')
+
+    # Миграция: process_file_events
+    try:
+        cursor.execute("PRAGMA table_info(process_file_events)")
+        fe_cols = {row[1] for row in cursor.fetchall()}
+        if fe_cols:
+            # Безопасное переименование устаревших имен колонок при их наличии
+            legacy_renames = [
+                ('id', 'event_id'),
+                ('action', 'action_type'),
+                ('target_folder', 'target_directory'),
+                ('bytes_count', 'bytes_affected'),
+            ]
+            for old_col, new_col in legacy_renames:
+                if old_col in fe_cols and new_col not in fe_cols:
+                    cursor.execute(f"ALTER TABLE process_file_events RENAME COLUMN {old_col} TO {new_col}")
+                    fe_cols.remove(old_col)
+                    fe_cols.add(new_col)
+
+            target_fe_columns = {
+                'pid': "INTEGER NOT NULL DEFAULT 0",
+                'process_name': "TEXT NOT NULL DEFAULT ''",
+                'action_type': "TEXT NOT NULL DEFAULT ''",
+                'target_directory': "TEXT NOT NULL DEFAULT ''",
+                'file_path': "TEXT NOT NULL DEFAULT ''",
+                'bytes_affected': "INTEGER DEFAULT 0",
+                'instance_id': "INTEGER",
+                'timestamp': "TEXT NOT NULL DEFAULT (datetime('now'))",
+                'created_at': "REAL DEFAULT 0.0",
+            }
+            for col_name, col_def in target_fe_columns.items():
+                if col_name not in fe_cols:
+                    cursor.execute(f"ALTER TABLE process_file_events ADD COLUMN {col_name} {col_def}")
+    except Exception as exc:
+        logger.warning(f'Миграция process_file_events: {exc}')
+
+

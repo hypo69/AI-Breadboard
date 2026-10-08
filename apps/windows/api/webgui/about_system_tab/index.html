@@ -17,7 +17,7 @@ Usage Examples:
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 03:08:00
+ * Updated: 2026-10-08 12:52:00
  * =============================================================================
 -->
 
@@ -252,7 +252,7 @@ Usage Examples:
           </div>
 
           <!-- Collapsible System Instruction Inspector -->
-          <div class="mt-2" id="about-ai-instruction-section" style="display: none;">
+          <div class="mt-2" id="about-ai-instruction-section">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
               <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-instruction" style="font-size: 0.74rem;">
                 <i class="bi bi-shield-lock-fill text-info"></i>
@@ -265,34 +265,34 @@ Usage Examples:
               </button>
             </div>
             <div id="about-ai-instruction-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
-              <pre class="m-0 p-1.5 text-info font-monospace" id="about-ai-instruction-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+              <pre class="m-0 p-1.5 text-info font-monospace" id="about-ai-instruction-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">Ожидание запуска...</pre>
             </div>
           </div>
 
           <!-- Collapsible Sent Prompt Inspector -->
-          <div class="mt-2" id="about-ai-prompt-section" style="display: none;">
+          <div class="mt-2" id="about-ai-prompt-section">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
               <button class="btn btn-sm btn-link p-0 text-warning text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-prompt" style="font-size: 0.74rem;">
                 <i class="bi bi-terminal-fill text-warning"></i>
-                <span><strong>Сформированный промпт модели</strong></span>
+                <span><strong>Сформированный мизерный JSON-промпт модели</strong></span>
                 <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-prompt"></i>
               </button>
               <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-prompt" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
                 <i class="bi bi-clipboard"></i>
-                <span id="txt-about-ai-copy-prompt">Копировать</span>
+                <span id="txt-about-ai-copy-prompt">Копировать JSON</span>
               </button>
             </div>
             <div id="about-ai-prompt-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-warning border-opacity-30 rounded">
-              <pre class="m-0 p-1.5 text-warning font-monospace" id="about-ai-prompt-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+              <pre class="m-0 p-1.5 text-warning font-monospace" id="about-ai-prompt-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">Ожидание запуска...</pre>
             </div>
           </div>
 
           <!-- Collapsible Raw Response / Diagnostic Data Inspector -->
-          <div class="mt-2" id="about-ai-raw-section" style="display: none;">
+          <div class="mt-2" id="about-ai-raw-section">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
               <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-raw" style="font-size: 0.74rem;">
                 <i class="bi bi-code-slash text-info"></i>
-                <span><strong>Сырой ответ модели / Данные</strong></span>
+                <span><strong>Сырой ответ модели</strong></span>
                 <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-raw"></i>
               </button>
               <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-raw" style="font-size: 0.68rem;" title="Скопировать ответ">
@@ -301,7 +301,7 @@ Usage Examples:
               </button>
             </div>
             <div id="about-ai-raw-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
-              <pre class="m-0 p-1.5 text-light font-monospace" id="about-ai-raw-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+              <pre class="m-0 p-1.5 text-light font-monospace" id="about-ai-raw-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">Ожидание ответа модели...</pre>
             </div>
           </div>
         </div>
@@ -467,21 +467,9 @@ Usage Examples:
             <i class="bi bi-windows text-info"></i>
             <span>Платформа & ОС</span>
           </div>
-          <div class="d-flex align-items-center gap-1">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_os" title="Частота опроса: Платформа & ОС">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
-            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="os" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История ОС / Host из базы данных">
-              <i class="bi bi-clock-history"></i>
-            </button>
-          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="os" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История ОС / Host из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="ui-kpi-value text-info text-truncate mt-1" id="about-kpi-os-title">Windows 11 (AMD64)</div>
         <div class="ui-kpi-sub text-truncate d-flex align-items-center justify-content-between" id="about-host-view-box">
@@ -544,21 +532,9 @@ Usage Examples:
             <i class="bi bi-shield-check text-success"></i>
             <span>Безопасность системы</span>
           </div>
-          <div class="d-flex align-items-center gap-1">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_sec" title="Частота опроса: Безопасность">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
-            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="security" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История безопасности из базы данных">
-              <i class="bi bi-clock-history"></i>
-            </button>
-          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="security" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История безопасности из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-success text-truncate mt-1" id="about-kpi-sec-title">Active & Protected</div>
         <div class="ui-kpi-sub text-truncate" id="about-kpi-sec-sub">Firewall: ON | UAC: ON</div>
@@ -573,21 +549,9 @@ Usage Examples:
             <i class="bi bi-shield-lock text-warning"></i>
             <span>Точки восстановления</span>
           </div>
-          <div class="d-flex align-items-center gap-1">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_prot" title="Частота опроса: Точки восстановления">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
-            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="restore_points" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История точек восстановления из базы данных">
-              <i class="bi bi-clock-history"></i>
-            </button>
-          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="restore_points" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История точек восстановления из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="ui-kpi-value text-warning text-truncate mt-1" id="about-kpi-prot-title">3 Checkpoints</div>
         <div class="ui-kpi-sub text-truncate" id="about-kpi-prot-sub">Protection: Active</div>
@@ -602,21 +566,9 @@ Usage Examples:
             <i class="bi bi-hdd-fill text-primary"></i>
             <span>Системный накопитель (C:)</span>
           </div>
-          <div class="d-flex align-items-center gap-1">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_stor" title="Частота опроса: Системный накопитель C:">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
-            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="storage" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История накопителя C: из базы данных">
-              <i class="bi bi-clock-history"></i>
-            </button>
-          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="storage" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История накопителя C: из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="ui-kpi-value text-white text-truncate mt-1" id="about-kpi-stor-title">1014.8 GB Free</div>
         <div class="ui-kpi-sub text-info text-truncate" id="about-kpi-stor-clean">Cleanable: ~190 MB</div>
@@ -636,18 +588,6 @@ Usage Examples:
             <i class="bi bi-cpu-fill text-info"></i>
             <span class="text-white">Конфигурация оборудования и ОС</span>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_hw_specs" title="Частота опроса: Оборудование и ОС">
-              <option value="start" selected>Только при старте</option>
-              <option value="manual">По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
-          </div>
         </div>
         <table class="ui-spec-table">
           <tbody>
@@ -661,7 +601,7 @@ Usage Examples:
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-display me-1.5 text-primary"></i>Мониторы и дисплеи</td>
-              <td class="about-sys-spec-val text-truncate" id="about-spec-monitors">1920x1080 @ 60Hz</td>
+              <td class="about-sys-spec-val" id="about-spec-monitors">Опрос мониторов...</td>
             </tr>
             <tr>
               <td class="about-sys-spec-key"><i class="bi bi-battery-charging me-1.5 text-warning"></i>Питание и Энергия</td>
@@ -702,16 +642,6 @@ Usage Examples:
             <button class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-0.5" id="btn-open-regional-settings" data-bs-toggle="modal" data-bs-target="#aboutRegionalSettingsModal" title="Настроить часовой пояс, язык, локаль и пользователя" style="font-size: 0.75rem;">
               <i class="bi bi-gear-fill me-1"></i>Настроить
             </button>
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_user_env" title="Частота опроса: Окружение пользователя">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
             <span class="small text-muted font-monospace" id="about-ident-time-badge">Локальное время: --:--:--</span>
           </div>
         </div>
@@ -802,16 +732,6 @@ Usage Examples:
             <span class="text-white">Storage Volumes & Partitions</span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_disks" title="Частота опроса: Разделы накопителей">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
             <span class="badge bg-secondary" id="about-disks-count">-- Drives</span>
           </div>
         </div>
@@ -870,16 +790,6 @@ Usage Examples:
             <span class="text-white">Здоровье накопителей SSD/NVMe и износ (Wear & SMART)</span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_wear" title="Частота опроса: Износ накопителей">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
             <span class="badge bg-secondary" id="diag-wear-disks-count">0 дисков</span>
           </div>
         </div>
@@ -915,16 +825,6 @@ Usage Examples:
             <span class="text-white">Деградация и состояние батареи (Battery Degradation)</span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_battery" title="Частота опроса: Состояние батареи">
-              <option value="start">Только при старте</option>
-              <option value="manual" selected>По запросу</option>
-              <option value="3">Каждые 3 сек</option>
-              <option value="5">Каждые 5 сек</option>
-              <option value="10">Каждые 10 сек</option>
-              <option value="30">Каждые 30 сек</option>
-              <option value="60">Каждые 60 сек</option>
-              <option value="120">Каждые 120 сек</option>
-            </select>
             <span class="badge bg-dark border border-secondary text-info" id="diag-battery-source-badge">AC Mains</span>
           </div>
         </div>
@@ -949,16 +849,6 @@ Usage Examples:
         <span class="badge bg-secondary" id="about-sys-node-count">Hardware Tree</span>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_hw_tree" title="Частота опроса: Дерево оборудования">
-          <option value="start" selected>Только при старте</option>
-          <option value="manual">По запросу</option>
-          <option value="3">Каждые 3 сек</option>
-          <option value="5">Каждые 5 сек</option>
-          <option value="10">Каждые 10 сек</option>
-          <option value="30">Каждые 30 сек</option>
-          <option value="60">Каждые 60 сек</option>
-          <option value="120">Каждые 120 сек</option>
-        </select>
         <input type="text" class="form-control form-control-sm" id="about-sys-search"
                placeholder="Поиск компонентов..." style="max-width: 220px; font-size: 0.76rem; height: 26px;">
       </div>

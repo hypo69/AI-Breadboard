@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 08:42:00
+# Updated: 2026-10-08 12:54:00
 # =============================================================================
 
 from __future__ import annotations
@@ -619,7 +619,7 @@ class SystemCollector:
             return f'spawned_by_{clean_parent}'
         return 'unknown'
 
-    def get_top_processes(self, limit: int = 25, sort_by: str = 'cpu') -> List[ProcessMetrics]:
+    def get_top_processes(self, limit: Any = 25, sort_by: str = 'cpu') -> List[ProcessMetrics]:
         """Retrieve active processes sorted by resource consumption, with token and provenance info.
 
         Args:
@@ -628,6 +628,7 @@ class SystemCollector:
         Returns:
             List[ProcessMetrics]: Ranked process metrics, including provenance, integrity_level and elevation.
         """
+        limit_val = limit.default if hasattr(limit, "default") else (int(limit) if isinstance(limit, (int, float, str)) and str(limit).isdigit() else 25)
         # Collect token information for all processes
         token_collector = ProcessTokenCollector()
         token_info_map = {info.pid: info for info in token_collector.collect()}
@@ -645,7 +646,7 @@ class SystemCollector:
         if PSUTIL_AVAILABLE:
             handle_attr = 'num_handles' if os.name == 'nt' else 'num_fds'
             proc_dict: Dict[int, Dict[str, Any]] = {}
-            for p in psutil.process_iter(attrs=['pid', 'ppid', 'name', 'status', 'cpu_percent', 'memory_info', 'memory_percent', 'num_threads', 'username', 'create_time', 'exe', 'cmdline', handle_attr]):
+            for p in psutil.process_iter(attrs=['pid', 'ppid', 'name', 'status', 'cpu_percent', 'memory_info', 'memory_percent', 'num_threads', 'username', 'create_time', 'exe', 'cmdline', 'cpu_times', 'io_counters', handle_attr]):
                 try:
                     proc_dict[p.info['pid']] = p.info
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -664,7 +665,21 @@ class SystemCollector:
                     exe_low = (info.get('exe') or '').lower()
 
                     mem_info = info.get('memory_info')
-                    rss_mb = round(mem_info.rss / (1024 * 1024), 1) if mem_info else 0.0
+                    rss_bytes = int(mem_info.rss) if mem_info and hasattr(mem_info, 'rss') else 0
+                    rss_mb = round(rss_bytes / (1024 * 1024), 1)
+                    private_bytes = int(getattr(mem_info, 'vms', 0) or getattr(mem_info, 'private', 0) or 0) if mem_info else 0
+                    page_faults = int(getattr(mem_info, 'num_page_faults', 0) or 0) if mem_info else 0
+
+                    cpu_times = info.get('cpu_times')
+                    user_time_ms = int(getattr(cpu_times, 'user', 0) * 1000) if cpu_times else 0
+                    kernel_time_ms = int(getattr(cpu_times, 'system', 0) * 1000) if cpu_times else 0
+
+                    io_cnt = info.get('io_counters')
+                    rb_total = int(getattr(io_cnt, 'read_bytes', 0) or 0) if io_cnt else 0
+                    wb_total = int(getattr(io_cnt, 'write_bytes', 0) or 0) if io_cnt else 0
+                    ro_total = int(getattr(io_cnt, 'read_count', 0) or 0) if io_cnt else 0
+                    wo_total = int(getattr(io_cnt, 'write_count', 0) or 0) if io_cnt else 0
+
                     cpu_p = round(info.get('cpu_percent') or 0.0, 1)
                     num_h = info.get(handle_attr) or 0
                     token = token_info_map.get(pid)
@@ -736,6 +751,15 @@ class SystemCollector:
                         is_app=is_app,
                         friendly_name=friendly,
                         window_title=first_title,
+                        user_time_ms=user_time_ms,
+                        kernel_time_ms=kernel_time_ms,
+                        working_set_bytes=rss_bytes,
+                        private_bytes=private_bytes,
+                        page_faults_count=page_faults,
+                        read_bytes_total=rb_total,
+                        write_bytes_total=wb_total,
+                        read_ops_total=ro_total,
+                        write_ops_total=wo_total,
                     ))
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
@@ -782,9 +806,9 @@ class SystemCollector:
         else:
             procs.sort(key=lambda x: x.cpu_percent, reverse=True)
 
-        if limit is None or limit <= 0:
+        if limit_val is None or limit_val <= 0:
             return procs
-        return procs[:limit]
+        return procs[:limit_val]
 
     def get_battery_metrics(self) -> BatteryMetrics:
         """Collect laptop or UPS battery charge level and AC power status.
@@ -1167,6 +1191,7 @@ class SystemCollector:
                     bits = 32
                     dm = DEVMODEW()
                     dm.dmSize = ctypes.sizeof(DEVMODEW)
+                    orient = 'вертикальная' if h > w else 'горизонтальная'
                     if user32.EnumDisplaySettingsW(dev, -1, ctypes.byref(dm)):
                         if dm.dmDisplayFrequency:
                             freq = dm.dmDisplayFrequency
@@ -1174,15 +1199,21 @@ class SystemCollector:
                             bits = dm.dmBitsPerPel
                         if dm.dmPelsWidth and dm.dmPelsHeight:
                             w, h = (dm.dmPelsWidth, dm.dmPelsHeight)
+                        if hasattr(dm, 'dmOrientation') and dm.dmOrientation == 2:
+                            orient = 'вертикальная'
+                        elif hasattr(dm, 'dmOrientation') and dm.dmOrientation == 1:
+                            orient = 'горизонтальная'
+                    if h > w:
+                        orient = 'вертикальная'
                     ad_info = adapter_map.get(dev, {})
-                    monitors.append(MonitorInfo(device=dev, name=ad_info.get('mon_name', 'Display Monitor'), adapter=ad_info.get('adapter', ''), width=w, height=h, frequency_hz=freq, bits_per_pixel=bits, is_primary=is_prim))
+                    monitors.append(MonitorInfo(device=dev, name=ad_info.get('mon_name', 'Display Monitor'), adapter=ad_info.get('adapter', ''), width=w, height=h, frequency_hz=freq, bits_per_pixel=bits, is_primary=is_prim, orientation=orient))
                     return True
                 cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.wintypes.HMONITOR, ctypes.wintypes.HDC, ctypes.POINTER(ctypes.wintypes.RECT), ctypes.wintypes.LPARAM)
                 user32.EnumDisplayMonitors(None, None, cb_type(_enum_cb), 0)
             except Exception as ex:
                 logger.debug(f'Failed to query connected monitors: {ex}')
         if not monitors:
-            monitors.append(MonitorInfo(device='\\\\.\\DISPLAY1', name='Primary Monitor', adapter='Display Adapter', width=1920, height=1080, frequency_hz=60, bits_per_pixel=32, is_primary=True))
+            monitors.append(MonitorInfo(device='\\\\.\\DISPLAY1', name='Primary Monitor', adapter='Display Adapter', width=1920, height=1080, frequency_hz=60, bits_per_pixel=32, is_primary=True, orientation='горизонтальная'))
         self._monitors_cached = monitors
         return monitors
 
@@ -1407,15 +1438,58 @@ class SystemCollector:
         alerts = self.get_health_alerts()
         return SystemHardwareQuick(ram_sticks=ram_sticks, physical_disks=phys_disks, listening_ports=ports, alerts=alerts)
 
-    async def get_snapshot(self, process_limit: int=20) -> SystemSnapshot:
-        """Capture full point-in-time system telemetry snapshot without blocking event loop.
+    def get_snapshot_from_db(self, process_limit: Any = 20) -> Optional[SystemSnapshot]:
+        """Считывает последний зафиксированный снимок системы из базы данных SQLite (telemetry.db).
 
         Args:
-            process_limit: Number of top active processes to include.
+            process_limit: Ограничение количества верхних процессов.
 
         Returns:
-            SystemSnapshot: Consolidated system and hardware snapshot.
+            Optional[SystemSnapshot]: Объект снимка системы или None, если БД пуста.
         """
+        if not self.storage:
+            return None
+        try:
+            limit = process_limit.default if hasattr(process_limit, "default") else (int(process_limit) if isinstance(process_limit, (int, float, str)) and str(process_limit).isdigit() else 20)
+            snap_dict = self.storage.get_latest_snapshot_full()
+            if not snap_dict:
+                return None
+            snap_obj = SystemSnapshot.model_validate(snap_dict)
+            if not snap_obj.monitors:
+                try:
+                    snap_obj.monitors = self.get_monitors()
+                except Exception:
+                    pass
+            else:
+                for m in snap_obj.monitors:
+                    if not getattr(m, 'orientation', None):
+                        m.orientation = 'вертикальная' if (m.height or 0) > (m.width or 0) else 'горизонтальная'
+            if limit and snap_obj.top_processes and len(snap_obj.top_processes) > limit:
+                snap_obj.top_processes = snap_obj.top_processes[:limit]
+            return snap_obj
+        except Exception as ex:
+            logger.debug(f"[SystemCollector] Ошибка загрузки снимка из SQLite: {ex}")
+            return None
+
+    async def get_snapshot(self, process_limit: Any = 20, force_live: bool = False) -> SystemSnapshot:
+        """Capture point-in-time system telemetry snapshot.
+
+        По умолчанию считывает снимок напрямую из базы данных SQLite (telemetry.db),
+        что устраняет задержки, исключает скачки нагрузки на CPU/OS и гарантирует согласованность.
+        При отсутствии данных в БД или при force_live=True выполняет сбор вживую.
+
+        Args:
+            process_limit: Количество процессов для включения в снимок.
+            force_live: Принудительный сбор метрик напрямую из ОС.
+
+        Returns:
+            SystemSnapshot: Сводный снимок телеметрии системы.
+        """
+        limit = process_limit.default if hasattr(process_limit, "default") else (int(process_limit) if isinstance(process_limit, (int, float, str)) and str(process_limit).isdigit() else 20)
+        if not force_live:
+            db_snap = self.get_snapshot_from_db(process_limit=limit)
+            if db_snap is not None:
+                return db_snap
 
         def _collect_sync_telemetry() -> Dict[str, Any]:
             now = time.time()
@@ -1823,7 +1897,7 @@ class SystemCollector:
                 npu_props['Производительность (TOPS)'] = f'{npu.tops} TOPS'
             nodes.append(HardwareNode(category='Neural Processing Unit (NPU)', name=npu.name, properties=npu_props))
         for idx, mon in enumerate(self.get_monitors()):
-            nodes.append(HardwareNode(category='Monitors & Displays', name=f'{mon.name} ({mon.width}x{mon.height} @ {mon.frequency_hz}Hz)', properties={'Устройство': mon.device, 'Название дисплея': mon.name, 'Подключенный видеоадаптер': mon.adapter or 'Default Adapter', 'Разрешение экрана': f'{mon.width} x {mon.height}', 'Частота развертки': f'{mon.frequency_hz} Hz', 'Глубина цвета': f'{mon.bits_per_pixel}-bit', 'Основной монитор': 'Да (Основной)' if mon.is_primary else 'Нет (Вторичный)'}))
+            nodes.append(HardwareNode(category='Monitors & Displays', name=f'{mon.name} ({mon.width}x{mon.height} @ {mon.frequency_hz}Hz, {mon.orientation})', properties={'Устройство': mon.device, 'Название дисплея': mon.name, 'Ориентация': mon.orientation, 'Подключенный видеоадаптер': mon.adapter or 'Default Adapter', 'Разрешение экрана': f'{mon.width} x {mon.height}', 'Частота развертки': f'{mon.frequency_hz} Hz', 'Глубина цвета': f'{mon.bits_per_pixel}-bit', 'Основной монитор': 'Да (Основной)' if mon.is_primary else 'Нет (Вторичный)'}))
         if os.name == 'nt':
             try:
                 import win32com.client

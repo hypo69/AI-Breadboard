@@ -87,7 +87,7 @@ class GeminiChatBase(BaseChatProvider):
         """Initialize Google Gemini chat provider adapter.
 
         Args:
-            model_id (str): Model identifier (e.g. 'gemini-flash-latest').
+            model_id (str): Model identifier (e.g. 'gemini-3.5-flash-lite').
             system_prompt (str): System prompt / instruction.
             api_key_names (Optional[List[str]]): Specific API key names to use.
             model_name (str): Legacy alias for model_id.

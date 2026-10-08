@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-08 13:39:00
 =============================================================================
 .SYNOPSIS
     Запускает/останавливает внутренний FastAPI-сервис Windows TC (apps/windows/api)
@@ -30,8 +30,7 @@ param (
 
     [int]$Port = 8001,
 
-    [Alias('Host')]
-    [string]$Host_ = '127.0.0.1',
+    [string]$ListenHost = '127.0.0.1',
 
     [ValidateSet('critical','error','warning','info','debug')]
     [string]$LogLevel = 'info'
@@ -78,7 +77,7 @@ function Start-InternalService {
 
     # Освобождаем порт если занят
     $occupied = netstat -aon 2>$null |
-        Select-String ":${Port}\s" |
+        Select-String ":$Port\s" |
         ForEach-Object { ($_ -split '\s+')[-1] } |
         Where-Object { $_ -match '^\d+$' -and $_ -ne '0' } |
         Select-Object -Unique
@@ -91,27 +90,30 @@ function Start-InternalService {
         }
     }
 
-    Write-Host "  Запуск Windows Internal API на ${Host_}:${Port}..." -ForegroundColor Cyan
+    Write-Host "  Запуск Windows Internal API на ${ListenHost}:$Port..." -ForegroundColor Cyan
 
     $pyArgs = @(
         '-m', 'apps.windows.api',
-        '--host', $Host_,
+        '--host', $ListenHost,
         '--port', $Port,
         '--log-level', $LogLevel
     )
 
-    $proc = Start-Process -FilePath 'py' `
-        -ArgumentList $pyArgs `
-        -WorkingDirectory $projectRoot `
-        -PassThru `
-        -WindowStyle Hidden
+    $startParams = @{
+        FilePath         = 'py'
+        ArgumentList     = $pyArgs
+        WorkingDirectory = $projectRoot
+        PassThru         = $true
+        WindowStyle      = 'Hidden'
+    }
+    $proc = Start-Process @startParams
 
     if ($proc) {
         $proc.Id | Set-Content $pidFile -Encoding UTF8
         Write-Host "  [OK] Windows Internal API запущен (PID $($proc.Id))" -ForegroundColor Green
-        Write-Host "  [URL] http://${Host_}:${Port}/tc" -ForegroundColor White
-        Write-Host "  [URL] http://${Host_}:${Port}/health" -ForegroundColor White
-        Write-Host "  [URL] http://${Host_}:${Port}/docs" -ForegroundColor White
+        Write-Host "  [URL] http://${ListenHost}:$Port/tc" -ForegroundColor White
+        Write-Host "  [URL] http://${ListenHost}:$Port/health" -ForegroundColor White
+        Write-Host "  [URL] http://${ListenHost}:$Port/docs" -ForegroundColor White
     } else {
         Write-Host "  [ERROR] Не удалось запустить Windows Internal API" -ForegroundColor Red
     }
@@ -143,7 +145,7 @@ function Get-ServiceStatus {
         Write-Host "  [RUNNING] Windows Internal API активен (PID $servicePid, порт $Port)" -ForegroundColor Green
         # Пробуем health-check
         try {
-            $resp = Invoke-RestMethod "http://127.0.0.1:${Port}/health" -TimeoutSec 2 -ErrorAction Stop
+            $resp = Invoke-RestMethod "http://127.0.0.1:$Port/health" -TimeoutSec 2 -ErrorAction Stop
             Write-Host "  [HEALTH] status=$($resp.status), webgui=$($resp.webgui_exists)" -ForegroundColor Green
         } catch {
             Write-Host "  [HEALTH] Сервис запущен, но health-endpoint недоступен (ещё стартует?)" -ForegroundColor Yellow

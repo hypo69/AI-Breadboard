@@ -14,7 +14,7 @@
  * Package: src/api/webgui/windows_admin_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 11:38:46
+ * Updated: 2026-10-08 11:46:00
  * =============================================================================
  */
 
@@ -178,11 +178,11 @@
     ];
 
     const badges = [
-      { text: u.is_logged_in ? 'Online' : 'Offline', class: u.is_logged_in ? 'badge bg-success' : 'badge bg-secondary' }
+      { text: u.is_logged_in ? 'Online' : 'Offline', class: u.is_logged_in ? 'badge bg-success-subtle text-success border border-success-subtle' : 'badge bg-secondary-subtle text-secondary border border-secondary-subtle' }
     ];
-    if (u.is_admin) badges.push({ text: i18n.t('auto___36d00f'), class: 'badge bg-warning text-dark' });
-    if (u.is_hidden) badges.push({ text: i18n.t('auto___1bde0d'), class: 'badge bg-purple text-white' });
-    if (!u.enabled) badges.push({ text: i18n.t('auto___cadea0'), class: 'badge bg-danger' });
+    if (u.is_admin) badges.push({ text: i18n.t('auto___36d00f'), class: 'badge bg-warning-subtle text-warning border border-warning-subtle' });
+    if (u.is_hidden) badges.push({ text: i18n.t('auto___1bde0d'), class: 'badge bg-secondary-subtle text-secondary border border-secondary-subtle' });
+    if (!u.enabled) badges.push({ text: i18n.t('auto___cadea0'), class: 'badge bg-danger-subtle text-danger border border-danger-subtle' });
 
     window.AITableModal.show({
       icon: '👤i18n.t('auto__title_u_name_subtitle_u_full_name_u_full_name__f3dccb') | ' : ''}SID: ${u.sid}`,

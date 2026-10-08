@@ -118,7 +118,7 @@ def test_router_openai_chat_completions():
         mock_chat = AsyncMock()
         mock_chat.generate_content = AsyncMock(return_value='Universal assistant reply')
         mock_get_model.return_value = mock_chat
-        payload = {'model': 'gemini-flash-latest', 'messages': [{'role': 'system', 'content': 'You are helpful'}, {'role': 'user', 'content': 'Test prompt'}], 'temperature': 0.5, 'max_tokens': 100, 'stream': False}
+        payload = {'model': 'gemini-3.5-flash-lite', 'messages': [{'role': 'system', 'content': 'You are helpful'}, {'role': 'user', 'content': 'Test prompt'}], 'temperature': 0.5, 'max_tokens': 100, 'stream': False}
         response = client.post('/v1/chat/completions', json=payload)
         assert response.status_code == 200
         data = response.json()

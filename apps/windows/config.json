@@ -21,12 +21,12 @@
         "preload_silero": false,
         "realtime_streaming": true,
         "default_provider": "gemini",
-        "default_model": "gemini-3.5-flash-lite",
+        "default_model": "gemini-3.1-flash-lite",
         "providers": {
             "gemini": {
                 "enabled": true,
-                "model": "gemini-3.5-flash-lite",
                 "api_key_names": "*",
+                "default_model": "gemini-3.1-flash-lite",
                 "unsupported_models": [
                     "gemini-1.0-pro",
                     "gemini-1.0-ultra",
@@ -41,12 +41,12 @@
             },
             "gemini_cli": {
                 "enabled": true,
-                "model": "gemini-3.1-flash-lite",
+                "default_model": "gemini-3.1-flash-lite",
                 "unsupported_models": []
             },
             "agy": {
                 "enabled": true,
-                "model": "agy-gemini-3.6-flash",
+                "default_model": "agy-gemini-3.6-flash",
                 "effort": "medium",
                 "unsupported_models": [
                     "gemini-2.0-flash"
@@ -55,7 +55,7 @@
             "foundry": {
                 "enabled": false,
                 "base_url": "http://localhost:49618",
-                "model": "qwen2.5-1.5b",
+                "default_model": "qwen2.5-1.5b",
                 "unsupported_models": [
                     "antigravity-preview-05-2026",
                     "test-foundry-model-1"
@@ -64,19 +64,19 @@
             "ollama": {
                 "enabled": false,
                 "base_url": "http://localhost:11434",
-                "model": "llama3.1",
+                "default_model": "llama3.1",
                 "unsupported_models": [
                     "llama3.1"
                 ]
             },
             "hf": {
                 "enabled": false,
-                "model": "",
+                "default_model": "",
                 "unsupported_models": []
             },
             "onnx": {
                 "enabled": false,
-                "model": "",
+                "default_model": "",
                 "unsupported_models": []
             },
             "openai": {
@@ -88,7 +88,7 @@
     },
     "web_search": {
         "engine": "playwright",
-        "gemini_model": "gemini-flash-latest",
+        "gemini_model": "gemini-3.5-flash-lite",
         "gemini_cli_model": "gemini-3.1-flash-lite",
         "agy_model": "agy-flash",
         "fallback_on_rag_not_found": true

@@ -16,12 +16,13 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 10:48:10
 # =============================================================================
 
 """Mixin class for image operations in GoogleGenerativeAI."""
 
 import asyncio
+import json
 from io import IOBase
 from pathlib import Path
 from typing import Any
@@ -56,12 +57,26 @@ class GoogleGenerativeAIImagesMixin:
         img_bytes: bytes = get_image_bytes(image) if isinstance(image, Path) else image
         if not img_bytes:
             return False
+        effective_prompt = prompt or 'Опиши это изображение.'
+        if hasattr(self, '_log_request_details'):
+            self._log_request_details(method='describe_image', model=self.model_name, q=effective_prompt, generation_config={'mime_type': mime_type})
         for attempt in range(attempts):
             try:
-                response = self._client.models.generate_content(model=self.model_name, contents=[types.Part.from_bytes(data=img_bytes, mime_type=mime_type), types.Part.from_text(text=prompt or 'Опиши это изображение.')])
+                response = self._client.models.generate_content(model=self.model_name, contents=[types.Part.from_bytes(data=img_bytes, mime_type=mime_type), types.Part.from_text(text=effective_prompt)])
                 if response and response.text:
+                    if hasattr(self, '_log_response_details'):
+                        self._log_response_details(method='describe_image', model=self.model_name, response_text=response.text, attempt=attempt + 1)
                     return response.text
-                logger.debug(f'GoogleGenerativeAI: Empty ответ describe_image (попытка {attempt + 1})')
+                err_empty = {
+                    'error': {
+                        'code': 204,
+                        'status': 'EMPTY_RESPONSE',
+                        'message': f'Empty response describe_image on attempt {attempt + 1}',
+                        'model': self.model_name,
+                        'attempt': attempt + 1,
+                    }
+                }
+                logger.warning(f'GoogleGenerativeAIImagesMixin: Empty response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, self.model_name, attempt, attempts)
@@ -84,12 +99,14 @@ class GoogleGenerativeAIImagesMixin:
             >>> ai = GoogleGenerativeAI()
             >>> success = await ai.upload_file(Path("data.pdf"), file_name="data.pdf")
         """
+        if hasattr(self, '_log_request_details'):
+            self._log_request_details(method='upload_file', model=self.model_name, q=f'Upload file: {file_name or str(file)}')
         for attempt in range(attempts):
             try:
                 upload_kwargs = {'config': types.UploadFileConfig(display_name=file_name)} if file_name else {}
                 response = self._client.files.upload(path=file, **upload_kwargs)
                 if response:
-                    logger.debug(f'GoogleGenerativeAI: Файл {file_name} successfully загружен')
+                    logger.info(f'GoogleGenerativeAI: Файл {file_name or str(file)} успешно загружен: {response.name if hasattr(response, "name") else response}')
                     return True
                 return False
             except Exception as ex:

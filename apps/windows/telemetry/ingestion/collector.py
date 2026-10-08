@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 08:42:00
+# Updated: 2026-10-08 12:54:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1167,6 +1167,7 @@ class SystemCollector:
                     bits = 32
                     dm = DEVMODEW()
                     dm.dmSize = ctypes.sizeof(DEVMODEW)
+                    orient = 'вертикальная' if h > w else 'горизонтальная'
                     if user32.EnumDisplaySettingsW(dev, -1, ctypes.byref(dm)):
                         if dm.dmDisplayFrequency:
                             freq = dm.dmDisplayFrequency
@@ -1174,15 +1175,21 @@ class SystemCollector:
                             bits = dm.dmBitsPerPel
                         if dm.dmPelsWidth and dm.dmPelsHeight:
                             w, h = (dm.dmPelsWidth, dm.dmPelsHeight)
+                        if hasattr(dm, 'dmOrientation') and dm.dmOrientation == 2:
+                            orient = 'вертикальная'
+                        elif hasattr(dm, 'dmOrientation') and dm.dmOrientation == 1:
+                            orient = 'горизонтальная'
+                    if h > w:
+                        orient = 'вертикальная'
                     ad_info = adapter_map.get(dev, {})
-                    monitors.append(MonitorInfo(device=dev, name=ad_info.get('mon_name', 'Display Monitor'), adapter=ad_info.get('adapter', ''), width=w, height=h, frequency_hz=freq, bits_per_pixel=bits, is_primary=is_prim))
+                    monitors.append(MonitorInfo(device=dev, name=ad_info.get('mon_name', 'Display Monitor'), adapter=ad_info.get('adapter', ''), width=w, height=h, frequency_hz=freq, bits_per_pixel=bits, is_primary=is_prim, orientation=orient))
                     return True
                 cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.wintypes.HMONITOR, ctypes.wintypes.HDC, ctypes.POINTER(ctypes.wintypes.RECT), ctypes.wintypes.LPARAM)
                 user32.EnumDisplayMonitors(None, None, cb_type(_enum_cb), 0)
             except Exception as ex:
                 logger.debug(f'Failed to query connected monitors: {ex}')
         if not monitors:
-            monitors.append(MonitorInfo(device='\\\\.\\DISPLAY1', name='Primary Monitor', adapter='Display Adapter', width=1920, height=1080, frequency_hz=60, bits_per_pixel=32, is_primary=True))
+            monitors.append(MonitorInfo(device='\\\\.\\DISPLAY1', name='Primary Monitor', adapter='Display Adapter', width=1920, height=1080, frequency_hz=60, bits_per_pixel=32, is_primary=True, orientation='горизонтальная'))
         self._monitors_cached = monitors
         return monitors
 
@@ -1823,7 +1830,7 @@ class SystemCollector:
                 npu_props['Производительность (TOPS)'] = f'{npu.tops} TOPS'
             nodes.append(HardwareNode(category='Neural Processing Unit (NPU)', name=npu.name, properties=npu_props))
         for idx, mon in enumerate(self.get_monitors()):
-            nodes.append(HardwareNode(category='Monitors & Displays', name=f'{mon.name} ({mon.width}x{mon.height} @ {mon.frequency_hz}Hz)', properties={'Устройство': mon.device, 'Название дисплея': mon.name, 'Подключенный видеоадаптер': mon.adapter or 'Default Adapter', 'Разрешение экрана': f'{mon.width} x {mon.height}', 'Частота развертки': f'{mon.frequency_hz} Hz', 'Глубина цвета': f'{mon.bits_per_pixel}-bit', 'Основной монитор': 'Да (Основной)' if mon.is_primary else 'Нет (Вторичный)'}))
+            nodes.append(HardwareNode(category='Monitors & Displays', name=f'{mon.name} ({mon.width}x{mon.height} @ {mon.frequency_hz}Hz, {mon.orientation})', properties={'Устройство': mon.device, 'Название дисплея': mon.name, 'Ориентация': mon.orientation, 'Подключенный видеоадаптер': mon.adapter or 'Default Adapter', 'Разрешение экрана': f'{mon.width} x {mon.height}', 'Частота развертки': f'{mon.frequency_hz} Hz', 'Глубина цвета': f'{mon.bits_per_pixel}-bit', 'Основной монитор': 'Да (Основной)' if mon.is_primary else 'Нет (Вторичный)'}))
         if os.name == 'nt':
             try:
                 import win32com.client

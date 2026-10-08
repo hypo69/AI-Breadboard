@@ -20,7 +20,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:58:00
+# Updated: 2026-10-08 10:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -469,6 +469,39 @@ class TelemetryConfigManager:
         if getattr(self, '_telemetry_mode', 'telemetry') == 'tc':
             return getattr(self, '_tc_flush_interval_seconds', 5.0)
         return getattr(self, '_standard_flush_interval_seconds', 30.0)
+
+    def get_multi_rate_config(self) -> Dict[str, Any]:
+        """Возвращает настройки асинхронного многоскоростного ядра сбора телеметрии."""
+        return self._config.get('multi_rate_engine', {
+            'enabled': True,
+            'level3_realtime_interval_seconds': 1.0,
+            'level2_adaptive_min_interval_seconds': 0.5,
+            'level2_adaptive_max_interval_seconds': 30.0,
+            'level1_smart_interval_seconds': 43200.0,
+            'level1_battery_interval_seconds': 900.0,
+            'level1_security_interval_seconds': 3600.0,
+            'level1_scm_interval_seconds': 1800.0,
+            'deadband': {
+                'temperature_c': 1.0,
+                'cpu_load_pct': 3.0,
+                'freq_mhz': 50.0,
+                'power_w': 2.0,
+                'fan_rpm': 100.0,
+                'heartbeat_interval_seconds': 60.0,
+            }
+        })
+
+    def get_deadband_config(self) -> Dict[str, float]:
+        """Возвращает пороги Deadband для сенсоров."""
+        mr = self.get_multi_rate_config()
+        return mr.get('deadband', {
+            'temperature_c': 1.0,
+            'cpu_load_pct': 3.0,
+            'freq_mhz': 50.0,
+            'power_w': 2.0,
+            'fan_rpm': 100.0,
+            'heartbeat_interval_seconds': 60.0,
+        })
 
     def get_max_db_size_mb(self) -> float:
         """Возвращает максимальный разрешенный размер SQLite базы данных (в МБ, по умолчанию 100.0)."""

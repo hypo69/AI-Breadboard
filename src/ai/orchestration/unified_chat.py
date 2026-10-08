@@ -62,14 +62,22 @@ class UnifiedChatModel:
     ============  ====================
     """
 
-    def __init__(self, system_instruction: str='', **kwargs: Any) -> None:
+    def __init__(self, system_instruction: str='', provider: str='', model: str='', **kwargs: Any) -> None:
+        """UnifiedChatModel требует явно указанные provider и model. Никаких хардкодов по умолчанию!
+        
+        Args:
+            system_instruction: Системная инструкция для всех моделей.
+            provider: Имя провайдера (gemini, gemini_cli, agy, foundry, ollama и т.д.).
+            model: Имя модели для указанного провайдера.
+            **kwargs: Дополнительные параметры.
+        """
+        if not provider or not model:
+            raise ValueError('[UnifiedChatModel] Требуется явно указать provider и model. Получено: provider={}, model={}'.format(repr(provider), repr(model)))
+        
         if 'api_key_names' in kwargs:
             logger.warning('[UnifiedChatModel] Параметр api_key_names устарел и не используется в UnifiedChatModel. Управление ключами выполняется непосредственно провайдерами моделей.')
-        from src.ai.gemini.generative_ai import GoogleGenerativeAI, _DEFAULT_MODEL
         from src.config import ai_cfg
         providers = getattr(ai_cfg, 'providers', {}) if ai_cfg else {}
-        default_model = _DEFAULT_MODEL
-        self._provider = 'GEMINI'  # По умолчанию
         
         # Инициализируем gemini_model первым делом
         self.gemini_model = GoogleGenerativeAI(system_instruction=system_instruction, sleep_on_exhausted=False)
@@ -78,70 +86,38 @@ class UnifiedChatModel:
         self.gemini_cli_model: Any = False
         self.agy_model: Any = False
         
-        # Читаем настройки из конфига, без хардкода
-        foundry_model_id = ''
-        ollama_model_id = ''
-        gemini_cli_model_id = ''
-        agy_model_id = ''
-        gemini_model_id = ''
+        # Используем переданные provider и model
+        provider_upper = provider.upper()
+        default_model = ''
         
-        if isinstance(providers, dict):
-            # Проверяем провайдеры в порядке приоритета
-            # Сначала gemini (по умолчанию), потом gemini_cli, agy, foundry, ollama
-            gemini_cfg = providers.get('gemini', {})
-            if isinstance(gemini_cfg, dict) and gemini_cfg.get('enabled'):
-                gemini_model_id = gemini_cfg.get('model', '')
-                if not gemini_model_id:
-                    gemini_model_id = _DEFAULT_MODEL
-                # _model_name хранит полное имя с префиксом для правильной маршрутизации
-                default_model = f'gemini:{gemini_model_id}'
-                self._provider = 'GEMINI'
-                self.gemini_model.model_name = gemini_model_id
-            gemini_cli_cfg = providers.get('gemini_cli', {})
-            if isinstance(gemini_cli_cfg, dict) and gemini_cli_cfg.get('enabled'):
-                gemini_cli_model_id = gemini_cli_cfg.get('model', '')
-                if not gemini_cli_model_id:
-                    logger.warning('[UnifiedChatModel] gemini_cli.model не задан в конфиге, используется fallback')
-                    gemini_cli_model_id = 'gemini-3.1-flash-lite'
-                # _model_name хранит полное имя с префиксом для правильной маршрутизации
-                default_model = f'gemini_cli:{gemini_cli_model_id}'
-                self._provider = 'GEMINI_CLI'
-                from src.ai.providers.gemini_cli import GeminiCliChatBase
-                self.gemini_cli_model = GeminiCliChatBase(model_id=gemini_cli_model_id, system_prompt=system_instruction)
-            agy_cfg = providers.get('agy', {})
-            if isinstance(agy_cfg, dict) and agy_cfg.get('enabled'):
-                agy_model_id = agy_cfg.get('model', '')
-                if not agy_model_id:
-                    logger.warning('[UnifiedChatModel] agy.model не задан в конфиге, используется fallback')
-                    agy_model_id = 'gemini-3.6-flash'
-                # _model_name хранит полное имя с префиксом для правильной маршрутизации
-                default_model = f'agy-{agy_model_id}'
-                self._provider = 'AGY'
-                from src.ai.providers.agy import AgyChatBase
-                self.agy_model = AgyChatBase(model_id=agy_model_id, system_prompt=system_instruction)
-            foundry_cfg = providers.get('foundry', {})
-            if isinstance(foundry_cfg, dict) and foundry_cfg.get('enabled'):
-                foundry_model_id = foundry_cfg.get('model', '')
-                if not foundry_model_id:
-                    logger.warning('[UnifiedChatModel] foundry.model не задан в конфиге, используется fallback')
-                    foundry_model_id = 'qwen2.5-1.5b-instruct-generic-cpu:4'
-                # _model_name хранит полное имя с префиксом для правильной маршрутизации
-                default_model = f'foundry:{foundry_model_id}'
-                self._provider = 'FOUNDRY'
-                from src.ai.providers.foundry import FoundryChatBase
-                self.foundry_model = FoundryChatBase(model_id=foundry_model_id, system_prompt=system_instruction)
-            ollama_cfg = providers.get('ollama', {})
-            if isinstance(ollama_cfg, dict) and ollama_cfg.get('enabled'):
-                ollama_model_id = ollama_cfg.get('model', '')
-                if not ollama_model_id:
-                    logger.warning('[UnifiedChatModel] ollama.model не задан в конфиге, используется fallback')
-                    ollama_model_id = 'llama3.1'
-                # _model_name хранит полное имя с префиксом для правильной маршрутизации
-                default_model = f'ollama:{ollama_model_id}'
-                self._provider = 'OLLAMA'
-                ollama_base_url = ollama_cfg.get('base_url', 'http://localhost:11434')
-                from src.ai.providers.ollama import OllamaChatBase
-                self.ollama_model = OllamaChatBase(model_id=ollama_model_id, system_prompt=system_instruction, api_url=ollama_base_url)
+        if provider_upper == 'GEMINI':
+            default_model = f'gemini:{model}'
+            self._provider = 'GEMINI'
+            self.gemini_model.model_name = model
+        elif provider_upper == 'GEMINI_CLI':
+            default_model = f'gemini_cli:{model}'
+            self._provider = 'GEMINI_CLI'
+            from src.ai.providers.gemini_cli import GeminiCliChatBase
+            self.gemini_cli_model = GeminiCliChatBase(model_id=model, system_prompt=system_instruction)
+        elif provider_upper == 'AGY':
+            default_model = f'agy-{model}'
+            self._provider = 'AGY'
+            from src.ai.providers.agy import AgyChatBase
+            self.agy_model = AgyChatBase(model_id=model, system_prompt=system_instruction)
+        elif provider_upper == 'FOUNDRY':
+            default_model = f'foundry:{model}'
+            self._provider = 'FOUNDRY'
+            from src.ai.providers.foundry import FoundryChatBase
+            self.foundry_model = FoundryChatBase(model_id=model, system_prompt=system_instruction)
+        elif provider_upper == 'OLLAMA':
+            default_model = f'ollama:{model}'
+            self._provider = 'OLLAMA'
+            from src.ai.providers.ollama import OllamaChatBase
+            ollama_base_url = providers.get('ollama', {}).get('base_url', 'http://localhost:11434')
+            self.ollama_model = OllamaChatBase(model_id=model, system_prompt=system_instruction, api_url=ollama_base_url)
+        else:
+            raise ValueError(f'[UnifiedChatModel] Неизвестный провайдер: {provider}')
+        
         self._model_name = default_model
 
     def _sync_model_id(self, val: str) -> None:
@@ -243,8 +219,12 @@ class UnifiedChatModel:
         """Resolve model name to a provider instance.
 
         Performs lazy initialisation of providers on first use.
+        If model_name is not provided, uses self._model_name from initialization.
         """
-        active_name = model_name or self._model_name
+        if not model_name:
+            model_name = self._model_name
+        
+        active_name = model_name
         if active_name.startswith('gemini_cli:') or active_name.startswith('gemini-cli-'):
             if not self.gemini_cli_model:
                 from src.ai.providers.gemini_cli import GeminiCliChatBase

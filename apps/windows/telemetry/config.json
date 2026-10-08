@@ -149,5 +149,23 @@
     "enable_disk_trace": true,
     "enable_network_trace": true,
     "enable_registry_trace": true
+  },
+  "multi_rate_engine": {
+    "enabled": true,
+    "level3_realtime_interval_seconds": 1.0,
+    "level2_adaptive_min_interval_seconds": 0.5,
+    "level2_adaptive_max_interval_seconds": 30.0,
+    "level1_smart_interval_seconds": 43200.0,
+    "level1_battery_interval_seconds": 900.0,
+    "level1_security_interval_seconds": 3600.0,
+    "level1_scm_interval_seconds": 1800.0,
+    "deadband": {
+      "temperature_c": 1.0,
+      "cpu_load_pct": 3.0,
+      "freq_mhz": 50.0,
+      "power_w": 2.0,
+      "fan_rpm": 100.0,
+      "heartbeat_interval_seconds": 60.0
+    }
   }
 }

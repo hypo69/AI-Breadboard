@@ -106,3 +106,65 @@ py -m apps.windows.wikillm tui
 - `POST /api/windows/wikillm/observe` — Фиксация совместных наблюдений.
 - `POST /api/windows/wikillm/code/ingest` — Индексация кодовой базы.
 - `GET /api/windows/wikillm/stats` — Метрики эффективности кэша и размер базы.
+
+---
+
+## 💾 Локальное хранилище данных (SQLite Database)
+
+Все накопленные знания, факты, наблюдения телеметрии и полнотекстовый поисковый индекс WikiLLM сохраняются в локальной базе данных SQLite.
+
+### 📍 Расположение базы данных
+
+- **Путь по умолчанию:** `data/windows_wikillm/knowledge.db` (относительно корневой директории проекта).
+- При первом запуске или инициализации директория `data/windows_wikillm/` создаётся автоматически.
+
+### ⚙️ Конфигурация пути к базе данных
+
+Путь к файлу базы данных настраивается несколькими способами:
+
+1. **Через файл конфигурации:** `apps/windows/wikillm/config.json`
+   ```json
+   {
+     "database_path": "data/windows_wikillm/knowledge.db",
+     "min_confidence_threshold": 0.70,
+     "max_queue_size": 1000,
+     "async_workers": 2,
+     "gemini_model_id": "gemini-3.5-flash-lite",
+     "enable_code_indexer": true,
+     "enable_semantic_search": true,
+     "cache_exact_hits": true
+   }
+   ```
+
+2. **Программно через Pydantic-модель:**
+   ```python
+   from apps.windows.wikillm.config import WikiLLMConfig
+   from apps.windows.wikillm.engine import WikiEngine
+
+   config = WikiLLMConfig(database_path="data/windows_wikillm/knowledge.db")
+   engine = WikiEngine(config=config)
+   ```
+
+3. **Напрямую в хранилище `WikiStorage`:**
+   ```python
+   from apps.windows.wikillm.storage import WikiStorage
+
+   # Использование файла на диске
+   storage = WikiStorage(db_path="data/windows_wikillm/knowledge.db")
+
+   # In-memory база данных (для тестов)
+   mem_storage = WikiStorage(db_path=":memory:")
+   ```
+
+### 🗄️ Структура таблиц SQLite
+
+| Таблица | Описание |
+|---|---|
+| `entities` | Основной реестр нормализованных сущностей (первичный ключ: `canonical_key`, тип, имя, резюме, категория, важность, статус подтверждения). |
+| `claims` | Атомарные проверенные утверждения, факты и выводы о сущностях (`claim_type`, `statement`, `confidence`). |
+| `evidence` | Доказательная база, симптомы, контекст и пошаговые инструкции по исправлению проблем (`action_type`, `instruction`). |
+| `observations` | Локальная телеметрия и статистика встречаемости артефакта на машине (`total_occurrences`, `first_seen`, `last_seen`). |
+| `co_occurrences` | Матрица совместных событий для выявления корреляций между артефактами. |
+| `relations` | Направленный граф связей между сущностями базы знаний (`source_key`, `target_key`, `relation_type`). |
+| `entities_fts` | Виртуальная таблица полнотекстового поиска SQLite FTS5 (поля `canonical_key`, `name`, `summary`, `tags`). |
+

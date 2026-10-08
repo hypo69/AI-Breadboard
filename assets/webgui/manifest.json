@@ -1,0 +1,443 @@
+{
+  "url": "http://127.0.0.1:8001/tc",
+  "created_at": "2026-10-08T18:24:08.281970+03:00",
+  "debug": false,
+  "full_page": false,
+  "screenshots": [
+    {
+      "number": 1,
+      "label": "ℹ️\nℹ️ О Системе",
+      "tab": "tab-about-system",
+      "status": "navigation_error"
+    },
+    {
+      "number": 2,
+      "label": "Потребление ресурсов",
+      "tab": "tab-hardware-load-inspector",
+      "status": "navigation_error"
+    },
+    {
+      "number": 3,
+      "label": "Активность процессов",
+      "tab": "tab-processes-load-inspector",
+      "status": "navigation_error"
+    },
+    {
+      "number": 4,
+      "label": "📜 Журналы и активность",
+      "tab": "tab-system-control",
+      "status": "navigation_error"
+    },
+    {
+      "number": 5,
+      "label": "Defender Security",
+      "tab": "tab-defender",
+      "status": "navigation_error"
+    },
+    {
+      "number": 6,
+      "label": "Windows Sysadmin",
+      "tab": "tab-windows-admin",
+      "status": "navigation_error"
+    },
+    {
+      "number": 7,
+      "label": "💬\n💬🎬 Чат и сценарии",
+      "tab": "tab-scenarios",
+      "status": "navigation_error"
+    },
+    {
+      "number": 8,
+      "label": "Пользователи",
+      "tab": "tab-accounts-identity",
+      "status": "navigation_error"
+    },
+    {
+      "number": 9,
+      "label": "🔍\n1. Утечки и микрофризы",
+      "tag": "button",
+      "tab": "tab-process-leaks",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-process-leaks",
+      "hash": "tab-process-leaks",
+      "file": "tab-process-leaks.png",
+      "status": "ok"
+    },
+    {
+      "number": 10,
+      "label": "⏱️\n2. Поведенческая форензика",
+      "tag": "button",
+      "tab": "tab-forensics",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-forensics",
+      "hash": "tab-forensics",
+      "file": "tab-forensics.png",
+      "status": "ok"
+    },
+    {
+      "number": 11,
+      "label": "⚡\n3. Качество ядра и Троттлинг",
+      "tag": "button",
+      "tab": "tab-throttling",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-throttling",
+      "hash": "tab-throttling",
+      "file": "tab-throttling.png",
+      "status": "ok"
+    },
+    {
+      "number": 12,
+      "label": "🗝️\nRegistry Viewer",
+      "tag": "button",
+      "tab": "tab-registry-viewer",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-registry-viewer",
+      "hash": "tab-registry-viewer",
+      "file": "tab-registry-viewer.png",
+      "status": "ok"
+    },
+    {
+      "number": 13,
+      "label": "💽\n4. Износ дисков и батареи",
+      "tag": "button",
+      "tab": "tab-storage-wear",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-storage-wear",
+      "hash": "tab-storage-wear",
+      "file": "tab-storage-wear.png",
+      "status": "ok"
+    },
+    {
+      "number": 14,
+      "label": "🔌\n5. Сеть и периферия",
+      "tag": "button",
+      "tab": "tab-peripherals",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-peripherals",
+      "hash": "tab-peripherals",
+      "file": "tab-peripherals.png",
+      "status": "ok"
+    },
+    {
+      "number": 15,
+      "label": "🌐\n🌐 Сетевой терминал",
+      "tag": "button",
+      "tab": "tab-network",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-network",
+      "hash": "tab-network",
+      "file": "tab-network.png",
+      "status": "ok"
+    },
+    {
+      "number": 16,
+      "label": "🚀\n🚀 Автозапуск программ",
+      "tag": "button",
+      "tab": "tab-startup-auditor",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-startup-auditor",
+      "hash": "tab-startup-auditor",
+      "file": "tab-startup-auditor.png",
+      "status": "ok"
+    },
+    {
+      "number": 17,
+      "label": "💾\nWindows Backup",
+      "tag": "button",
+      "tab": "tab-windows-backup",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-windows-backup",
+      "hash": "tab-windows-backup",
+      "file": "tab-windows-backup.png",
+      "status": "ok"
+    },
+    {
+      "number": 18,
+      "label": "⚡\n⚡ Логи сенсоров",
+      "tag": "button",
+      "tab": "tab-hardware-monitor",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-hardware-monitor",
+      "hash": "tab-hardware-monitor",
+      "file": "tab-hardware-monitor.png",
+      "status": "ok"
+    },
+    {
+      "number": 19,
+      "label": "⚡\nТелеметрия и логи",
+      "tag": "button",
+      "tab": "tab-autolog",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-autolog",
+      "hash": "tab-autolog",
+      "file": "tab-autolog.png",
+      "status": "ok"
+    },
+    {
+      "number": 20,
+      "label": "🔬\nИсследования телеметрии",
+      "tag": "button",
+      "tab": "tab-telemetry-research",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-telemetry-research",
+      "hash": "tab-telemetry-research",
+      "file": "tab-telemetry-research.png",
+      "status": "ok"
+    },
+    {
+      "number": 21,
+      "label": "🔍\nПрозрачность ПО",
+      "tag": "button",
+      "tab": "tab-software-transparency",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-software-transparency",
+      "hash": "tab-software-transparency",
+      "file": "tab-software-transparency.png",
+      "status": "ok"
+    },
+    {
+      "number": 22,
+      "label": "📁\n📁 Пользовательские директории",
+      "tag": "button",
+      "tab": "tab-user-directories",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-user-directories",
+      "hash": "tab-user-directories",
+      "file": "tab-user-directories.png",
+      "status": "ok"
+    },
+    {
+      "number": 23,
+      "label": "⚡\nУстановить Ninite",
+      "tag": "button",
+      "tab": "tab-ninite-updater",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-ninite-updater",
+      "hash": "tab-ninite-updater",
+      "file": "tab-ninite-updater.png",
+      "status": "ok"
+    },
+    {
+      "number": 24,
+      "label": "🗂️\n🗂️ Восстановить удаленные файлы",
+      "tag": "button",
+      "tab": "",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-about-system",
+      "hash": "tab-about-system",
+      "file": "tab-about-system.png",
+      "status": "ok"
+    },
+    {
+      "number": 25,
+      "label": "💽\nДиски и тома (Storage)",
+      "tag": "button",
+      "tab": "tab-storage-manager",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-about-system",
+      "hash": "tab-about-system",
+      "file": "tab-about-system.png",
+      "status": "ok"
+    },
+    {
+      "number": 26,
+      "label": "🚀\nЗагрузка и WinRE (Boot)",
+      "tag": "button",
+      "tab": "tab-boot-recovery",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-log-settings",
+      "hash": "tab-log-settings",
+      "file": "tab-log-settings.png",
+      "status": "ok"
+    },
+    {
+      "number": 27,
+      "label": "🩺\nОбслуживание SFC/DISM",
+      "tag": "button",
+      "tab": "tab-servicing-integrity",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-servicing-integrity",
+      "hash": "tab-servicing-integrity",
+      "file": "tab-servicing-integrity.png",
+      "status": "ok"
+    },
+    {
+      "number": 28,
+      "label": "⚙️\nСлужбы Windows (Services)",
+      "tag": "button",
+      "tab": "tab-services-manager",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-services-manager",
+      "hash": "tab-services-manager",
+      "file": "tab-services-manager.png",
+      "status": "ok"
+    },
+    {
+      "number": 29,
+      "label": "📅\nПланировщик задач (Tasks)",
+      "tag": "button",
+      "tab": "tab-task-scheduler",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-task-scheduler",
+      "hash": "tab-task-scheduler",
+      "file": "tab-task-scheduler.png",
+      "status": "ok"
+    },
+    {
+      "number": 30,
+      "label": "⚡\nДиспетчер процессов (Processes)",
+      "tag": "button",
+      "tab": "tab-process-manager",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-process-manager",
+      "hash": "tab-process-manager",
+      "file": "tab-process-manager.png",
+      "status": "ok"
+    },
+    {
+      "number": 31,
+      "label": "🛡️\nБрандмауэр Windows (Firewall)",
+      "tag": "button",
+      "tab": "tab-firewall-manager",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-firewall-manager",
+      "hash": "tab-firewall-manager",
+      "file": "tab-firewall-manager.png",
+      "status": "ok"
+    },
+    {
+      "number": 32,
+      "label": "🗝️\nПрава доступа и ACL (icacls)",
+      "tag": "button",
+      "tab": "tab-security-acl",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-security-acl",
+      "hash": "tab-security-acl",
+      "file": "tab-security-acl.png",
+      "status": "ok"
+    },
+    {
+      "number": 33,
+      "label": "📊\nТрассировка ETW (logman)",
+      "tag": "button",
+      "tab": "tab-performance-tracing",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-performance-tracing",
+      "hash": "tab-performance-tracing",
+      "file": "tab-performance-tracing.png",
+      "status": "ok"
+    },
+    {
+      "number": 34,
+      "label": "Параметры и настройка журналов",
+      "tag": "button",
+      "tab": "tab-log-settings",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-log-settings",
+      "hash": "tab-log-settings",
+      "file": "tab-log-settings.png",
+      "status": "ok"
+    },
+    {
+      "number": 35,
+      "label": "📦\nПакетный менеджер (Winget)",
+      "tag": "button",
+      "tab": "tab-software-manager",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-software-manager",
+      "hash": "tab-software-manager",
+      "file": "tab-software-manager.png",
+      "status": "ok"
+    },
+    {
+      "number": 36,
+      "label": "⚡\nPost-Install Wizard",
+      "tag": "button",
+      "tab": "tab-post-install-wizard",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-post-install-wizard",
+      "hash": "tab-post-install-wizard",
+      "file": "tab-post-install-wizard.png",
+      "status": "ok"
+    },
+    {
+      "number": 37,
+      "label": "🛠️\nMaintenance & Recovery",
+      "tag": "button",
+      "tab": "tab-maintenance-recovery",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-maintenance-recovery",
+      "hash": "tab-maintenance-recovery",
+      "file": "tab-maintenance-recovery.png",
+      "status": "ok"
+    },
+    {
+      "number": 38,
+      "label": "📌\nПанель задач и Окна (Taskbar)",
+      "tag": "button",
+      "tab": "tab-taskbar",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-taskbar",
+      "hash": "tab-taskbar",
+      "file": "tab-taskbar.png",
+      "status": "ok"
+    },
+    {
+      "number": 39,
+      "label": "👥\nУчетные записи (Users & Identity)",
+      "tab": "tab-accounts-identity",
+      "status": "navigation_error"
+    },
+    {
+      "number": 40,
+      "label": "🛠️\n🛠️ Команды System32",
+      "tag": "button",
+      "tab": "tab-system32-commands",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-system32-commands",
+      "hash": "tab-system32-commands",
+      "file": "tab-system32-commands.png",
+      "status": "ok"
+    },
+    {
+      "number": 41,
+      "label": "⚡\nСессии питания",
+      "tag": "button",
+      "tab": "tab-power-lifecycle",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-power-lifecycle",
+      "hash": "tab-power-lifecycle",
+      "file": "tab-power-lifecycle.png",
+      "status": "ok"
+    },
+    {
+      "number": 42,
+      "label": "Логи программы (%APPDATA%)",
+      "tag": "button",
+      "tab": "tab-app-logs",
+      "id": "",
+      "url_after_navigation": "http://127.0.0.1:8001/tc#tab-app-logs",
+      "hash": "tab-app-logs",
+      "file": "tab-app-logs.png",
+      "status": "ok"
+    },
+    {
+      "number": 43,
+      "label": "pane-usr",
+      "tab": "pane-usr",
+      "status": "navigation_error"
+    },
+    {
+      "number": 44,
+      "label": "pane-loc",
+      "tab": "pane-loc",
+      "status": "navigation_error"
+    },
+    {
+      "number": 45,
+      "label": "pane-tz",
+      "tab": "pane-tz",
+      "status": "navigation_error"
+    }
+  ]
+}

@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:50:00
+# Updated: 2026-10-08 11:54:00
 # =============================================================================
 
 from __future__ import annotations
@@ -852,6 +852,7 @@ class TelemetryWriter:
 
         processes = raw_procs if top_n is None or top_n <= 0 else raw_procs[:top_n]
         proc_rows = []
+        pid_snapshot_rows = []
         for p in processes:
             p_dict = p if isinstance(p, dict) else (p.model_dump() if hasattr(p, 'model_dump') else (vars(p) if hasattr(p, '__dict__') else p))
             proc_rows.append((
@@ -868,6 +869,35 @@ class TelemetryWriter:
                 p_dict.get('process_guid', None), p_dict.get('ancestor_chain', None),
                 p_dict.get('launch_reason', None),
             ))
+
+            # Снимок канонического Per-PID Telemetry Engine
+            mem_mb = float(p_dict.get('memory_mb', 0.0) or 0.0)
+            ws_bytes = int(p_dict.get('working_set_bytes') or (mem_mb * 1024 * 1024))
+            pid_snapshot_rows.append((
+                int(p_dict.get('pid', 0)),
+                str(p_dict.get('name', p_dict.get('process_name', 'unknown'))),
+                p_dict.get('executable_path', p_dict.get('executable', None)),
+                float(p_dict.get('cpu_percent', 0.0) or 0.0),
+                int(p_dict.get('user_time_ms', 0) or 0),
+                int(p_dict.get('kernel_time_ms', 0) or 0),
+                int(p_dict.get('num_threads', p_dict.get('thread_count', 1)) or 1),
+                ws_bytes,
+                int(p_dict.get('private_bytes', 0) or 0),
+                int(p_dict.get('page_faults_count', p_dict.get('page_faults', 0)) or 0),
+                int(p_dict.get('gpu_vram_bytes', 0) or 0),
+                float(p_dict.get('gpu_utilization', 0.0) or 0.0),
+                int(p_dict.get('read_bytes_total', p_dict.get('read_bytes_sec', 0)) or 0),
+                int(p_dict.get('write_bytes_total', p_dict.get('write_bytes_sec', 0)) or 0),
+                int(p_dict.get('read_ops_total', 0) or 0),
+                int(p_dict.get('write_ops_total', 0) or 0),
+                int(p_dict.get('net_bytes_sent_total', 0) or 0),
+                int(p_dict.get('net_bytes_recv_total', 0) or 0),
+                int(p_dict.get('num_handles', p_dict.get('handle_count', 0)) or 0),
+                int(p_dict.get('gdi_objects', 0) or 0),
+                int(p_dict.get('user_objects', 0) or 0),
+                ts_str
+            ))
+
         if proc_rows:
             cursor.executemany('''
                 INSERT INTO process_snapshots (
@@ -878,6 +908,19 @@ class TelemetryWriter:
                     creation_time, process_guid, ancestor_chain, launch_reason
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', proc_rows)
+
+        if pid_snapshot_rows:
+            cursor.executemany('''
+                INSERT INTO process_pid_snapshots (
+                    pid, process_name, executable_path,
+                    cpu_percent, user_time_ms, kernel_time_ms, thread_count,
+                    working_set_bytes, private_bytes, page_faults_count,
+                    gpu_vram_bytes, gpu_utilization,
+                    read_bytes_total, write_bytes_total, read_ops_total, write_ops_total,
+                    net_bytes_sent_total, net_bytes_recv_total,
+                    handle_count, gdi_objects, user_objects, timestamp
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', pid_snapshot_rows)
 
         # Синхронизация нормализованных таблиц оборудования и метрик
         try:
@@ -2554,6 +2597,90 @@ class TelemetryWriter:
 
             conn.commit()
         return saved
+
+    def insert_process_pid_snapshots(self, snapshots: List[Union[Dict[str, Any], Any]]) -> int:
+        """Пакетная вставка снимков ресурсов процессов по PID в process_pid_snapshots."""
+        if not snapshots:
+            return 0
+        now_ts = datetime.now(timezone.utc).isoformat()
+        rows = []
+        for s in snapshots:
+            d = s if isinstance(s, dict) else (s.model_dump() if hasattr(s, 'model_dump') else vars(s))
+            mem_mb = float(d.get('memory_mb', 0.0) or 0.0)
+            ws_bytes = int(d.get('working_set_bytes') or (mem_mb * 1024 * 1024))
+            rows.append((
+                int(d.get('pid', 0)),
+                str(d.get('process_name', d.get('name', 'unknown'))),
+                d.get('executable_path', d.get('executable', None)),
+                float(d.get('cpu_percent', 0.0) or 0.0),
+                int(d.get('user_time_ms', 0) or 0),
+                int(d.get('kernel_time_ms', 0) or 0),
+                int(d.get('thread_count', d.get('num_threads', 1)) or 1),
+                ws_bytes,
+                int(d.get('private_bytes', 0) or 0),
+                int(d.get('page_faults_count', d.get('page_faults', 0)) or 0),
+                int(d.get('gpu_vram_bytes', 0) or 0),
+                float(d.get('gpu_utilization', 0.0) or 0.0),
+                int(d.get('read_bytes_total', d.get('read_bytes_sec', 0)) or 0),
+                int(d.get('write_bytes_total', d.get('write_bytes_sec', 0)) or 0),
+                int(d.get('read_ops_total', 0) or 0),
+                int(d.get('write_ops_total', 0) or 0),
+                int(d.get('net_bytes_sent_total', 0) or 0),
+                int(d.get('net_bytes_recv_total', 0) or 0),
+                int(d.get('handle_count', d.get('num_handles', 0)) or 0),
+                int(d.get('gdi_objects', 0) or 0),
+                int(d.get('user_objects', 0) or 0),
+                d.get('timestamp') or now_ts
+            ))
+
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executemany('''
+                INSERT INTO process_pid_snapshots (
+                    pid, process_name, executable_path,
+                    cpu_percent, user_time_ms, kernel_time_ms, thread_count,
+                    working_set_bytes, private_bytes, page_faults_count,
+                    gpu_vram_bytes, gpu_utilization,
+                    read_bytes_total, write_bytes_total, read_ops_total, write_ops_total,
+                    net_bytes_sent_total, net_bytes_recv_total,
+                    handle_count, gdi_objects, user_objects, timestamp
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', rows)
+            conn.commit()
+        return len(rows)
+
+    def insert_process_file_events(self, events: List[Union[Dict[str, Any], Any]]) -> int:
+        """Пакетная вставка событий файловой активности в process_file_events."""
+        if not events:
+            return 0
+        now_ts = datetime.now(timezone.utc).isoformat()
+        now_epoch = time.time()
+        rows = []
+        for ev in events:
+            d = ev if isinstance(ev, dict) else (ev.model_dump() if hasattr(ev, 'model_dump') else vars(ev))
+            rows.append((
+                int(d.get('pid', 0)),
+                str(d.get('process_name', d.get('name', ''))),
+                str(d.get('action_type', d.get('action', 'MODIFY'))),
+                str(d.get('target_directory', d.get('target_folder', ''))),
+                str(d.get('file_path', '')),
+                int(d.get('bytes_affected', d.get('bytes_count', 0)) or 0),
+                d.get('instance_id', None),
+                str(d.get('timestamp') or now_ts),
+                float(d.get('created_at') or now_epoch)
+            ))
+
+        with self._cm.lock, self._cm.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executemany('''
+                INSERT INTO process_file_events (
+                    pid, process_name, action_type, target_directory,
+                    file_path, bytes_affected, instance_id, timestamp, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', rows)
+            conn.commit()
+        return len(rows)
+
 
 
 

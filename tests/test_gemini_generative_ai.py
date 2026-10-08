@@ -16,18 +16,20 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-08 10:48:40
 # =============================================================================
 
 """Tests for GoogleGenerativeAI class and Gemini module utilities."""
 
 import asyncio
+import json
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 from src.ai.gemini.generative_ai import GoogleGenerativeAI, add_unsupported_model, load_unsupported_models, normalize_text, remove_html_blocks
+from src.ai.gemini.errors import format_error_as_json
 
 class TestGoogleGenerativeAI_HappyPath:
     """Tests for normal and expected GoogleGenerativeAI usage scenarios.
@@ -354,16 +356,16 @@ class TestGoogleGenerativeAI_ErrorScenarios:
     @pytest.mark.asyncio
     async def test_error_unsupported_modalities_switches_model(self):
         """Error 400 with unsupported response modalities must add model to unsupported and switch."""
-        error_400_modalities: Exception = RuntimeError('400 INVALID_ARGUMENT: The requested combination of response modalities (TEXT) is not supported by the model. models/gemini-flash-latest-preview-tts accepts the following combination of response modalities:\n* AUDIO')
+        error_400_modalities: Exception = RuntimeError('400 INVALID_ARGUMENT: The requested combination of response modalities (TEXT) is not supported by the model. models/gemini-3.5-flash-lite-preview-tts accepts the following combination of response modalities:\n* AUDIO')
         success_response: MagicMock = MagicMock()
         success_response.text = 'Success with fallback text model'
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_400_modalities, success_response]
-        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), patch('src.ai.gemini.core.get_status'), patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-flash-latest-preview-tts', 'gemini-flash-latest']), patch('src.ai.gemini.errors.add_unsupported_model') as mock_add_unsupp:
-            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-flash-latest-preview-tts')
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), patch('src.ai.gemini.core.get_status'), patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-3.5-flash-lite-preview-tts', 'gemini-3.5-flash-lite']), patch('src.ai.gemini.errors.add_unsupported_model') as mock_add_unsupp:
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-3.5-flash-lite-preview-tts')
             result: str = await ai_instance.ask('Test TTS Modality')
             assert result == 'Success with fallback text model', f'On modality mismatch error must transition to available model, got: {result!r}'
-            assert ai_instance.model_name == 'gemini-flash-latest', f'Active model name must update to gemini-flash-latest, current: {ai_instance.model_name}'
+            assert ai_instance.model_name == 'gemini-3.5-flash-lite', f'Active model name must update to gemini-3.5-flash-lite, current: {ai_instance.model_name}'
             mock_add_unsupp.assert_called_once()
 
     @pytest.mark.asyncio
@@ -388,8 +390,8 @@ class TestGoogleGenerativeAI_ErrorScenarios:
         success_response.text = 'Success with failover model'
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_503, error_503, error_503, error_503, success_response]
-        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), patch('src.ai.gemini.core.get_status'), patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-flash-latest', 'gemini-flash-lite-latest']), patch('asyncio.sleep'):
-            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-flash-latest')
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), patch('src.ai.gemini.core.get_status'), patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-3.5-flash-lite', 'gemini-flash-lite-latest']), patch('asyncio.sleep'):
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-3.5-flash-lite')
             result: str = await ai_instance.ask('Test 503 persistent')
             assert result == 'Success with failover model'
             assert ai_instance.model_name == 'gemini-flash-lite-latest'
@@ -418,3 +420,90 @@ class TestGoogleGenerativeAI_Regression:
             unified_model: UnifiedChatModel = UnifiedChatModel(system_instruction='Test instruction')
             result = await unified_model.chat('Test request to unified')
             assert result == 'Response via UnifiedChatModel', f'UnifiedChatModel must correctly call chat() on Gemini, got: {result!r}'
+
+
+class TestGoogleGenerativeAI_LoggingAndErrors:
+    """Тесты расширенного логирования промптов, инструкций, ответов и сериализации ошибок в JSON."""
+
+    def test_format_error_as_json_api_error(self):
+        """Проверка сериализации объекта ошибки API в валидный JSON."""
+        from google.genai.errors import ClientError
+        raw_error_dict = {
+            'error': {
+                'code': 429,
+                'message': 'Resource has been exhausted (e.g. check quota).',
+                'status': 'RESOURCE_EXHAUSTED',
+            }
+        }
+        client_err = ClientError(429, raw_error_dict)
+        json_out = format_error_as_json(client_err, model='gemini-3.5-flash-lite', attempt=1, max_attempts=15)
+        parsed = json.loads(json_out)
+        assert 'error' in parsed
+        assert parsed['error']['code'] == 429
+        assert parsed['error']['status'] == 'RESOURCE_EXHAUSTED'
+        assert parsed['error']['model'] == 'gemini-3.5-flash-lite'
+        assert parsed['error']['attempt'] == 1
+        assert parsed['error']['max_attempts'] == 15
+
+    def test_format_error_as_json_generic_exception(self):
+        """Проверка сериализации стандартного исключения в валидный JSON."""
+        err = ConnectionResetError('Connection abruptly closed by peer')
+        json_out = format_error_as_json(err, model='gemini-3.7-flash', attempt=2, max_attempts=5, action_taken='retry')
+        parsed = json.loads(json_out)
+        assert 'error' in parsed
+        assert parsed['error']['type'] == 'ConnectionResetError'
+        assert 'Connection abruptly closed' in parsed['error']['message']
+        assert parsed['error']['model'] == 'gemini-3.7-flash'
+        assert parsed['error']['attempt'] == 2
+        assert parsed['error']['action_taken'] == 'retry'
+
+    @pytest.mark.asyncio
+    async def test_ask_logs_request_and_response(self):
+        """Проверка, что ask логирует полный запрос и полученный ответ."""
+        from logger import logger as global_logger
+        mock_response = MagicMock()
+        mock_response.text = 'The answer is 42.'
+        mock_client = MagicMock()
+        mock_client.models.generate_content.return_value = mock_response
+
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.core.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.core.get_status'), \
+             patch.object(global_logger, 'info') as mock_log_info:
+            ai_instance = GoogleGenerativeAI(system_instruction='You are a precise calculator.')
+            res = await ai_instance.ask('What is the meaning of life?')
+            assert res == 'The answer is 42.'
+            
+            # Проверяем вызовы logger.info
+            logged_messages = [str(call.args[0]) for call in mock_log_info.call_args_list if call.args]
+            has_request_log = any('Gemini Request [ask]' in m and 'What is the meaning of life?' in m for m in logged_messages)
+            has_response_log = any('Gemini Response [ask]' in m and 'The answer is 42.' in m for m in logged_messages)
+            assert has_request_log, f"Expected request to be logged with prompt, got: {logged_messages}"
+            assert has_response_log, f"Expected response to be logged, got: {logged_messages}"
+
+    @pytest.mark.asyncio
+    async def test_error_logs_as_json(self):
+        """Проверка, что ошибка API логируется как валидный JSON через logger.error."""
+        from logger import logger as global_logger
+        from src.ai.gemini.errors import GoogleGenerativeAIErrorMixin
+
+        class DummyErrorClient(GoogleGenerativeAIErrorMixin):
+            api_key = 'bad_key'
+            _unavailable_attempts = 0
+            def _record_error(self, ex):
+                pass
+            def _invalidate_api_key(self, key):
+                pass
+            def _switch_api_key(self):
+                return True
+
+        client = DummyErrorClient()
+        error_401 = RuntimeError('401 API_KEY_INVALID: Provided API key is not valid')
+
+        with patch.object(global_logger, 'error') as mock_log_error:
+            should_retry = await client._handle_api_error(error_401, 'gemini-3.7-flash', 0, 5)
+            assert should_retry is True
+
+            logged_errors = [str(call.args[0]) for call in mock_log_error.call_args_list if call.args]
+            has_json_error = any('Gemini Model Error' in m and ('"status": "AUTH_ERROR"' in m or '401' in m or 'API_KEY_INVALID' in m) for m in logged_errors)
+            assert has_json_error, f"Expected error to be logged as JSON, got: {logged_errors}"

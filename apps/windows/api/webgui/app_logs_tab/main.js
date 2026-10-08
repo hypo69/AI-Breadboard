@@ -5,17 +5,18 @@
  * Description:
  *   Клиентский контроллер вкладки анализа внутренних логов программы
  *   AI-Breadboard strictly из %APPDATA%\AI-Breadboard\logs.
+ *   Полная адаптивность к светлой, кирпичной, темной и терминальной темам.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script type="module" src="/html/app_logs_tab/main.js?v=20261008_v1"></script>
+ *     <script type="module" src="/html/app_logs_tab/main.js?v=20261008_v2"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/app_logs_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 10:25:00
+ * Updated: 2026-10-08 10:40:00
  * =============================================================================
  */
 
@@ -48,10 +49,8 @@ function bindEvents() {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('#apl-mode-tabs .nav-link').forEach(b => {
         b.classList.remove('active');
-        b.classList.add('text-light');
       });
       btn.classList.add('active');
-      btn.classList.remove('text-light');
 
       state.currentMode = btn.dataset.mode;
       switchViewMode(state.currentMode);
@@ -260,11 +259,11 @@ function renderFilesBadges() {
     const btn = document.createElement('button');
     btn.type = 'button';
     const isActive = f.name === state.currentFile;
-    btn.className = `btn btn-sm rounded-pill px-2.5 py-0.5 small apl-file-badge ${isActive ? 'btn-primary active' : 'btn-outline-secondary text-light'}`;
+    btn.className = `btn btn-sm rounded-pill px-2.5 py-0.5 small apl-file-badge ${isActive ? 'active' : ''}`;
     btn.style.fontSize = '0.76rem';
 
     const icon = f.is_json ? 'bi-filetype-json text-info' : 'bi-file-text text-warning';
-    btn.innerHTML = `<i class="bi ${icon} me-1"></i><strong>${f.name}</strong> <span class="badge bg-dark ms-1">${f.size_formatted}</span>`;
+    btn.innerHTML = `<i class="bi ${icon} me-1"></i><strong>${f.name}</strong> <span class="badge apl-card border border-secondary-subtle ms-1">${f.size_formatted}</span>`;
 
     btn.addEventListener('click', async () => {
       state.currentFile = f.name;
@@ -396,15 +395,15 @@ function renderRecordsTable(records) {
     else if (lvl === 'WARNING' || lvl === 'WARN') badgeClass = 'badge-apl-warn';
     else if (lvl === 'DEBUG') badgeClass = 'badge-apl-deb';
 
-    const repeatBadge = entry.repeat_count > 1 ? `<span class="badge bg-dark border border-secondary text-warning ms-1" title="Повторений">${entry.repeat_count}x</span>` : '';
+    const repeatBadge = entry.repeat_count > 1 ? `<span class="badge apl-card border border-secondary-subtle text-warning ms-1" title="Повторений">${entry.repeat_count}x</span>` : '';
     const hasExc = !!entry.exc_info;
     const excBadge = hasExc ? `<span class="badge bg-danger ms-1" title="Содержит Stacktrace"><i class="bi bi-bug"></i> Trace</span>` : '';
 
     tr.innerHTML = `
       <td class="font-monospace small text-muted text-nowrap">${escapeHtml(entry.timestamp || '--:--:--')}</td>
       <td><span class="badge ${badgeClass} small">${escapeHtml(entry.level || 'INFO')}</span>${repeatBadge}</td>
-      <td><span class="badge bg-dark border border-secondary text-info font-monospace text-truncate" style="max-width: 120px;" title="${escapeHtml(entry.component)}">${escapeHtml(entry.component)}</span></td>
-      <td class="font-monospace small text-break">${escapeHtml(entry.message || '')}${excBadge}</td>
+      <td><span class="badge apl-comp-badge font-monospace text-truncate" style="max-width: 120px;" title="${escapeHtml(entry.component)}">${escapeHtml(entry.component)}</span></td>
+      <td class="font-monospace small text-break text-body">${escapeHtml(entry.message || '')}${excBadge}</td>
       <td class="text-end">
         <button class="btn btn-xs btn-outline-info rounded px-1.5 py-0.5 btn-entry-view" title="Посмотреть детали">
           <i class="bi bi-eye"></i>
@@ -413,7 +412,7 @@ function renderRecordsTable(records) {
     `;
 
     // Клик по строке открывает детали
-    tr.addEventListener('click', (e) => {
+    tr.addEventListener('click', () => {
       state.selectedEntry = entry;
       openEntryModal(entry);
     });
@@ -490,12 +489,12 @@ async function runAiDiagnostics() {
         recsContainer.innerHTML = '<div class="alert alert-success small mb-0"><i class="bi bi-check-circle me-1"></i>Активных проблем и предупреждений не обнаружено.</div>';
       } else {
         recsContainer.innerHTML = data.recommendations.map(r => `
-          <div class="card bg-black border-${r.severity === 'high' ? 'danger' : 'warning'} p-2.5 mb-2 shadow-sm">
+          <div class="card apl-card border-${r.severity === 'high' ? 'danger' : 'warning'} p-2.5 mb-2 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="fw-bold text-${r.severity === 'high' ? 'danger' : 'warning'} small"><i class="bi bi-exclamation-triangle me-1"></i>${escapeHtml(r.title)}</span>
               <span class="badge bg-${r.severity === 'high' ? 'danger' : 'warning'} small">${r.severity.toUpperCase()}</span>
             </div>
-            <div class="small text-light mb-1">${escapeHtml(r.description)}</div>
+            <div class="small text-body mb-1">${escapeHtml(r.description)}</div>
             <div class="small text-info"><i class="bi bi-arrow-right-circle me-1"></i><strong>Действие:</strong> ${escapeHtml(r.action)}</div>
           </div>
         `).join('');
@@ -510,11 +509,11 @@ async function runAiDiagnostics() {
         clustersBody.innerHTML = data.clusters.map(c => `
           <tr>
             <td><span class="badge bg-danger fw-bold">${c.count}x</span></td>
-            <td><span class="badge bg-dark border border-danger text-danger">${escapeHtml(c.level)}</span></td>
+            <td><span class="badge apl-card border border-danger text-danger">${escapeHtml(c.level)}</span></td>
             <td class="font-monospace small text-muted text-nowrap">${escapeHtml(c.last_seen || '--')}</td>
             <td class="font-monospace small text-break">
               <div class="fw-bold text-warning">${escapeHtml(c.pattern)}</div>
-              <div class="text-secondary small mt-0.5">${escapeHtml(c.sample_message)}</div>
+              <div class="text-muted small mt-0.5">${escapeHtml(c.sample_message)}</div>
             </td>
           </tr>
         `).join('');
@@ -543,16 +542,14 @@ function renderTimelineChart() {
       const maxTotal = Math.max(...timeline.map(t => t.total), 1);
       barsContainer.innerHTML = timeline.map(t => {
         const heightPct = Math.max(8, (t.total / maxTotal) * 100);
-        const errPct = (t.errors / t.total) * 100;
-        const warnPct = (t.warnings / t.total) * 100;
         const timeLabel = t.time.slice(11, 16);
 
         return `
           <div class="d-flex flex-column align-items-center" style="flex: 1; min-width: 28px; height: 100%; justify-content: flex-end;" title="${t.time}: Всего: ${t.total}, Ошибок: ${t.errors}">
             <span class="small font-monospace text-muted" style="font-size: 0.65rem;">${t.total}</span>
-            <div class="w-100 rounded-top" style="height: ${heightPct}%; background: linear-gradient(to top, #0284c7 0%, ${t.errors > 0 ? '#ef4444' : '#38bdf8'} 100%); position: relative;">
+            <div class="w-100 rounded-top" style="height: ${heightPct}%; background: linear-gradient(to top, var(--nav-active, #0284c7) 0%, ${t.errors > 0 ? '#ef4444' : 'var(--nav-active, #38bdf8)'} 100%); position: relative;">
             </div>
-            <span class="small font-monospace text-secondary text-truncate" style="font-size: 0.65rem; margin-top: 4px;">${timeLabel}</span>
+            <span class="small font-monospace text-muted text-truncate" style="font-size: 0.65rem; margin-top: 4px;">${timeLabel}</span>
           </div>
         `;
       }).join('');
@@ -562,7 +559,7 @@ function renderTimelineChart() {
   if (compContainer && state.stats.components) {
     compContainer.innerHTML = state.stats.components.map(c => `
       <div class="col-md-3 col-sm-6">
-        <div class="card bg-black border-secondary p-2 d-flex flex-row justify-content-between align-items-center">
+        <div class="card apl-card p-2 d-flex flex-row justify-content-between align-items-center shadow-sm">
           <span class="font-monospace small text-info text-truncate" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
           <span class="badge bg-primary rounded-pill font-monospace">${c.count}</span>
         </div>

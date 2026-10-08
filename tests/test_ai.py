@@ -106,8 +106,8 @@ class TestAgyChat:
         chat.system_instruction = 'New instruction'
         assert chat.system_prompt == 'New instruction'
         assert chat.system_instruction == 'New instruction'
-        chat.model_id = 'agy-gemini-flash-latest'
-        assert chat.model_id == 'gemini-flash-latest'
+        chat.model_id = 'agy-gemini-3.5-flash-lite'
+        assert chat.model_id == 'gemini-3.5-flash-lite'
         chat2 = AgyChatBase(model_id='agy-gemini-2.0-flash')
         assert chat2.model_id == 'gemini-2.0-flash'
 
@@ -164,7 +164,7 @@ class TestModelManager:
         """Тест получения моделей Gemini через SDK с фильтрацией и кэшированием."""
         from src.ai.model_manager import get_available_models, _CACHED_MODELS
         mock_model_1 = MagicMock()
-        mock_model_1.name = 'models/gemini-flash-latest'
+        mock_model_1.name = 'models/gemini-3.5-flash-lite'
         mock_model_1.supported_actions = ['generateContent']
         mock_model_2 = MagicMock()
         mock_model_2.name = 'models/gemini-2.0-flash'
@@ -176,11 +176,11 @@ class TestModelManager:
         mock_client.models.list.return_value = [mock_model_1, mock_model_2, mock_model_3]
         with patch('src.ai.model_manager.genai.Client', return_value=mock_client):
             models = get_available_models('gemini', api_key='fake_key', force_refresh=True)
-            assert 'gemini-flash-latest' in models
+            assert 'gemini-3.5-flash-lite' in models
             assert 'gemini-2.0-flash' not in models
             assert 'text-embedding-004' not in models
             assert 'gemini' in _CACHED_MODELS
-            assert 'gemini-flash-latest' in _CACHED_MODELS['gemini']
+            assert 'gemini-3.5-flash-lite' in _CACHED_MODELS['gemini']
             mock_client.models.list.reset_mock()
             cached_models = get_available_models('gemini', api_key='fake_key', force_refresh=False)
             assert cached_models == models

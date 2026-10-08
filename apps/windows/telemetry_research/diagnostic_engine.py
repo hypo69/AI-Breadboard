@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 12:00:00
 # =============================================================================
 
 from __future__ import annotations
@@ -265,6 +265,49 @@ class SystemDiagnosticEngine(DiagnosticEngine):
             "3. Отвечайте строго на русском языке."
         )
 
+    def _build_minimal_group_prompt(
+        self,
+        group_id: str,
+        title: str,
+        status: str,
+        anomalies: List[str],
+        key_metrics: Dict[str, Any],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Формирует ультра-компактный JSON-промпт, содержащий исключительно параметры, требующие внимания/уточнения."""
+        data: Dict[str, Any] = {
+            "group": group_id,
+            "status": status,
+        }
+        if anomalies:
+            data["anomalies"] = anomalies
+        if key_metrics:
+            data["metrics"] = key_metrics
+
+        # Точечное добавление только проблемного контекста
+        if group_id == "compute_thermals":
+            cpu = payload.get("cpu", {})
+            if cpu.get("load_percent", 0.0) >= 70.0 or (cpu.get("package_temperature_celsius") or 0.0) >= 75.0:
+                data["cpu_load_pct"] = cpu.get("load_percent")
+                if cpu.get("package_temperature_celsius"):
+                    data["temp_c"] = cpu.get("package_temperature_celsius")
+        elif group_id == "memory_processes":
+            ram = payload.get("ram", {})
+            if ram.get("used_percent", 0.0) >= 75.0:
+                data["ram_used_pct"] = ram.get("used_percent")
+            top_p = payload.get("top_active_processes", [])
+            if top_p and (top_p[0].get("cpu_percent", 0.0) >= 50.0 or top_p[0].get("memory_percent", 0.0) >= 30.0):
+                data["top_proc"] = f"{top_p[0].get('name')} (CPU {top_p[0].get('cpu_percent')}%, RAM {top_p[0].get('memory_mb')}MB)"
+        elif group_id == "storage_smart":
+            parts = [p for p in payload.get("storage_partitions", []) if p.get("used_percent", 0.0) >= 85.0]
+            if parts:
+                data["critical_volumes"] = [{p.get("device", "vol"): f"{p.get('used_percent')}% full"} for p in parts]
+        elif group_id == "system_network":
+            if payload.get("system_updates", {}).get("reboot_pending"):
+                data["reboot_pending"] = True
+
+        return data
+
     async def diagnose_group(
         self,
         group_id: str = "",
@@ -328,6 +371,9 @@ class SystemDiagnosticEngine(DiagnosticEngine):
         summary = f"Подсистема '{gtitle}' находится в статусе: {status.upper()}."
         model_name = "Heuristic Analyzer"
         raw_response = None
+        system_instruction = "Вы — системный диагност. Дайте краткую экспертную оценку (1-2 предложения) и 1 рекомендацию строго на русском языке."
+        prompt_dict = self._build_minimal_group_prompt(gid, gtitle, status, anomalies, key_metrics, gpayload)
+        generated_prompt = json.dumps(prompt_dict, ensure_ascii=False, indent=2)
 
         executor = self.chat_model
         if executor is not None:
@@ -338,18 +384,13 @@ class SystemDiagnosticEngine(DiagnosticEngine):
             else:
                 model_name = "AI Model"
 
-            prompt = (
-                f"Домен: {gtitle}\n"
-                f"Данные телеметрии:\n```json\n{json.dumps(gpayload, ensure_ascii=False, indent=2)}\n```\n\n"
-                "Сформулируйте краткий вердикт и 1-2 рекомендации."
-            )
             try:
                 if hasattr(executor, "ask"):
-                    res = await executor.ask(prompt)
+                    res = await executor.ask(generated_prompt, system_instruction=system_instruction)
                 elif hasattr(executor, "chat"):
-                    res = await executor.chat(prompt)
+                    res = await executor.chat(generated_prompt, system_instruction=system_instruction)
                 elif callable(executor):
-                    res = await executor(prompt)
+                    res = await executor(generated_prompt)
                 else:
                     res = str(executor)
                 raw_response = str(res).strip()
@@ -367,6 +408,8 @@ class SystemDiagnosticEngine(DiagnosticEngine):
             recommendations=recommendations,
             key_metrics=key_metrics,
             raw_response=raw_response,
+            generated_prompt=generated_prompt,
+            system_instruction=system_instruction,
             ai_model_used=model_name,
         )
 
@@ -383,24 +426,45 @@ class SystemDiagnosticEngine(DiagnosticEngine):
 
         summary = f"Общий вердикт: синтез завершен по {len(groups)} доменам. Индекс здоровья: {health_score}/100 ({status_label})."
         model_name = "Heuristic Analyzer"
+        raw_response = None
+        system_instruction = "Вы — ведущий инженер. Сформулируйте общий вердикт (1-2 предложения) и 2-3 приоритетных действия строго на русском языке."
+        
+        # Ультра-компактный JSON промпт синтеза: передаются только статусы и выявленные аномалии
+        synth_payload = {
+            "health_score": health_score,
+            "status": status_label,
+            "domains": [
+                {
+                    "group": g.group_id,
+                    "status": g.status,
+                    "anomalies": g.anomalies,
+                    "metrics": g.key_metrics,
+                }
+                for g in groups
+            ],
+        }
+        generated_prompt = json.dumps(synth_payload, ensure_ascii=False, indent=2)
 
         executor = self.chat_model
         if executor is not None:
             if hasattr(executor, "active_provider"):
                 model_name = getattr(executor, "active_provider", "Unified AI")
-            prompt = f"Синтезируйте общий вердикт по группам: {[g.model_dump() for g in groups]}"
             try:
                 if hasattr(executor, "ask"):
-                    res = await executor.ask(prompt)
-                    summary = str(res).strip()
-            except Exception:
-                pass
+                    res = await executor.ask(generated_prompt, system_instruction=system_instruction)
+                    raw_response = str(res).strip()
+                    summary = raw_response
+            except Exception as ex:
+                logger.warning(f"Ошибка LLM синтеза вердикта: {ex}")
 
         return SynthesisDiagnosticResult(
             health_score=health_score,
             status_label=status_label,
             executive_summary=summary,
             critical_actions=actions[:4] if actions else ["Система функционирует штатно."],
+            raw_response=raw_response,
+            generated_prompt=generated_prompt,
+            system_instruction=system_instruction,
             ai_model_used=model_name,
             groups_evaluated=len(groups),
         )

@@ -556,7 +556,7 @@ async function _handleSaveAgent() {
   const desc = document.getElementById('agent-desc')?.value.trim();
   const enabled = document.getElementById('agent-enabled')?.checked ?? true;
   const provider = document.getElementById('agent-provider')?.value ?? 'gemini';
-  const model = document.getElementById('agent-model')?.value ?? 'gemini-flash-latest';
+  const model = document.getElementById('agent-model')?.value ?? 'gemini-3.5-flash-lite';
   const temperature = parseFloat(document.getElementById('agent-temperature')?.value ?? '0.3');
   const max_steps = parseInt(document.getElementById('agent-max-steps')?.value ?? '15', 10);
   const timeout_seconds = parseInt(document.getElementById('agent-timeout')?.value ?? '60', 10);
@@ -665,7 +665,7 @@ function _openAiBuilder() {
 async function _handleRunAiGenerate() {
   const taskDesc = document.getElementById('ai-builder-prompt')?.value.trim();
   const provider = document.getElementById('ai-builder-provider')?.value ?? 'gemini';
-  const model = document.getElementById('ai-builder-model')?.value ?? 'gemini-flash-latest';
+  const model = document.getElementById('ai-builder-model')?.value ?? 'gemini-3.5-flash-lite';
 
   if (!taskDesc) {
     _showToast(i18n.t('auto___f81ce1'), 'warning');

@@ -14,58 +14,67 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:43:00
+# Updated: 2026-10-08 12:20:00
 # =============================================================================
 
 from __future__ import annotations
 """Единый слой телеметрии Windows (Слой 3) платформы AI-Breadboard."""
 
-# Импорт контрактов из единого слоя apps.windows.contracts
+# Импорт перечислений из слоя apps.windows.contracts
 from apps.windows.contracts import (
     RiskLevel,
     TelemetryTier,
     ProcessState,
     ThreadState,
-    CpuMetrics,
-    MemoryMetrics,
-    GpuMetrics,
-    HardwareSensor,
-    SystemSnapshot,
-    ProcessMetrics,
-    ProcessTokenInfo,
-    TelemetryIncident,
 )
 
 # Модели телеметрии
 from apps.windows.telemetry.models import (
     AnomalyItem,
     BatteryMetrics,
+    CloudStorageInfo,
+    CpuMetrics,
     DiskIoMetrics,
     DiskPartitionMetrics,
     DriverInfo,
     ForensicsActivityReport,
+    GpuMetrics,
     HardwareArchiveEntry,
     HardwareAuditReport,
     HardwareChangeItem,
     HardwareDeviceAudit,
     HardwareNode,
+    HardwareSensor,
     KernelThrottlingReport,
+    MemoryMetrics,
+    MonitorInfo,
     NetworkInterfaceMetrics,
     NetworkPortMetrics,
+    NpuMetrics,
+    OfficeSuiteInfo,
     PeripheralsNetworkReport,
     PhysicalDiskHealth,
     ProcessLeakDiagnosticsReport,
     ProcessLeakItem,
     ProcessLifecycleEvent,
+    ProcessMetrics,
     ProcessNetworkActivity,
     ProcessProvenanceInfo,
     ProcessProvenanceReport,
+    ProcessTokenInfo,
     RamStickInfo,
+    StartupArchiveEntry,
+    StartupChangeItem,
     StorageBatteryWearReport,
+    SystemCoreMetrics,
     SystemDiagnosticReport,
+    SystemHardwareQuick,
     SystemHealthAlerts,
+    SystemSnapshot,
+    TelemetryIncident,
     W64CollectorStatus,
     W64SystemEvent,
+    WindowsUpdateInfo,
     ETWTraceEvent,
     SecurityAuditStatus,
     SecurityBookmarkState,
@@ -98,6 +107,7 @@ from apps.windows.telemetry.storage.init_db import (
 from apps.windows.telemetry.sensors import get_hardware_sensors
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.service import TelemetryLoggerService
+from apps.windows.telemetry.telemetry_engine import TelemetryEngine, DeadbandTracker
 from apps.windows.telemetry.telemetry_config import TelemetryConfigManager, get_default_telemetry_config_path
 from apps.windows.telemetry.json_logger import TelemetryJsonLogger
 from apps.windows.telemetry.file_collector import FileCollector
@@ -203,6 +213,8 @@ __all__ = [
     "AggregationLevel",
     "sensors_aggregate",
     "TelemetryLoggerService",
+    "TelemetryEngine",
+    "DeadbandTracker",
     "TelemetryConfigManager",
     "TelemetryJsonLogger",
     "get_default_telemetry_config_path",

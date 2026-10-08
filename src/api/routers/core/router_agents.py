@@ -54,7 +54,7 @@ DEFAULT_AGENTS: List[Dict[str, Any]] = [
         "is_system": True,
         "enabled": True,
         "provider": "gemini",
-        "model": "gemini-flash-latest",
+        "model": "gemini-3.5-flash-lite",
         "tools": ["flight_search", "flight_price_calculator"],
     },
     {
@@ -64,7 +64,7 @@ DEFAULT_AGENTS: List[Dict[str, Any]] = [
         "is_system": True,
         "enabled": True,
         "provider": "gemini",
-        "model": "gemini-flash-latest",
+        "model": "gemini-3.5-flash-lite",
         "tools": ["web_search"],
     },
     {
@@ -74,7 +74,7 @@ DEFAULT_AGENTS: List[Dict[str, Any]] = [
         "is_system": True,
         "enabled": True,
         "provider": "gemini",
-        "model": "gemini-flash-latest",
+        "model": "gemini-3.5-flash-lite",
         "tools": ["web_search"],
     },
 ]

@@ -14,7 +14,7 @@
 # Package: apps.windows.contracts
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:35:00
+# Updated: 2026-10-08 12:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -202,7 +202,7 @@ class ProcessInfo:
 
 
 @dataclass
-class SystemSnapshot:
+class ContractSystemSnapshot:
     """Комплексный снимок состояния операционной системы."""
     timestamp: datetime = field(default_factory=datetime.now)
     tier: TelemetryTier = TelemetryTier.STANDARD
@@ -212,7 +212,7 @@ class SystemSnapshot:
     active_processes: int = 0
     total_handles: int = 0
     processes: List[ProcessInfo] = field(default_factory=list)
-    incidents: List[TelemetryIncident] = field(default_factory=list)
+    incidents: List[ContractTelemetryIncident] = field(default_factory=list)
     sensors: Dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -231,7 +231,7 @@ class SystemSnapshot:
 
 
 @dataclass
-class TelemetryIncident:
+class ContractTelemetryIncident:
     """Инцидент или критическая аномалия телеметрии."""
     incident_id: str
     timestamp: datetime = field(default_factory=datetime.now)
@@ -255,7 +255,7 @@ class TelemetryIncident:
         }
 
 
-class ProcessMetrics(BaseModel):
+class ContractProcessMetrics(BaseModel):
     """Срез метрик отдельного процесса."""
     pid: int
     name: str
@@ -267,7 +267,7 @@ class ProcessMetrics(BaseModel):
     thread_count: int = 0
 
 
-class ProcessTokenInfo(BaseModel):
+class ContractProcessTokenInfo(BaseModel):
     """Атрибуты маркера безопасности процесса (Security Token)."""
     pid: int
     username: str = ""

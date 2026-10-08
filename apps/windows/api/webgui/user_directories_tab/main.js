@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/user_directories_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-08 11:46:00
  * =============================================================================
  */
 
@@ -508,7 +508,7 @@ function getFileIcon(ext) {
     case 'mp3':
     case 'wav':
     case 'ogg':
-      return '<i class="bi bi-file-earmark-music-fill text-purple fs-6"></i>';
+      return '<i class="bi bi-file-earmark-music-fill text-info fs-6"></i>';
     case 'py':
     case 'js':
     case 'sh':

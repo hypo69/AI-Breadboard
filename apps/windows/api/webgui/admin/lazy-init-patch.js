@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 07:09:00
+ * Updated: 2026-10-08 12:35:00
  * =============================================================================
  */
 
@@ -107,7 +107,7 @@ window.addEventListener('load', async () => {
     { tabName: 'trading', appId: 'trading_terminal', htmlUrl: `/html/trading_tab/index.html`, jsUrl: `/html/trading_tab/main.js` },
     { tabName: 'network', appId: 'network_terminal', htmlUrl: `/html/network_tab/index.html`, jsUrl: `/html/network_tab/main.js` },
     { tabName: 'system-inspector', appId: 'system_inspector', htmlUrl: `/html/system_inspector_tab/index.html`, jsUrl: `/html/system_inspector_tab/main.js` },
-    { tabName: 'about-system', appId: 'about_system', htmlUrl: `/html/about_system_tab/index.html?v=20261006_v3`, jsUrl: `/html/about_system_tab/main.js?v=20261006_v3` },
+    { tabName: 'about-system', appId: 'about_system', htmlUrl: `/html/about_system_tab/index.html?v=20261008_v2`, jsUrl: `/html/about_system_tab/main.js?v=20261008_v2` },
     { tabName: 'windows-admin', appId: 'windows_sysadmin', htmlUrl: `/html/windows_admin_tab/index.html`, jsUrl: `/html/windows_admin_tab/main.js` },
     { tabName: 'cloudflared', appId: 'cloudflared_monitor', htmlUrl: `/html/cloudflared_tab/index.html`, jsUrl: `/html/cloudflared_tab/main.js` },
     { tabName: 'user-assistant', appId: 'user_assistant', htmlUrl: `/html/user_assistant_tab/index.html`, jsUrl: `/html/user_assistant_tab/main.js` },

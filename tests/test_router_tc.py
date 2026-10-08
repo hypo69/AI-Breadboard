@@ -103,15 +103,15 @@ class TestTcModelEndpoints:
         cfg_file.parent.mkdir(parents=True, exist_ok=True)
         cfg_file.write_text(json.dumps({'ai': {'provider': 'gemini_cli', 'gemini_cli': {'model': 'gemini-3.1-flash-lite'}}}), encoding='utf-8')
         with patch('src.api.routers.tc.router_tc._find_tc_config_path', return_value=cfg_file):
-            response = client.post('/api/v1/tc/model', json={'model': 'gemini-flash-latest', 'provider': 'gemini', 'save_to_config': True})
+            response = client.post('/api/v1/tc/model', json={'model': 'gemini-3.5-flash-lite', 'provider': 'gemini', 'save_to_config': True})
             assert response.status_code == 200
             data = response.json()
             assert data.get('status') == 'success'
-            assert data.get('model') == 'gemini-flash-latest'
+            assert data.get('model') == 'gemini-3.5-flash-lite'
             assert data.get('provider') == 'GEMINI'
             updated_data = json.loads(cfg_file.read_text(encoding='utf-8'))
             assert updated_data['ai']['provider'] == 'gemini'
-            assert updated_data['ai']['gemini']['model'] == 'gemini-flash-latest'
+            assert updated_data['ai']['gemini']['model'] == 'gemini-3.5-flash-lite'
 
     def test_set_tc_model_via_put(self, client: TestClient) -> None:
         """Проверка PUT /api/v1/tc/model обновляет модель."""

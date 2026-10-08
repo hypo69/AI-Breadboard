@@ -1,0 +1,271 @@
+Да. Для проверки концепции я бы сделал это как **агента Procurement & Sales Intelligence**, а не просто «почтового бота».
+
+### 1. Что агент делает
+
+Два раза в день агент:
+
+1. Ищет новые **счета, счета-фактуры, квитанции, заказы и коммерческие предложения**.
+2. Распознаёт PDF, Excel, HTML и текстовые документы.
+3. Извлекает:
+
+   * поставщика / продавца;
+   * покупателя;
+   * номер документа;
+   * дату;
+   * срок оплаты;
+   * валюту;
+   * позиции;
+   * количество;
+   * цену за единицу;
+   * скидки;
+   * НДС;
+   * доставку;
+   * итоговую сумму;
+   * банковские реквизиты;
+   * условия поставки;
+   * условия оплаты.
+4. Сопоставляет несколько предложений по одному товару/услуге.
+5. Строит **большую сводную закупочную/продажную ведомость**.
+6. Формирует HTML/PDF-отчёт.
+7. Отправляет его два раза в день на указанный адрес.
+
+Для реальной отправки электронной почты потребуется подключённый почтовый сервис. Я нашёл доступный вариант **Resend** и предложил его подключить; после подключения его можно использовать для автоматической отправки.
+
+### 2. Расширенный словарь поиска
+
+Твой список я бы расширил примерно так:
+
+```json
+{
+  "keywords": [
+    "invoice",
+    "tax invoice",
+    "commercial invoice",
+    "proforma invoice",
+    "pro forma invoice",
+    "invoice statement",
+    "bill",
+    "receipt",
+    "sales invoice",
+    "purchase invoice",
+    "credit invoice",
+    "debit invoice",
+    "credit note",
+    "debit note",
+    "tax receipt",
+    "payment receipt",
+    "quotation",
+    "quote",
+    "price quote",
+    "price quotation",
+    "pricing",
+    "price list",
+    "commercial offer",
+    "sales quotation",
+    "purchase quotation",
+    "proposal",
+    "commercial proposal",
+    "purchase order",
+    "sales order",
+    "order",
+    "order confirmation",
+    "order number",
+    "PO",
+    "PO number",
+    "SO",
+    "SO number",
+    "delivery note",
+    "packing slip",
+    "packing list",
+    "shipping invoice",
+    "statement",
+    "account statement",
+    "accounting",
+    "payment request",
+    "payment confirmation",
+    "remittance",
+    "remittance advice",
+    "bill of sale",
+    "contract",
+    "agreement",
+    "estimate",
+    "cost estimate",
+    "price estimate",
+
+    "חשבונית",
+    "חשבונית מס",
+    "חשבונית מס קבלה",
+    "חשבונית עסקה",
+    "חשבונית זיכוי",
+    "חשבונית חיוב",
+    "חשבונית פרופורמה",
+    "חשבונית מסחרית",
+    "קבלה",
+    "קבלה על תשלום",
+    "הצעת מחיר",
+    "הצעה מסחרית",
+    "מחירון",
+    "הזמנה",
+    "הזמנת רכש",
+    "הזמנת לקוח",
+    "אישור הזמנה",
+    "מספר הזמנה",
+    "מספר הזמנת רכש",
+    "תעודת משלוח",
+    "תעודת חיוב",
+    "תעודת זיכוי",
+    "דרישת תשלום",
+    "אישור תשלום",
+    "דוח חשבון",
+    "דף חשבון",
+    "זיכוי",
+    "חיוב",
+    "הסכם",
+    "חוזה",
+    "אומדן",
+    "עלות",
+
+    "счет-фактура",
+    "счёт-фактура",
+    "счет",
+    "счёт",
+    "налоговая накладная",
+    "товарная накладная",
+    "счет на оплату",
+    "коммерческий счет",
+    "предварительный счет",
+    "инвойс",
+    "квитанция",
+    "чек",
+    "акт",
+    "акт выполненных работ",
+    "акт приема-передачи",
+    "заказ",
+    "заказ на покупку",
+    "заказ поставщику",
+    "номер заказа",
+    "коммерческое предложение",
+    "ценовое предложение",
+    "предложение",
+    "прайс",
+    "прайс-лист",
+    "расценки",
+    "смета",
+    "оценка стоимости",
+    "подтверждение заказа",
+    "накладная",
+    "доставка",
+    "уведомление об оплате",
+    "подтверждение оплаты",
+    "банковская выписка",
+    "дебет",
+    "кредит",
+    "возврат",
+    "скидка"
+  ]
+}
+```
+
+### 3. Я бы добавил ещё один слой — признаки документа
+
+Одних keywords недостаточно. Агент должен искать **семантические признаки**:
+
+```text
+invoice number
+invoice no.
+document number
+reference number
+PO number
+order number
+customer number
+vendor number
+VAT
+VAT ID
+tax ID
+subtotal
+total
+grand total
+amount due
+balance due
+currency
+quantity
+unit price
+unit cost
+discount
+tax
+VAT rate
+shipping
+freight
+delivery
+payment terms
+due date
+bank details
+IBAN
+SWIFT
+BIC
+purchase order
+quotation number
+valid until
+validity
+```
+
+Для Израиля отдельно:
+
+```text
+עוסק מורשה
+עוסק פטור
+ח.פ.
+ע.מ.
+מספר עוסק
+מספר חברה
+מספר חשבונית
+תאריך חשבונית
+תאריך עסקה
+סכום לפני מע"מ
+מע"מ
+סה"כ
+לתשלום
+תנאי תשלום
+מועד תשלום
+תאריך פירעון
+פרטי בנק
+מספר חשבון
+סניף
+```
+
+### 4. Важный момент
+
+Я бы **не ограничивал агента только словами `invoice` и `חשבונית`**.
+
+Например, очень важный документ может называться:
+
+> `Quotation_2026-1048.pdf`
+
+и вообще не содержать слова invoice.
+
+Поэтому pipeline лучше сделать:
+
+**Discovery → Document classification → OCR/text extraction → Field extraction → Validation → Deduplication → Aggregation → Report → Email**
+
+И отдельно классифицировать:
+
+```text
+INVOICE
+TAX_INVOICE
+RECEIPT
+QUOTATION
+PROFORMA
+PURCHASE_ORDER
+SALES_ORDER
+DELIVERY_NOTE
+CREDIT_NOTE
+DEBIT_NOTE
+PAYMENT_CONFIRMATION
+STATEMENT
+CONTRACT
+OTHER_FINANCIAL
+```
+
+Это уже получается хороший прототип твоего **AI Sales / Procurement Agent**.
+
+И ещё: в указанном адресе у тебя написано `e.cat.co.il@gamil.com`. Если это не намеренная запись, то, вероятно, ты имел в виду адрес с доменом `gmail.com`. Для автоматической отправки я бы **не исправлял его молча**, а зафиксировал именно тот адрес, который ты указал, пока не подтвердим правильный.

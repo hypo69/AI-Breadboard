@@ -25,7 +25,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 12:27:30
+# Updated: 2026-10-08 12:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -113,34 +113,39 @@ async def get_system_summary(
 async def list_processes(
     limit: int = Query(default=50, ge=1, le=500, description="Лимит процессов"),
     sort_by: str = Query(default="cpu", description="Сортировка (cpu, memory, handles)"),
-    source: Optional[str] = Query(default="live", description="Источник (live или db)"),
+    source: Optional[str] = Query(default="db", description="Источник (db или live)"),
 ) -> List[ProcessMetrics]:
-    """Получение списка процессов из оперативной памяти или SQLite базы данных."""
-    if source == "db":
+    """Получение списка процессов из SQLite базы данных (telemetry.db) или оперативной памяти."""
+    lim = limit.default if hasattr(limit, "default") else (int(limit) if isinstance(limit, (int, float, str)) and str(limit).isdigit() else 50)
+    sort_str = sort_by.default if hasattr(sort_by, "default") else (str(sort_by) if sort_by else "cpu")
+    src_str = source.default if hasattr(source, "default") else (str(source) if source else "db")
+
+    if src_str != "live":
         try:
             from apps.windows.telemetry.sqlite import TelemetryStorage
             storage = TelemetryStorage.get_instance(read_only=True)
-            raw_procs = storage.get_latest_processes(limit=limit, sort_by=sort_by)
-            result = []
-            for p in raw_procs:
-                result.append(
-                    ProcessMetrics(
-                        pid=p.get("pid", 0),
-                        name=p.get("name", "unknown"),
-                        cpu_percent=float(p.get("cpu_percent") or 0.0),
-                        memory_mb=float(p.get("memory_mb") or 0.0),
-                        memory_percent=float(p.get("memory_percent") or 0.0),
-                        num_threads=int(p.get("num_threads") or 1),
-                        num_handles=int(p.get("num_handles") or 0),
-                        status=p.get("status") or "running",
-                        username=p.get("username"),
+            raw_procs = storage.get_latest_processes(limit=lim, sort_by=sort_str)
+            if raw_procs:
+                result = []
+                for p in raw_procs:
+                    result.append(
+                        ProcessMetrics(
+                            pid=p.get("pid", 0),
+                            name=p.get("name", "unknown"),
+                            cpu_percent=float(p.get("cpu_percent") or 0.0),
+                            memory_mb=float(p.get("memory_mb") or 0.0),
+                            memory_percent=float(p.get("memory_percent") or 0.0),
+                            num_threads=int(p.get("num_threads") or 1),
+                            num_handles=int(p.get("num_handles") or 0),
+                            status=p.get("status") or "running",
+                            username=p.get("username"),
+                        )
                     )
-                )
-            return result
+                return result
         except Exception as ex:
             logger.warning(f"[RouterSystem] Ошибка чтения процессов из SQLite: {ex}")
     collector = get_collector()
-    return await asyncio.to_thread(collector.get_top_processes, limit=limit, sort_by=sort_by)
+    return await asyncio.to_thread(collector.get_top_processes, limit=lim, sort_by=sort_str)
 
 
 @router.get("/processes/stats")
@@ -217,7 +222,24 @@ async def get_hardware_tree() -> List[HardwareNode]:
 
 @router.get("/sensors", response_model=List[HardwareSensor])
 async def get_sensors() -> List[HardwareSensor]:
-    """Список текущих показаний аппаратных сенсоров хоста (температуры, напряжения, кулеры)."""
+    """Список текущих показаний аппаратных сенсоров хоста из базы данных SQLite (telemetry.db)."""
+    try:
+        from apps.windows.telemetry.sqlite import TelemetryStorage
+        storage = TelemetryStorage.get_instance(read_only=True)
+        db_sensors = storage.get_latest_sensors()
+        if db_sensors:
+            return [
+                HardwareSensor(
+                    sensor_id=str(item.get("sensor_id") or item.get("name") or "unknown"),
+                    name=str(item.get("name") or item.get("sensor_id") or "sensor"),
+                    sensor_type=str(item.get("sensor_type") or "temperature"),
+                    value=float(item.get("value") or 0.0),
+                    unit=str(item.get("unit") or "°C"),
+                )
+                for item in db_sensors
+            ]
+    except Exception as ex:
+        logger.debug(f"[RouterSystem] Ошибка чтения сенсоров из SQLite: {ex}")
     from apps.windows.telemetry.sensors import get_hardware_sensors
     return await asyncio.to_thread(get_hardware_sensors)
 

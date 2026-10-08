@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 12:00:00
 # =============================================================================
 
 from __future__ import annotations
@@ -303,6 +303,8 @@ class GroupDiagnosticResult(BaseModel):
     recommendations: List[str] = Field(default_factory=list, description="Рекомендации по оптимизации домена")
     key_metrics: Dict[str, Any] = Field(default_factory=dict, description="Ключевые метрики для карточки UI")
     raw_response: Optional[str] = Field(default=None, description="Сырой ответ языковой модели")
+    generated_prompt: Optional[str] = Field(default=None, description="Точный компактный JSON-промпт, отправленный модели")
+    system_instruction: Optional[str] = Field(default=None, description="Системная инструкция для модели")
     ai_model_used: str = Field(default="AI Model", description="Использованный AI-провайдер/модель")
 
 
@@ -317,5 +319,8 @@ class SynthesisDiagnosticResult(BaseModel):
     status_label: str = Field(default="Отличное", description="Метка статуса (Отличное, Внимание, Критическое)")
     executive_summary: str = Field(..., description="Итоговое резюме инженера по всей системе")
     critical_actions: List[str] = Field(default_factory=list, description="Приоритетные шаги для администратора")
+    raw_response: Optional[str] = Field(default=None, description="Сырой ответ модели синтеза")
+    generated_prompt: Optional[str] = Field(default=None, description="Сформированный компактный JSON промпт синтеза")
+    system_instruction: Optional[str] = Field(default=None, description="Системная инструкция синтеза")
     ai_model_used: str = Field(default="AI Model", description="Использованный провайдер для синтеза")
     groups_evaluated: int = Field(default=4, description="Количество оцененных доменов")

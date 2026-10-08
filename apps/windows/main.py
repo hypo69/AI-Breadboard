@@ -100,15 +100,19 @@ def load_tc_config(config_path_override: Optional[str] = None) -> Dict[str, Any]
     ])
 
     for cand in candidates:
+        logger.debug(f'[MainApp] Попытка загрузки конфига из: {cand}')
         if cand.exists() and cand.is_file():
             try:
                 with open(cand, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     if isinstance(data, dict):
+                        logger.info(f'[MainApp] Конфиг загружен из: {cand}')
+                        logger.debug(f'[MainApp] Конфиг содержимое: {data.keys()}')
                         return data
             except Exception as exc:
                 logger.warning(f'Не удалось прочитать конфигурацию из {cand}: {exc}')
 
+    logger.error('[MainApp] Не удалось загрузить конфигурацию из ни одного из кандидатов')
     return {}
 
 
@@ -126,6 +130,15 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     app_config = config if config is not None else load_tc_config()
     server_section = app_config.get('server', {})
     cors_config = build_cors_config(server_section)
+
+    # Строгая проверка обязательных секций конфига
+    ai_cfg = app_config.get('ai_providers_and_models_configuration', {})
+    if not ai_cfg:
+        raise ValueError('[Main] Обязательная секция ai_providers_and_models_configuration отсутствует в конфиге')
+    if not ai_cfg.get('default_provider'):
+        raise ValueError('[Main] Обязательное поле ai_providers_and_models_configuration.default_provider отсутствует в конфиге')
+    if not ai_cfg.get('default_model'):
+        raise ValueError('[Main] Обязательное поле ai_providers_and_models_configuration.default_model отсутствует в конфиге')
 
     state = AppState()
     state.metrics = create_metrics(started_at=state.started_at)
@@ -209,13 +222,34 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     app.state.ws_hub = state.ws_hub
 
     # Инициализация легковесной модели ИИ только если она включена
-    ai_cfg = app_config.get('ai', {})
+    ai_cfg = app_config.get('ai_providers_and_models_configuration', {})
+    logger.debug(f'[MainApp] Конфиг ai_providers_and_models_configuration: {ai_cfg}')
+    
     try:
         from src.ai import UnifiedChatModel
-        state.chat_model = UnifiedChatModel()
-        state.narrator_model = UnifiedChatModel() if ai_cfg.get('enable_narrator', False) else None
+        
+        # Читаем default_provider и default_model из конфига
+        default_provider = ai_cfg.get('default_provider', '')
+        default_model = ai_cfg.get('default_model', '')
+        
+        logger.debug(f'[MainApp] default_provider: {default_provider}, default_model: {default_model}')
+        
+        # Требуем оба параметра — ни одного хардкода!
+        if default_provider and default_model:
+            state.chat_model = UnifiedChatModel(provider=default_provider, model=default_model)
+        else:
+            raise ValueError('[Main] Не указаны default_provider и/или default_model в конфиге')
+        
+        # Инициализируем narrator_model если включена функция narrator
+        if ai_cfg.get('enable_narrator', False):
+            if default_provider and default_model:
+                state.narrator_model = UnifiedChatModel(provider=default_provider, model=default_model)
+            else:
+                raise ValueError('[Main] Не указаны default_provider и/или default_model для narrator_model')
+        else:
+            state.narrator_model = None
     except Exception as exc:
-        logger.debug(f'AI модель не инициализирована: {exc}')
+        logger.warning(f'AI модель не инициализирована: {exc}')
         state.chat_model = None
         state.narrator_model = None
     app.state.chat_model = state.chat_model

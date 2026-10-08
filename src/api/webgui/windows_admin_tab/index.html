@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/windows_admin_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 11:38:46
+Updated: 2026-10-08 11:46:00
 =============================================================================
 -->
 
@@ -46,18 +46,20 @@ Updated: 2026-10-06 11:38:46
     border-color: #3b82f6 !important;
   }
   .badge-hidden {
-    background-color: #6b21a8;
-    color: #e9d5ff;
-    border: 1px solid #9333ea;
+    background-color: var(--bs-secondary-bg-subtle, rgba(100, 116, 139, 0.2));
+    color: var(--bs-secondary-text-emphasis, #94a3b8);
+    border: 1px solid var(--bs-border-color, rgba(148, 163, 184, 0.3));
   }
   .badge-admin {
-    background-color: #9a3412;
-    color: #ffedd5;
-    border: 1px solid #ea580c;
+    background-color: var(--bs-warning-bg-subtle, rgba(234, 88, 12, 0.2));
+    color: var(--bs-warning-text-emphasis, #f59e0b);
+    border: 1px solid var(--bs-warning-border-subtle, rgba(245, 158, 11, 0.4));
   }
   .badge-disabled {
-    background-color: #374151;
-    color: #9ca3af;
+    background-color: var(--bs-danger-bg-subtle, rgba(239, 68, 68, 0.2));
+    color: var(--bs-danger-text-emphasis, #f87171);
+    border: 1px solid var(--bs-danger-border-subtle, rgba(239, 68, 68, 0.4));
+    font-weight: bold;
   }
 </style>
 

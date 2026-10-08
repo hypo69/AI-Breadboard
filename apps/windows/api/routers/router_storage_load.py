@@ -18,12 +18,13 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-05 23:40:00
+# Updated: 2026-10-08 13:56:00
 # =============================================================================
 
 from __future__ import annotations
 """Роутер панели «Параметры накопителей (Диски SSD/HDD/NVMe)»: метрики хранилища."""
 
+import re
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -43,18 +44,32 @@ class DiskDriveMetric(BaseModel):
     """Метрика физического накопителя (SSD, HDD, NVMe)."""
     id: str = Field(default="", description="Идентификатор накопителя (напр. Disk0)")
     name: str = Field(..., description="Модель или наименование диска")
-    media_type: str = Field(default="SSD", description="Тип носителя: NVMe, SSD, HDD")
+    media_type: str = Field(default="SSD", description="Тип носителя: NVMe, SSD, HDD, External")
+    interface_type: Optional[str] = Field(default=None, description="Интерфейс: SATA, NVMe, USB, PCIe")
+    serial_number: Optional[str] = Field(default=None, description="Серийный номер диска")
+    health_status: Optional[str] = Field(default="Healthy", description="Состояние здоровья (SMART)")
     total_gb: Optional[float] = Field(default=None, description="Полный объем накопителя, GB")
     used_gb: Optional[float] = Field(default=None, description="Занятый объем, GB")
     free_gb: Optional[float] = Field(default=None, description="Свободный объем, GB")
     used_percent: Optional[float] = Field(default=None, description="Заполненность накопителя, %")
     temperature_c: Optional[float] = Field(default=None, description="Температура накопителя, °C")
-    activity_percent: Optional[float] = Field(default=None, description="Общая активность диска, %")
+    activity_percent: Optional[float] = Field(default=None, description="Общая интенсивность обращений (активность), %")
     read_activity_percent: Optional[float] = Field(default=None, description="Активность чтения, %")
     write_activity_percent: Optional[float] = Field(default=None, description="Активность записи, %")
     read_rate_raw: Optional[str] = Field(default=None, description="Скорость чтения")
     write_rate_raw: Optional[str] = Field(default=None, description="Скорость записи")
+    data_written_gb: Optional[float] = Field(default=None, description="Объем записанных данных, GB")
+    data_written_raw: Optional[str] = Field(default=None, description="Форматированный объем записанных данных")
+    data_read_gb: Optional[float] = Field(default=None, description="Объем прочитанных данных, GB")
+    data_read_raw: Optional[str] = Field(default=None, description="Форматированный объем прочитанных данных")
+    read_bytes: Optional[int] = Field(default=None, description="Байт прочитано")
+    write_bytes: Optional[int] = Field(default=None, description="Байт записано")
+    read_count: Optional[int] = Field(default=None, description="Количество операций чтения")
+    write_count: Optional[int] = Field(default=None, description="Количество операций записи")
+    life_percent: Optional[float] = Field(default=None, description="Остаточный ресурс SSD (Life), %")
     power_on_hours: Optional[float] = Field(default=None, description="Время наработки (Power-on Hours)")
+    power_on_count: Optional[float] = Field(default=None, description="Количество циклов включения")
+    partitions: List[str] = Field(default_factory=list, description="Связанные буквы дисков / разделы")
 
 
 class DiskPartitionMetric(BaseModel):
@@ -142,13 +157,32 @@ def build_storage_load(
             if temp is not None and (temp <= 5 or temp > 120):
                 temp = None
 
+            wear = getattr(cd, "wear_percentage", None)
+            life = None
+            if wear is not None and wear >= 0:
+                life = max(0.0, 100.0 - float(wear))
+
+            lifetime_w_tb = getattr(cd, "lifetime_write_tb", None)
+            lifetime_r_tb = getattr(cd, "lifetime_read_tb", None)
+            lifetime_w_b = getattr(cd, "lifetime_write_bytes", None)
+            lifetime_r_b = getattr(cd, "lifetime_read_bytes", None)
+
             drives_map[m] = {
                 "id": dev_id,
                 "name": m,
                 "media_type": media_type,
+                "interface_type": getattr(cd, "interface_type", None) or ("NVMe" if media_type == "NVMe" else "SATA"),
+                "serial_number": getattr(cd, "serial_number", None),
+                "health_status": getattr(cd, "health_status", "Healthy") or "Healthy",
                 "total_gb": round(float(cd.size_gb), 1) if getattr(cd, "size_gb", None) else None,
                 "temperature_c": round(float(temp), 1) if temp is not None else None,
                 "power_on_hours": round(float(cd.power_on_hours), 0) if getattr(cd, "power_on_hours", None) else None,
+                "life_percent": life,
+                "data_written_gb": round(float(lifetime_w_tb) * 1024.0, 1) if lifetime_w_tb else None,
+                "data_read_gb": round(float(lifetime_r_tb) * 1024.0, 1) if lifetime_r_tb else None,
+                "write_bytes": int(lifetime_w_b) if lifetime_w_b else None,
+                "read_bytes": int(lifetime_r_b) if lifetime_r_b else None,
+                "partitions": [],
             }
 
     # 2. Обогащение и добавление из сенсоров LibreHardwareMonitor
@@ -166,6 +200,7 @@ def build_storage_load(
                     "id": f"drive-{len(drives_map) + 1}",
                     "name": hname,
                     "media_type": _detect_media_type(hname),
+                    "partitions": [],
                 }
 
             cat = str(s.get("sensor_category", "")).lower()
@@ -190,16 +225,79 @@ def build_storage_load(
                     drives_map[matched_key]["total_gb"] = round(float(val_num), 1)
                 elif "free space" in sname and val_num is not None:
                     drives_map[matched_key]["free_gb"] = round(float(val_num), 1)
+                elif "data written" in sname and val_num is not None:
+                    drives_map[matched_key]["data_written_gb"] = round(float(val_num), 1)
+                elif "data read" in sname and val_num is not None:
+                    drives_map[matched_key]["data_read_gb"] = round(float(val_num), 1)
             elif "throughput" in cat:
                 if "read rate" in sname:
                     drives_map[matched_key]["read_rate_raw"] = str(val_raw or "")
                 elif "write rate" in sname:
                     drives_map[matched_key]["write_rate_raw"] = str(val_raw or "")
+            elif "levels" in cat:
+                if "life" in sname and val_num is not None:
+                    drives_map[matched_key]["life_percent"] = round(float(val_num), 1)
             elif "factors" in cat:
                 if "power on hours" in sname and val_num is not None:
                     drives_map[matched_key]["power_on_hours"] = round(float(val_num), 0)
+                elif "power on count" in sname and val_num is not None:
+                    drives_map[matched_key]["power_on_count"] = round(float(val_num), 0)
 
-    # 3. Сбор логических разделов
+    # 3. psutil disk_io_counters для операций и байтов чтения/записи
+    io_counters = {}
+    if psutil is not None:
+        try:
+            io_counters = psutil.disk_io_counters(perdisk=True) or {}
+        except Exception as io_err:
+            logger.debug(f"[router_storage_load] Ошибка сбора psutil.disk_io_counters: {io_err}")
+
+    for k, d in drives_map.items():
+        dev_id = str(d.get("id", ""))
+        digits = re.findall(r"\d+", dev_id)
+        if digits:
+            phys_key = f"PhysicalDrive{digits[0]}"
+            if phys_key in io_counters:
+                io_stat = io_counters[phys_key]
+                if d.get("read_bytes") is None or d.get("read_bytes") == 0:
+                    d["read_bytes"] = io_stat.read_bytes
+                if d.get("write_bytes") is None or d.get("write_bytes") == 0:
+                    d["write_bytes"] = io_stat.write_bytes
+                d["read_count"] = io_stat.read_count
+                d["write_count"] = io_stat.write_count
+
+        # Форматирование data_written_raw
+        w_gb = d.get("data_written_gb")
+        w_b = d.get("write_bytes")
+        if w_gb and w_gb > 0:
+            if w_gb >= 1000:
+                d["data_written_raw"] = f"{w_gb / 1024.0:.2f} TB"
+            else:
+                d["data_written_raw"] = f"{w_gb:,.0f} GB"
+        elif w_b and w_b > 0:
+            if w_b >= 1024**4:
+                d["data_written_raw"] = f"{w_b / (1024**4):.2f} TB"
+            elif w_b >= 1024**3:
+                d["data_written_raw"] = f"{w_b / (1024**3):.2f} GB"
+            else:
+                d["data_written_raw"] = f"{w_b / (1024**2):.1f} MB"
+
+        # Форматирование data_read_raw
+        r_gb = d.get("data_read_gb")
+        r_b = d.get("read_bytes")
+        if r_gb and r_gb > 0:
+            if r_gb >= 1000:
+                d["data_read_raw"] = f"{r_gb / 1024.0:.2f} TB"
+            else:
+                d["data_read_raw"] = f"{r_gb:,.0f} GB"
+        elif r_b and r_b > 0:
+            if r_b >= 1024**4:
+                d["data_read_raw"] = f"{r_b / (1024**4):.2f} TB"
+            elif r_b >= 1024**3:
+                d["data_read_raw"] = f"{r_b / (1024**3):.2f} GB"
+            else:
+                d["data_read_raw"] = f"{r_b / (1024**2):.1f} MB"
+
+    # 4. Сбор логических разделов
     partitions_list: List[DiskPartitionMetric] = []
     if partitions_data is not None:
         for p in partitions_data:

@@ -793,7 +793,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
       const params = new URLSearchParams();
       if (force) params.append('refresh', 'true');
       if (showAll) params.append('include_unsupported', 'true');
-      const url = '/api/chat/models' + (params.toString() ? '?' + params.toString() : '');
+      const url = '/api/v1/chat/models' + (params.toString() ? '?' + params.toString() : '');
       const modelsData = await window.api.fetch(url);
       let grouped = modelsData.models || {};
       if (Array.isArray(grouped)) {
@@ -1090,7 +1090,7 @@ async function loadAgyConfig() {
     const modelSelect = document.getElementById('agy-model');
     if (modelSelect) {
       try {
-        const modelsData = await window.api.fetch('/api/chat/models');
+        const modelsData = await window.api.fetch('/api/v1/chat/models');
         const agyList = modelsData.models?.agy || [];
         if (agyList.length > 0) {
           const curVal = modelSelect.value;

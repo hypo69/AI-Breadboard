@@ -16,7 +16,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 10:47:00
 # =============================================================================
 
 """Модуль реализации компонента `GoogleGenerativeAI` системы AI-Breadboard."""
@@ -29,7 +29,7 @@ from logger import logger
 from src.ai.gemini.gemini_api_key_state import update_last_run
 from src.utils.jjson import j_loads
 from .core import GoogleGenerativeAICore
-from .errors import GoogleGenerativeAIErrorMixin
+from .errors import GoogleGenerativeAIErrorMixin, format_error_as_json
 from .history import GoogleGenerativeAIHistoryMixin
 from .config import GoogleGenerativeAIConfigMixin
 from .images import GoogleGenerativeAIImagesMixin
@@ -86,10 +86,20 @@ class GoogleGenerativeAI(
                 if response and response.text:
                     response_text: str = self._normalize_text(response.text)
                     response_text = self._remove_html_blocks(response_text)
+                    self._log_response_details(method='ask', model=self.model_name, response_text=response_text, attempt=attempt + 1)
                     update_last_run(self._key_names_active[0] if self._key_names_active else '')
                     self._unavailable_attempts = 0
                     return response_text
-                logger.debug(f'GoogleGenerativeAI: Empty model response on attempt {attempt + 1}')
+                err_empty = {
+                    'error': {
+                        'code': 204,
+                        'status': 'EMPTY_RESPONSE',
+                        'message': f'Empty model response on attempt {attempt + 1}',
+                        'model': self.model_name,
+                        'attempt': attempt + 1,
+                    }
+                }
+                logger.warning(f'GoogleGenerativeAI: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, self.model_name, attempt, attempts)
@@ -134,9 +144,20 @@ class GoogleGenerativeAI(
                     if response and response.text:
                         response_text: str = self._normalize_text(response.text)
                         response_text = self._remove_html_blocks(response_text)
+                        self._log_response_details(method='chat', model=active_model, response_text=response_text, attempt=attempt + 1)
                         update_last_run(self._key_names_active[0] if self._key_names_active else '')
                         self._unavailable_attempts = 0
                         return response_text
+                    err_empty = {
+                        'error': {
+                            'code': 204,
+                            'status': 'EMPTY_RESPONSE',
+                            'message': f'Empty model response in stateless chat on attempt {attempt + 1}',
+                            'model': active_model,
+                            'attempt': attempt + 1,
+                        }
+                    }
+                    logger.warning(f'GoogleGenerativeAI: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                     await asyncio.sleep(2 ** min(attempt, 4))
                     continue
                 if history:
@@ -163,11 +184,21 @@ class GoogleGenerativeAI(
                 if response and response.text:
                     response_text = self._normalize_text(response.text)
                     response_text = self._remove_html_blocks(response_text)
+                    self._log_response_details(method='chat', model=active_model, response_text=response_text, attempt=attempt + 1)
                     self.chat_history.append({'role': 'user', 'parts': [q]})
                     self.chat_history.append({'role': 'model', 'parts': [response_text]})
                     self._unavailable_attempts = 0
                     return response_text
-                logger.error('GoogleGenerativeAI: Empty model response in chat')
+                err_empty = {
+                    'error': {
+                        'code': 204,
+                        'status': 'EMPTY_RESPONSE',
+                        'message': f'Empty model response in chat on attempt {attempt + 1}',
+                        'model': active_model,
+                        'attempt': attempt + 1,
+                    }
+                }
+                logger.error(f'GoogleGenerativeAI: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, active_model, attempt, attempts)
@@ -218,11 +249,15 @@ class GoogleGenerativeAI(
                         else:
                             response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
                         has_yielded = False
+                        collected_chunks: list[str] = []
                         async for chunk in response:
                             if chunk.text:
+                                collected_chunks.append(chunk.text)
                                 yield chunk.text
                                 has_yielded = True
                         if has_yielded:
+                            full_stream_text = ''.join(collected_chunks)
+                            self._log_response_details(method='chat_stream', model=active_model, response_text=full_stream_text, attempt=attempt + 1)
                             update_last_run(self._key_names_active[0] if self._key_names_active else '')
                             self._unavailable_attempts = 0
                             return
@@ -236,6 +271,8 @@ class GoogleGenerativeAI(
                             return res
                         chunks = await asyncio.to_thread(_collect_stateless)
                         if chunks:
+                            full_stream_text = ''.join(chunks)
+                            self._log_response_details(method='chat_stream', model=active_model, response_text=full_stream_text, attempt=attempt + 1)
                             for chunk_text in chunks:
                                 yield chunk_text
                             update_last_run(self._key_names_active[0] if self._key_names_active else '')
@@ -270,6 +307,7 @@ class GoogleGenerativeAI(
                     if full_chunks:
                         full_text: str = ''.join(full_chunks)
                         normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
+                        self._log_response_details(method='chat_stream', model=active_model, response_text=normalized, attempt=attempt + 1)
                         self.chat_history.append({'role': 'user', 'parts': [q]})
                         self.chat_history.append({'role': 'model', 'parts': [normalized]})
                         update_last_run(self._key_names_active[0] if self._key_names_active else '')
@@ -287,9 +325,10 @@ class GoogleGenerativeAI(
                     chunks = await asyncio.to_thread(_collect_chat)
                     full_text: str = ''.join(chunks)
                     if full_text:
+                        normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
+                        self._log_response_details(method='chat_stream', model=active_model, response_text=normalized, attempt=attempt + 1)
                         for chunk_text in chunks:
                             yield chunk_text
-                        normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
                         self.chat_history.append({'role': 'user', 'parts': [q]})
                         self.chat_history.append({'role': 'model', 'parts': [normalized]})
                         update_last_run(self._key_names_active[0] if self._key_names_active else '')
@@ -341,12 +380,15 @@ class GoogleGenerativeAI(
             tool_calls = [p for p in candidate.content.parts if p.function_call]
             text_parts = [p.text for p in candidate.content.parts if p.text]
             if not tool_calls:
-                return '\n'.join(text_parts)
+                final_text = '\n'.join(text_parts)
+                self._log_response_details(method='ask_with_tools', model=active_model, response_text=final_text)
+                return final_text
             contents.append(candidate.content)
             tool_results: list[types.Part] = []
             for part in tool_calls:
                 fc = part.function_call
                 result = tool_dispatcher(fc.name, dict(fc.args))
+                logger.info(f"GoogleGenerativeAI: Tool Call executed [{fc.name}] args={dict(fc.args)} -> result={result}")
                 tool_results.append(types.Part.from_function_response(name=fc.name, response={'result': result}))
             contents.append(types.Content(role='tool', parts=tool_results))
         return ''
@@ -390,13 +432,19 @@ class GoogleGenerativeAI(
             if not tool_calls:
                 try:
                     response_stream = self._client.models.generate_content_stream(model=active_model, contents=contents, config=config)
+                    streamed_chunks: list[str] = []
                     for chunk in response_stream:
                         if chunk.text:
+                            streamed_chunks.append(chunk.text)
                             yield {'text': chunk.text}
+                    if streamed_chunks:
+                        self._log_response_details(method='ask_with_tools_stream', model=active_model, response_text=''.join(streamed_chunks))
                 except Exception as ex:
                     logger.error(f'GoogleGenerativeAI: Error streaming ask_with_tools_stream: {ex}')
                     if text_parts:
-                        yield {'text': ''.join(text_parts)}
+                        final_text = ''.join(text_parts)
+                        self._log_response_details(method='ask_with_tools_stream', model=active_model, response_text=final_text)
+                        yield {'text': final_text}
                 return
             contents.append(candidate.content)
             tool_results: list[types.Part] = []
@@ -405,5 +453,6 @@ class GoogleGenerativeAI(
                 args_json: str = json.dumps(dict(fc.args), ensure_ascii=False)
                 yield {'status': f'Function call {fc.name}({args_json})'}
                 result = tool_dispatcher(fc.name, dict(fc.args))
+                logger.info(f"GoogleGenerativeAI: Stream Tool Call executed [{fc.name}]({args_json}) -> result={result}")
                 tool_results.append(types.Part.from_function_response(name=fc.name, response={'result': result}))
             contents.append(types.Content(role='tool', parts=tool_results))

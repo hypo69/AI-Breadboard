@@ -16,12 +16,13 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 10:47:35
 # =============================================================================
 
 """Класс для выполнения одиночных запросов к API Gemini (ask)."""
 
 import asyncio
+import json
 from logger import logger
 from src.ai.gemini.gemini_api_key_state import update_last_run
 from .core import GoogleGenerativeAICore
@@ -60,6 +61,7 @@ class GoogleGenerativeAISingleRequest(
             if not self._switch_api_key():
                 return self._get_exhausted_error_msg()
             self._all_keys_exhausted = False
+        self._log_request_details(method='ask', model=self.model_name, q=q, generation_config=generation_config)
         for attempt in range(attempts):
             try:
                 config = self._build_content_config(generation_config=generation_config)
@@ -67,10 +69,20 @@ class GoogleGenerativeAISingleRequest(
                 if response and response.text:
                     response_text: str = self._normalize_text(response.text)
                     response_text = self._remove_html_blocks(response_text)
+                    self._log_response_details(method='ask', model=self.model_name, response_text=response_text, attempt=attempt + 1)
                     update_last_run(self._key_names_active[0] if self._key_names_active else '')
                     self._unavailable_attempts = 0
                     return response_text
-                logger.debug(f'GoogleGenerativeAI: Empty model response on attempt {attempt + 1}')
+                err_empty = {
+                    'error': {
+                        'code': 204,
+                        'status': 'EMPTY_RESPONSE',
+                        'message': f'Empty model response on attempt {attempt + 1}',
+                        'model': self.model_name,
+                        'attempt': attempt + 1,
+                    }
+                }
+                logger.warning(f'GoogleGenerativeAISingleRequest: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, self.model_name, attempt, attempts)

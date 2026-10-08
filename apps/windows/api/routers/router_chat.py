@@ -186,14 +186,14 @@ def get_chat_model(selected_model_name: str, system_instruction: str = "", user_
         )
     elif is_foundry:
         model_id = selected_model_name.split(':', 1)[-1]
-        from src.ai.foundry_chat import FoundryChatBase
+        from src.ai.providers.foundry import FoundryChatBase
         inst = FoundryChatBase(
             model_id=model_id,
             system_prompt=eff_sys_prompt,
         )
     elif is_ollama:
         model_id = selected_model_name.split(':', 1)[-1]
-        from src.ai.ollama_chat import OllamaChatBase
+        from src.ai.providers.ollama import OllamaChatBase
         ollama_url = ai_cfg.ollama_base_url if ai_cfg else 'http://localhost:11434'
         inst = OllamaChatBase(
             model_id=model_id,
@@ -209,7 +209,7 @@ def get_chat_model(selected_model_name: str, system_instruction: str = "", user_
         )
     elif is_onnx:
         model_id = selected_model_name.split(':', 1)[-1].lstrip(':')
-        from src.ai.onnx_chat import ONNXChatBase
+        from src.ai.providers.onnx import ONNXChatBase
         inst = ONNXChatBase(
             model_id=model_id,
             system_prompt=eff_sys_prompt,
@@ -220,26 +220,26 @@ def get_chat_model(selected_model_name: str, system_instruction: str = "", user_
         prov_name = prov_part.lower().rstrip(':')
         if prov_name == 'compat':
             prov_name = 'openai'
-        from src.ai.openai_compat_chat import OpenAICompatChat
+        from src.ai.providers.openai import OpenAICompatChat
         inst = OpenAICompatChat.create_for_provider(
             provider_name=prov_name,
             model_id=model_id,
             system_prompt=eff_sys_prompt,
         )
     elif is_agy:
-        from src.ai.agy_chat import AgyChatBase
+        from src.ai.providers.agy import AgyChatBase
         inst = AgyChatBase(
             model_id=selected_model_name,
             system_prompt=eff_sys_prompt,
         )
     elif is_gemini:
-        from src.ai.gemini_chat import GeminiChatBase
+        from src.ai.providers.gemini import GeminiChatBase
         inst = GeminiChatBase(
             model_id=selected_model_name,
             system_prompt=eff_sys_prompt,
         )
     else:
-        from src.ai.foundry_chat import FoundryChatBase
+        from src.ai.providers.foundry import FoundryChatBase
         inst = FoundryChatBase(
             model_id=selected_model_name,
             system_prompt=eff_sys_prompt,
@@ -707,7 +707,9 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
             normalized_model, provider = _normalize_model_and_provider(req.model, target_provider)
             user_identifier, _, _, _ = await _extract_user_auth(fastapi_req)
+            config_path = __root__ / 'apps' / 'windows' / 'config.json'
 
+            # 1. Обновляем настройки пользователя в базе данных
             try:
                 from src.user_manager import user_manager
                 user_id_int = int(user_identifier) if str(user_identifier).isdigit() else 1
@@ -715,7 +717,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             except Exception as e:
                 logger.debug(f"[router_chat] Не удалось обновить provider/model в user_settings: {e}")
 
-            # Обновление состояния базового chat_model
+            # 2. Обновление состояния базового chat_model
             active_chat_ref = getattr(getattr(fastapi_req, "app", None), "state", None)
             target_chat_model = getattr(active_chat_ref, "chat_model", None) if active_chat_ref else None
             if not target_chat_model:
@@ -725,6 +727,84 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     target_chat_model._model_name = normalized_model
                 if hasattr(target_chat_model, "model_name"):
                     target_chat_model.model_name = normalized_model
+
+            # 3. Сохраняем в apps/windows/config.json
+            if config_path.exists():
+                try:
+                    import json
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        cfg = json.load(f)
+                    
+                    ai_cfg_section = cfg.get("ai_providers_and_models_configuration", {})
+                    if "providers" not in ai_cfg_section:
+                        ai_cfg_section["providers"] = {}
+                    
+                    providers = ai_cfg_section["providers"]
+                    
+                    # Update provider/model based on selected provider
+                    if provider == 'GEMINI':
+                        providers["gemini"]["enabled"] = True
+                        providers["gemini"]["model"] = normalized_model
+                        # Disable other providers
+                        if "gemini_cli" in providers:
+                            providers["gemini_cli"]["enabled"] = False
+                        if "agy" in providers:
+                            providers["agy"]["enabled"] = False
+                        if "foundry" in providers:
+                            providers["foundry"]["enabled"] = False
+                        if "ollama" in providers:
+                            providers["ollama"]["enabled"] = False
+                        if "openai" in providers:
+                            providers["openai"]["enabled"] = False
+                    elif provider == 'GEMINI_CLI':
+                        providers["gemini_cli"]["enabled"] = True
+                        providers["gemini_cli"]["model"] = normalized_model
+                        if "gemini" in providers:
+                            providers["gemini"]["enabled"] = False
+                        if "agy" in providers:
+                            providers["agy"]["enabled"] = False
+                        if "foundry" in providers:
+                            providers["foundry"]["enabled"] = False
+                        if "ollama" in providers:
+                            providers["ollama"]["enabled"] = False
+                        if "openai" in providers:
+                            providers["openai"]["enabled"] = False
+                    elif provider == 'FOUNDRY':
+                        providers["foundry"]["enabled"] = True
+                        providers["foundry"]["model"] = normalized_model
+                        if "gemini" in providers:
+                            providers["gemini"]["enabled"] = False
+                        if "gemini_cli" in providers:
+                            providers["gemini_cli"]["enabled"] = False
+                        if "agy" in providers:
+                            providers["agy"]["enabled"] = False
+                        if "ollama" in providers:
+                            providers["ollama"]["enabled"] = False
+                        if "openai" in providers:
+                            providers["openai"]["enabled"] = False
+                    elif provider == 'OLLAMA':
+                        providers["ollama"]["enabled"] = True
+                        providers["ollama"]["model"] = normalized_model
+                        if "gemini" in providers:
+                            providers["gemini"]["enabled"] = False
+                        if "gemini_cli" in providers:
+                            providers["gemini_cli"]["enabled"] = False
+                        if "foundry" in providers:
+                            providers["foundry"]["enabled"] = False
+                        if "agy" in providers:
+                            providers["agy"]["enabled"] = False
+                        if "openai" in providers:
+                            providers["openai"]["enabled"] = False
+
+                    ai_cfg_section["providers"] = providers
+                    cfg["ai_providers_and_models_configuration"] = ai_cfg_section
+
+                    with open(config_path, 'w', encoding='utf-8') as f:
+                        json.dump(cfg, f, indent=2, ensure_ascii=False)
+                    
+                    logger.info(f"[router_chat] Saved provider '{provider}' and model '{normalized_model}' to {config_path}")
+                except Exception as e:
+                    logger.error(f"[router_chat] Error saving config to {config_path}: {e}")
 
             return {
                 "status": "success",
@@ -1231,3 +1311,5 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
     return router
 
+
+__all__ = ['init_router', 'get_chat_model']

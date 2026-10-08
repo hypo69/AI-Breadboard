@@ -14,7 +14,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:37:00
+# Updated: 2026-10-08 12:08:00
 # =============================================================================
 
 from __future__ import annotations
@@ -29,6 +29,25 @@ from apps.windows.telemetry.analytics import (
     TelemetryAnalyzer,
     TelemetryCompactor,
 )
+from apps.windows.telemetry.analytics.analyzer import TelemetryResearcher
+from apps.windows.telemetry.analytics.charts import TelemetryChartGenerator
+from apps.windows.telemetry.analytics.extractor import TelemetryDataExtractor
+from apps.windows.telemetry.analytics.models import (
+    AnomalyEvent,
+    ChartConfig,
+    ClientProgramResource,
+    ClientResourceSummary,
+    CorrelationMatrixItem,
+    DeepResearchReport,
+    DeviceEventSummary,
+    HypothesisResult,
+    MetricPoint,
+    MetricStats,
+    ResearchScenarioRequest,
+    TelemetryResearchReport,
+    TimeSeriesDataset,
+    UnknownProgramEvaluation,
+)
 
 __all__ = [
     "DiagnosticEngine",
@@ -38,4 +57,22 @@ __all__ = [
     "TelemetryAggregator",
     "TelemetryAnalyzer",
     "TelemetryCompactor",
+    "TelemetryResearcher",
+    "TelemetryChartGenerator",
+    "TelemetryDataExtractor",
+    "TelemetryResearchReport",
+    "DeepResearchReport",
+    "ChartConfig",
+    "MetricPoint",
+    "MetricStats",
+    "AnomalyEvent",
+    "DeviceEventSummary",
+    "TimeSeriesDataset",
+    "CorrelationMatrixItem",
+    "HypothesisResult",
+    "ResearchScenarioRequest",
+    "ClientProgramResource",
+    "ClientResourceSummary",
+    "UnknownProgramEvaluation",
 ]
+

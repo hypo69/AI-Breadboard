@@ -16,12 +16,13 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 10:47:45
 # =============================================================================
 
 """Класс диалоговых методов API (Chat и Chat Stream)."""
 
 import asyncio
+import json
 from typing import Any, AsyncGenerator
 from logger import logger
 from src.ai.gemini.gemini_api_key_state import update_last_run
@@ -67,6 +68,7 @@ class GoogleGenerativeAIChat(
             self._all_keys_exhausted = False
         instruction: str = system_instruction or self.system_instruction or ''
         active_model: str = model_name or self.model_name
+        self._log_request_details(method='chat', model=active_model, q=q, history=history or self.chat_history, system_instruction=instruction)
         for attempt in range(attempts):
             try:
                 if not self.save_history_chat:
@@ -75,9 +77,20 @@ class GoogleGenerativeAIChat(
                     if response and response.text:
                         response_text: str = self._normalize_text(response.text)
                         response_text = self._remove_html_blocks(response_text)
+                        self._log_response_details(method='chat', model=active_model, response_text=response_text, attempt=attempt + 1)
                         update_last_run(self._key_names_active[0] if self._key_names_active else '')
                         self._unavailable_attempts = 0
                         return response_text
+                    err_empty = {
+                        'error': {
+                            'code': 204,
+                            'status': 'EMPTY_RESPONSE',
+                            'message': f'Empty model response in stateless chat on attempt {attempt + 1}',
+                            'model': active_model,
+                            'attempt': attempt + 1,
+                        }
+                    }
+                    logger.warning(f'GoogleGenerativeAIChat: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                     await asyncio.sleep(2 ** min(attempt, 4))
                     continue
                 if history:
@@ -104,11 +117,21 @@ class GoogleGenerativeAIChat(
                 if response and response.text:
                     response_text = self._normalize_text(response.text)
                     response_text = self._remove_html_blocks(response_text)
+                    self._log_response_details(method='chat', model=active_model, response_text=response_text, attempt=attempt + 1)
                     self.chat_history.append({'role': 'user', 'parts': [q]})
                     self.chat_history.append({'role': 'model', 'parts': [response_text]})
                     self._unavailable_attempts = 0
                     return response_text
-                logger.error('GoogleGenerativeAI: Empty model response in chat')
+                err_empty = {
+                    'error': {
+                        'code': 204,
+                        'status': 'EMPTY_RESPONSE',
+                        'message': f'Empty model response in chat on attempt {attempt + 1}',
+                        'model': active_model,
+                        'attempt': attempt + 1,
+                    }
+                }
+                logger.error(f'GoogleGenerativeAIChat: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, active_model, attempt, attempts)
@@ -141,6 +164,7 @@ class GoogleGenerativeAIChat(
             self._all_keys_exhausted = False
         instruction: str = system_instruction or self.system_instruction or ''
         active_model: str = model_name or self.model_name
+        self._log_request_details(method='chat_stream', model=active_model, q=q, history=history or self.chat_history, system_instruction=instruction, generation_config=generation_config)
         for attempt in range(attempts):
             try:
                 if not self.save_history_chat:
@@ -157,11 +181,15 @@ class GoogleGenerativeAIChat(
                         else:
                             response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
                         has_yielded = False
+                        collected_chunks: list[str] = []
                         async for chunk in response:
                             if chunk.text:
+                                collected_chunks.append(chunk.text)
                                 yield chunk.text
                                 has_yielded = True
                         if has_yielded:
+                            full_stream_text = ''.join(collected_chunks)
+                            self._log_response_details(method='chat_stream', model=active_model, response_text=full_stream_text, attempt=attempt + 1)
                             update_last_run(self._key_names_active[0] if self._key_names_active else '')
                             self._unavailable_attempts = 0
                             return
@@ -175,6 +203,8 @@ class GoogleGenerativeAIChat(
                             return res
                         chunks = await asyncio.to_thread(_collect_stateless)
                         if chunks:
+                            full_stream_text = ''.join(chunks)
+                            self._log_response_details(method='chat_stream', model=active_model, response_text=full_stream_text, attempt=attempt + 1)
                             for chunk_text in chunks:
                                 yield chunk_text
                             update_last_run(self._key_names_active[0] if self._key_names_active else '')
@@ -209,6 +239,7 @@ class GoogleGenerativeAIChat(
                     if full_chunks:
                         full_text: str = ''.join(full_chunks)
                         normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
+                        self._log_response_details(method='chat_stream', model=active_model, response_text=normalized, attempt=attempt + 1)
                         self.chat_history.append({'role': 'user', 'parts': [q]})
                         self.chat_history.append({'role': 'model', 'parts': [normalized]})
                         update_last_run(self._key_names_active[0] if self._key_names_active else '')
@@ -226,9 +257,10 @@ class GoogleGenerativeAIChat(
                     chunks = await asyncio.to_thread(_collect_chat)
                     full_text: str = ''.join(chunks)
                     if full_text:
+                        normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
+                        self._log_response_details(method='chat_stream', model=active_model, response_text=normalized, attempt=attempt + 1)
                         for chunk_text in chunks:
                             yield chunk_text
-                        normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
                         self.chat_history.append({'role': 'user', 'parts': [q]})
                         self.chat_history.append({'role': 'model', 'parts': [normalized]})
                         update_last_run(self._key_names_active[0] if self._key_names_active else '')

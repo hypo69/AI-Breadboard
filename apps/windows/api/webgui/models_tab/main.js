@@ -210,7 +210,7 @@ async function initModelsTab() {
     };
   }
 
-  // Provider switch direct toggling
+  // Provider switch direct toggling (AGY, Foundry, Ollama, ONNX config endpoints not implemented yet)
   const agyEnabledSwitch = document.getElementById('agy-enabled');
   if (agyEnabledSwitch) {
     agyEnabledSwitch.onchange = async () => {
@@ -313,6 +313,8 @@ async function initModelsTab() {
     };
   }
 
+  // AGY/Foundry/Ollama/ONNX config save buttons temporarily disabled (endpoints not implemented yet)
+  /*
   if (saveAgyBtn) {
     saveAgyBtn.onclick = async () => {
       const enabled = document.getElementById('agy-enabled')?.checked ?? true;
@@ -422,6 +424,7 @@ async function initModelsTab() {
       }
     };
   }
+  */
 
   if (saveBtn && modelSelect) {
     saveBtn.onclick = async () => {
@@ -534,10 +537,10 @@ async function initModelsTab() {
     modelSelect && saveBtn ? loadTabModels(modelSelect, saveBtn) : Promise.resolve(),
     keysListBody ? refreshKeysList(keysListBody) : Promise.resolve(),
     gaccountsListBody ? refreshGoogleAccountsList(gaccountsListBody) : Promise.resolve(),
-    loadFoundryConfig(),
-    loadOllamaConfig(),
-    loadAgyConfig(),
-    loadOnnxConfig(),
+    // loadFoundryConfig(), // Endpoint /api/foundry/config not implemented yet
+    // loadOllamaConfig(), // Endpoint /api/ollama/config not implemented yet
+    // loadAgyConfig(), // Endpoint /api/agy/config not implemented yet
+    // loadOnnxConfig(), // Endpoint /api/onnx/config not implemented yet
     loadSystemInstruction()
   ]);
 }
@@ -611,7 +614,7 @@ async function executeModelTest() {
   }
 
   try {
-    const res = await window.api.fetch('/api/chat/test-model', {
+    const res = await window.api.fetch('/api/v1/chat/test-model', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: modelTestAbortController.signal,
@@ -826,7 +829,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
       const params = new URLSearchParams();
       if (force) params.append('refresh', 'true');
       if (showAll) params.append('include_unsupported', 'true');
-      const url = '/api/chat/models' + (params.toString() ? '?' + params.toString() : '');
+      const url = '/api/v1/chat/models' + (params.toString() ? '?' + params.toString() : '');
       const modelsData = await window.api.fetch(url);
       let grouped = modelsData.models || {};
       if (Array.isArray(grouped)) {
@@ -980,8 +983,8 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
 async function refreshKeysList(container) {
   try {
     container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Загрузка ключей...</td></tr>';
-    const keysData = await window.api.fetch('/api/keys');
-    const keys = keysData.keys || [];
+    const keysData = await window.api.fetch('/api/keys/');
+    const keys = Array.isArray(keysData) ? keysData : (keysData.keys || []);
 
     if (keys.length === 0) {
       container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Список ключей пуст</td></tr>';
@@ -998,7 +1001,7 @@ async function refreshKeysList(container) {
 
       const tdKey = document.createElement('td');
       tdKey.className = 'font-monospace text-muted small';
-      tdKey.textContent = key.api_key_masked;
+      tdKey.textContent = key.masked_key || key.api_key_masked || '';
       row.appendChild(tdKey);
 
       const tdStatus = document.createElement('td');
@@ -1145,7 +1148,7 @@ async function loadAgyConfig() {
     const modelSelect = document.getElementById('agy-model');
     if (modelSelect) {
       try {
-        const modelsData = await window.api.fetch('/api/chat/models');
+        const modelsData = await window.api.fetch('/api/v1/chat/models');
         const agyList = modelsData.models?.agy || [];
         if (agyList.length > 0) {
           const curVal = modelSelect.value;

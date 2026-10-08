@@ -17,7 +17,7 @@ Usage Examples:
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 03:51:00
+ * Updated: 2026-10-08 13:58:00
  =============================================================================
 -->
 
@@ -28,6 +28,24 @@ Usage Examples:
     padding: 1rem 1.25rem;
     max-width: 100%;
     color: var(--text-color);
+  }
+
+  /* Стили селекторов интервалов временной шкалы */
+  .sys-spark-interval-select {
+    background-color: var(--surface-2, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text-color, #e2e8f0) !important;
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15)) !important;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .sys-spark-interval-select:focus {
+    border-color: var(--nav-active, #0dcaf0) !important;
+    box-shadow: 0 0 0 0.15rem rgba(13, 202, 240, 0.25) !important;
+  }
+  .sys-spark-interval-select option {
+    background-color: var(--surface-1, #1e293b);
+    color: var(--text-color, #e2e8f0);
   }
 
   /* Адаптация text-light и бейджей для светлой темы */
@@ -813,6 +831,9 @@ Usage Examples:
                 <button type="button" class="btn btn-xs btn-outline-info active py-0 px-2 fw-bold" id="btn-cpu-spark-log" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('log')">Лог. шкала (Log)</button>
                 <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-cpu-spark-lin" style="font-size: 0.68rem;" onclick="window.setCpuSparkScale && window.setCpuSparkScale('linear')">Линейная (Lin)</button>
               </div>
+              <select class="form-select form-select-xs sys-spark-interval-select" id="sel-cpu-spark-interval" style="height: 22px; padding: 0 6px; font-size: 0.68rem; width: auto; min-width: 85px;" onchange="window.setCpuSparkInterval && window.setCpuSparkInterval(this.value)">
+                <option value="seconds">Секунды</option>
+              </select>
             </div>
             <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
               <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);" title="Основная шкала: Загрузка ядер CPU (0-100%)">● Нагрузка %</span>
@@ -1017,17 +1038,31 @@ Usage Examples:
           </div>
         </div>
 
-        <!-- График истории RAM -->
+        <!-- График истории RAM (Использование RAM %, Чтение диска, Запись на диск) с логарифмической/линейной шкалой -->
         <div class="sys-full-only sys-history-panel p-2.5 mt-3 rounded-2">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-primary me-1"></i>История загрузки (RAM % · Чтение · Запись)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
-              <span class="text-success">● RAM</span>
-              <span class="text-info">● Read</span>
-              <span class="text-warning">● Write</span>
+          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-success me-1"></i>История RAM и Дискового I/O</span>
+              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
+                <button type="button" class="btn btn-xs btn-outline-success active py-0 px-2 fw-bold" id="btn-ram-spark-log" style="font-size: 0.68rem;" onclick="window.setRamSparkScale && window.setRamSparkScale('log')">Лог. шкала (Log)</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-ram-spark-lin" style="font-size: 0.68rem;" onclick="window.setRamSparkScale && window.setRamSparkScale('linear')">Линейная (Lin)</button>
+              </div>
+              <select class="form-select form-select-xs sys-spark-interval-select" id="sel-ram-spark-interval" style="height: 22px; padding: 0 6px; font-size: 0.68rem; width: auto; min-width: 85px;" onchange="window.setRamSparkInterval && window.setRamSparkInterval(this.value)">
+                <option value="seconds">Секунды</option>
+              </select>
+            </div>
+            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
+              <span class="text-success" style="text-shadow: 0 0 8px rgba(16,185,129,0.5);" title="Основная шкала: Загрузка RAM (%)">● Занято RAM %</span>
+              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);" title="Скорость чтения с диска (Read)">● Чтение (Read)</span>
+              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);" title="Скорость записи на диск (Write)">● Запись (Write)</span>
+              <span class="text-muted font-monospace ms-2" id="sys-ram-spark-live-cursor" style="font-size: 0.70rem;">Live</span>
             </div>
           </div>
-          <div id="sys-memio-spark" style="height: 60px;"></div>
+          <!-- Контейнер графика и интерактивного тултипа -->
+          <div style="position: relative; width: 100%; height: 90px;" id="sys-memio-spark-container">
+            <div id="sys-memio-spark" style="width: 100%; height: 100%;"></div>
+            <div id="sys-memio-spark-tooltip" class="sys-spark-tooltip" style="display: none;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1191,16 +1226,30 @@ Usage Examples:
           </div>
         </div>
 
-        <!-- График истории сети -->
+        <!-- График истории сети (Входящий / Исходящий трафик) с логарифмической/линейной шкалой -->
         <div class="sys-full-only sys-history-panel p-2.5 mt-3 rounded-2">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small text-light" style="font-size: 0.78rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История сети (⬇ Download · ⬆ Upload)</span>
-            <div class="d-flex align-items-center gap-2" style="font-size: 0.72rem; font-weight: 600;">
-              <span class="text-info">● Download</span>
-              <span class="text-warning">● Upload</span>
+          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История Сетевого Трафика</span>
+              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
+                <button type="button" class="btn btn-xs btn-outline-info active py-0 px-2 fw-bold" id="btn-net-spark-log" style="font-size: 0.68rem;" onclick="window.setNetSparkScale && window.setNetSparkScale('log')">Лог. шкала (Log)</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-net-spark-lin" style="font-size: 0.68rem;" onclick="window.setNetSparkScale && window.setNetSparkScale('linear')">Линейная (Lin)</button>
+              </div>
+              <select class="form-select form-select-xs sys-spark-interval-select" id="sel-net-spark-interval" style="height: 22px; padding: 0 6px; font-size: 0.68rem; width: auto; min-width: 85px;" onchange="window.setNetSparkInterval && window.setNetSparkInterval(this.value)">
+                <option value="seconds">Секунды</option>
+              </select>
+            </div>
+            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
+              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);" title="Скорость приема (Download / Rx)">● Входящий (Rx)</span>
+              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);" title="Скорость передачи (Upload / Tx)">● Исходящий (Tx)</span>
+              <span class="text-muted font-monospace ms-2" id="sys-net-spark-live-cursor" style="font-size: 0.70rem;">Live</span>
             </div>
           </div>
-          <div id="sys-net-spark" style="height: 60px;"></div>
+          <!-- Контейнер графика и интерактивного тултипа -->
+          <div style="position: relative; width: 100%; height: 90px;" id="sys-net-spark-container">
+            <div id="sys-net-spark" style="width: 100%; height: 100%;"></div>
+            <div id="sys-net-spark-tooltip" class="sys-spark-tooltip" style="display: none;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1272,13 +1321,39 @@ Usage Examples:
           </div>
         </div>
 
-        <!-- Сетка карточек накопителей и разделов -->
+        <!-- График истории дисковой подсистемы (Чтение / Запись / Нагрузка I/O) с логарифмической/линейной шкалой -->
+        <div class="sys-full-only sys-history-panel p-2.5 mb-3 rounded-2">
+          <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small text-light" style="font-size: 0.80rem; font-weight: 700;"><i class="bi bi-graph-up text-info me-1"></i>История Накопителей и Дискового I/O</span>
+              <div class="btn-group btn-group-sm" role="group" style="height: 22px;">
+                <button type="button" class="btn btn-xs btn-outline-info active py-0 px-2 fw-bold" id="btn-storage-spark-log" style="font-size: 0.68rem;" onclick="window.setStorageSparkScale && window.setStorageSparkScale('log')">Лог. шкала (Log)</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-storage-spark-lin" style="font-size: 0.68rem;" onclick="window.setStorageSparkScale && window.setStorageSparkScale('linear')">Линейная (Lin)</button>
+              </div>
+              <select class="form-select form-select-xs sys-spark-interval-select" id="sel-storage-spark-interval" style="height: 22px; padding: 0 6px; font-size: 0.68rem; width: auto; min-width: 85px;" onchange="window.setStorageSparkInterval && window.setStorageSparkInterval(this.value)">
+                <option value="seconds">Секунды</option>
+              </select>
+            </div>
+            <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
+              <span class="text-info" style="text-shadow: 0 0 8px rgba(13,202,240,0.5);" title="Скорость чтения с накопителей (Read)">● Чтение (Read)</span>
+              <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);" title="Скорость записи на накопители (Write)">● Запись (Write)</span>
+              <span class="text-muted font-monospace ms-2" id="sys-storage-spark-live-cursor" style="font-size: 0.70rem;">Live</span>
+            </div>
+          </div>
+          <!-- Контейнер графика и интерактивного тултипа -->
+          <div style="position: relative; width: 100%; height: 90px;" id="sys-storage-spark-container">
+            <div id="sys-storage-spark" style="width: 100%; height: 100%;"></div>
+            <div id="sys-storage-spark-tooltip" class="sys-spark-tooltip" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- Сетка карточек накопителей и разделов (растянута по всей ширине) -->
         <div class="sys-full-only">
-          <div class="sys-core-section-title d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-hdd-network text-info me-1.5"></i>Физические накопители и разделы</span>
+          <div class="sys-core-section-title d-flex justify-content-between align-items-center mb-2">
+            <span><i class="bi bi-hdd-network text-info me-1.5"></i>Физические накопители и разделы (полная ширина)</span>
             <span class="badge bg-secondary font-monospace" style="font-size: 0.76rem;" id="sys-storage-summary-badge">Автоматический опрос</span>
           </div>
-          <div id="sys-metric-storage-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; font-size: 0.78rem;">
+          <div id="sys-metric-storage-cards" style="display: flex; flex-direction: column; gap: 12px; width: 100%; font-size: 0.78rem;">
             <div class="text-muted small text-center py-3 col-12">Опрос накопителей выполняется...</div>
           </div>
         </div>

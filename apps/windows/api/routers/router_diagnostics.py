@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:04:00
+# Updated: 2026-10-08 10:28:00
 # =============================================================================
 
 from __future__ import annotations
@@ -45,6 +45,8 @@ class DiagnosticExplainRequest(BaseModel):
     model: Optional[str] = Field(default=None, description="Опциональное имя конкретной модели")
     provider: Optional[str] = Field(default=None, description="Опциональный AI провайдер")
     web_search: bool = Field(default=True, description="Выполнять ли онлайн поиск для обогащения контекста")
+    cache_only: bool = Field(default=False, description="Проверить только кэш/базу знаний WikiLLM без вызова LLM")
+    force_refresh: bool = Field(default=False, description="Принудительно запросить модель ИИ для улучшения/обновления кэша")
 
 
 class DiagnosticExplainResponse(BaseModel):
@@ -57,8 +59,9 @@ class DiagnosticExplainResponse(BaseModel):
     recommendation: str = Field(description="Практическая рекомендация эксперта")
     action_steps: List[str] = Field(default_factory=list, description="Пошаговые рекомендуемые действия")
     canonical_key: Optional[str] = Field(default=None, description="Канонический ключ сущности в WikiLLM")
-    source: str = Field(default="gemini", description="Источник ответа (wikillm / gemini / heuristic)")
+    source: str = Field(default="gemini", description="Источник ответа (wikillm / gemini / heuristic / not_found)")
     is_verified: bool = Field(default=False, description="Признак верификации знания в WikiLLM")
+
 
 
 from src.api.diagnostics_prompt_manager import (
@@ -218,7 +221,7 @@ def init_router() -> APIRouter:
             logger.debug(f"Ошибка вычисления канонического ключа WikiLLM: {e}")
 
         # 2. Проверяем наличие верифицированного знания в локальной базе WikiLLM
-        if canonical_key:
+        if canonical_key and not req.force_refresh:
             try:
                 from apps.windows.wikillm.router import get_engine
                 engine = get_engine()
@@ -249,8 +252,24 @@ def init_router() -> APIRouter:
             except Exception as e:
                 logger.debug(f"Проверка WikiLLM пропущена: {e}")
 
+        # Если запрошена только проверка кэша базы знаний и запись не найдена
+        if req.cache_only:
+            return DiagnosticExplainResponse(
+                summary="",
+                developer="",
+                category="",
+                security_verdict="",
+                performance_impact="",
+                recommendation="",
+                action_steps=[],
+                canonical_key=canonical_key,
+                source="not_found",
+                is_verified=False,
+            )
+
         # Получаем соответствующий шаблон промпта для типа таблицы
         tmpl = prompt_manager.get_template(req.table_type)
+
 
         # 3. Вызов языковой модели через прямой GoogleGenerativeAI с Web Grounding
         try:

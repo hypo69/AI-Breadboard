@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 03:51:00
+ * Updated: 2026-10-08 13:58:00
  * =============================================================================
  */
 
@@ -38,7 +38,96 @@
   let lastGpuDevices = [];
   const _gpuSparkHistories = {};
   const currentGpuSparkScales = {};
+  const currentGpuSparkIntervals = {};
   const lastGpuSparkDataMap = {};
+
+  let currentCpuSparkInterval = 'seconds';
+  let currentRamSparkInterval = 'seconds';
+  let currentNetSparkInterval = 'seconds';
+  let currentStorageSparkInterval = 'seconds';
+  let cachedAvailableTimeRanges = null;
+
+  function formatSparkTimeLabel(ts, interval = 'seconds') {
+    if (!ts) return '--:--:--';
+    let d = null;
+    if (typeof ts === 'number') {
+      d = new Date(ts > 1e11 ? ts : ts * 1000);
+    } else {
+      d = new Date(ts);
+    }
+    if (isNaN(d.getTime())) return String(ts);
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const hh = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    const DD = pad(d.getDate());
+    const MM = pad(d.getMonth() + 1);
+    const YY = String(d.getFullYear()).slice(-2);
+
+    if (interval === 'seconds' || interval === 'minutes') {
+      return `${hh}:${mm}:${ss}`;
+    }
+    if (interval === 'hours') {
+      return `${hh}:${mm}`;
+    }
+    if (interval === 'days' || interval === 'weeks') {
+      return `${DD}.${MM} ${hh}:${mm}`;
+    }
+    return `${DD}.${MM}.${YY} ${hh}:${mm}`;
+  }
+
+  async function fetchAvailableTimeRanges() {
+    try {
+      const res = await fetch('/api/v1/telemetry/time-ranges');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      cachedAvailableTimeRanges = data;
+      populateIntervalSelectors(data.intervals || []);
+      return data;
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка загрузки доступных временных диапазонов:', e);
+      const fallbackIntervals = [
+        { id: 'seconds', label: 'Секунды', is_available: true },
+        { id: 'all', label: 'Все', is_available: true }
+      ];
+      populateIntervalSelectors(fallbackIntervals);
+    }
+  }
+
+  function populateIntervalSelectors(intervals) {
+    if (!Array.isArray(intervals) || intervals.length === 0) return;
+
+    const selectIds = [
+      'sel-cpu-spark-interval',
+      'sel-ram-spark-interval',
+      'sel-net-spark-interval',
+      'sel-storage-spark-interval'
+    ];
+
+    Object.keys(currentGpuSparkIntervals).forEach(k => {
+      const gId = `sel-gpu-spark-interval-${k}`;
+      if (!selectIds.includes(gId)) selectIds.push(gId);
+    });
+
+    document.querySelectorAll('.sys-spark-interval-select').forEach(el => {
+      if (el.id && !selectIds.includes(el.id)) selectIds.push(el.id);
+    });
+
+    selectIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const currentVal = el.value || 'seconds';
+      el.innerHTML = intervals.map(item => `
+        <option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>
+      `).join('');
+      if (intervals.some(i => i.id === currentVal)) {
+        el.value = currentVal;
+      } else {
+        el.value = intervals[0].id;
+      }
+    });
+  }
 
   async function fetchLhmSensors() {
     const badgeCount = document.getElementById('sys-lhm-sensors-count');
@@ -481,15 +570,22 @@
 
       // RAM график
       if (card.classList.contains('sys-card-ram') || card.id === 'sys-card-ram') {
-        if (typeof renderMemIoSpark === 'function' && Array.isArray(_memIoSparkHistory)) {
+        if (typeof renderMemIoSpark === 'function' && Array.isArray(_memIoSparkHistory) && _memIoSparkHistory.length) {
           renderMemIoSpark(_memIoSparkHistory);
         }
       }
 
       // Net график
       if (card.classList.contains('sys-card-net') || card.id === 'sys-card-net') {
-        if (typeof renderNetSpark === 'function' && Array.isArray(_netSparkHistory)) {
+        if (typeof renderNetSpark === 'function' && Array.isArray(_netSparkHistory) && _netSparkHistory.length) {
           renderNetSpark(_netSparkHistory);
+        }
+      }
+
+      // Storage график
+      if (card.classList.contains('sys-card-storage') || card.id === 'sys-card-storage') {
+        if (typeof renderStorageSpark === 'function' && Array.isArray(_storageSparkHistory) && _storageSparkHistory.length) {
+          renderStorageSpark(_storageSparkHistory);
         }
       }
     }
@@ -1201,6 +1297,38 @@
   let currentCpuSparkScale = 'log';
   let lastCpuSparkData = [];
 
+  async function setCpuSparkInterval(interval) {
+    currentCpuSparkInterval = interval;
+    const el = document.getElementById('sel-cpu-spark-interval');
+    if (el) el.value = interval;
+    if (interval === 'seconds') {
+      await fetchCpuLoadFromApi();
+    } else {
+      await fetchCpuHistoryByInterval(interval);
+    }
+  }
+  window.setCpuSparkInterval = setCpuSparkInterval;
+
+  async function fetchCpuHistoryByInterval(interval) {
+    try {
+      const res = await fetch(`/api/v1/telemetry/history?interval=${encodeURIComponent(interval)}&metric=cpu&limit=120`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.history) && data.history.length > 0) {
+        lastCpuSparkData = data.history.map(r => ({
+          timestamp: r.timestamp,
+          time_label: formatSparkTimeLabel(r.timestamp || r.created_at, interval),
+          load_percent: Number(r.cpu_total_percent || 0),
+          temperature_c: r.gpu_temp_c != null ? Number(r.gpu_temp_c) : null,
+          power_w: null
+        }));
+        renderCpuSpark(lastCpuSparkData);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения истории CPU по интервалу:', e);
+    }
+  }
+
   function setCpuSparkScale(scale) {
     currentCpuSparkScale = scale;
     const btnLog = document.getElementById('btn-cpu-spark-log');
@@ -1317,10 +1445,15 @@
     const pMax = rawPowers.length ? Math.max(...rawPowers) : 100;
     const pDelta = Math.max(8, pMax - pMin);
 
+    // Динамический предел шкалы для линейного режима (с запасом 15% и минимумом 5%)
+    const rawLoads = history.map(h => Number(h.load_percent != null ? h.load_percent : (h.load || 0)));
+    const maxLoad = rawLoads.length ? Math.max(...rawLoads) : 0;
+    const loadMaxScale = Math.min(100, Math.max(5, maxLoad * 1.15));
+
     // Главная шкала: Загрузка CPU (0..100% высоты холста)
     const transformLoad = (v) => {
       const cl = Math.min(100, Math.max(0, Number(v || 0)));
-      if (!isLog) return cl / 100;
+      if (!isLog) return Math.min(1, cl / loadMaxScale);
       return Math.log10(1 + 9 * (cl / 100)); // Log-10 mapping: 10% -> 0.28, 50% -> 0.74, 100% -> 1.0
     };
 
@@ -1420,7 +1553,7 @@
         tooltip.innerHTML = `
           <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
             <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
-            <span class="badge ${isLog ? 'bg-info-subtle text-info' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin'}</span>
+            <span class="badge ${isLog ? 'bg-info-subtle text-info' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log (0–100%)' : 'Lin (0–' + Math.round(loadMaxScale) + '%)'}</span>
           </div>
           <div class="d-flex gap-2 font-monospace">
             <span class="text-info fw-bold"><i class="bi bi-activity me-0.5"></i>${lStr}</span>
@@ -1442,6 +1575,41 @@
     });
 
     box.appendChild(svg);
+  }
+
+  async function setGpuSparkInterval(idx, interval) {
+    currentGpuSparkIntervals[idx] = interval;
+    const el = document.getElementById(`sel-gpu-spark-interval-${idx}`);
+    if (el) el.value = interval;
+    if (interval === 'seconds') {
+      await fetchGpuLoadFromApi();
+    } else {
+      await fetchGpuHistoryByInterval(idx, interval);
+    }
+  }
+  window.setGpuSparkInterval = setGpuSparkInterval;
+
+  async function fetchGpuHistoryByInterval(idx, interval) {
+    try {
+      const res = await fetch(`/api/v1/telemetry/history?interval=${encodeURIComponent(interval)}&metric=gpu&limit=120`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.history) && data.history.length > 0) {
+        const historyPts = data.history.map(r => ({
+          timestamp: r.timestamp,
+          time_label: formatSparkTimeLabel(r.timestamp || r.created_at, interval),
+          load_percent: Number(r.gpu_load_percent || 0),
+          temperature_c: r.gpu_temp_c != null ? Number(r.gpu_temp_c) : null,
+          power_w: null,
+          vram_percent: null
+        }));
+        _gpuSparkHistories[idx] = historyPts;
+        lastGpuSparkDataMap[idx] = historyPts;
+        renderGpuSpark(historyPts, idx);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения истории GPU по интервалу:', e);
+    }
   }
 
   function setGpuSparkScale(scale, idx = 0) {
@@ -1533,10 +1701,15 @@
     const pMax = rawPowers.length ? Math.max(...rawPowers) : 100;
     const pDelta = Math.max(8, pMax - pMin);
 
+    // Динамический предел шкалы для линейного режима (с запасом 15% и минимумом 5%)
+    const rawLoads = history.map(h => Number(h.load_percent != null ? h.load_percent : (h.load || 0)));
+    const maxLoad = rawLoads.length ? Math.max(...rawLoads) : 0;
+    const loadMaxScale = Math.min(100, Math.max(5, maxLoad * 1.15));
+
     // Главная шкала: Загрузка GPU Core (0..100% высоты холста)
     const transformLoad = (v) => {
       const cl = Math.min(100, Math.max(0, Number(v || 0)));
-      if (!isLog) return cl / 100;
+      if (!isLog) return Math.min(1, cl / loadMaxScale);
       return Math.log10(1 + 9 * (cl / 100));
     };
 
@@ -1635,7 +1808,7 @@
         tooltip.innerHTML = `
           <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
             <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
-            <span class="badge ${isLog ? 'bg-warning-subtle text-warning' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin'}</span>
+            <span class="badge ${isLog ? 'bg-warning-subtle text-warning' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log (0–100%)' : 'Lin (0–' + Math.round(loadMaxScale) + '%)'}</span>
           </div>
           <div class="d-flex gap-2 font-monospace">
             <span class="text-warning fw-bold"><i class="bi bi-activity me-0.5"></i>${lStr}</span>
@@ -1658,30 +1831,234 @@
     box.appendChild(svg);
   }
 
+  let currentRamSparkScale = 'log';
+  let lastMemIoSparkData = [];
+  const _memIoSparkHistory = [];
+
+  async function setRamSparkInterval(interval) {
+    currentRamSparkInterval = interval;
+    const el = document.getElementById('sel-ram-spark-interval');
+    if (el) el.value = interval;
+    if (interval === 'seconds') {
+      await fetchMemoryIoFromApi();
+    } else {
+      await fetchRamHistoryByInterval(interval);
+    }
+  }
+  window.setRamSparkInterval = setRamSparkInterval;
+
+  async function fetchRamHistoryByInterval(interval) {
+    try {
+      const res = await fetch(`/api/v1/telemetry/history?interval=${encodeURIComponent(interval)}&metric=ram&limit=120`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.history) && data.history.length > 0) {
+        const rows = data.history.map(r => ({
+          timestamp: r.timestamp,
+          time_label: formatSparkTimeLabel(r.timestamp || r.created_at, interval),
+          memory_percent: Number(r.memory_percent || 0),
+          read_bytes_sec: Number(r.disk_read_bytes_sec || 0),
+          write_bytes_sec: Number(r.disk_write_bytes_sec || 0)
+        }));
+        lastMemIoSparkData = rows;
+        renderMemIoSpark(rows);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения истории RAM по интервалу:', e);
+    }
+  }
+
+  function setRamSparkScale(scale) {
+    currentRamSparkScale = scale;
+    const btnLog = document.getElementById('btn-ram-spark-log');
+    const btnLin = document.getElementById('btn-ram-spark-lin');
+    if (btnLog && btnLin) {
+      if (scale === 'log') {
+        btnLog.className = 'btn btn-xs btn-outline-success active py-0 px-2 fw-bold';
+        btnLin.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      } else {
+        btnLin.className = 'btn btn-xs btn-outline-success active py-0 px-2 fw-bold';
+        btnLog.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      }
+    }
+    if (lastMemIoSparkData && lastMemIoSparkData.length) {
+      renderMemIoSpark(lastMemIoSparkData);
+    }
+  }
+  window.setRamSparkScale = setRamSparkScale;
+
   function renderMemIoSpark(history) {
     const box = document.getElementById('sys-memio-spark');
+    const container = document.getElementById('sys-memio-spark-container');
+    const tooltip = document.getElementById('sys-memio-spark-tooltip');
     if (!box) return;
+
+    if (Array.isArray(history) && history.length >= 2) {
+      lastMemIoSparkData = history;
+    } else if (lastMemIoSparkData && lastMemIoSparkData.length >= 2) {
+      history = lastMemIoSparkData;
+    } else {
+      return;
+    }
+
     box.replaceChildren();
-    if (!Array.isArray(history) || history.length < 2) return;
     const ns = 'http://www.w3.org/2000/svg';
-    const W = 200, H = 56;
+    const W = 600, H = 84;
+    const padTop = 6, padBottom = 6;
+    const innerH = H - padTop - padBottom;
+
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
-    svg.style.cssText = 'width:100%;height:100%;';
-    const maxIo = Math.max(1, ...history.map(h => Math.max(h.read_bytes_sec, h.write_bytes_sec)));
-    const line = (getY, color) => {
-      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 2) - 1).toFixed(1)}`);
-      const pl = document.createElementNS(ns, 'polyline');
-      pl.setAttribute('points', pts.join(' '));
-      pl.setAttribute('fill', 'none');
-      pl.setAttribute('stroke', color);
-      pl.setAttribute('stroke-width', '1.2');
-      svg.appendChild(pl);
+    svg.style.cssText = 'width:100%;height:100%;display:block;cursor:crosshair;';
+
+    // 1. Defs с градиентом
+    const defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML = `
+      <linearGradient id="ramGradLoad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#10b981" stop-opacity="0.38"/>
+        <stop offset="60%" stop-color="#10b981" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+      </linearGradient>
+    `;
+    svg.appendChild(defs);
+
+    // 2. Горизонтальная сетка (Grid Lines)
+    const gridG = document.createElementNS(ns, 'g');
+    gridG.setAttribute('opacity', '0.2');
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+      const y = H - padBottom - ratio * innerH;
+      const gl = document.createElementNS(ns, 'line');
+      gl.setAttribute('x1', '0');
+      gl.setAttribute('y1', y.toFixed(1));
+      gl.setAttribute('x2', String(W));
+      gl.setAttribute('y2', y.toFixed(1));
+      gl.setAttribute('stroke', '#ffffff');
+      gl.setAttribute('stroke-dasharray', ratio === 0.0 || ratio === 1.0 ? 'none' : '3,3');
+      gl.setAttribute('stroke-width', '1');
+      gridG.appendChild(gl);
+    });
+    svg.appendChild(gridG);
+
+    // 3. Динамические диапазоны
+    const count = history.length;
+    const isLog = currentRamSparkScale === 'log';
+
+    const rawRams = history.map(h => Number(h.memory_percent != null ? h.memory_percent : (h.ram || 0)));
+    const maxRam = rawRams.length ? Math.max(...rawRams) : 0;
+    const ramMaxScale = Math.min(100, Math.max(10, maxRam * 1.15));
+
+    const rawReads = history.map(h => Number(h.read_bytes_sec != null ? h.read_bytes_sec : (h.disk_read || 0)));
+    const rawWrites = history.map(h => Number(h.write_bytes_sec != null ? h.write_bytes_sec : (h.disk_write || 0)));
+    const maxIoBytes = Math.max(1024 * 1024, ...rawReads, ...rawWrites);
+    const ioMaxScale = maxIoBytes * 1.15;
+
+    const transformRam = (v) => {
+      const cl = Math.min(100, Math.max(0, Number(v || 0)));
+      if (!isLog) return Math.min(1, cl / ramMaxScale);
+      return Math.log10(1 + 9 * (cl / 100));
     };
-    line(h => Math.min(100, h.memory_percent) / 100, '#198754');
-    line(h => h.read_bytes_sec / maxIo, '#0dcaf0');
-    line(h => h.write_bytes_sec / maxIo, '#ffc107');
+
+    const transformIo = (v) => {
+      if (!v || v <= 0) return 0;
+      const nv = Number(v);
+      if (!isLog) return Math.min(1, nv / ioMaxScale);
+      return Math.log10(1 + 9 * (Math.min(ioMaxScale, nv) / ioMaxScale));
+    };
+
+    const ramPts = [];
+    const readPts = [];
+    const writePts = [];
+
+    history.forEach((h, i) => {
+      const x = (i / (count - 1)) * W;
+      const rVal = Number(h.memory_percent != null ? h.memory_percent : (h.ram || 0));
+      const rdVal = Number(h.read_bytes_sec != null ? h.read_bytes_sec : (h.disk_read || 0));
+      const wrVal = Number(h.write_bytes_sec != null ? h.write_bytes_sec : (h.disk_write || 0));
+
+      const yRam = H - padBottom - transformRam(rVal) * innerH;
+      const yRead = H - padBottom - (0.04 + transformIo(rdVal) * 0.44) * innerH;
+      const yWrite = H - padBottom - (0.04 + transformIo(wrVal) * 0.44) * innerH;
+
+      ramPts.push({ x, y: yRam, raw: rVal, time: h.timestamp || h.time });
+      readPts.push({ x, y: yRead, raw: rdVal });
+      writePts.push({ x, y: yWrite, raw: wrVal });
+    });
+
+    const drawSeries = (pts, strokeColor, fillColor, strokeWidth = 1.8) => {
+      if (pts.length < 2) return;
+      const linePath = buildSmoothSvgPath(pts);
+      if (fillColor) {
+        const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${H - padBottom} L ${pts[0].x.toFixed(1)} ${H - padBottom} Z`;
+        const aEl = document.createElementNS(ns, 'path');
+        aEl.setAttribute('d', areaPath);
+        aEl.setAttribute('fill', fillColor);
+        svg.appendChild(aEl);
+      }
+      const pEl = document.createElementNS(ns, 'path');
+      pEl.setAttribute('d', linePath);
+      pEl.setAttribute('fill', 'none');
+      pEl.setAttribute('stroke', strokeColor);
+      pEl.setAttribute('stroke-width', String(strokeWidth));
+      pEl.setAttribute('stroke-linejoin', 'round');
+      pEl.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(pEl);
+    };
+
+    drawSeries(writePts, '#f59e0b', null, 1.3);
+    drawSeries(readPts, '#0dcaf0', null, 1.3);
+    drawSeries(ramPts, '#10b981', 'url(#ramGradLoad)', 2.0);
+
+    // Hover курсор и тултип
+    const crosshair = document.createElementNS(ns, 'line');
+    crosshair.setAttribute('y1', '0');
+    crosshair.setAttribute('y2', String(H));
+    crosshair.setAttribute('stroke', 'var(--text-muted, rgba(128,128,128,0.5))');
+    crosshair.setAttribute('stroke-dasharray', '2,2');
+    crosshair.setAttribute('stroke-width', '1');
+    crosshair.style.display = 'none';
+    svg.appendChild(crosshair);
+
+    svg.addEventListener('mousemove', (evt) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+      const ratio = mouseX / rect.width;
+      const curIndex = Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
+      const pt = ramPts[curIndex];
+      const hItem = history[curIndex];
+
+      if (pt && tooltip) {
+        crosshair.setAttribute('x1', pt.x.toFixed(1));
+        crosshair.setAttribute('x2', pt.x.toFixed(1));
+        crosshair.style.display = 'block';
+
+        const tStr = hItem.timestamp ? new Date(hItem.timestamp).toLocaleTimeString() : (hItem.time ? new Date(hItem.time).toLocaleTimeString() : '--:--:--');
+        const rStr = `${pt.raw.toFixed(1)}%`;
+        const rdStr = readPts[curIndex] ? formatBytesPerSec(readPts[curIndex].raw) : '0 B/s';
+        const wrStr = writePts[curIndex] ? formatBytesPerSec(writePts[curIndex].raw) : '0 B/s';
+
+        tooltip.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
+            <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
+            <span class="badge ${isLog ? 'bg-success-subtle text-success' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log (0–100%)' : 'Lin (0–' + Math.round(ramMaxScale) + '%)'}</span>
+          </div>
+          <div class="d-flex gap-2 font-monospace">
+            <span class="text-success fw-bold"><i class="bi bi-memory me-0.5"></i>RAM: ${rStr}</span>
+            <span class="text-info fw-bold"><i class="bi bi-arrow-down me-0.5"></i>R: ${rdStr}</span>
+            <span class="text-warning fw-bold"><i class="bi bi-arrow-up me-0.5"></i>W: ${wrStr}</span>
+          </div>
+        `;
+        tooltip.style.display = 'block';
+        const tipX = Math.min(rect.width - 160, Math.max(10, mouseX - 60));
+        tooltip.style.left = `${tipX}px`;
+      }
+    });
+
+    svg.addEventListener('mouseleave', () => {
+      crosshair.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
     box.appendChild(svg);
   }
 
@@ -1815,39 +2192,14 @@
       if (writeSubBar) writeSubBar.style.width = `${writePct.toFixed(1)}%`;
       if (writeSubThumb) writeSubThumb.style.left = `${writePct.toFixed(1)}%`;
 
-      // 5. График спарклайна
-      renderMemIoSpark(data.history);
+      // 5. Графики спарклайна RAM и Накопителей
+      if (Array.isArray(data.history) && data.history.length > 0) {
+        renderMemIoSpark(data.history);
+        renderStorageSpark(data.history);
+      }
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения памяти/IO из API:', e);
     }
-  }
-
-  const _netSparkHistory = [];
-
-  function renderNetSpark(history) {
-    const box = document.getElementById('sys-net-spark');
-    if (!box) return;
-    box.replaceChildren();
-    if (!Array.isArray(history) || history.length < 2) return;
-    const ns = 'http://www.w3.org/2000/svg';
-    const W = 200, H = 56;
-    const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('preserveAspectRatio', 'none');
-    svg.style.cssText = 'width:100%;height:100%;';
-    const maxSpeed = Math.max(1024, ...history.map(h => Math.max(h.download_bytes_sec || 0, h.upload_bytes_sec || 0)));
-    const line = (getY, color) => {
-      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
-      const pl = document.createElementNS(ns, 'polyline');
-      pl.setAttribute('points', pts.join(' '));
-      pl.setAttribute('fill', 'none');
-      pl.setAttribute('stroke', color);
-      pl.setAttribute('stroke-width', '1.4');
-      svg.appendChild(pl);
-    };
-    line(h => Math.min(1, Math.max(0, Number(h.download_bytes_sec || 0) / maxSpeed)), '#0dcaf0');
-    line(h => Math.min(1, Math.max(0, Number(h.upload_bytes_sec || 0) / maxSpeed)), '#f59e0b');
-    box.appendChild(svg);
   }
 
   async function fetchNetworkLoadFromApi() {
@@ -1958,6 +2310,497 @@
     }
   }
 
+  let currentNetSparkScale = 'log';
+  let lastNetSparkData = [];
+  const _netSparkHistory = [];
+
+  async function setNetSparkInterval(interval) {
+    currentNetSparkInterval = interval;
+    const el = document.getElementById('sel-net-spark-interval');
+    if (el) el.value = interval;
+    if (interval === 'seconds') {
+      await fetchNetworkLoadFromApi();
+    } else {
+      await fetchNetHistoryByInterval(interval);
+    }
+  }
+  window.setNetSparkInterval = setNetSparkInterval;
+
+  async function fetchNetHistoryByInterval(interval) {
+    try {
+      const res = await fetch(`/api/v1/telemetry/history?interval=${encodeURIComponent(interval)}&metric=net&limit=120`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.history) && data.history.length > 0) {
+        const rows = data.history.map(r => ({
+          timestamp: r.timestamp,
+          time_label: formatSparkTimeLabel(r.timestamp || r.created_at, interval),
+          download_bytes_sec: Number(r.network_recv_bytes_sec || 0),
+          upload_bytes_sec: Number(r.network_sent_bytes_sec || 0)
+        }));
+        lastNetSparkData = rows;
+        renderNetSpark(rows);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения истории сети по интервалу:', e);
+    }
+  }
+
+  function setNetSparkScale(scale) {
+    currentNetSparkScale = scale;
+    const btnLog = document.getElementById('btn-net-spark-log');
+    const btnLin = document.getElementById('btn-net-spark-lin');
+    if (btnLog && btnLin) {
+      if (scale === 'log') {
+        btnLog.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLin.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      } else {
+        btnLin.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLog.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      }
+    }
+    if (lastNetSparkData && lastNetSparkData.length) {
+      renderNetSpark(lastNetSparkData);
+    }
+  }
+  window.setNetSparkScale = setNetSparkScale;
+
+  function renderNetSpark(history) {
+    const box = document.getElementById('sys-net-spark');
+    const container = document.getElementById('sys-net-spark-container');
+    const tooltip = document.getElementById('sys-net-spark-tooltip');
+    if (!box) return;
+
+    if (Array.isArray(history) && history.length >= 2) {
+      lastNetSparkData = history;
+    } else if (lastNetSparkData && lastNetSparkData.length >= 2) {
+      history = lastNetSparkData;
+    } else {
+      return;
+    }
+
+    box.replaceChildren();
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 600, H = 84;
+    const padTop = 6, padBottom = 6;
+    const innerH = H - padTop - padBottom;
+
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'width:100%;height:100%;display:block;cursor:crosshair;';
+
+    const defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML = `
+      <linearGradient id="netGradRx" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#0dcaf0" stop-opacity="0.38"/>
+        <stop offset="60%" stop-color="#0dcaf0" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#0dcaf0" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="netGradTx" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.30"/>
+        <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+      </linearGradient>
+    `;
+    svg.appendChild(defs);
+
+    const gridG = document.createElementNS(ns, 'g');
+    gridG.setAttribute('opacity', '0.2');
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+      const y = H - padBottom - ratio * innerH;
+      const gl = document.createElementNS(ns, 'line');
+      gl.setAttribute('x1', '0');
+      gl.setAttribute('y1', y.toFixed(1));
+      gl.setAttribute('x2', String(W));
+      gl.setAttribute('y2', y.toFixed(1));
+      gl.setAttribute('stroke', '#ffffff');
+      gl.setAttribute('stroke-dasharray', ratio === 0.0 || ratio === 1.0 ? 'none' : '3,3');
+      gl.setAttribute('stroke-width', '1');
+      gridG.appendChild(gl);
+    });
+    svg.appendChild(gridG);
+
+    const count = history.length;
+    const isLog = currentNetSparkScale === 'log';
+
+    const rawDls = history.map(h => Number(h.download_bytes_sec != null ? h.download_bytes_sec : (h.rx || 0)));
+    const rawUls = history.map(h => Number(h.upload_bytes_sec != null ? h.upload_bytes_sec : (h.tx || 0)));
+    const maxNetBytes = Math.max(1024, ...rawDls, ...rawUls);
+    const netMaxScale = maxNetBytes * 1.15;
+
+    const transformNet = (v) => {
+      if (!v || v <= 0) return 0;
+      const nv = Number(v);
+      if (!isLog) return Math.min(1, nv / netMaxScale);
+      return Math.log10(1 + 9 * (Math.min(netMaxScale, nv) / netMaxScale));
+    };
+
+    const rxPts = [];
+    const txPts = [];
+
+    history.forEach((h, i) => {
+      const x = (i / (count - 1)) * W;
+      const rxVal = Number(h.download_bytes_sec != null ? h.download_bytes_sec : (h.rx || 0));
+      const txVal = Number(h.upload_bytes_sec != null ? h.upload_bytes_sec : (h.tx || 0));
+
+      const yRx = H - padBottom - transformNet(rxVal) * innerH;
+      const yTx = H - padBottom - transformNet(txVal) * innerH;
+
+      rxPts.push({ x, y: yRx, raw: rxVal, time: h.timestamp || h.time });
+      txPts.push({ x, y: yTx, raw: txVal });
+    });
+
+    const drawSeries = (pts, strokeColor, fillColor, strokeWidth = 1.8) => {
+      if (pts.length < 2) return;
+      const linePath = buildSmoothSvgPath(pts);
+      if (fillColor) {
+        const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${H - padBottom} L ${pts[0].x.toFixed(1)} ${H - padBottom} Z`;
+        const aEl = document.createElementNS(ns, 'path');
+        aEl.setAttribute('d', areaPath);
+        aEl.setAttribute('fill', fillColor);
+        svg.appendChild(aEl);
+      }
+      const pEl = document.createElementNS(ns, 'path');
+      pEl.setAttribute('d', linePath);
+      pEl.setAttribute('fill', 'none');
+      pEl.setAttribute('stroke', strokeColor);
+      pEl.setAttribute('stroke-width', String(strokeWidth));
+      pEl.setAttribute('stroke-linejoin', 'round');
+      pEl.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(pEl);
+    };
+
+    drawSeries(txPts, '#f59e0b', 'url(#netGradTx)', 1.6);
+    drawSeries(rxPts, '#0dcaf0', 'url(#netGradRx)', 2.0);
+
+    const crosshair = document.createElementNS(ns, 'line');
+    crosshair.setAttribute('y1', '0');
+    crosshair.setAttribute('y2', String(H));
+    crosshair.setAttribute('stroke', 'var(--text-muted, rgba(128,128,128,0.5))');
+    crosshair.setAttribute('stroke-dasharray', '2,2');
+    crosshair.setAttribute('stroke-width', '1');
+    crosshair.style.display = 'none';
+    svg.appendChild(crosshair);
+
+    svg.addEventListener('mousemove', (evt) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+      const ratio = mouseX / rect.width;
+      const curIndex = Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
+      const pt = rxPts[curIndex];
+      const hItem = history[curIndex];
+
+      if (pt && tooltip) {
+        crosshair.setAttribute('x1', pt.x.toFixed(1));
+        crosshair.setAttribute('x2', pt.x.toFixed(1));
+        crosshair.style.display = 'block';
+
+        const tStr = hItem.timestamp ? new Date(hItem.timestamp).toLocaleTimeString() : (hItem.time ? new Date(hItem.time).toLocaleTimeString() : '--:--:--');
+        const rxStr = formatBytesPerSec(pt.raw);
+        const txStr = txPts[curIndex] ? formatBytesPerSec(txPts[curIndex].raw) : '0 B/s';
+
+        tooltip.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
+            <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
+            <span class="badge ${isLog ? 'bg-info-subtle text-info' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin (0–' + formatBytesPerSec(netMaxScale) + ')'}</span>
+          </div>
+          <div class="d-flex gap-2 font-monospace">
+            <span class="text-info fw-bold"><i class="bi bi-arrow-down me-0.5"></i>Rx: ${rxStr}</span>
+            <span class="text-warning fw-bold"><i class="bi bi-arrow-up me-0.5"></i>Tx: ${txStr}</span>
+          </div>
+        `;
+        tooltip.style.display = 'block';
+        const tipX = Math.min(rect.width - 160, Math.max(10, mouseX - 60));
+        tooltip.style.left = `${tipX}px`;
+      }
+    });
+
+    svg.addEventListener('mouseleave', () => {
+      crosshair.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
+    box.appendChild(svg);
+  }
+
+  let currentStorageSparkScale = 'log';
+  let lastStorageSparkData = [];
+  const _storageSparkHistory = [];
+
+  async function setStorageSparkInterval(interval) {
+    currentStorageSparkInterval = interval;
+    const el = document.getElementById('sel-storage-spark-interval');
+    if (el) el.value = interval;
+    if (interval === 'seconds') {
+      await fetchStorageLoadFromApi();
+    } else {
+      await fetchStorageHistoryByInterval(interval);
+    }
+  }
+  window.setStorageSparkInterval = setStorageSparkInterval;
+
+  async function fetchStorageHistoryByInterval(interval) {
+    try {
+      const res = await fetch(`/api/v1/telemetry/history?interval=${encodeURIComponent(interval)}&metric=storage&limit=120`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.history) && data.history.length > 0) {
+        const rows = data.history.map(r => ({
+          timestamp: r.timestamp,
+          time_label: formatSparkTimeLabel(r.timestamp || r.created_at, interval),
+          read_bytes_sec: Number(r.disk_read_bytes_sec || 0),
+          write_bytes_sec: Number(r.disk_write_bytes_sec || 0)
+        }));
+        lastStorageSparkData = rows;
+        renderStorageSpark(rows);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения истории дисков по интервалу:', e);
+    }
+  }
+
+  function setStorageSparkScale(scale) {
+    currentStorageSparkScale = scale;
+    const btnLog = document.getElementById('btn-storage-spark-log');
+    const btnLin = document.getElementById('btn-storage-spark-lin');
+    if (btnLog && btnLin) {
+      if (scale === 'log') {
+        btnLog.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLin.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      } else {
+        btnLin.className = 'btn btn-xs btn-outline-info active py-0 px-2 fw-bold';
+        btnLog.className = 'btn btn-xs btn-outline-secondary py-0 px-2';
+      }
+    }
+    if (lastStorageSparkData && lastStorageSparkData.length) {
+      renderStorageSpark(lastStorageSparkData);
+    }
+  }
+  window.setStorageSparkScale = setStorageSparkScale;
+
+  function renderStorageSpark(history) {
+    const box = document.getElementById('sys-storage-spark');
+    const container = document.getElementById('sys-storage-spark-container');
+    const tooltip = document.getElementById('sys-storage-spark-tooltip');
+    if (!box) return;
+
+    if (Array.isArray(history) && history.length >= 2) {
+      lastStorageSparkData = history;
+    } else if (lastStorageSparkData && lastStorageSparkData.length >= 2) {
+      history = lastStorageSparkData;
+    } else {
+      return;
+    }
+
+    box.replaceChildren();
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 600, H = 84;
+    const padTop = 6, padBottom = 6;
+    const innerH = H - padTop - padBottom;
+
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'width:100%;height:100%;display:block;cursor:crosshair;';
+
+    const defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML = `
+      <linearGradient id="storageGradRead" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#0dcaf0" stop-opacity="0.38"/>
+        <stop offset="60%" stop-color="#0dcaf0" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#0dcaf0" stop-opacity="0.0"/>
+      </linearGradient>
+      <linearGradient id="storageGradWrite" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.30"/>
+        <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+      </linearGradient>
+    `;
+    svg.appendChild(defs);
+
+    const gridG = document.createElementNS(ns, 'g');
+    gridG.setAttribute('opacity', '0.2');
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+      const y = H - padBottom - ratio * innerH;
+      const gl = document.createElementNS(ns, 'line');
+      gl.setAttribute('x1', '0');
+      gl.setAttribute('y1', y.toFixed(1));
+      gl.setAttribute('x2', String(W));
+      gl.setAttribute('y2', y.toFixed(1));
+      gl.setAttribute('stroke', '#ffffff');
+      gl.setAttribute('stroke-dasharray', ratio === 0.0 || ratio === 1.0 ? 'none' : '3,3');
+      gl.setAttribute('stroke-width', '1');
+      gridG.appendChild(gl);
+    });
+    svg.appendChild(gridG);
+
+    const count = history.length;
+    const isLog = currentStorageSparkScale === 'log';
+
+    const rawReads = history.map(h => Number(h.read_bytes_sec != null ? h.read_bytes_sec : (h.disk_read || 0)));
+    const rawWrites = history.map(h => Number(h.write_bytes_sec != null ? h.write_bytes_sec : (h.disk_write || 0)));
+    const maxIoBytes = Math.max(1024 * 1024, ...rawReads, ...rawWrites);
+    const storageMaxScale = maxIoBytes * 1.15;
+
+    const transformStorage = (v) => {
+      if (!v || v <= 0) return 0;
+      const nv = Number(v);
+      if (!isLog) return Math.min(1, nv / storageMaxScale);
+      return Math.log10(1 + 9 * (Math.min(storageMaxScale, nv) / storageMaxScale));
+    };
+
+    const readPts = [];
+    const writePts = [];
+
+    history.forEach((h, i) => {
+      const x = (i / (count - 1)) * W;
+      const rdVal = Number(h.read_bytes_sec != null ? h.read_bytes_sec : (h.disk_read || 0));
+      const wrVal = Number(h.write_bytes_sec != null ? h.write_bytes_sec : (h.disk_write || 0));
+
+      const yRead = H - padBottom - transformStorage(rdVal) * innerH;
+      const yWrite = H - padBottom - transformStorage(wrVal) * innerH;
+
+      readPts.push({ x, y: yRead, raw: rdVal, time: h.timestamp || h.time });
+      writePts.push({ x, y: yWrite, raw: wrVal });
+    });
+
+    const drawSeries = (pts, strokeColor, fillColor, strokeWidth = 1.8) => {
+      if (pts.length < 2) return;
+      const linePath = buildSmoothSvgPath(pts);
+      if (fillColor) {
+        const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${H - padBottom} L ${pts[0].x.toFixed(1)} ${H - padBottom} Z`;
+        const aEl = document.createElementNS(ns, 'path');
+        aEl.setAttribute('d', areaPath);
+        aEl.setAttribute('fill', fillColor);
+        svg.appendChild(aEl);
+      }
+      const pEl = document.createElementNS(ns, 'path');
+      pEl.setAttribute('d', linePath);
+      pEl.setAttribute('fill', 'none');
+      pEl.setAttribute('stroke', strokeColor);
+      pEl.setAttribute('stroke-width', String(strokeWidth));
+      pEl.setAttribute('stroke-linejoin', 'round');
+      pEl.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(pEl);
+    };
+
+    drawSeries(writePts, '#f59e0b', 'url(#storageGradWrite)', 1.6);
+    drawSeries(readPts, '#0dcaf0', 'url(#storageGradRead)', 2.0);
+
+    const crosshair = document.createElementNS(ns, 'line');
+    crosshair.setAttribute('y1', '0');
+    crosshair.setAttribute('y2', String(H));
+    crosshair.setAttribute('stroke', 'var(--text-muted, rgba(128,128,128,0.5))');
+    crosshair.setAttribute('stroke-dasharray', '2,2');
+    crosshair.setAttribute('stroke-width', '1');
+    crosshair.style.display = 'none';
+    svg.appendChild(crosshair);
+
+    svg.addEventListener('mousemove', (evt) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+      const ratio = mouseX / rect.width;
+      const curIndex = Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
+      const pt = readPts[curIndex];
+      const hItem = history[curIndex];
+
+      if (pt && tooltip) {
+        crosshair.setAttribute('x1', pt.x.toFixed(1));
+        crosshair.setAttribute('x2', pt.x.toFixed(1));
+        crosshair.style.display = 'block';
+
+        const tStr = hItem.timestamp ? new Date(hItem.timestamp).toLocaleTimeString() : (hItem.time ? new Date(hItem.time).toLocaleTimeString() : '--:--:--');
+        const rdStr = formatBytesPerSec(pt.raw);
+        const wrStr = writePts[curIndex] ? formatBytesPerSec(writePts[curIndex].raw) : '0 B/s';
+
+        tooltip.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-0.5 mb-1" style="border-color: rgba(255,255,255,0.1) !important;">
+            <span class="text-muted"><i class="bi bi-clock me-1"></i>${escapeHtml(tStr)}</span>
+            <span class="badge ${isLog ? 'bg-info-subtle text-info' : 'bg-secondary text-light'}" style="font-size:0.62rem;">${isLog ? 'Log' : 'Lin (0–' + formatBytesPerSec(storageMaxScale) + ')'}</span>
+          </div>
+          <div class="d-flex gap-2 font-monospace">
+            <span class="text-info fw-bold"><i class="bi bi-arrow-down me-0.5"></i>Чтение: ${rdStr}</span>
+            <span class="text-warning fw-bold"><i class="bi bi-arrow-up me-0.5"></i>Запись: ${wrStr}</span>
+          </div>
+        `;
+        tooltip.style.display = 'block';
+        const tipX = Math.min(rect.width - 160, Math.max(10, mouseX - 60));
+        tooltip.style.left = `${tipX}px`;
+      }
+    });
+
+    svg.addEventListener('mouseleave', () => {
+      crosshair.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
+    box.appendChild(svg);
+  }
+
+  function formatDriveOps(cnt) {
+    if (cnt == null) return '--';
+    const n = Number(cnt);
+    if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return String(n);
+  }
+
+  function formatDriveHours(hours) {
+    if (hours == null) return '--';
+    const h = Number(hours);
+    if (h >= 8760) {
+      const years = (h / 8760).toFixed(1);
+      return `${h.toLocaleString()} ч (~${years} г.)`;
+    }
+    return `${h.toLocaleString()} ч`;
+  }
+
+  function openDriveAiModal(d) {
+    const modal = window.AIModalDialog || window.AITableModal;
+    if (!modal) {
+      console.warn('[SystemInspectorTab] AIModalDialog модуль не найден');
+      return;
+    }
+
+    const pct = d.used_percent != null ? Number(d.used_percent).toFixed(1) : '--';
+    const totGb = d.total_gb != null ? Number(d.total_gb).toFixed(1) : '--';
+    const usedGb = d.used_gb != null ? Number(d.used_gb).toFixed(1) : '--';
+    const freeGb = d.free_gb != null ? Number(d.free_gb).toFixed(1) : '--';
+    const temp = d.temperature_c != null ? `${Number(d.temperature_c).toFixed(0)} °C` : 'N/A';
+
+    modal.show({
+      title: d.name,
+      subtitle: `${d.id} | ${d.media_type} | ${totGb} GB`,
+      icon: '💾',
+      tableType: 'disk',
+      badges: [
+        { text: d.media_type, class: d.media_type === 'NVMe' ? 'badge bg-primary' : d.media_type === 'SSD' ? 'badge bg-info text-dark' : 'badge bg-warning text-dark' },
+        { text: d.health_status || 'SMART OK', class: 'badge bg-success' },
+        { text: temp, class: 'badge bg-dark border text-light' }
+      ],
+      metadata: [
+        { label: 'Модель накопителя', value: d.name },
+        { label: 'Идентификатор устройства', value: d.id, isCode: true },
+        { label: 'Тип носителя / Интерфейс', value: `${d.media_type} (${d.interface_type || 'SATA/NVMe'})` },
+        { label: 'Общий объем', value: `${totGb} GB` },
+        { label: 'Занятый объем', value: `${usedGb} GB (${pct}%)` },
+        { label: 'Свободное пространство', value: `${freeGb} GB` },
+        { label: 'Температура', value: temp },
+        { label: 'Интенсивность обращений', value: d.activity_percent != null ? `${d.activity_percent}%` : 'N/A' },
+        { label: 'Скорость чтения / записи', value: `Чтение: ${d.read_rate_raw || '0 B/s'}, Запись: ${d.write_rate_raw || '0 B/s'}` },
+        { label: 'Всего записано (TBW)', value: d.data_written_raw || 'N/A' },
+        { label: 'Всего прочитано', value: d.data_read_raw || 'N/A' },
+        { label: 'Время наработки (Power-On)', value: formatDriveHours(d.power_on_hours) },
+        { label: 'Серийный номер', value: d.serial_number || 'N/A', isCode: true },
+        { label: 'Связанные разделы', value: (d.partitions && d.partitions.length) ? d.partitions.join(', ') : 'N/A' }
+      ],
+      rawTitle: 'Дамп телеметрии физического накопителя',
+      rawContent: JSON.stringify(d, null, 2),
+      autoRun: false
+    });
+  }
+
   function renderStorageCards(data) {
     const box = document.getElementById('sys-metric-storage-cards');
     const badgeDrives = document.getElementById('sys-storage-drives-badge');
@@ -1981,62 +2824,211 @@
     }
 
     if (drives.length > 0) {
-      box.innerHTML = drives.map(d => {
+      box.innerHTML = drives.map((d, idx) => {
         const pct = d.used_percent != null ? Number(d.used_percent) : 0;
         const temp = d.temperature_c != null ? Number(d.temperature_c) : null;
         const totGb = d.total_gb != null ? Number(d.total_gb) : 0;
         const usedGb = d.used_gb != null ? Number(d.used_gb) : 0;
-        const gaugeSvg = createGaugeSvg(pct, 100, 56);
+        const freeGb = Math.max(0, totGb - usedGb);
         const percentSlider = createPercentSliderHtml(pct, false, `${usedGb.toFixed(0)} / ${totGb.toFixed(0)} GB`);
-        const tempHtml = temp != null ? createTempSliderHtml(temp, 25, 75, false) : '';
-        const mediaBadgeClass = d.media_type === 'SSD' || d.media_type === 'NVMe' ? 'bg-primary-subtle text-primary border-primary' : 'bg-warning-subtle text-warning border-warning';
 
-        let subInfo = '';
-        if (d.read_rate_raw || d.write_rate_raw) {
-          subInfo = `
-            <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.72rem;">
-              <span><i class="bi bi-arrow-down text-info"></i> ${escapeHtml(d.read_rate_raw || '0 B/s')}</span>
-              <span><i class="bi bi-arrow-up text-warning"></i> ${escapeHtml(d.write_rate_raw || '0 B/s')}</span>
-            </div>
-          `;
-        } else if (d.activity_percent != null) {
-          subInfo = `<div class="text-muted mt-1" style="font-size: 0.72rem;">Активность: <span class="text-light fw-bold">${d.activity_percent}%</span></div>`;
+        let mediaBadgeClass = 'bg-warning-subtle text-warning border-warning';
+        let iconHtml = '<i class="bi bi-hdd-fill text-warning fs-5"></i>';
+        if (d.media_type === 'NVMe') {
+          mediaBadgeClass = 'bg-primary-subtle text-primary border-primary';
+          iconHtml = '<i class="bi bi-lightning-charge-fill text-info fs-5"></i>';
+        } else if (d.media_type === 'SSD') {
+          mediaBadgeClass = 'bg-info-subtle text-info border-info';
+          iconHtml = '<i class="bi bi-device-ssd-fill text-primary fs-5"></i>';
+        } else if (d.media_type === 'External' || d.interface_type === 'USB') {
+          mediaBadgeClass = 'bg-purple-subtle text-info border-info';
+          iconHtml = '<i class="bi bi-usb-drive-fill text-info fs-5"></i>';
+        }
+
+        let tempColorClass = 'text-success';
+        let tempBadgeClass = 'bg-success-subtle text-success border border-success';
+        let tempStatusText = 'Оптимально';
+        if (temp != null) {
+          if (temp >= 65) {
+            tempColorClass = 'text-danger fw-bold';
+            tempBadgeClass = 'bg-danger-subtle text-danger border border-danger';
+            tempStatusText = 'Горячий';
+          } else if (temp >= 50) {
+            tempColorClass = 'text-warning fw-bold';
+            tempBadgeClass = 'bg-warning-subtle text-warning border border-warning';
+            tempStatusText = 'Нагрев';
+          } else {
+            tempColorClass = 'text-success';
+            tempBadgeClass = 'bg-success-subtle text-success border border-success';
+            tempStatusText = 'Норма';
+          }
+        } else {
+          tempColorClass = 'text-muted';
+          tempBadgeClass = 'bg-secondary text-light';
+          tempStatusText = 'N/A';
+        }
+
+        let partitionsBadgesHtml = '';
+        if (Array.isArray(d.partitions) && d.partitions.length > 0) {
+          partitionsBadgesHtml = d.partitions.map(p => `<span class="badge bg-primary-subtle text-primary border border-primary font-monospace" style="font-size: 0.70rem;">${escapeHtml(p)}</span>`).join(' ');
         }
 
         return `
-          <div class="sys-core-card" title="${escapeHtml(d.name)}: Занято ${pct.toFixed(1)}% (${usedGb.toFixed(1)} GB / ${totGb.toFixed(1)} GB)${temp != null ? ', Температура ' + temp.toFixed(0) + '°C' : ''}">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="sys-core-title text-truncate" style="max-width: 140px;" title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</span>
-              <span class="badge ${mediaBadgeClass} border" style="font-size: 0.65rem;">${escapeHtml(d.media_type)}</span>
+          <div class="sys-panel p-3 mb-2 rounded-3 w-100 border sys-drive-full-card interactive-table-row" data-drive-idx="${idx}" style="background: var(--surface-1); border-color: var(--border-color) !important; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;" title="Кликните для детального AI-анализа накопителя ${escapeHtml(d.name)}">
+            <!-- Заголовок накопителя -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-2 mb-2 border-bottom" style="border-color: var(--border-color) !important;">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                ${iconHtml}
+                <span class="fw-bold text-body" style="font-size: 1.02rem;">${escapeHtml(d.name)}</span>
+                <span class="badge ${mediaBadgeClass} font-monospace" style="font-size: 0.72rem;">${escapeHtml(d.media_type)}</span>
+                ${d.interface_type ? `<span class="badge bg-dark border text-light font-monospace" style="font-size: 0.70rem;">${escapeHtml(d.interface_type)}</span>` : ''}
+                <span class="badge bg-secondary-subtle text-body border font-monospace" style="font-size: 0.70rem;">${escapeHtml(d.id)}</span>
+                ${partitionsBadgesHtml}
+                <span class="badge bg-success-subtle text-success border border-success font-monospace" style="font-size: 0.70rem;">● ${escapeHtml(d.health_status || 'SMART OK')}</span>
+                ${d.life_percent != null ? `<span class="badge bg-info-subtle text-info border border-info font-monospace" style="font-size: 0.70rem;" title="Оставшийся ресурс"><i class="bi bi-heart-pulse me-1"></i>Ресурс: ${d.life_percent.toFixed(0)}%</span>` : ''}
+                ${d.serial_number ? `<span class="small text-muted font-monospace d-none d-md-inline" style="font-size: 0.68rem;" title="Серийный номер">S/N: ${escapeHtml(d.serial_number)}</span>` : ''}
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-dark border text-light font-monospace px-2.5 py-1" style="font-size: 0.80rem;">${usedGb.toFixed(1)} / ${totGb.toFixed(1)} GB (${pct.toFixed(1)}%)</span>
+                <button type="button" class="btn btn-xs btn-outline-info py-0.5 px-2 fw-semibold no-modal-trigger sys-drive-ai-btn" data-drive-idx="${idx}" title="Запустить AI-анализ накопителя">
+                  <i class="bi bi-robot me-1"></i>AI Анализ
+                </button>
+              </div>
             </div>
-            <div class="py-1">
-              ${gaugeSvg}
+
+            <!-- 4 Информационные колонки на всю ширину -->
+            <div class="row g-3 align-items-center">
+              <!-- 1. Емкость и Занятость -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <div class="p-2.5 rounded-2 h-100" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-muted fw-bold"><i class="bi bi-pie-chart text-info me-1"></i>Емкость и Занято</span>
+                    <span class="fw-bold font-monospace ${pct >= 85 ? 'text-danger' : pct >= 70 ? 'text-warning' : 'text-info'}">${pct.toFixed(1)}%</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2 my-1">
+                    <div style="width: 80px; height: 46px; flex-shrink: 0;">
+                      ${createGaugeSvg(pct, 80, 46)}
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="font-monospace fw-bold" style="font-size: 0.85rem;">${usedGb.toFixed(1)} / ${totGb.toFixed(1)} GB</div>
+                      <div class="small text-muted font-monospace">Свободно: <span class="text-success fw-semibold">${freeGb.toFixed(1)} GB</span></div>
+                    </div>
+                  </div>
+                  <div>
+                    ${percentSlider}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Интенсивность обращений (I/O) -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <div class="p-2.5 rounded-2 h-100" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+                  <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <span class="small text-muted fw-bold"><i class="bi bi-speedometer2 text-warning me-1"></i>Интенсивность I/O</span>
+                    <span class="badge ${d.activity_percent != null && d.activity_percent > 30 ? 'bg-danger-subtle text-danger border border-danger' : d.activity_percent != null && d.activity_percent > 5 ? 'bg-warning-subtle text-warning border border-warning' : 'bg-info-subtle text-info border border-info'} font-monospace" style="font-size: 0.70rem;">
+                      ${d.activity_percent != null ? 'Активность ' + d.activity_percent.toFixed(1) + '%' : (d.read_rate_raw || d.write_rate_raw ? 'Активен' : 'Штатно')}
+                    </span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center font-monospace mb-1" style="font-size: 0.76rem;">
+                    <span class="text-info fw-semibold"><i class="bi bi-arrow-down-short"></i>Чтение:</span>
+                    <span class="fw-bold text-info">${escapeHtml(d.read_rate_raw || '0 B/s')}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center font-monospace mb-1.5" style="font-size: 0.76rem;">
+                    <span class="text-warning fw-semibold"><i class="bi bi-arrow-up-short"></i>Запись:</span>
+                    <span class="fw-bold text-warning">${escapeHtml(d.write_rate_raw || '0 B/s')}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center small text-muted font-monospace pt-1 border-top" style="border-color: var(--border-color) !important; font-size: 0.70rem;">
+                    <span>Операции (IOPS):</span>
+                    <span>${formatDriveOps(d.read_count)} R · ${formatDriveOps(d.write_count)} W</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Температура -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <div class="p-2.5 rounded-2 h-100" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+                  <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <span class="small text-muted fw-bold"><i class="bi bi-thermometer-half text-danger me-1"></i>Температура</span>
+                    <span class="badge ${tempBadgeClass}" style="font-size: 0.70rem;">${tempStatusText}</span>
+                  </div>
+                  <div class="d-flex align-items-baseline gap-2 mb-1">
+                    <span class="fw-bold font-monospace ${tempColorClass}" style="font-size: 1.35rem; line-height: 1;">${temp != null ? temp.toFixed(0) + ' °C' : '-- °C'}</span>
+                    <span class="small text-muted font-monospace">${temp != null ? (temp < 45 ? 'Оптимально' : temp < 55 ? 'Норма' : 'Нагрев') : 'Датчик недоступен'}</span>
+                  </div>
+                  <div class="my-1">
+                    ${createTempSliderHtml(temp, 25, 75, false)}
+                  </div>
+                  <div class="small text-muted font-monospace pt-1 border-top d-flex justify-content-between" style="border-color: var(--border-color) !important; font-size: 0.70rem;">
+                    <span>Безопасный порог:</span>
+                    <span>до 65 °C</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Записано и прочитано / Наработка -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <div class="p-2.5 rounded-2 h-100" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+                  <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <span class="small text-muted fw-bold"><i class="bi bi-database-check text-primary me-1"></i>Записано / Ресурс</span>
+                    <span class="badge bg-dark border text-light font-monospace" style="font-size: 0.70rem;">TBW / I/O</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center font-monospace mb-1" style="font-size: 0.76rem;">
+                    <span class="text-muted"><i class="bi bi-pencil-square text-warning me-1"></i>Всего записано:</span>
+                    <span class="fw-bold text-warning">${escapeHtml(d.data_written_raw || '--')}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center font-monospace mb-1.5" style="font-size: 0.76rem;">
+                    <span class="text-muted"><i class="bi bi-book text-info me-1"></i>Всего прочитано:</span>
+                    <span class="fw-bold text-info">${escapeHtml(d.data_read_raw || '--')}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center small text-muted font-monospace pt-1 border-top" style="border-color: var(--border-color) !important; font-size: 0.70rem;">
+                    <span>Наработка:</span>
+                    <span class="text-body fw-semibold">${formatDriveHours(d.power_on_hours)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="mb-1">
-              ${percentSlider}
-            </div>
-            ${tempHtml ? `<div class="mb-1">${tempHtml}</div>` : ''}
-            ${subInfo}
           </div>
         `;
       }).join('');
+
+      // Привязка кликов по карточкам и кнопке AI Анализа
+      box.querySelectorAll('.sys-drive-full-card').forEach(card => {
+        card.addEventListener('click', (ev) => {
+          if (ev.target.closest('button, a, input, select, .no-modal-trigger') && !ev.target.closest('.sys-drive-ai-btn')) {
+            return;
+          }
+          const idx = Number(card.getAttribute('data-drive-idx'));
+          const driveObj = drives[idx];
+          if (!driveObj) return;
+          openDriveAiModal(driveObj);
+        });
+      });
     } else {
       box.innerHTML = partitions.map(p => {
         const pct = Number(p.used_percent || 0);
-        const gaugeSvg = createGaugeSvg(pct, 100, 56);
+        const gaugeSvg = createGaugeSvg(pct, 90, 50);
         const percentSlider = createPercentSliderHtml(pct, false, `${p.used_gb.toFixed(0)} / ${p.total_gb.toFixed(0)} GB`);
 
         return `
-          <div class="sys-core-card" title="Раздел ${escapeHtml(p.device)} (${escapeHtml(p.fstype)}): Занято ${pct.toFixed(1)}%">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="sys-core-title">${escapeHtml(p.device)} (${escapeHtml(p.fstype)})</span>
-              <span class="badge bg-secondary border" style="font-size: 0.65rem;">${p.free_gb.toFixed(0)} GB free</span>
+          <div class="sys-panel p-3 mb-2 rounded-3 w-100 border" style="background: var(--surface-1); border-color: var(--border-color) !important;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-1.5 mb-1.5 border-bottom" style="border-color: var(--border-color) !important;">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-hdd-fill text-info fs-5"></i>
+                <span class="fw-bold text-body" style="font-size: 1.02rem;">Раздел ${escapeHtml(p.device)} (${escapeHtml(p.fstype || 'NTFS')})</span>
+                <span class="badge bg-secondary font-monospace">${p.free_gb.toFixed(1)} GB свободно</span>
+              </div>
+              <span class="badge bg-dark border text-light font-monospace">${p.used_gb.toFixed(1)} / ${p.total_gb.toFixed(1)} GB (${pct.toFixed(1)}%)</span>
             </div>
-            <div class="py-1">
-              ${gaugeSvg}
-            </div>
-            <div>
-              ${percentSlider}
+            <div class="row g-3 align-items-center">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width: 80px; height: 46px;">${gaugeSvg}</div>
+                  <div class="font-monospace fw-bold">${pct.toFixed(1)}% (${p.used_gb.toFixed(1)} / ${p.total_gb.toFixed(1)} GB)</div>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 col-lg-8">
+                ${percentSlider}
+              </div>
             </div>
           </div>
         `;
@@ -2095,6 +3087,11 @@
 
       // 2. Карточки дисков
       renderStorageCards(data);
+
+      // 3. График истории накопителей (если уже есть кэшированная история)
+      if (lastStorageSparkData && lastStorageSparkData.length >= 2) {
+        renderStorageSpark(lastStorageSparkData);
+      }
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения параметров дисков из API:', e);
     }
@@ -2504,6 +3501,9 @@
                 <button type="button" class="btn btn-xs btn-outline-warning active py-0 px-2 fw-bold" id="btn-gpu-spark-log-${idx}" style="font-size: 0.68rem;" onclick="window.setGpuSparkScale && window.setGpuSparkScale('log', ${idx})">Лог. шкала (Log)</button>
                 <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-gpu-spark-lin-${idx}" style="font-size: 0.68rem;" onclick="window.setGpuSparkScale && window.setGpuSparkScale('linear', ${idx})">Линейная (Lin)</button>
               </div>
+              <select class="form-select form-select-xs sys-spark-interval-select" id="sel-gpu-spark-interval-${idx}" style="height: 22px; padding: 0 6px; font-size: 0.68rem; width: auto; min-width: 85px;" onchange="window.setGpuSparkInterval && window.setGpuSparkInterval(${idx}, this.value)">
+                <option value="seconds">Секунды</option>
+              </select>
             </div>
             <div class="d-flex align-items-center gap-2.5" style="font-size: 0.74rem; font-weight: 600;">
               <span class="text-warning" style="text-shadow: 0 0 8px rgba(245,158,11,0.5);" title="Основная шкала: Загрузка GPU Core (0-100%)">● Нагрузка Core %</span>
@@ -4941,6 +5941,7 @@
   async function initSystemInspectorTab() {
     console.log('[SystemInspectorTab] Initializing...');
     bindTabEvents();
+    await fetchAvailableTimeRanges();
     if (window.isTabActive ? (window.isTabActive('tab-hardware-load-inspector') || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) : false) {
       await fetchCpuLoadFromApi();
       await fetchGpuLoadFromApi();
@@ -4970,6 +5971,7 @@
   function activateSystemInspectorTab() {
     if (window.isTabActive && !window.isTabActive('tab-hardware-load-inspector') && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
     console.log('[SystemInspectorTab] Tab activated, refreshing metrics...');
+    fetchAvailableTimeRanges();
     fetchCpuLoadFromApi();
     fetchGpuLoadFromApi();
     fetchMemoryIoFromApi();

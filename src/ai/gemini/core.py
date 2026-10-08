@@ -35,7 +35,7 @@ from src.ai.gemini.gemini_api_key_state import get_status, load_api_keys, mark_e
 from src.utils.jjson import j_loads
 _config_path: Path = Path(__file__).parent / 'config.json'
 _gemini_config: dict = j_loads(_config_path) if _config_path.exists() else {}
-_DEFAULT_MODEL: str = _gemini_config.get('model', 'gemini-flash-latest') if isinstance(_gemini_config, dict) else 'gemini-flash-latest'
+_DEFAULT_MODEL: str = _gemini_config.get('model', '') if isinstance(_gemini_config, dict) else ''
 _DEFAULT_SAVE_HISTORY: bool = _gemini_config.get('save_history_chat', False) if isinstance(_gemini_config, dict) else False
 _DEFAULT_REALTIME_STREAMING: bool = _gemini_config.get('realtime_streaming', True) if isinstance(_gemini_config, dict) else True
 
@@ -237,7 +237,7 @@ class GoogleGenerativeAICore:
         """
         active_pool: list[str] = self.get_available_models()
         if not active_pool:
-            active_pool = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+            active_pool = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
         try:
             idx: int = active_pool.index(self.model_name)
             next_idx: int = (idx + 1) % len(active_pool)
@@ -264,7 +264,7 @@ class GoogleGenerativeAICore:
         """
         active_pool: list[str] = self.get_available_models()
         if not active_pool:
-            active_pool = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+            active_pool = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
         try:
             idx: int = active_pool.index(self.model_name)
         except ValueError:

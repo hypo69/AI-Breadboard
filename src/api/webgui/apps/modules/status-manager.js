@@ -107,7 +107,7 @@ export async function updateModelBadge(statusData) {
       }
     } else if (ai.use_gemini) {
       prov = 'GEMINI';
-      mod = ai.gemini_model_id || ai.model || 'gemini-flash-latest';
+      mod = ai.gemini_model_id || ai.model || 'gemini-3.5-flash-lite';
     } else if (ai.use_agy) {
       prov = 'AGY';
       mod = ai.agy_model_id || ai.model || 'gemini-3.6-flash';

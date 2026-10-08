@@ -14,7 +14,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:38:00
+# Updated: 2026-10-08 12:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -40,14 +40,14 @@ from apps.windows.contracts import (
     ProcessState,
     ThreadState,
     ServiceState,
-    CpuMetrics,
-    MemoryMetrics,
-    GpuMetrics,
-    HardwareSensor,
-    SystemSnapshot,
-    ProcessMetrics,
-    ProcessTokenInfo,
-    TelemetryIncident,
+    ContractCpuMetrics,
+    ContractMemoryMetrics,
+    ContractGpuMetrics,
+    ContractHardwareSensor,
+    ContractSystemSnapshot,
+    ContractProcessMetrics,
+    ContractProcessTokenInfo,
+    ContractTelemetryIncident,
 )
 
 # C-FFI Win32 (Слой 2)
@@ -105,14 +105,14 @@ __all__ = [
     "ProcessState",
     "ThreadState",
     "ServiceState",
-    "CpuMetrics",
-    "MemoryMetrics",
-    "GpuMetrics",
-    "HardwareSensor",
-    "SystemSnapshot",
-    "ProcessMetrics",
-    "ProcessTokenInfo",
-    "TelemetryIncident",
+    "ContractCpuMetrics",
+    "ContractMemoryMetrics",
+    "ContractGpuMetrics",
+    "ContractHardwareSensor",
+    "ContractSystemSnapshot",
+    "ContractProcessMetrics",
+    "ContractProcessTokenInfo",
+    "ContractTelemetryIncident",
     # Нативные
     "win32_error_check",
     "WindowsErrorDecoder",

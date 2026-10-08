@@ -16,7 +16,7 @@
 # Package: apps.windows.core.tools
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 19:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -32,18 +32,36 @@ from apps.windows.core.models import RiskLevel
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult
 from apps.windows.core.tools.registry import ToolRegistry
 
+
 class WindowsCollectorTool(BaseTool):
     """Инструмент запуска специализированных доменных коллекторов Windows."""
     name = 'windows_collector'
     title = 'Коллектор аудита Windows'
-    description = "Запускает встроенный коллектор аудита Windows. Доступные домены: 'driver' (PnP устройства и драйверы), 'storage' (диски, тома, SMART), 'network' (сетевые адаптеры, открытые порты, сокеты), 'process' (активные процессы, CPU/RAM), 'services' (службы Windows и типы автозапуска), 'tasks' (планировщик Task Scheduler), 'security' (Defender, UAC, автозагрузка Run), 'eventlog' (журналы ошибок System/App), 'performance' (нагрузка и узкие места), 'software' (установленное ПО, UserAssist, Prefetch), 'update' (обновления Windows и установленные KB), 'clean' (временные файлы и кэш)."
-    parameters_schema = {'type': 'object', 'properties': {'collector_name': {'type': 'string', 'enum': ['driver', 'storage', 'network', 'process', 'services', 'tasks', 'security', 'eventlog', 'performance', 'software', 'update', 'clean', 'integrity'], 'description': 'Имя доменного коллектора для запуска'}}, 'required': ['collector_name']}
+    description = "Запускает встроенный коллектор аудита Windows. Доступные домены: 'driver' (PnP устройства и драйверы), 'storage' (диски, тома, SMART), 'network' (сетевые адаптеры, открытые порты, сокеты), 'process' (активные процессы, CPU/RAM), 'services' (службы Windows и типы автозапуска), 'tasks' (планировщик Task Scheduler), 'security' (Defender, UAC, автозагрузка Run), 'eventlog' (журналы ошибок System/App), 'performance' (нагрузка и узкие места), 'software' (установленное ПО, UserAssist, Prefetch), 'update' (обновления Windows и установленные KB), 'clean' (временные файлы и кэш), 'integrity' (целостность файлов), 'file_activity' (активность файлов), 'postinstall' (артефакты после установки)."
+    parameters_schema = {'type': 'object', 'properties': {'collector_name': {'type': 'string', 'enum': ['driver', 'storage', 'network', 'process', 'services', 'tasks', 'security', 'eventlog', 'performance', 'software', 'update', 'clean', 'integrity', 'file_activity', 'postinstall'], 'description': 'Имя доменного коллектора для запуска'}}, 'required': ['collector_name']}
     risk_level = RiskLevel.SAFE
 
     def __init__(self) -> None:
         """Инициализация коллекторов."""
-        from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
-        self.collectors: Dict[str, Any] = {'driver': DriverCollector(), 'storage': StorageCollector(), 'network': NetworkCollector(), 'process': ProcessCollector(), 'services': ServicesCollector(), 'tasks': TasksCollector(), 'security': SecurityCollector(), 'eventlog': EventLogCollector(), 'performance': PerformanceCollector(), 'software': SoftwareCollector(), 'clean': CleanCollector(), 'update': UpdateCollector(), 'integrity': IntegrityCollector()}
+        from pathlib import Path
+        from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, FileActivityCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
+        self.collectors: Dict[str, Any] = {
+            'driver': DriverCollector(),
+            'storage': StorageCollector(),
+            'network': NetworkCollector(),
+            'process': ProcessCollector(),
+            'services': ServicesCollector(),
+            'tasks': TasksCollector(),
+            'security': SecurityCollector(),
+            'eventlog': EventLogCollector(),
+            'performance': PerformanceCollector(),
+            'software': SoftwareCollector(),
+            'clean': CleanCollector(),
+            'update': UpdateCollector(),
+            'integrity': IntegrityCollector(),
+            'file_activity': FileActivityCollector(monitored_paths=[str(Path.cwd() / 'data')]),
+            'postinstall': PostInstallCollector(),
+        }
 
     async def execute(self, collector_name: str, **kwargs: Any) -> ToolExecutionResult:
         """Выполнение коллектора на хосте."""

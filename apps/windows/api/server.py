@@ -14,7 +14,7 @@
 # Package: apps.windows.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:38:00
+# Updated: 2026-10-08 13:36:00
 # =============================================================================
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import pkgutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -38,6 +39,7 @@ _MODULE_DIR = Path(__file__).resolve().parent
 _CONFIG_PATH = _MODULE_DIR / "config.json"
 _WEBGUI_DIR = _MODULE_DIR / "webgui"
 _TC_INDEX = _WEBGUI_DIR / "apps" / "index.html"
+_PROJECT_ROOT = _MODULE_DIR.parents[2]
 
 
 def load_config() -> Dict[str, Any]:
@@ -48,6 +50,50 @@ def load_config() -> Dict[str, Any]:
                 return json.load(f)
         except Exception as exc:
             logger.warning(f"[API Server] Ошибка чтения конфигурации {_CONFIG_PATH}: {exc}")
+    return {}
+
+
+def load_tc_config(profile: Optional[str] = None) -> Dict[str, Any]:
+    """Загрузка конфигурации для Test Computer / Windows App.
+
+    Args:
+        profile: Имя профиля конфигурации (например tc, su).
+
+    Returns:
+        Dict[str, Any]: Словарь с параметрами конфигурации.
+    """
+    candidates: List[Path] = []
+
+    if profile:
+        candidates.append(_PROJECT_ROOT / "start_scenarios_config" / f"{profile}.json")
+        candidates.append(_PROJECT_ROOT / "config" / f"{profile}.json")
+
+    env_cfg = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    if env_cfg:
+        p = Path(env_cfg)
+        candidates.append(p if p.is_absolute() else _PROJECT_ROOT / p)
+        candidates.append(_PROJECT_ROOT / "start_scenarios_config" / p.name)
+
+    candidates.extend([
+        _PROJECT_ROOT / "start_scenarios_config" / "tc.json",
+        _PROJECT_ROOT / "start_scenarios_config" / "su.json",
+        _PROJECT_ROOT / "config" / "tc.json",
+        _PROJECT_ROOT / "config_tc.json",
+        _MODULE_DIR.parent / "config.json",
+        _CONFIG_PATH,
+        _PROJECT_ROOT / "config.json",
+    ])
+
+    for cand in candidates:
+        if cand.exists() and cand.is_file():
+            try:
+                with open(cand, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        return data
+            except Exception as exc:
+                logger.warning(f"[API Server] Ошибка чтения конфигурации {cand}: {exc}")
+
     return {}
 
 
@@ -68,6 +114,7 @@ def discover_and_register_routers(app: FastAPI, package_path: str = "apps.window
             or "routers.router_" in module_name
             or module_name.endswith(".router_capabilities")
             or module_name.endswith(".system_inspector_router")
+            or module_name.endswith(".router_process_activity")
         ):
             try:
                 mod = importlib.import_module(module_name)
@@ -78,7 +125,6 @@ def discover_and_register_routers(app: FastAPI, package_path: str = "apps.window
                     except Exception:
                         pass
                 if isinstance(router, APIRouter):
-                    # Проверяем, не добавлен ли уже роутер
                     if router not in app.routes:
                         app.include_router(router)
                         logger.debug(f"[AutoDiscovery] Успешно зарегистрирован роутер: {module_name}")
@@ -118,6 +164,18 @@ def create_app() -> FastAPI:
     # 1. Сначала регистрируем явно сконфигурированные роутеры из config.json (для кастомных параметров)
     routers_list: List[Dict[str, Any]] = config.get("routers", [])
     registered_modules = set()
+    
+    # Создаем экземпляры моделей один раз для всех роутеров, которым они нужны
+    chat_model: Optional[Any] = None
+    narrator_model: Optional[Any] = None
+    
+    try:
+        from src.ai.orchestration.unified_chat import UnifiedChatModel
+        chat_model = UnifiedChatModel()
+        narrator_model = UnifiedChatModel()
+    except Exception as model_err:
+        logger.warning(f"[API Server] Не удалось инициализировать модели: {model_err}")
+    
     for entry in routers_list:
         if not entry.get("enabled", True):
             continue
@@ -129,6 +187,9 @@ def create_app() -> FastAPI:
         if entry.get("inject_app"):
             kwargs["app"] = app
             kwargs.setdefault("state", None)
+        if entry.get("inject_models"):
+            kwargs["chat_model"] = chat_model
+            kwargs["narrator_model"] = narrator_model
 
         try:
             mod = importlib.import_module(module_path)
@@ -142,6 +203,23 @@ def create_app() -> FastAPI:
 
     # 2. Затем выполняем динамическое обнаружение (Auto-Discovery) для всех модулей apps.windows
     discover_and_register_routers(app, "apps.windows")
+
+    # -------------------------------------------------------------------------
+    # Системные и UI точки входа
+    # -------------------------------------------------------------------------
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon() -> Response:
+        """Отдача иконки favicon.ico."""
+        fav_candidates = [
+            _WEBGUI_DIR / "favicon.ico",
+            _WEBGUI_DIR / "assets" / "favicon.ico",
+            _PROJECT_ROOT / "src" / "api" / "webgui" / "favicon.ico",
+            _PROJECT_ROOT / "src" / "api" / "webgui" / "assets" / "favicon.ico",
+        ]
+        for fav in fav_candidates:
+            if fav.exists() and fav.is_file():
+                return FileResponse(fav)
+        return Response(status_code=204)
 
     # TC UI точка входа
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -177,6 +255,101 @@ def create_app() -> FastAPI:
             "configured_routers_count": len(routers_list),
         }
 
+    # -------------------------------------------------------------------------
+    # Эндпоинты статусов приложений и настроек ИИ
+    # -------------------------------------------------------------------------
+    @app.get("/api/v1/apps/status", tags=["apps"])
+    @app.get("/api/apps/status", tags=["apps"])
+    async def get_apps_status(profile: Optional[str] = None) -> Dict[str, Any]:
+        """Возвращает статус доступности приложений для формирования меню."""
+        cfg = load_tc_config(profile)
+        apps_sec = cfg.get("apps", {})
+        enabled_list = apps_sec.get("enabled", []) if isinstance(apps_sec, dict) else []
+        disabled_list = apps_sec.get("disabled", []) if isinstance(apps_sec, dict) else []
+
+        apps_map: Dict[str, Dict[str, Any]] = {}
+        for item in enabled_list:
+            apps_map[item] = {"enabled": True, "name": item}
+        for item in disabled_list:
+            apps_map[item] = {"enabled": False, "name": item}
+
+        ai_config = cfg.get("ai", {})
+        if not ai_config:
+            global_cfg = load_tc_config()
+            ai_config = global_cfg.get("ai", {})
+
+        return {
+            "status": "ok",
+            "apps": apps_map,
+            "ai": ai_config,
+        }
+
+    @app.get("/auth/settings", tags=["auth"])
+    @app.get("/api/v1/auth/settings", tags=["auth"])
+    async def get_user_settings(request: Request) -> Dict[str, Any]:
+        """Чтение активных настроек пользователя и модели."""
+        try:
+            from src.user_manager import user_manager
+            settings = user_manager.get_user_settings(1) or {}
+        except Exception:
+            settings = {}
+
+        if not settings.get("model"):
+            cfg = load_tc_config()
+            ai_sec = cfg.get("ai", {})
+            prov = ai_sec.get("provider", "gemini")
+            model = ai_sec.get(prov, {}).get("model", "")
+            settings.setdefault("model", f"{prov}:{model}" if model else prov)
+
+        settings.setdefault("status", "ok")
+        settings.setdefault("favorite_models", {})
+        return settings
+
+    @app.post("/auth/settings", tags=["auth"])
+    @app.post("/api/v1/auth/settings", tags=["auth"])
+    async def update_user_settings(request: Request) -> Dict[str, Any]:
+        """Сохранение активной модели пользователя."""
+        try:
+            body = await request.json()
+            try:
+                from src.user_manager import user_manager
+                user_manager.update_user_settings(
+                    1,
+                    theme=body.get("theme"),
+                    language=body.get("language"),
+                    tts_enabled=body.get("tts_enabled"),
+                    system_instruction=body.get("system_instruction"),
+                    model=body.get("model"),
+                    tts_system=body.get("tts_system"),
+                    tts_voice=body.get("tts_voice"),
+                    rag_enabled=body.get("rag_enabled"),
+                )
+            except Exception:
+                pass
+            return {"status": "ok", "saved": body}
+        except Exception:
+            return {"status": "ok"}
+
+    @app.get("/api/v1/chat/active-model", tags=["chat"])
+    async def get_chat_active_model(profile: Optional[str] = None) -> Dict[str, Any]:
+        """Возвращает активную модель ИИ."""
+        cfg = load_tc_config(profile)
+        ai_sec = cfg.get("ai", {})
+        prov = ai_sec.get("provider", "gemini")
+        model = ai_sec.get(prov, {}).get("model", "")
+        return {"status": "ok", "provider": prov, "model": model, "config_file": "tc.json"}
+
+    @app.get("/api/v1/chat/models", tags=["chat"])
+    async def get_available_chat_models() -> Dict[str, Any]:
+        """Список доступных моделей ИИ для дропдауна."""
+        return {
+            "models": {
+                "gemini": ["gemini-3.1-flash-lite", "gemini-3.1-flash"],
+                "gemini_cli": ["gemini:gemini-3.1-flash-lite"],
+                "agy": ["agy-gemini-3.6-flash"],
+            }
+        }
+
     # Статические файлы TC
     if _WEBGUI_DIR.exists():
         app.mount("/webinterface", StaticFiles(directory=_WEBGUI_DIR), name="tc-webinterface")
@@ -195,4 +368,5 @@ __all__ = [
     "create_internal_app",
     "discover_and_register_routers",
     "load_config",
+    "load_tc_config",
 ]

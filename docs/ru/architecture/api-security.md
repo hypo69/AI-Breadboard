@@ -164,7 +164,7 @@ headers = {
 }
 
 payload = {
-    "model": "gemini-flash-latest",
+    "model": "gemini-3.5-flash-lite",
     "messages": [
         {"role": "user", "content": "Привет! Расскажи о возможностях системы."}
     ]

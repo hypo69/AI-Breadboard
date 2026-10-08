@@ -28,7 +28,7 @@ class Config {
             'enabled'            => false,
             'api_url'            => 'https://kino.davidka.net/api/chat/comment-responder',
             'api_key'            => '',
-            'model'              => 'gemini-flash-latest',
+            'model'              => 'gemini-3.5-flash-lite',
             'provider'           => 'gemini',
             'bot_user_id'        => 0,
             'auto_approve'       => true,
@@ -93,7 +93,7 @@ class Config {
         $merged['enabled']            = (bool)($merged['enabled'] ?? false);
         $merged['api_url']            = esc_url_raw($merged['api_url'] ?? '');
         $merged['api_key']            = sanitize_text_field($merged['api_key'] ?? '');
-        $merged['model']              = sanitize_text_field($merged['model'] ?? 'gemini-flash-latest');
+        $merged['model']              = sanitize_text_field($merged['model'] ?? 'gemini-3.5-flash-lite');
         $merged['provider']           = sanitize_text_field($merged['provider'] ?? 'gemini');
         $merged['bot_user_id']        = absint($merged['bot_user_id'] ?? 0);
         $merged['auto_approve']       = (bool)($merged['auto_approve'] ?? true);

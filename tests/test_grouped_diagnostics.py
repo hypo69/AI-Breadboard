@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 02:31:40
+# Updated: 2026-10-08 12:00:00
 # =============================================================================
 
 """Фикстура снимка телеметрии с несколькими выраженными узкими местами."""
@@ -70,6 +70,9 @@ def test_diagnose_group_heuristic_and_llm(sample_snapshot: SystemSnapshot):
     assert 'Экспертный анализ CPU' in res.summary
     assert res.ai_model_used == 'Mock LLM'
     assert 'cpu_load' in res.key_metrics
+    assert res.generated_prompt is not None
+    assert 'cpu_load' in res.generated_prompt or 'load' in res.generated_prompt
+    assert res.system_instruction is not None
 
 def test_synthesis_final_report():
     """Тестирование финального синтеза по всем завершенным группам."""
@@ -85,6 +88,8 @@ def test_synthesis_final_report():
     assert synthesis.groups_evaluated == 4
     assert len(synthesis.critical_actions) > 0
     assert 'Общий вердикт' in synthesis.executive_summary
+    assert synthesis.generated_prompt is not None
+    assert synthesis.system_instruction is not None
 
 def test_grouped_telemetry_builder_empty_snapshot():
     """Проверка отказоустойчивости билдера при пустом или частично поврежденном снимке."""
@@ -112,8 +117,10 @@ def test_router_diagnose_endpoints():
     assert res_group.status_code == 200
     group_res = res_group.json()
     assert group_res['group_id'] == groups_data[0]['group_id']
+    assert 'generated_prompt' in group_res
     res_synth = client.post('/api/v1/system/diagnose/synthesize', json={'groups': [group_res]})
     assert res_synth.status_code == 200
     synth_res = res_synth.json()
     assert 'health_score' in synth_res
     assert synth_res['groups_evaluated'] == 1
+    assert 'generated_prompt' in synth_res
