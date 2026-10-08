@@ -9,14 +9,14 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/html/power_lifecycle_tab/main.js?v=20261008_v1" type="module"></script>
+ *     <script src="/html/power_lifecycle_tab/main.js?v=20261008_v2" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/power_lifecycle_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 02:51:00
+ * Updated: 2026-10-08 04:25:00
  * =============================================================================
  */
 
@@ -236,23 +236,23 @@ function filterAndRenderSessions() {
   }
 
   tbody.innerHTML = filtered.map(s => {
-    let statusBadge = '<span class="badge bg-secondary">Неизвестно</span>';
+    let statusBadge = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Неизвестно</span>';
     if (s.shutdown_type === 'Active') {
-      statusBadge = '<span class="badge bg-success-subtle text-success border border-success">🟢 Активная</span>';
+      statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle">🟢 Активная</span>';
     } else if (s.shutdown_type === 'Restart') {
-      statusBadge = '<span class="badge bg-primary-subtle text-primary border border-primary">↻ Перезагрузка</span>';
+      statusBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle">↻ Перезагрузка</span>';
     } else if (s.shutdown_type === 'Shutdown' || s.shutdown_type === 'PowerOff') {
-      statusBadge = '<span class="badge bg-secondary-subtle text-light border">⏻ Выключение</span>';
+      statusBadge = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">⏻ Выключение</span>';
     } else if (s.shutdown_type === 'BSOD' || s.bugcheck) {
-      statusBadge = `<span class="badge bg-danger text-white">🚨 BSOD ${s.bugcheck || ''}</span>`;
+      statusBadge = `<span class="badge bg-danger text-white">🚨 BSOD ${escapeHtml(s.bugcheck || '')}</span>`;
     } else if (s.unexpected_shutdown) {
-      statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger">⚠️ Сбой / 41</span>';
+      statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">⚠️ Сбой / 41</span>';
     }
 
     let initiatorHtml = '<span class="text-muted">--</span>';
     if (s.initiator || s.process) {
-      const initName = s.initiator ? `<span class="fw-semibold text-warning">${escapeHtml(s.initiator)}</span>` : '';
-      const procName = s.process ? `<span class="badge bg-dark border border-secondary text-info font-monospace ms-1">${escapeHtml(s.process)}</span>` : '';
+      const initName = s.initiator ? `<span class="fw-semibold text-primary">${escapeHtml(s.initiator)}</span>` : '';
+      const procName = s.process ? `<span class="badge pwr-proc-badge font-monospace ms-1">${escapeHtml(s.process)}</span>` : '';
       initiatorHtml = `<div class="d-flex align-items-center flex-wrap">${initName} ${procName}</div>`;
       if (s.initiator_chain && s.initiator_chain.length > 1) {
         initiatorHtml += `<div class="small text-muted font-monospace mt-0.5" style="font-size: 0.72rem;">🔗 ${escapeHtml(s.initiator_chain.join(' → '))}</div>`;
@@ -261,8 +261,8 @@ function filterAndRenderSessions() {
 
     let reasonHtml = '<span class="text-muted">--</span>';
     if (s.reason || s.reason_code) {
-      const codeBadge = s.reason_code ? `<span class="badge bg-secondary-subtle text-secondary border font-monospace me-1">${escapeHtml(s.reason_code)}</span>` : '';
-      reasonHtml = `<div>${codeBadge}<span class="text-light">${escapeHtml(s.reason || '')}</span></div>`;
+      const codeBadge = s.reason_code ? `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace me-1">${escapeHtml(s.reason_code)}</span>` : '';
+      reasonHtml = `<div>${codeBadge}<span>${escapeHtml(s.reason || '')}</span></div>`;
       if (s.comment) {
         reasonHtml += `<div class="small text-muted font-italic mt-0.5">💬 ${escapeHtml(s.comment)}</div>`;
       }
@@ -270,10 +270,10 @@ function filterAndRenderSessions() {
 
     return `
       <tr>
-        <td class="font-monospace text-info small fw-bold">${escapeHtml(s.session_id)}</td>
+        <td class="font-monospace text-primary small fw-bold">${escapeHtml(s.session_id)}</td>
         <td class="font-monospace small">${escapeHtml(s.boot_time)}</td>
         <td class="font-monospace small text-muted">${s.shutdown_time ? escapeHtml(s.shutdown_time) : '<span class="text-success fw-bold">Сейчас</span>'}</td>
-        <td class="font-monospace fw-semibold text-warning">${escapeHtml(s.uptime_human || '--')}</td>
+        <td class="font-monospace fw-semibold">${escapeHtml(s.uptime_human || '--')}</td>
         <td>${statusBadge}</td>
         <td>${initiatorHtml}</td>
         <td>${reasonHtml}</td>
@@ -335,25 +335,25 @@ function filterAndRenderEvents() {
   }
 
   tbody.innerHTML = filtered.map(e => {
-    let eidBadge = '<span class="badge bg-secondary font-monospace">' + e.event_id + '</span>';
+    let eidBadge = `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace">${e.event_id}</span>`;
     if (e.event_id === 1074) {
-      eidBadge = '<span class="badge bg-warning text-dark font-monospace fw-bold">1074 User32</span>';
+      eidBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning font-monospace fw-bold">1074 User32</span>';
     } else if (e.event_id === 41) {
-      eidBadge = '<span class="badge bg-danger font-monospace fw-bold">41 Kernel-Power</span>';
+      eidBadge = '<span class="badge bg-danger-subtle text-danger border border-danger font-monospace fw-bold">41 Kernel-Power</span>';
     } else if (e.event_id === 6008) {
-      eidBadge = '<span class="badge bg-danger font-monospace fw-bold">6008 EventLog</span>';
+      eidBadge = '<span class="badge bg-danger-subtle text-danger border border-danger font-monospace fw-bold">6008 EventLog</span>';
     } else if (e.event_id === 12 || e.event_id === 6005 || e.event_id === 6009) {
-      eidBadge = `<span class="badge bg-success font-monospace">${e.event_id} Boot</span>`;
+      eidBadge = `<span class="badge bg-success-subtle text-success border border-success font-monospace">${e.event_id} Boot</span>`;
     } else if (e.event_id === 13 || e.event_id === 6006) {
-      eidBadge = `<span class="badge bg-info text-dark font-monospace">${e.event_id} Clean</span>`;
+      eidBadge = `<span class="badge bg-info-subtle text-info border border-info font-monospace">${e.event_id} Clean</span>`;
     } else if (e.event_id === 1001) {
-      eidBadge = '<span class="badge bg-danger font-monospace fw-bold">1001 BSOD</span>';
+      eidBadge = '<span class="badge bg-danger text-white font-monospace fw-bold">1001 BSOD</span>';
     }
 
     let userProc = '<span class="text-muted">--</span>';
     if (e.user || e.process) {
-      userProc = `<div class="fw-semibold text-warning">${escapeHtml(e.user || '')}</div>`;
-      if (e.process) userProc += `<div class="font-monospace small text-info">${escapeHtml(e.process)}</div>`;
+      userProc = `<div class="fw-semibold text-primary">${escapeHtml(e.user || '')}</div>`;
+      if (e.process) userProc += `<div class="font-monospace small text-muted">${escapeHtml(e.process)}</div>`;
     }
 
     const desc = e.reason || e.details?.message || '--';
@@ -363,9 +363,9 @@ function filterAndRenderEvents() {
         <td class="font-monospace small">${escapeHtml(e.timestamp)}</td>
         <td>${eidBadge}</td>
         <td class="small text-muted font-monospace">${escapeHtml(e.provider)}</td>
-        <td><span class="badge bg-dark border border-secondary text-light">${escapeHtml(e.event_type)}</span></td>
+        <td><span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">${escapeHtml(e.event_type)}</span></td>
         <td>${userProc}</td>
-        <td class="small text-light">${escapeHtml(desc)}</td>
+        <td class="small">${escapeHtml(desc)}</td>
         <td class="text-center">
           ${e.raw_xml ? `
             <button class="btn btn-xs btn-outline-secondary p-1 px-2 pwr-xml-btn" data-xml="${escapeHtml(e.raw_xml)}" title="Просмотреть XML">
@@ -401,14 +401,14 @@ function showSessionDetailModal(sessionId) {
     let eventsListHtml = '<div class="text-muted small">Нет связанных событий</div>';
     if (session.events && session.events.length > 0) {
       eventsListHtml = session.events.map(ev => `
-        <div class="card bg-black border-secondary p-2 mb-2">
+        <div class="pwr-detail-card p-2 mb-2">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="badge bg-primary font-monospace">Event ${ev.event_id}</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">Event ${ev.event_id}</span>
             <span class="font-monospace small text-muted">${escapeHtml(ev.timestamp)}</span>
           </div>
-          <div class="small fw-semibold text-warning">${escapeHtml(ev.provider || '')}</div>
-          <div class="small text-light mt-1">${escapeHtml(ev.reason || ev.details?.message || '')}</div>
-          ${ev.process ? `<div class="small text-info font-monospace mt-1">Процесс: ${escapeHtml(ev.process)} | Пользователь: ${escapeHtml(ev.user || '--')}</div>` : ''}
+          <div class="small fw-semibold text-primary">${escapeHtml(ev.provider || '')}</div>
+          <div class="small mt-1">${escapeHtml(ev.reason || ev.details?.message || '')}</div>
+          ${ev.process ? `<div class="small text-muted font-monospace mt-1">Процесс: ${escapeHtml(ev.process)} | Пользователь: ${escapeHtml(ev.user || '--')}</div>` : ''}
         </div>
       `).join('');
     }
@@ -416,32 +416,32 @@ function showSessionDetailModal(sessionId) {
     modalBody.innerHTML = `
       <div class="row g-3 mb-3">
         <div class="col-6">
-          <div class="card bg-black border-secondary p-2.5">
+          <div class="pwr-detail-card p-2.5">
             <div class="text-muted small">🚀 Время старта (Boot):</div>
             <div class="font-monospace fw-bold text-info mt-1">${escapeHtml(session.boot_time)}</div>
           </div>
         </div>
         <div class="col-6">
-          <div class="card bg-black border-secondary p-2.5">
+          <div class="pwr-detail-card p-2.5">
             <div class="text-muted small">⏹️ Завершение работы:</div>
-            <div class="font-monospace fw-bold ${session.shutdown_time ? 'text-light' : 'text-success'} mt-1">
+            <div class="font-monospace fw-bold ${session.shutdown_time ? '' : 'text-success'} mt-1">
               ${session.shutdown_time ? escapeHtml(session.shutdown_time) : 'Сессия активна'}
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card bg-black border-secondary p-3 mb-3">
+      <div class="pwr-detail-card p-3 mb-3">
         <h6 class="fw-bold text-warning mb-2"><i class="bi bi-sliders me-1.5"></i>Параметры завершения</h6>
         <div class="row g-2 small">
           <div class="col-4 text-muted">Тип завершения:</div>
-          <div class="col-8 fw-semibold text-light">${escapeHtml(session.shutdown_type)}</div>
+          <div class="col-8 fw-semibold">${escapeHtml(session.shutdown_type)}</div>
           
           <div class="col-4 text-muted">Аптайм сессии:</div>
-          <div class="col-8 font-monospace text-warning fw-bold">${escapeHtml(session.uptime_human || '--')}</div>
+          <div class="col-8 font-monospace fw-bold">${escapeHtml(session.uptime_human || '--')}</div>
 
           <div class="col-4 text-muted">Инициатор:</div>
-          <div class="col-8 text-light">${escapeHtml(session.initiator || 'SYSTEM / Hardware')}</div>
+          <div class="col-8">${escapeHtml(session.initiator || 'SYSTEM / Hardware')}</div>
 
           <div class="col-4 text-muted">Процесс:</div>
           <div class="col-8 font-monospace text-info">${escapeHtml(session.process || '--')}</div>
@@ -450,11 +450,11 @@ function showSessionDetailModal(sessionId) {
           <div class="col-8 font-monospace text-secondary">${escapeHtml(session.reason_code || '--')}</div>
 
           <div class="col-4 text-muted">Текст причины:</div>
-          <div class="col-8 text-light">${escapeHtml(session.reason || '--')}</div>
+          <div class="col-8">${escapeHtml(session.reason || '--')}</div>
 
           ${session.comment ? `
             <div class="col-4 text-muted">Комментарий:</div>
-            <div class="col-8 text-light font-italic">${escapeHtml(session.comment)}</div>
+            <div class="col-8 font-italic">${escapeHtml(session.comment)}</div>
           ` : ''}
 
           ${session.bugcheck ? `
@@ -465,19 +465,19 @@ function showSessionDetailModal(sessionId) {
       </div>
 
       ${session.initiator_chain && session.initiator_chain.length > 0 ? `
-        <div class="card bg-black border-secondary p-3 mb-3">
+        <div class="pwr-detail-card p-3 mb-3">
           <h6 class="fw-bold text-info mb-2"><i class="bi bi-diagram-3 me-1.5"></i>Корреляция цепочки вызова</h6>
           <div class="d-flex align-items-center flex-wrap gap-1 font-monospace small">
             ${session.initiator_chain.map((step, idx) => `
-              <span class="badge bg-secondary-subtle text-light border p-2">${escapeHtml(step)}</span>
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle p-2">${escapeHtml(step)}</span>
               ${idx < session.initiator_chain.length - 1 ? '<i class="bi bi-arrow-right text-muted"></i>' : ''}
             `).join('')}
           </div>
         </div>
       ` : ''}
 
-      <div class="card bg-black border-secondary p-3">
-        <h6 class="fw-bold text-light mb-2"><i class="bi bi-list-nested me-1.5"></i>Хронология событий в рамках сессии</h6>
+      <div class="pwr-detail-card p-3">
+        <h6 class="fw-bold mb-2"><i class="bi bi-list-nested me-1.5"></i>Хронология событий в рамках сессии</h6>
         <div style="max-height: 250px; overflow-y: auto;">
           ${eventsListHtml}
         </div>

@@ -16,7 +16,7 @@
 # Package: apps.windows.wikillm.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 09:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -103,3 +103,33 @@ def test_stats_endpoint(client: TestClient) -> None:
     data = response.json()
     assert "lookup_stats" in data
     assert "storage_stats" in data
+
+
+def test_approve_endpoint(client: TestClient) -> None:
+    """Проверка POST /api/windows/wikillm/approve."""
+    payload = {
+        "table_type": "process",
+        "title": "explorer.exe",
+        "subtitle": "Microsoft Corporation",
+        "summary": "Проводник Windows и менеджер оболочки рабочего стола.",
+        "category": "system",
+        "security_verdict": "Легитимный системный процесс Microsoft Windows.",
+        "performance_impact": "Низкое в фоновом режиме.",
+        "recommendation": "Не завершать процесс.",
+        "action_steps": ["Перезапустить процесс при зависании панели задач."],
+        "tags": ["process", "shell"]
+    }
+    response = client.post("/api/windows/wikillm/approve", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["canonical_key"] == "process:explorer.exe"
+
+    # Проверяем, что теперь сущность доступна через GET /entities/process:explorer.exe
+    get_res = client.get("/api/windows/wikillm/entities/process:explorer.exe")
+    assert get_res.status_code == 200
+    ent = get_res.json()
+    assert ent["name"] == "explorer.exe"
+    assert ent["provenance_source"] == "documented"
+    assert len(ent["claims"]) >= 1
+    assert ent["claims"][0]["verified"] is True

@@ -127,7 +127,7 @@ Exceptions:
 ```python
 Examples:
     >>> from src.ai import UnifiedChatModel
-    >>> model = UnifiedChatModel(model_name='gemini-2.5-flash')
+    >>> model = UnifiedChatModel(model_name='gemini-3.1-flash')
     >>> response = model.chat('Hello world')
     >>> print(len(response) > 0)
     True

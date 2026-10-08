@@ -40,7 +40,7 @@ class TestGeminiChat:
         assert GeminiChatBase.normalize_model_id('') == 'gemini-flash-latest'
         assert GeminiChatBase.normalize_model_id('gemini:gemini-3.7-flash') == 'gemini-3.7-flash'
         assert GeminiChatBase.normalize_model_id('models/gemini-2.5-pro') == 'gemini-2.5-pro'
-        assert GeminiChatBase.normalize_model_id('gemini-2.5-flash') == 'gemini-2.5-flash'
+        assert GeminiChatBase.normalize_model_id('gemini-flash-latest') == 'gemini-flash-latest'
 
     def test_capabilities_and_availability(self):
         """Verify provider capabilities and availability checking."""

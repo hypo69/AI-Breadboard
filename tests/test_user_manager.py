@@ -184,15 +184,15 @@ class TestFavoriteModels:
         """Test adding and retrieving favorite models with notes."""
         user_id = 1
         assert user_mgr.get_favorite_models(user_id) == {}
-        success = user_mgr.set_favorite_model(user_id, 'gemini-2.5-flash', 'Fast model for general tasks')
+        success = user_mgr.set_favorite_model(user_id, 'gemini-flash-latest', 'Fast model for general tasks')
         assert success is True
         favs = user_mgr.get_favorite_models(user_id)
-        assert 'gemini-2.5-flash' in favs
-        assert favs['gemini-2.5-flash']['note'] == 'Fast model for general tasks'
-        success = user_mgr.set_favorite_model(user_id, 'gemini-2.5-flash', 'Updated note for model')
+        assert 'gemini-flash-latest' in favs
+        assert favs['gemini-flash-latest']['note'] == 'Fast model for general tasks'
+        success = user_mgr.set_favorite_model(user_id, 'gemini-flash-latest', 'Updated note for model')
         assert success is True
         favs2 = user_mgr.get_favorite_models(user_id)
-        assert favs2['gemini-2.5-flash']['note'] == 'Updated note for model'
+        assert favs2['gemini-flash-latest']['note'] == 'Updated note for model'
 
     def test_remove_favorite_model(self, user_mgr):
         """Test removing favorite model."""

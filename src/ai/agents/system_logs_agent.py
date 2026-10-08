@@ -96,7 +96,7 @@ class SystemLogsAgent:
         model = active_llm or self.ai_model
         if not model:
             from src.api.routers.core.router_chat import get_chat_model
-            model = get_chat_model('gemini-2.5-flash', system_instruction=SYSTEM_LOGS_AGENT_PROMPT)
+            model = get_chat_model('gemini-3.1-flash', system_instruction=SYSTEM_LOGS_AGENT_PROMPT)
         if hasattr(model, 'ask'):
             return await model.ask(prompt)
         elif hasattr(model, 'chat'):

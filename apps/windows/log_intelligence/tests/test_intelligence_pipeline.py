@@ -16,7 +16,7 @@
 # Package: apps.windows.log_intelligence.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 05:04:00
 # =============================================================================
 
 """Проверка работы Data Researcher: подсчет Redundancy Ratio, Health Score и детекция всплесков."""
@@ -64,6 +64,30 @@ def test_adaptive_rag_pipeline(tmp_path: Path) -> None:
     search_res = pipeline.search_rag('почему отключился сетевой адаптер?')
     assert len(search_res) > 0
     assert 'Realtek' in search_res[0]['text'] or 'network' in search_res[0]['text'].lower() or 'сбо' in search_res[0]['text'].lower()
+
+def test_adaptive_rag_wikillm_storage(tmp_path: Path) -> None:
+    """Проверка сохранения сущностей телеметрии в SQLite FTS5 хранилище WikiStorage."""
+    rag = AdaptiveLogRAG(storage_dir=tmp_path / 'rag_wiki')
+    gate = DecisionGate()
+    researcher = LogDataResearcher()
+    entries = [
+        LogEntry(timestamp='2026-09-16 17:00:00', level='Error', provider='DistributedCOM', event_id=10016, message='The application-specific permission settings do not grant Local Activation permission for the COM Server application'),
+        LogEntry(timestamp='2026-09-16 17:00:05', level='Critical', provider='Kernel-Power', event_id=41, message='The system has rebooted without cleanly shutting down first'),
+    ]
+    profile = researcher.profile_data(entries, channel='System')
+    decision = gate.evaluate(profile)
+    chunks_count = rag.ingest(profile, decision)
+    assert chunks_count > 0
+
+    # Проверка поиска через SQLite FTS5 в WikiStorage
+    fts_results = rag.wiki_storage.search_fts('DistributedCOM')
+    assert len(fts_results) > 0
+    canonical_keys = [e.canonical_key for e in fts_results]
+    assert any('DistributedCOM' in k for k in canonical_keys)
+
+    # Проверка общего поиска
+    search_results = rag.search('DistributedCOM permission')
+    assert len(search_results) > 0
 
 def test_wevtapi_channel_enumeration() -> None:
     """Проверка нативного перечисления каналов через WevtAPI."""

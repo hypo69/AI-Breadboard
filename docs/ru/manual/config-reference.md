@@ -10,24 +10,28 @@
 
 ## 📑 Содержание
 
-1. [Секция `server` (Параметры веб-сервера и сети)](#1-секция-server)
-2. [Секция `apps` (Встроенные приложения и терминалы)](#2-секция-apps)
-3. [Секция `telegram` (Интеграция с Telegram)](#3-секция-telegram)
-4. [Секция `ai` (Провайдеры моделей и ротация ключей)](#4-секция-ai)
-5. [Секция `huggingface` (Локальные модели Transformers)](#5-секция-huggingface)
-6. [Секция `onnx` (DirectML & ONNX Runtime)](#6-секция-onnx)
-7. [Секция `openai_compat` (OpenAI-совместимые API)](#7-секция-openai_compat)
-8. [Секция `tts` (Синтез речи)](#8-секция-tts)
-9. [Секция `logging` (Логирование и анализатор)](#9-секция-logging)
-10. [Секция `pprint` (Форматирование вывода JSON)](#10-секция-pprint)
-11. [Секция `rag` (Retrieval-Augmented Generation)](#11-секция-rag)
-12. [Секция `ifttt` (Параметры Webhooks умного дома)](#12-секция-ifttt)
-13. [Секция `web_search` (Движки веб-поиска)](#13-секция-web_search)
-14. [Секция `langchain` (MCP-серверы и агентный стек)](#14-секция-langchain)
-15. [Секция `agents` (Автономные агенты)](#15-секция-agents)
-16. [Секция `plugins` (Плагины)](#16-секция-plugins)
-17. [Секция `storage` (Хранилище данных)](#17-секция-storage)
-18. [Секция `user_settings` (Пользовательские настройки)](#18-секция-user_settings)
+- [Справочник конфигурации: `config.json`](#справочник-конфигурации-configjson)
+  - [📑 Содержание](#-содержание)
+  - [1. Секция `server`](#1-секция-server)
+  - [2. Секция `apps`](#2-секция-apps)
+  - [3. Секция `telegram`](#3-секция-telegram)
+  - [4. Секция `ai`](#4-секция-ai)
+  - [5. Секция `huggingface`](#5-секция-huggingface)
+  - [6. Секция `onnx`](#6-секция-onnx)
+  - [7. Секция `openai_compat`](#7-секция-openai_compat)
+  - [8. Секция `tts`](#8-секция-tts)
+  - [9. Секция `logging`](#9-секция-logging)
+  - [10. Секция `pprint`](#10-секция-pprint)
+  - [11. Секция `rag`](#11-секция-rag)
+  - [12. Секция `ifttt`](#12-секция-ifttt)
+  - [13. Секция `web_search`](#13-секция-web_search)
+  - [14. Секция `langchain`](#14-секция-langchain)
+  - [15. Секция `agents`](#15-секция-agents)
+    - [Параметры каждого агента в массиве `items`:](#параметры-каждого-агента-в-массиве-items)
+  - [16. Секция `plugins`](#16-секция-plugins)
+  - [17. Секция `storage`](#17-секция-storage)
+  - [18. Секция `user_settings`](#18-секция-user_settings)
+  - [🔗 Связанная документация](#-связанная-документация)
 
 ---
 
@@ -337,7 +341,7 @@
 ```json
 "web_search": {
   "engine": "gemini_cli",
-  "gemini_model": "gemini-2.5-flash",
+  "gemini_model": "gemini-3.1-flash",
   "gemini_cli_model": "gemini-3.1-flash-lite",
   "agy_model": "agy-flash",
   "fallback_on_rag_not_found": true
@@ -362,7 +366,7 @@
 "langchain": {
   "enabled": true,
   "default_llm": "gemini",
-  "gemini_model": "gemini-2.5-flash",
+  "gemini_model": "gemini-3.1-flash",
   "ollama_model": "qwen2.5:7b",
   "ollama_base_url": "http://localhost:11434",
   "mcp_servers": {
@@ -417,7 +421,7 @@
       "is_system": true,
       "enabled": true,
       "provider": "gemini",
-      "model": "gemini-2.5-flash",
+      "model": "gemini-3.1-flash",
       "temperature": 0.2,
       "max_steps": 15,
       "timeout_seconds": 60,
@@ -430,7 +434,7 @@
       "is_system": true,
       "enabled": true,
       "provider": "gemini",
-      "model": "gemini-2.5-flash",
+      "model": "gemini-3.1-flash",
       "tools": ["web_search"]
     },
     {
@@ -457,7 +461,7 @@
       "is_system": true,
       "enabled": true,
       "provider": "gemini",
-      "model": "gemini-2.5-flash",
+      "model": "gemini-3.1-flash",
       "tools": ["web_search"]
     },
     {
@@ -466,7 +470,7 @@
       "is_system": true,
       "enabled": true,
       "provider": "gemini",
-      "model": "gemini-2.5-flash",
+      "model": "gemini-3.1-flash",
       "tools": ["gmail_search", "gmail_create_draft", "gdrive_list_files", "gdrive_download_file", "gsheets_info", "gsheets_read", "gsheets_search", "gsheets_append"]
     },
     {
@@ -475,7 +479,7 @@
       "is_system": true,
       "enabled": true,
       "provider": "gemini",
-      "model": "gemini-2.5-flash",
+      "model": "gemini-3.1-flash",
       "tools": ["ifttt_trigger_event", "web_search", "rag_search"]
     }
   ]

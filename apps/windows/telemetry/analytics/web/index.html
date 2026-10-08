@@ -1,0 +1,482 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса index.
+
+Usage Examples:
+    Web Route:
+      /windows/telemetry_research/web/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/telemetry_research/web/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/telemetry_research/web
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!-- Updated: 2026-10-04 07:49:00 -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Исследование телеметрии Windows | Web GUI</title>
+  <link rel="stylesheet" href="/static/style.css?v=20261004_v1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo-section">
+      <div class="logo-icon">🔬</div>
+      <div class="logo-text">
+        <h1>Исследование телеметрии Windows</h1>
+        <p>Анализ долговременной телеметрии, EDA, ресурсы клиентских программ и оценка Gemini</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <select id="select-source" class="source-select">
+        <option value="">Загрузка источников...</option>
+      </select>
+      <button id="btn-run" class="btn btn-primary">🔬 Анализ</button>
+      <button id="btn-dashboard" class="btn btn-secondary">🌐 HTML Дашборд</button>
+      <button id="btn-json" class="btn btn-secondary">📥 JSON</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- KPI Summary Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Индекс здоровья (Health Score)</div>
+        <div class="kpi-value" id="kpi-health">--%</div>
+        <div class="kpi-sub">Интегральный показатель стабильности</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Записей в выборке</div>
+        <div class="kpi-value" id="kpi-records">0</div>
+        <div class="kpi-sub">Точек замеров телеметрии</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">ЦП и Память (Avg / Max)</div>
+        <div class="kpi-value" style="font-size: 16px; margin-top: 6px;" id="kpi-cpu-val">CPU: --%</div>
+        <div class="kpi-sub" id="kpi-ram-val">RAM: --%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Аномалии и сбои</div>
+        <div class="kpi-value" id="kpi-anomalies" style="color: var(--accent-amber);">0</div>
+        <div class="kpi-sub" id="kpi-devices">Оборудование в норме</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="tab-current">⚡ Текущее состояние (telemetry.db)</button>
+      <button class="tab-btn" data-tab="tab-client-resources">💻 Ресурсы программ клиента</button>
+      <button class="tab-btn" data-tab="tab-charts">📈 Графики исследования</button>
+      <button class="tab-btn" data-tab="tab-hypotheses">🧪 Системные гипотезы</button>
+      <button class="tab-btn" data-tab="tab-anomalies">🚨 Аномалии и выводы</button>
+      <button class="tab-btn" data-tab="tab-correlations">🔗 Корреляции</button>
+      <button class="tab-btn" data-tab="tab-records">📋 Журнал записей</button>
+    </nav>
+
+    <!-- Tab: Current State (telemetry.db) -->
+    <div id="tab-current" class="tab-content active">
+      <!-- Live Status & Controls Bar -->
+      <div class="live-status-bar">
+        <div class="status-badge-container">
+          <div class="pulse-dot"></div>
+          <div>
+            <div class="status-badge-text" id="live-db-status">Подключение к telemetry.db...</div>
+            <div class="status-badge-sub" id="live-db-sub">Загрузка информации о базе данных...</div>
+          </div>
+        </div>
+        <div class="live-controls">
+          <label class="toggle-label">
+            <input type="checkbox" id="auto-refresh-toggle" checked>
+            <span>⏱ Автообновление (3с)</span>
+          </label>
+          <select id="current-range-select" class="source-select" style="min-width: 160px;">
+            <option value="50">50 замеров</option>
+            <option value="100" selected>100 замеров</option>
+            <option value="300">300 замеров</option>
+            <option value="500">500 замеров</option>
+            <option value="1000">1000 замеров</option>
+          </select>
+          <button id="btn-refresh-current" class="btn btn-secondary">🔄 Обновить</button>
+        </div>
+      </div>
+
+      <!-- Current Instant KPI Cards -->
+      <div class="current-kpi-grid">
+        <div class="current-kpi-card">
+          <div class="current-kpi-header">
+            <span class="kpi-title">Процессор (CPU)</span>
+            <span class="current-kpi-icon">💻</span>
+          </div>
+          <div class="kpi-value" id="curr-cpu-val">--%</div>
+          <div class="kpi-sub" id="curr-cpu-freq">Частота: -- GHz</div>
+          <div class="mini-meter-bg"><div class="mini-meter-fill" id="curr-cpu-meter" style="width: 0%;"></div></div>
+        </div>
+
+        <div class="current-kpi-card">
+          <div class="current-kpi-header">
+            <span class="kpi-title">Память (RAM)</span>
+            <span class="current-kpi-icon">🧠</span>
+          </div>
+          <div class="kpi-value" id="curr-ram-val">--%</div>
+          <div class="kpi-sub" id="curr-ram-gb">-- / -- GB</div>
+          <div class="mini-meter-bg"><div class="mini-meter-fill" id="curr-ram-meter" style="width: 0%; background: var(--accent-green);"></div></div>
+        </div>
+
+        <div class="current-kpi-card">
+          <div class="current-kpi-header">
+            <span class="kpi-title">Видеокарта (GPU)</span>
+            <span class="current-kpi-icon">🎮</span>
+          </div>
+          <div class="kpi-value" id="curr-gpu-val">--%</div>
+          <div class="kpi-sub" id="curr-gpu-temp">Темп: --°C</div>
+          <div class="mini-meter-bg"><div class="mini-meter-fill" id="curr-gpu-meter" style="width: 0%; background: var(--accent-purple);"></div></div>
+        </div>
+
+        <div class="current-kpi-card">
+          <div class="current-kpi-header">
+            <span class="kpi-title">Дисковая активность</span>
+            <span class="current-kpi-icon">💾</span>
+          </div>
+          <div class="kpi-value" style="font-size: 18px;" id="curr-disk-val">R: 0 / W: 0 MB/s</div>
+          <div class="kpi-sub" id="curr-disk-sub">Чтение и запись на диск</div>
+        </div>
+
+        <div class="current-kpi-card">
+          <div class="current-kpi-header">
+            <span class="kpi-title">Сетевой трафик</span>
+            <span class="current-kpi-icon">🌐</span>
+          </div>
+          <div class="kpi-value" style="font-size: 18px;" id="curr-net-val">↓ 0 / ↑ 0 KB/s</div>
+          <div class="kpi-sub" id="curr-uptime-val">Аптайм: --</div>
+        </div>
+      </div>
+
+      <!-- Current Charts Grid -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">📈 Нагрузка и частота ЦП (CPU)</h3>
+          </div>
+          <div class="chart-canvas-wrapper"><canvas id="chart-live-cpu"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">📊 Оперативная память (RAM)</h3>
+          </div>
+          <div class="chart-canvas-wrapper"><canvas id="chart-live-ram"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">🎮 Нагрузка и температура GPU</h3>
+          </div>
+          <div class="chart-canvas-wrapper"><canvas id="chart-live-gpu"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">💾 Дисковая скорость (Read / Write MB/s)</h3>
+          </div>
+          <div class="chart-canvas-wrapper"><canvas id="chart-live-disk"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">🌐 Сетевая пропускная способность (KB/s)</h3>
+          </div>
+          <div class="chart-canvas-wrapper"><canvas id="chart-live-net"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">🌡 Аппаратные сенсоры (LHM / Hardware)</h3>
+          </div>
+          <div class="chart-canvas-wrapper" style="overflow-y: auto; max-height: 280px;">
+            <div id="live-sensors-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Grid: Top Processes + Activity Feed -->
+      <div class="split-grid">
+        <!-- Top Processes -->
+        <div class="table-wrapper">
+          <div class="table-header-bar">
+            <h3 style="font-size: 15px;">🔥 Топ активных процессов (telemetry.db)</h3>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 70px;">PID</th>
+                <th>Процесс</th>
+                <th style="width: 80px;">CPU %</th>
+                <th style="width: 90px;">RAM MB</th>
+                <th style="width: 70px;">Потоки</th>
+              </tr>
+            </thead>
+            <tbody id="live-processes-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="table-wrapper">
+          <div class="table-header-bar">
+            <h3 style="font-size: 15px;">⚡ Системная активность и события</h3>
+          </div>
+          <div style="padding: 12px;">
+            <ul class="activity-feed-list" id="live-activity-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Client Program Resources & Gemini AI -->
+    <div id="tab-client-resources" class="tab-content">
+      <!-- Client KPI Strip -->
+      <div class="kpi-grid" style="margin-bottom: 20px;">
+        <div class="kpi-card">
+          <div class="kpi-title">Программ клиента</div>
+          <div class="kpi-value" id="client-kpi-total">0</div>
+          <div class="kpi-sub">Активных пользовательских процессов</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Занято памяти RAM</div>
+          <div class="kpi-value" id="client-kpi-ram">0 MB</div>
+          <div class="kpi-sub">Суммарный объем ОЗУ клиентов</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Загрузка ЦП (CPU)</div>
+          <div class="kpi-value" id="client-kpi-cpu">0%</div>
+          <div class="kpi-sub">Суммарная нагрузка на ядра</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Неизвестных (Heavy)</div>
+          <div class="kpi-value" id="client-kpi-unknown" style="color: var(--accent-red);">0</div>
+          <div class="kpi-sub">Требуют анализа в Gemini</div>
+        </div>
+      </div>
+
+      <!-- Controls & Actions Bar -->
+      <div class="live-status-bar" style="margin-bottom: 16px;">
+        <div class="status-badge-container">
+          <div class="pulse-dot"></div>
+          <div>
+            <div class="status-badge-text" id="client-status-text">Аудит программ клиента</div>
+            <div class="status-badge-sub" id="client-status-sub">Отслеживание потребления ресурсов и проверка в Gemini AI</div>
+          </div>
+        </div>
+        <div class="live-controls">
+          <button id="btn-refresh-client-procs" class="btn btn-secondary">🔄 Обновить список</button>
+          <button id="btn-ask-gemini-all-unknown" class="btn btn-primary">🤖 Проверить неизвестные в Gemini</button>
+        </div>
+      </div>
+
+      <!-- Gemini AI Evaluations Container -->
+      <div id="gemini-evaluations-container" style="margin-bottom: 20px; display: none;">
+        <div class="kpi-card" style="border-left: 4px solid var(--accent-purple);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 16px; color: var(--accent-purple);">🤖 Экспертные заключения Gemini AI по неизвестным ресурсоемким программам</h3>
+            <span class="badge badge-warning" id="gemini-evals-count-badge">0 отчетов</span>
+          </div>
+          <div id="gemini-evals-list" class="gemini-evals-grid"></div>
+        </div>
+      </div>
+
+      <!-- Client Programs Table -->
+      <div class="table-wrapper">
+        <div class="table-header-bar">
+          <h3 style="font-size: 15px;">Программы, запущенные клиентом (память, процессор, диск)</h3>
+          <input type="text" id="input-search-client-procs" class="search-input" placeholder="Фильтр по названию программы...">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 220px;">Программа / Процесс</th>
+              <th style="width: 80px;">PID</th>
+              <th style="width: 110px;">CPU (%)</th>
+              <th style="width: 140px;">RAM (МБ / %)</th>
+              <th style="width: 130px;">Диск (файл / IO)</th>
+              <th>Каталог запуска / Командная строка</th>
+              <th style="width: 150px;">Статус / Доверие</th>
+              <th style="width: 140px;">Действие</th>
+            </tr>
+          </thead>
+          <tbody id="client-procs-table-body">
+            <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Загрузка данных о программах клиента...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Charts (Research) -->
+    <div id="tab-charts" class="tab-content">
+      <div class="charts-grid" id="charts-container">
+        <!-- Rendered by Chart.js -->
+      </div>
+    </div>
+
+    <!-- Tab: Hypotheses -->
+    <div id="tab-hypotheses" class="tab-content">
+      <div class="hypotheses-grid" id="hypotheses-container">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- Tab: Anomalies & Conclusions -->
+    <div id="tab-anomalies" class="tab-content">
+      <div class="kpi-card" style="margin-bottom: 20px;">
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--accent-green);">💡 Сводные выводы исследования</h3>
+        <ul id="conclusions-list" style="padding-left: 20px; color: var(--text-primary); font-size: 14px;"></ul>
+      </div>
+
+      <div class="table-wrapper">
+        <div class="table-header-bar">
+          <h3 style="font-size: 15px;">Выявленные аномалии и критические всплески</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Уровень</th>
+              <th>Время</th>
+              <th>Метрика</th>
+              <th>Значение</th>
+              <th>Описание</th>
+            </tr>
+          </thead>
+          <tbody id="anomalies-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Correlations -->
+    <div id="tab-correlations" class="tab-content">
+      <div class="kpi-card">
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--accent-blue);">Матрица корреляций между метриками (Пирсон)</h3>
+        <div class="correlation-list" id="correlations-container"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Records -->
+    <div id="tab-records" class="tab-content">
+      <div class="table-wrapper">
+        <div class="table-header-bar">
+          <input type="text" id="input-search" class="search-input" placeholder="Поиск по записям (Enter)...">
+          <div id="page-label" style="font-size: 13px; color: var(--text-secondary);">Страница 1 из 1</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 180px;">Время</th>
+              <th style="width: 200px;">Источник</th>
+              <th style="width: 140px;">Тип</th>
+              <th>Данные (JSON)</th>
+            </tr>
+          </thead>
+          <tbody id="records-table-body"></tbody>
+        </table>
+        <div class="pagination-bar">
+          <button id="btn-prev-page" class="btn btn-secondary">⬅ Назад</button>
+          <button id="btn-next-page" class="btn btn-secondary">Вперед ➡</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Response Modal / Dynamic Presentation Card -->
+    <section id="ai-response-card" class="ai-response-card" style="display: none;">
+      <div class="ai-response-header">
+        <div class="ai-response-title-group">
+          <span class="ai-badge">🤖 AI Ассистент Телеметрии</span>
+          <h2 id="ai-response-title" class="ai-response-title">Отчет и визуализация</h2>
+        </div>
+        <div class="ai-header-actions">
+          <button id="btn-ai-close" class="btn-icon" title="Закрыть панель">✕</button>
+        </div>
+      </div>
+
+      <div class="ai-response-content">
+        <!-- Dynamic Chart Area -->
+        <div id="ai-chart-wrapper" class="ai-chart-wrapper" style="display: none;">
+          <div class="ai-chart-header">
+            <h3 id="ai-chart-title" style="font-size: 15px; color: var(--accent-blue);">📈 Визуализация</h3>
+          </div>
+          <div class="ai-canvas-container">
+            <canvas id="chart-ai-dynamic"></canvas>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Badges -->
+        <div id="ai-metrics-row" class="ai-metrics-row" style="display: none;"></div>
+
+        <!-- Markdown Reply Text -->
+        <div id="ai-reply-body" class="ai-reply-body"></div>
+
+        <!-- SQL Queries Collapsible Badge -->
+        <details id="ai-sql-details" class="ai-sql-details" style="display: none;">
+          <summary>🔍 Выполненные SQL-запросы к <code>telemetry.db</code></summary>
+          <pre id="ai-sql-code" class="ai-sql-code"></pre>
+        </details>
+
+        <!-- Follow-up Chips -->
+        <div id="ai-followup-row" class="ai-followup-row" style="display: none;">
+          <span style="font-size: 12px; color: var(--text-secondary); margin-right: 8px;">💡 Уточнить:</span>
+          <div id="ai-followup-chips" class="ai-chips-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom AI Query Bar (Sticky / Fixed) -->
+    <footer class="bottom-ai-bar">
+      <!-- Quick Prompt Chips -->
+      <div class="ai-quick-chips">
+        <button class="prompt-chip" data-query="покажи график загрузки цпу по времени">
+          📈 График загрузки ЦПУ по времени
+        </button>
+        <button class="prompt-chip" data-query="Посчитай примерное общее потребление электроэнергии компьютером и покажи суточную круговую диаграмму">
+          ⚡ Суточное потребление энергии (круговая диаграмма)
+        </button>
+        <button class="prompt-chip" data-query="топ процессов по cpu">
+          🔥 Топ процессов по CPU
+        </button>
+        <button class="prompt-chip" data-query="SELECT timestamp, event_type, friendly_name FROM device_events ORDER BY id DESC LIMIT 5">
+          📋 SQL: События устройств
+        </button>
+      </div>
+
+      <!-- Input and Send Button Form -->
+      <form id="ai-query-form" class="ai-query-form" onsubmit="return false;">
+        <div class="ai-input-wrapper">
+          <span class="ai-input-icon">✨</span>
+          <input
+            type="text"
+            id="ai-query-input"
+            class="ai-query-input"
+            placeholder="Спросите ИИ о телеметрии (например: «покажи график загрузки цпу по времени», «посчитай потребление электроэнергии»)..."
+            autocomplete="off"
+          />
+          <button type="button" id="btn-ai-clear" class="btn-clear" title="Очистить" style="display: none;">✕</button>
+        </div>
+        <button type="submit" id="btn-ai-send" class="btn btn-primary btn-ai-send">
+          <span id="btn-ai-send-text">Отправить</span>
+          <span id="btn-ai-spinner" class="spinner" style="display: none;"></span>
+        </button>
+      </form>
+    </footer>
+  </main>
+
+  <script src="/static/app.js?v=20261001_v2"></script>
+</body>
+</html>

@@ -1,96 +1,41 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Apps Windows Telemetry_Research -   Init  
+# Process Name: AI-Breadboard Apps Windows Telemetry Research - Compatibility Layer
 # =============================================================================
 # Description:
-#   Пакет исследования логов телеметрии, визуализации и FastAPI Web GUI.
+#   Слой совместимости: перенаправление импортов в apps.windows.telemetry.analytics.
 #
 # Usage Examples:
-#
+#   Python API:
+#     from apps.windows.telemetry_research import DiagnosticEngine
 #
 # File: __init__.py
 # Project: ai-breadboard
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:47:00
+# Updated: 2026-10-08 09:37:00
 # =============================================================================
 
 from __future__ import annotations
-"""Пакет исследования логов телеметрии, визуализации и FastAPI Web GUI."""
+"""Слой перенаправления в apps.windows.telemetry.analytics."""
 
-from .analyzer import TelemetryResearcher
-from .charts import TelemetryChartGenerator
-from .extractor import TelemetryDataExtractor
-from .models import (
-    AnomalyEvent,
-    ChartConfig,
-    ClientProgramResource,
-    ClientResourceSummary,
-    CorrelationMatrixItem,
-    DeepResearchReport,
-    DeviceEventSummary,
-    HypothesisResult,
-    MetricPoint,
-    MetricStats,
-    ResearchScenarioRequest,
-    TelemetryResearchReport,
-    TimeSeriesDataset,
-    UnknownProgramEvaluation,
-)
-from .client_resource_analyzer import ClientResourceAnalyzer
-from .diagnostic_engine import DiagnosticEngine, SystemDiagnosticEngine
-from .deep_diagnostics import DeepDiagnosticsEngine
-from .incident_detector import IncidentDetector
-from .reboot_analyzer import WindowsRebootAnalyzer
-from .aggregator import TelemetryAggregator
-from .grouped_telemetry import (
+from apps.windows.telemetry.analytics import (
+    DiagnosticEngine,
     GroupedTelemetryBuilder,
-    GroupDiagnoseRequest,
-    GroupDiagnosticResult,
-    SynthesisRequest,
-    SynthesisDiagnosticResult,
+    IncidentDetector,
+    RebootAnalyzer,
+    TelemetryAggregator,
+    TelemetryAnalyzer,
+    TelemetryCompactor,
 )
-from .compactor import TelemetryCompactor, compute_percentile
-from .hardware_history_manager import HardwareHistoryManager
-from .hardware_auditor import HardwareAuditor
-from .audit_startup_checker import AuditStartupChecker, StartupAuditResult, run_startup_audit
 
 __all__ = [
-    "TelemetryResearcher",
-    "TelemetryChartGenerator",
-    "TelemetryDataExtractor",
-    "TelemetryResearchReport",
-    "DeepResearchReport",
-    "ChartConfig",
-    "MetricPoint",
-    "MetricStats",
-    "AnomalyEvent",
-    "DeviceEventSummary",
-    "TimeSeriesDataset",
-    "CorrelationMatrixItem",
-    "HypothesisResult",
-    "ResearchScenarioRequest",
     "DiagnosticEngine",
-    "SystemDiagnosticEngine",
-    "DeepDiagnosticsEngine",
-    "IncidentDetector",
-    "WindowsRebootAnalyzer",
-    "TelemetryAggregator",
     "GroupedTelemetryBuilder",
-    "GroupDiagnoseRequest",
-    "GroupDiagnosticResult",
-    "SynthesisRequest",
-    "SynthesisDiagnosticResult",
+    "IncidentDetector",
+    "RebootAnalyzer",
+    "TelemetryAggregator",
+    "TelemetryAnalyzer",
     "TelemetryCompactor",
-    "compute_percentile",
-    "HardwareHistoryManager",
-    "HardwareAuditor",
-    "AuditStartupChecker",
-    "StartupAuditResult",
-    "run_startup_audit",
-    "ClientResourceAnalyzer",
-    "ClientProgramResource",
-    "ClientResourceSummary",
-    "UnknownProgramEvaluation",
 ]

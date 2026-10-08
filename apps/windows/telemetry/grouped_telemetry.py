@@ -1,31 +1,26 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Apps Windows Telemetry - Grouped Telemetry Wrapper
+# Process Name: AI-Breadboard Apps Windows Telemetry - Grouped Telemetry
 # =============================================================================
 # Description:
-#   Обёртка, позволяющая импортировать группы телеметрии из модуля
-#   `apps.windows.telemetry_research.grouped_telemetry` через путь
-#   `apps.windows.telemetry.grouped_telemetry`. Это необходимо для совместимости
-#   с существующими тестами, которые ожидают наличие данного модуля в пакете
-#   `apps.windows.telemetry`.
+#   Прямой экспорт сгруппированной телеметрии из аналитического ядра.
 #
-#   Внутри экспортируются все публичные типы, объявленные в оригинальном модуле.
-#   Переэкспорт делается без изменения логики – классы и функции остаются теми
-#   же, что и в исследовательском подпакете.
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.grouped_telemetry import GroupedTelemetryBuilder
+#
+# File: grouped_telemetry.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-08 09:37:00
 # =============================================================================
-# Updated: 2026-10-03 23:59:45
-# =============================================================================
 
-"""Обёртка для экспорта групп телеметрии.
+from __future__ import annotations
+"""Экспорт моделей и построителя сгруппированной телеметрии."""
 
-Этот модуль переэкспортирует ключевые классы из
-`apps.windows.telemetry_research.grouped_telemetry`, обеспечивая обратную
-совместимость с кодом, который импортирует их напрямую из
-`apps.windows.telemetry.grouped_telemetry`.
-"""
-
-# Переэкспорт из исследовательского подпакета
-from apps.windows.telemetry_research.grouped_telemetry import (
+from apps.windows.telemetry.analytics.grouped_telemetry import (
     TelemetryGroupInfo,
     GroupedTelemetryBuilder,
     GroupDiagnoseRequest,

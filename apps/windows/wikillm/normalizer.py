@@ -16,7 +16,7 @@
 # Package: apps.windows.wikillm
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 09:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -171,6 +171,52 @@ class CanonicalKeyNormalizer:
             return f"generic:{msg_snippet or 'unknown'}"
 
         return "unknown:unspecified"
+
+    @classmethod
+    def compute_key_from_parts(
+        cls,
+        table_type: str,
+        title: str,
+        subtitle: Optional[str] = "",
+    ) -> str:
+        """Формирует канонический ключ на основе типа таблицы, названия и подзаголовка.
+
+        Args:
+            table_type: Тип таблицы или артефакта (software, process, service, registry, etc.).
+            title: Основное наименование или заголовок.
+            subtitle: Подзаголовок, издатель или контекст.
+
+        Returns:
+            Канонический ключ вида 'process:explorer.exe', 'software:vscode', etc.
+        """
+        raw_title = (title or "").strip()
+        raw_type = (table_type or "generic").strip().lower()
+
+        # Если title является кодом ошибки
+        if cls._HEX_ERROR_RE.match(raw_title) or raw_title.lower().startswith("0x"):
+            norm_code = cls.normalize_hex_code(raw_title)
+            prefix = "ntstatus" if norm_code.startswith("0xc") else "win32"
+            return f"{prefix}:{norm_code}"
+
+        # Если process
+        if raw_type in ("process", "proc") or raw_title.lower().endswith(".exe"):
+            clean_proc = raw_title.split()[0].lower() if raw_title else "unknown.exe"
+            return f"process:{clean_proc}"
+
+        # Если service
+        if raw_type in ("service", "services"):
+            clean_srv = re.sub(r"[^a-zA-Z0-9_\-]+", "_", raw_title.lower()).strip("_")
+            return f"service:{clean_srv}"
+
+        # Если registry
+        if raw_type in ("registry", "reg") or any(raw_title.upper().startswith(p) for p in ("HKLM\\", "HKCU\\", "HKEY_")):
+            return f"registry:{cls.normalize_registry_path(raw_title)}"
+
+        # Для software, network, task, website, generic
+        slug = re.sub(r"[^a-zA-Z0-9_\-]+", "_", raw_title.lower()).strip("_")
+        if not slug:
+            slug = re.sub(r"[^a-zA-Z0-9_\-]+", "_", (subtitle or "unspecified").lower()).strip("_")
+        return f"{raw_type}:{slug[:64] or 'unspecified'}"
 
     @classmethod
     def sanitize_message_template(cls, message: str) -> str:

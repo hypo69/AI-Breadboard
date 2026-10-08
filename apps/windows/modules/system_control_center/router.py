@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.system_control_center
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 04:36:00
 # =============================================================================
 
 from __future__ import annotations
@@ -33,12 +33,15 @@ from typing import Any, Dict, List, Optional
 import psutil
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from apps.common.csv_logger import AppCsvLogger
 from logger import logger
 from apps.windows.core.audits import CleanCollector, IntegrityCollector, PostInstallCollector, SecurityCollector, StorageCollector, UpdateCollector
 from apps.windows.core.safe_executor import SafeExecutor
 from apps.windows.core.system_restore import WindowsSystemRestoreManager
 from apps.windows.core.system_param_manager import SafeSystemParamManager
+
 router = APIRouter(prefix='/api/system-control', tags=['System Control Center'])
+_csv_logger = AppCsvLogger('system_control_center')
 _executor = SafeExecutor()
 _restore_mgr = WindowsSystemRestoreManager()
 _param_mgr = SafeSystemParamManager(restore_manager=_restore_mgr)

@@ -16,7 +16,7 @@
 # Package: apps.windows.wikillm
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 09:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -46,6 +46,13 @@ class ArtifactType(str, Enum):
     CODE_SYMBOL = "code_symbol"
     INCIDENT = "incident"
     SYMPTOM = "symptom"
+    SOFTWARE = "software"
+    TASK = "task"
+    NETWORK = "network"
+    WEBSITE = "website"
+    DISK = "disk"
+    USER = "user"
+    GENERIC = "generic"
 
 
 class KnowledgeSource(str, Enum):

@@ -35,9 +35,11 @@ def setup_tmp_log_dir(tmp_path: Path):
     set_apps_log_dir_override(temp_logs)
     set_mirroring_logs_to_csv(False)
     set_memory_batching(False)
+    flush_batch_buffer()
     db_file = temp_logs / 'telemetry.db'
-    TelemetryStorage._instance = TelemetryStorage(db_path=db_file)
+    TelemetryStorage._instance = TelemetryStorage(db_path=db_file, buffer_mode='direct')
     yield
+    flush_batch_buffer()
     set_apps_log_dir_override(None)
     set_csv_mirroring(False)
     set_memory_batching(False)

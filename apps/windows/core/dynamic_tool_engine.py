@@ -95,7 +95,7 @@ class DynamicWindowsToolEngine:
             if provider:
                 provider_upper = str(provider).upper()
                 if provider_upper == 'GEMINI':
-                    model_id = getattr(ai_cfg, 'gemini_model_id', getattr(ai_cfg, 'model', 'gemini-2.5-flash'))
+                    model_id = getattr(ai_cfg, 'gemini_model_id', getattr(ai_cfg, 'model', 'gemini-3.1-flash'))
                 elif provider_upper == 'GEMINI_CLI':
                     model_id = getattr(ai_cfg, 'gemini_cli_model_id', getattr(ai_cfg, 'model', 'gemini-3.1-flash-lite'))
                 elif provider_upper == 'AGY':

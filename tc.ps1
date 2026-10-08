@@ -21,7 +21,7 @@ Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 01:30:00
+Updated: 2026-10-08 05:30:00
 =============================================================================
 
 .SYNOPSIS
@@ -95,6 +95,13 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 $scriptDir = $PSScriptRoot
 if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = (Get-Location).Path }
 
+$windowsConfig = Join-Path $scriptDir "apps\windows\config.json"
+if (Test-Path $windowsConfig) {
+    $env:AIBREADBOARD_CONFIG = $windowsConfig
+    $env:CONFIG_FILE = $windowsConfig
+    Write-Host "  [⚙️ Config Profile]: apps\windows\config.json" -ForegroundColor DarkCyan
+}
+
 $pythonExe = if ($env:PYTHON_HOME) { Join-Path $env:PYTHON_HOME 'python.exe' } else { 'python' }
 
 $host_ = if ($HostAddress) { $HostAddress } else { '127.0.0.1' }
@@ -103,7 +110,7 @@ $port_ = if ($Port)        { $Port }        else { '8001' }
 $regionQuery = ''
 if ($LanguageRegion) {
     # Очистка и нормализация тега по стандарту BCP 47 (language-REGION)
-    $cleanTag = $LanguageRegion.Trim().Trim("`'""").Replace('_', '-')
+    $cleanTag = $LanguageRegion.Trim().Trim("'").Trim('"').Trim('`').Replace('_', '-')
     if ($cleanTag -match '^([a-zA-Z]{2,3})(?:-([a-zA-Z]{2,4}))?$') {
         $langPart = $Matches[1].ToLower()
         $defaultRegions = @{ 

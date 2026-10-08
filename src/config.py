@@ -17,7 +17,7 @@
 # Package: src
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 03:35:00
+# Updated: 2026-10-08 05:32:00
 # =============================================================================
 
 """Модуль основной системы (`config`)."""
@@ -35,6 +35,8 @@ if _cfg_env:
         CONFIG_FILE = _cfg_path
     elif (__root__ / _cfg_env).exists():
         CONFIG_FILE = __root__ / _cfg_env
+    elif (__root__ / 'apps' / 'windows' / _cfg_path.name).exists():
+        CONFIG_FILE = __root__ / 'apps' / 'windows' / _cfg_path.name
     elif (__root__ / 'start_scenarios_config' / _cfg_path.name).exists():
         CONFIG_FILE = __root__ / 'start_scenarios_config' / _cfg_path.name
     elif (__root__ / 'config' / _cfg_path.name).exists():
@@ -47,7 +49,13 @@ if not CONFIG_FILE.exists() and (__root__ / 'config.json').exists():
     CONFIG_FILE = __root__ / 'config.json'
 global_settings = j_loads_ns(CONFIG_FILE)
 server_cfg = getattr(global_settings, 'server', SimpleNamespace())
-ai_cfg = getattr(global_settings, 'ai', SimpleNamespace())
+
+# Для TC-режима (apps/windows/config.json) читаем ai_providers_and_models_configuration
+# Для обычного режима (config.json) читаем ai
+ai_cfg_section = getattr(global_settings, 'ai_providers_and_models_configuration', None)
+if ai_cfg_section is None:
+    ai_cfg_section = getattr(global_settings, 'ai', SimpleNamespace())
+ai_cfg = ai_cfg_section
 tts_cfg = getattr(global_settings, 'tts', SimpleNamespace())
 logging_cfg = getattr(global_settings, 'logging', SimpleNamespace())
 pprint_cfg = getattr(global_settings, 'pprint', getattr(global_settings, 'printer', SimpleNamespace()))

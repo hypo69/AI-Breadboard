@@ -16,7 +16,7 @@
 # Package: logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:29:02
+# Updated: 2026-10-08 09:09:30
 # =============================================================================
 
 """Intelligent log analyzer with Gemini AI integration.
@@ -43,8 +43,27 @@ from concurrent.futures import ThreadPoolExecutor
 from src.ai import UnifiedChatModel
 from logger import logger
 from header import __root__
-LOG_DIR: Path = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
-REPORTS_DIR: Path = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'reports'
+
+def get_default_log_dir() -> Path:
+    """Возвращает целевую директорию логов."""
+    env_dir = os.environ.get('AI_BREADBOARD_LOGS_DIR') or os.environ.get('LOG_DIR')
+    if env_dir:
+        return Path(env_dir)
+    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+    base_dir = Path(appdata) if appdata and os.path.exists(appdata) else Path.home() / '.config'
+    return base_dir / 'AI-Breadboard' / 'logs'
+
+def get_default_reports_dir() -> Path:
+    """Возвращает целевую директорию отчетов."""
+    env_dir = os.environ.get('AI_BREADBOARD_REPORTS_DIR') or os.environ.get('REPORTS_DIR')
+    if env_dir:
+        return Path(env_dir)
+    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+    base_dir = Path(appdata) if appdata and os.path.exists(appdata) else Path.home() / '.config'
+    return base_dir / 'AI-Breadboard' / 'reports'
+
+LOG_DIR: Path = get_default_log_dir()
+REPORTS_DIR: Path = get_default_reports_dir()
 LOCK_FILE: Path = LOG_DIR / 'log_analyzer.lock'
 DEFAULT_MAX_SIZE_MB: float = 10.0
 MAX_CHARS_FOR_ANALYSIS: int = 500 * 1024

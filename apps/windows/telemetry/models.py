@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:50:00
+# Updated: 2026-10-08 08:43:00
 # =============================================================================
 
 from __future__ import annotations
@@ -109,7 +109,13 @@ class GpuInventoryInfo(BaseModel):
     pci_bus_id: str = ''
     bios_version: str = ''
     cuda_cores: Optional[int] = None
+    cuda_supported: bool = False
+    rocm_supported: bool = False
+    oneapi_supported: bool = False
     directml_supported: bool = True
+    vulkan_supported: bool = True
+    opencl_supported: bool = True
+    compute_apis: List[str] = Field(default_factory=list, description='Поддерживаемые вычислительные API')
 
 
 class GpuTelemetrySample(BaseModel):
@@ -189,16 +195,42 @@ class MemoryMetrics(BaseModel):
     swap_percent: float = Field(default=0.0, description='Swap utilization percentage')
 
 class GpuMetrics(BaseModel):
-    """GPU accelerator telemetry."""
+    """GPU accelerator telemetry and compute backends."""
     name: str = Field(default='Unknown GPU', description='GPU device model name')
+    vendor: str = Field(default='', description='GPU vendor name (NVIDIA, AMD, Intel, etc.)')
+    gpu_type: str = Field(default='Discrete', description='Тип GPU (Discrete / Integrated)')
     load_percent: Optional[float] = Field(default=None, description='GPU core load percentage')
     memory_total_gb: float = Field(default=0.0, description='Total VRAM in GB')
     memory_used_gb: float = Field(default=0.0, description='Used VRAM in GB')
     memory_free_gb: float = Field(default=0.0, description='Free VRAM in GB')
+    dedicated_memory_mb: Optional[float] = Field(default=None, description='Выделенная память VRAM (МБ)')
+    shared_memory_mb: Optional[float] = Field(default=None, description='Общая системная память GPU (МБ)')
+    memory_type: str = Field(default='Dedicated VRAM', description='Тип видеопамяти (Dedicated VRAM / Shared System Memory)')
+    directx_version: str = Field(default='DirectX 12 (FL 12_1)', description='Версия DirectX')
     temperature_celsius: Optional[float] = Field(default=None, description='GPU core temperature in Celsius')
     has_cuda: bool = Field(default=False, description='CUDA support availability')
-    has_directml: bool = Field(default=False, description='DirectML accelerator availability')
+    has_rocm: bool = Field(default=False, description='AMD ROCm / HIP support availability')
+    has_oneapi: bool = Field(default=False, description='Intel oneAPI support availability')
+    has_directml: bool = Field(default=True, description='DirectML accelerator availability')
+    has_vulkan: bool = Field(default=True, description='Vulkan API availability')
+    has_opencl: bool = Field(default=True, description='OpenCL API availability')
+    compute_apis: List[str] = Field(default_factory=list, description='Supported compute APIs (CUDA, ROCm, DirectML, Vulkan, OpenCL, oneAPI)')
+    ai_backends: List[str] = Field(default_factory=list, description='Supported AI inference backends')
     engines: Dict[str, float] = Field(default_factory=dict, description='Подсистемы и движки GPU (3D, Decode, Copy, etc.)')
+
+
+class NpuMetrics(BaseModel):
+    """NPU neural accelerator telemetry and AI capabilities."""
+    name: str = Field(default='NPU Accelerator', description='NPU device model name')
+    vendor: str = Field(default='Intel', description='NPU vendor name (Intel, Qualcomm, AMD, etc.)')
+    driver_version: str = Field(default='', description='Driver version')
+    pnp_device_id: str = Field(default='', description='PnP device identifier')
+    status: str = Field(default='OK (Активно)', description='Device status')
+    tops: Optional[float] = Field(default=None, description='AI compute performance in TOPS')
+    has_directml: bool = Field(default=True, description='DirectML NPU support')
+    has_qnn: bool = Field(default=False, description='Qualcomm QNN support')
+    has_openvino: bool = Field(default=False, description='Intel OpenVINO support')
+    ai_backends: List[str] = Field(default_factory=list, description='Supported AI backends')
 
 class DiskPartitionMetrics(BaseModel):
     """Storage partition metrics."""
@@ -554,6 +586,7 @@ class SystemSnapshot(BaseModel):
     memory: MemoryMetrics = Field(default_factory=MemoryMetrics, description='RAM and Swap metrics')
     ram_sticks: List[RamStickInfo] = Field(default_factory=list, description='Installed physical RAM modules')
     gpus: List[GpuMetrics] = Field(default_factory=list, description='Detected GPU accelerators')
+    npus: List[NpuMetrics] = Field(default_factory=list, description='Detected NPU neural processors')
     monitors: List[MonitorInfo] = Field(default_factory=list, description='Connected display monitors')
     updates: WindowsUpdateInfo = Field(default_factory=WindowsUpdateInfo, description='Windows Update information')
     office: OfficeSuiteInfo = Field(default_factory=OfficeSuiteInfo, description='Office suite telemetry')

@@ -5,6 +5,7 @@ events with color-coded severity tags.
 """
 from __future__ import annotations
 import argparse
+import os
 import sys
 import tempfile
 import time
@@ -17,7 +18,12 @@ def get_default_log_dir() -> Path:
     Returns:
         Path: Default log directory.
     """
-    return Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
+    env_dir = os.environ.get('AI_BREADBOARD_LOGS_DIR') or os.environ.get('LOG_DIR')
+    if env_dir:
+        return Path(env_dir)
+    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+    base_dir = Path(appdata) if appdata and os.path.exists(appdata) else Path.home() / '.config'
+    return base_dir / 'AI-Breadboard' / 'logs'
 
 def watch_log_files(log_dir: Path, min_level: str='ALL', poll_interval: float=1.0) -> None:
     """Watch and stream log lines from directory.

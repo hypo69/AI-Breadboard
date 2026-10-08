@@ -47,7 +47,7 @@ Automated, context-aware AI comment responder plugin for WordPress connected sea
 | `enabled` | Enable or disable auto-replies | `true` |
 | `api_url` | AI-Breadboard endpoint URL | `https://kino.davidka.net/api/chat/comment-responder` |
 | `api_key` | Optional bearer token/secret | `""` |
-| `model` | Target AI model identifier | `gemini-2.5-flash` |
+| `model` | Target AI model identifier | `gemini-flash-latest` |
 | `provider` | AI provider (`gemini`, `foundry`, `ollama`, `openai`, etc.) | `gemini` |
 | `bot_user_id` | Dedicated WordPress user ID for the AI bot | `0` |
 | `auto_approve` | Automatically publish reply comments without moderation | `true` |

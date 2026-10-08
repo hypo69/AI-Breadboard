@@ -47,7 +47,7 @@ flowchart LR
   "ai": {
     "provider": "gemini",
     "gemini": {
-      "model": "gemini-2.5-flash"
+      "model": "gemini-3.1-flash"
     }
   },
   "apps": {

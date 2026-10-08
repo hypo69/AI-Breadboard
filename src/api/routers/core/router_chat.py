@@ -95,7 +95,7 @@ async def ping() -> dict:
 @router.post('/test-model')
 async def test_model(req: TestModelRequest) -> dict:
     """Эндпоинт, проверяющий возможность обращения к модели."""
-    model_name = req.model or 'gemini-2.5-flash'
+    model_name = req.model or 'gemini-flash-latest'
     provider = req.provider or 'gemini'
     model = get_chat_model(model_name, system_instruction=req.system_instruction)
     try:
@@ -144,7 +144,7 @@ async def get_active_model(request: Request) -> dict:
     chat = getattr(request.app.state, 'chat_model', None)
     model = getattr(chat, 'model_name', None)
     if not model or hasattr(model, '_mock_name'):
-        model = 'gemini-2.5-flash'
+        model = 'gemini-flash-latest'
     provider = getattr(chat, 'provider', None)
     if not provider or hasattr(provider, '_mock_name'):
         provider = 'GEMINI'

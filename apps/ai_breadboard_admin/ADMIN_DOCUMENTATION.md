@@ -158,7 +158,7 @@ AI-Breadboard Admin Panel — единый контейнер для управ�
   },
   "web_search": {
     "engine": "playwright",
-    "gemini_model": "gemini-2.5-flash"
+    "gemini_model": "gemini-3.1-flash"
   }
 }
 ```

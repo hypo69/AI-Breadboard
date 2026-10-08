@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 04:24:00
+ * Updated: 2026-10-08 10:25:00
  * =============================================================================
  */
 
@@ -104,6 +104,8 @@ const TABS = {
   'network':                  ['/html/network_tab/index.html',                  '/html/network_tab/main.js'],
   'performance-tracing':      ['/html/performance_tracing_tab/index.html',      '/html/performance_tracing_tab/main.js'],
   'system-logs':              ['/html/system_logs_tab/index.html',              '/html/system_logs_tab/main.js'],
+  'power-lifecycle':          ['/html/power_lifecycle_tab/index.html',          '/html/power_lifecycle_tab/main.js'],
+  'app-logs':                 ['/html/app_logs_tab/index.html',                 '/html/app_logs_tab/main.js'],
 };
 
 // Lazy-загрузка: вкладка грузится при первом открытии

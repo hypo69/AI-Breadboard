@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 03:25:00
+# Updated: 2026-10-08 08:42:00
 # =============================================================================
 
 from __future__ import annotations
@@ -305,10 +305,25 @@ def run_telemetry_service(
                     cached_gpu_metrics = [
                         GpuMetrics(
                             name=getattr(g, 'name', 'GPU'),
+                            vendor=getattr(g, 'vendor', ''),
+                            gpu_type=getattr(g, 'gpu_type', 'Discrete'),
                             load_percent=getattr(g, 'load_percent', None) or getattr(g, 'utilization_gpu_pct', None),
                             memory_total_gb=round((getattr(g, 'memory_total_mb', 0.0) or 0.0) / 1024.0, 2),
                             memory_used_gb=round((getattr(g, 'memory_used_mb', 0.0) or 0.0) / 1024.0, 2),
+                            dedicated_memory_mb=getattr(g, 'dedicated_memory_mb', 0.0),
+                            shared_memory_mb=getattr(g, 'shared_memory_mb', 0.0),
+                            memory_type=getattr(g, 'memory_type', 'Dedicated VRAM'),
+                            directx_version=getattr(g, 'directx_version', 'DirectX 12'),
                             temperature_celsius=getattr(g, 'temperature_celsius', None) or getattr(g, 'temperature_gpu_c', None),
+                            has_cuda=getattr(g, 'has_cuda', False),
+                            has_rocm=getattr(g, 'has_rocm', False),
+                            has_oneapi=getattr(g, 'has_oneapi', False),
+                            has_directml=getattr(g, 'has_directml', True),
+                            has_vulkan=getattr(g, 'has_vulkan', True),
+                            has_opencl=getattr(g, 'has_opencl', True),
+                            compute_apis=getattr(g, 'compute_apis', []),
+                            ai_backends=getattr(g, 'ai_backends', []),
+                            engines=getattr(g, 'engines', {}),
                         ) for g in gpu_data
                     ]
                 except Exception:

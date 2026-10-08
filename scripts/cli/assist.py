@@ -18,7 +18,7 @@
 # Package: scripts.cli
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:27:07
+# Updated: 2026-10-08 09:09:30
 # =============================================================================
 
 """Cross-platform CLI assistant for AI Breadboard project management.
@@ -195,7 +195,7 @@ class AssistCLI:
         print(f'{C_BOLD}{C_GREEN}1. Google Gemini API (Cloud API){C_RESET}')
         print(f"   Status:          {('✅ Активен' if has_gemini else '❌ Нет ключей')}")
         print(f"   Пул ключей:      {len(keys)} шт. ({(', '.join(keys) if keys else 'пусто')})")
-        print(f'   Дефолтная модель: gemini-2.5-flash / gemini-3.1-flash-lite')
+        print(f'   Дефолтная модель: gemini-3.1-flash / gemini-3.1-flash-lite')
         print()
         use_gemini_cli = bool(ai_cfg.get('use_gemini_cli', True))
         gemini_cli_model = str(ai_cfg.get('gemini_cli_model_id', 'gemini-3.1-flash-lite'))
@@ -232,9 +232,15 @@ class AssistCLI:
 
     def cmd_logs(self, lines: int=40, name: str='fastapi') -> int:
         """Показать логи"""
-        logs_dir = self.paths.project_root / 'logs'
+        try:
+            from logger import logger
+            logs_dir = getattr(logger, 'log_files_path', None) or (self.paths.project_root / 'logs')
+        except Exception:
+            logs_dir = self.paths.project_root / 'logs'
+        if not logs_dir.exists() and (self.paths.project_root / 'logs').exists():
+            logs_dir = self.paths.project_root / 'logs'
         if not logs_dir.exists():
-            print(f'{C_YELLOW}Каталог logs/ пока пуст.{C_RESET}')
+            print(f'{C_YELLOW}Каталог logs/ пока пуст: {logs_dir}{C_RESET}')
             return 0
         target_file = None
         if name == 'fastapi':

@@ -16,12 +16,13 @@
 # Package: logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 18:19:00
+# Updated: 2026-10-08 09:09:30
 # =============================================================================
 
 from __future__ import annotations
 """Модуль реализации компонента `SingletonMeta`."""
 
+import os
 import logging
 import logging.handlers
 import colorama
@@ -242,7 +243,13 @@ class Logger(metaclass=SingletonMeta):
             errors_log_path: Имя файла для ERROR логов.
             json_log_path: Имя файла для JSON логов.
         """
-        self.log_files_path: Path = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
+        env_dir = os.environ.get('AI_BREADBOARD_LOGS_DIR') or os.environ.get('LOG_DIR')
+        if env_dir:
+            self.log_files_path = Path(env_dir)
+        else:
+            appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+            base_dir = Path(appdata) if appdata and os.path.exists(appdata) else Path.home() / '.config'
+            self.log_files_path = base_dir / 'AI-Breadboard' / 'logs'
         self.info_log_path: Path = self.log_files_path / (info_log_path or 'info.log')
         self.debug_log_path: Path = self.log_files_path / (debug_log_path or 'debug.log')
         self.errors_log_path: Path = self.log_files_path / (errors_log_path or 'errors.log')

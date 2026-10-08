@@ -69,7 +69,7 @@ class StressBenchmarkEngine:
         """Возвращает историю запущенных AI бенчмарков."""
         return [{'provider': r.provider, 'model_name': r.model_name, 'success': r.success, 'ttft_ms': r.ttft_ms, 'total_time_ms': r.total_time_ms, 'prompt_tokens': r.prompt_tokens, 'completion_tokens': r.completion_tokens, 'tokens_per_second': r.tokens_per_second, 'generated_text': r.generated_text, 'error_message': r.error_message, 'timestamp': r.timestamp or time.time()} for r in self._ai_history]
 
-    def run_ai_inference_benchmark(self, provider: str='gemini', model_name: str='gemini-2.5-flash', prompt: str='Тестовый запрос для замера скорости инференса.', max_tokens: int=150, temperature: float=0.7) -> AIBenchmarkResult:
+    def run_ai_inference_benchmark(self, provider: str='gemini', model_name: str='gemini-3.1-flash', prompt: str='Тестовый запрос для замера скорости инференса.', max_tokens: int=150, temperature: float=0.7) -> AIBenchmarkResult:
         """Выполняет замер производительности ИИ (TTFT, токены/сек, время генерации)."""
         start_time = time.perf_counter()
         first_token_time: Optional[float] = None

@@ -574,7 +574,7 @@ async function _handleSaveAgent() {
   const desc = document.getElementById('agent-desc')?.value.trim();
   const enabled = document.getElementById('agent-enabled')?.checked ?? true;
   const provider = document.getElementById('agent-provider')?.value ?? 'gemini';
-  const model = document.getElementById('agent-model')?.value ?? 'gemini-2.5-flash';
+  const model = document.getElementById('agent-model')?.value ?? 'gemini-3.1-flash';
   const temperature = parseFloat(document.getElementById('agent-temperature')?.value ?? '0.3');
   const max_steps = parseInt(document.getElementById('agent-max-steps')?.value ?? '15', 10);
   const timeout_seconds = parseInt(document.getElementById('agent-timeout')?.value ?? '60', 10);
@@ -685,7 +685,7 @@ function _openAiBuilder() {
 async function _handleRunAiGenerate() {
   const taskDesc = document.getElementById('ai-builder-prompt')?.value.trim();
   const provider = document.getElementById('ai-builder-provider')?.value ?? 'gemini';
-  const model = document.getElementById('ai-builder-model')?.value ?? 'gemini-2.5-flash';
+  const model = document.getElementById('ai-builder-model')?.value ?? 'gemini-3.1-flash';
 
   if (!taskDesc) {
     _showToast('Пожалуйста, опишите задачу агента', 'warning');

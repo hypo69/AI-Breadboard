@@ -154,7 +154,7 @@ Write-Host ""
 # ============================================================================
 # AI configuration - defaults before reading config
 $aiProvider = "gemini"
-$aiGeminiModel = "gemini-2.5-flash"
+$aiGeminiModel = "gemini-3.1-flash"
 $aiGeminiCliModel = "gemini-3.1-flash-lite"
 $aiAgyModel = "gemini-3.6-flash"
 $aiAgyEffort = "medium"

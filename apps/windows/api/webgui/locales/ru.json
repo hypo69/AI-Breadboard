@@ -309,6 +309,7 @@
     "modeRaw": "📄 Исходная запись",
     "modeActivity": "⚙️ Журнал активности",
     "modeEventLogs": "📝 Журналы событий (Event Logs)",
+    "modePowerLifecycle": "⚡ Жизненный цикл питания (Power Lifecycle)",
     "btnAskAi": "Спросить ИИ",
     "searchPlaceholder": "Поиск по тексту, источнику...",
     "allLevels": "Все уровни",

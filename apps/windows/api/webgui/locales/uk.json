@@ -309,6 +309,7 @@
     "modeRaw": "📄 Исходная запись",
     "modeActivity": "⚙️ Журнал активности",
     "modeEventLogs": "📝 Журнал WevtAPI & Intel",
+    "modePowerLifecycle": "⚡ Життєвий цикл живлення (Power Lifecycle)",
     "btnAskAi": "Спросить ИИ",
     "searchPlaceholder": "Поиск по тексту, источнику...",
     "allLevels": "Все уровни",

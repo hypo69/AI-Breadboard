@@ -68,7 +68,7 @@ class TestHardwareProbers(unittest.TestCase):
         """Test AI inference benchmark execution."""
         from apps.windows.hardware.stress_benchmark import AIBenchmarkResult
         engine = StressBenchmarkEngine()
-        res = engine.run_ai_inference_benchmark(provider='gemini', model_name='gemini-2.5-flash')
+        res = engine.run_ai_inference_benchmark(provider='gemini', model_name='gemini-3.1-flash')
         self.assertIsInstance(res, AIBenchmarkResult)
         self.assertTrue(res.success)
         self.assertGreater(res.tokens_per_second, 0.0)

@@ -113,7 +113,7 @@
                     "gemini-1.0-ultra",
                     "gemini-1.5-flash",
                     "gemini-1.5-pro",
-                    "gemini-2.5-flash",
+                    "gemini-flash-latest",
                     "gemini-old",
                     "gemini:gemini-3.1-flash-lite"
                 ]

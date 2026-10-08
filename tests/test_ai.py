@@ -106,8 +106,8 @@ class TestAgyChat:
         chat.system_instruction = 'New instruction'
         assert chat.system_prompt == 'New instruction'
         assert chat.system_instruction == 'New instruction'
-        chat.model_id = 'agy-gemini-2.5-flash'
-        assert chat.model_id == 'gemini-2.5-flash'
+        chat.model_id = 'agy-gemini-flash-latest'
+        assert chat.model_id == 'gemini-flash-latest'
         chat2 = AgyChatBase(model_id='agy-gemini-2.0-flash')
         assert chat2.model_id == 'gemini-2.0-flash'
 

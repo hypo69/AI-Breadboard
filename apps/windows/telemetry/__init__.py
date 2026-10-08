@@ -1,40 +1,55 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Apps Windows Telemetry -   Init  
+# Process Name: AI-Breadboard Apps Windows Telemetry - Package Root
 # =============================================================================
 # Description:
-#   Exports core system metrics models, sensor probers, and telemetry collectors.
+#   Слой 3: Сбор, хранение, каталогизация и аналитика телеметрии Windows.
 #
 # Usage Examples:
-#
+#   Python API:
+#     from apps.windows.telemetry import SystemCollector, DiagnosticEngine
 #
 # File: __init__.py
 # Project: ai-breadboard
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:15:00
+# Updated: 2026-10-08 09:43:00
 # =============================================================================
 
-"""Exports core system metrics models, sensor probers, and telemetry collectors."""
+from __future__ import annotations
+"""Единый слой телеметрии Windows (Слой 3) платформы AI-Breadboard."""
 
-from .models import (
+# Импорт контрактов из единого слоя apps.windows.contracts
+from apps.windows.contracts import (
+    RiskLevel,
+    TelemetryTier,
+    ProcessState,
+    ThreadState,
+    CpuMetrics,
+    MemoryMetrics,
+    GpuMetrics,
+    HardwareSensor,
+    SystemSnapshot,
+    ProcessMetrics,
+    ProcessTokenInfo,
+    TelemetryIncident,
+)
+
+# Модели телеметрии
+from apps.windows.telemetry.models import (
     AnomalyItem,
     BatteryMetrics,
-    CpuMetrics,
     DiskIoMetrics,
     DiskPartitionMetrics,
     DriverInfo,
     ForensicsActivityReport,
-    GpuMetrics,
     HardwareArchiveEntry,
     HardwareAuditReport,
     HardwareChangeItem,
     HardwareDeviceAudit,
     HardwareNode,
-    HardwareSensor,
     KernelThrottlingReport,
-    MemoryMetrics,
     NetworkInterfaceMetrics,
     NetworkPortMetrics,
     PeripheralsNetworkReport,
@@ -42,22 +57,26 @@ from .models import (
     ProcessLeakDiagnosticsReport,
     ProcessLeakItem,
     ProcessLifecycleEvent,
-    ProcessMetrics,
     ProcessNetworkActivity,
     ProcessProvenanceInfo,
     ProcessProvenanceReport,
-    ProcessTokenInfo,
     RamStickInfo,
     StorageBatteryWearReport,
     SystemDiagnosticReport,
     SystemHealthAlerts,
-    SystemSnapshot,
     W64CollectorStatus,
     W64SystemEvent,
     ETWTraceEvent,
+    SecurityAuditStatus,
+    SecurityBookmarkState,
+    SecurityCollectorReport,
+    SecurityCorrelationItem,
+    SecurityEventItem,
+    SecurityEventRaw,
 )
-from .sensors import get_hardware_sensors
-from .sqlite import (
+
+# Хранилище и база данных
+from apps.windows.telemetry.sqlite import (
     AggregationLevel,
     TelemetryBuffer,
     TelemetryConnectionManager,
@@ -68,134 +87,138 @@ from .sqlite import (
     TelemetryWriter,
     sensors_aggregate,
 )
-from .collector import SystemCollector
-from .service import TelemetryLoggerService
-from .telemetry_config import TelemetryConfigManager, get_default_telemetry_config_path
-from .json_logger import TelemetryJsonLogger
-from .file_collector import FileCollector
-from .sensor_collector import SensorCollector
-from .device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import (
-    StorageDiskHealthInfo,
-    WindowsStorageSensor,
-    collect_storage_snapshot,
-    save_snapshot,
+from apps.windows.telemetry.storage.ring_buffer import TelemetryRingBuffer
+from apps.windows.telemetry.storage.init_db import (
+    init_telemetry_db,
+    init_telemetry_database,
+    get_default_telemetry_db_path,
 )
-from .storage_usage import WindowsStorageUsageCollector
-from .w64_collector import (
+
+# Коллекторы и датчики
+from apps.windows.telemetry.sensors import get_hardware_sensors
+from apps.windows.telemetry.collector import SystemCollector
+from apps.windows.telemetry.service import TelemetryLoggerService
+from apps.windows.telemetry.telemetry_config import TelemetryConfigManager, get_default_telemetry_config_path
+from apps.windows.telemetry.json_logger import TelemetryJsonLogger
+from apps.windows.telemetry.file_collector import FileCollector
+from apps.windows.telemetry.sensor_collector import SensorCollector
+from apps.windows.telemetry.device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
+from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector
+from apps.windows.telemetry.w64_collector import (
     AIW64Collector,
     get_w64_collector,
     start_w64_collector,
     stop_w64_collector,
 )
-from .w64_etw_collector import AIW64ETWCollector
-from apps.windows.telemetry_research.aggregator import TelemetryAggregator
-from apps.windows.telemetry_research.grouped_telemetry import GroupedTelemetryBuilder
-from apps.windows.telemetry_research.incident_detector import IncidentDetector
-from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
-from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
-from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
-from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
-from .security_collector import WindowsSecurityCollector
-from .security_normalizer import SecurityEventNormalizer
-from .models import (
-    SecurityAuditStatus,
-    SecurityBookmarkState,
-    SecurityCollectorReport,
-    SecurityCorrelationItem,
-    SecurityEventItem,
-    SecurityEventRaw,
-)
+from apps.windows.telemetry.w64_etw_collector import AIW64ETWCollector
+from apps.windows.telemetry.security_collector import WindowsSecurityCollector
+from apps.windows.telemetry.security_normalizer import SecurityEventNormalizer
 
+# Аналитический контур (прямой импорт без lazy __getattr__)
+from apps.windows.telemetry.analytics.aggregator import TelemetryAggregator
+from apps.windows.telemetry.analytics.analyzer import TelemetryAnalyzer
+from apps.windows.telemetry.analytics.compactor import TelemetryCompactor
+from apps.windows.telemetry.analytics.diagnostic_engine import DiagnosticEngine, SystemDiagnosticEngine
+from apps.windows.telemetry.analytics.grouped_telemetry import GroupedTelemetryBuilder
+from apps.windows.telemetry.analytics.incident_detector import IncidentDetector
+from apps.windows.telemetry.analytics.reboot_analyzer import WindowsRebootAnalyzer, RebootAnalyzer
+from apps.windows.telemetry.analytics.hardware_auditor import HardwareAuditor
+from apps.windows.telemetry.analytics.deep_diagnostics import DeepDiagnosticsEngine
+from apps.windows.telemetry.analytics.hardware_history_manager import HardwareHistoryManager
 
+# Каталог событий
+from apps.windows.telemetry.catalog.event_catalog import WindowsEventCatalog
 
 __all__ = [
+    # Контракты и модели
+    "RiskLevel",
+    "TelemetryTier",
+    "ProcessState",
+    "ThreadState",
+    "CpuMetrics",
+    "MemoryMetrics",
+    "GpuMetrics",
+    "HardwareSensor",
+    "HardwareNode",
+    "SystemSnapshot",
+    "ProcessMetrics",
+    "ProcessTokenInfo",
+    "TelemetryIncident",
+    "AnomalyItem",
+    "BatteryMetrics",
+    "DiskIoMetrics",
+    "DiskPartitionMetrics",
+    "DriverInfo",
+    "ForensicsActivityReport",
+    "HardwareArchiveEntry",
+    "HardwareAuditReport",
+    "HardwareChangeItem",
+    "HardwareDeviceAudit",
+    "KernelThrottlingReport",
+    "NetworkInterfaceMetrics",
+    "NetworkPortMetrics",
+    "PeripheralsNetworkReport",
+    "PhysicalDiskHealth",
+    "ProcessLeakDiagnosticsReport",
+    "ProcessLeakItem",
+    "ProcessLifecycleEvent",
+    "ProcessNetworkActivity",
+    "ProcessProvenanceInfo",
+    "ProcessProvenanceReport",
+    "RamStickInfo",
+    "StorageBatteryWearReport",
+    "SystemDiagnosticReport",
+    "SystemHealthAlerts",
+    "W64CollectorStatus",
+    "W64SystemEvent",
+    "ETWTraceEvent",
+    "SecurityAuditStatus",
+    "SecurityBookmarkState",
+    "SecurityCollectorReport",
+    "SecurityCorrelationItem",
+    "SecurityEventItem",
+    "SecurityEventRaw",
+    # Коллекторы
+    "SystemCollector",
+    "SensorCollector",
+    "FileCollector",
+    "WindowsSecurityCollector",
+    "SecurityEventNormalizer",
+    "WindowsStorageUsageCollector",
     "AIW64Collector",
     "AIW64ETWCollector",
     "get_w64_collector",
     "start_w64_collector",
     "stop_w64_collector",
-    "CpuMetrics",
-    "MemoryMetrics",
-    "RamStickInfo",
-    "GpuMetrics",
-    "DiskPartitionMetrics",
-    "PhysicalDiskHealth",
-    "DiskIoMetrics",
-    "NetworkInterfaceMetrics",
-    "NetworkPortMetrics",
-    "BatteryMetrics",
-    "SystemHealthAlerts",
-    "ProcessMetrics",
-    "ProcessProvenanceInfo",
-    "ProcessLifecycleEvent",
-    "ProcessProvenanceReport",
-    "ProcessTokenInfo",
-    "ProcessLeakItem",
-    "ProcessLeakDiagnosticsReport",
-    "ForensicsActivityReport",
-    "KernelThrottlingReport",
-    "StorageBatteryWearReport",
-    "PeripheralsNetworkReport",
-    "HardwareSensor",
-    "HardwareNode",
-    "SystemSnapshot",
-    "AnomalyItem",
-    "SystemDiagnosticReport",
-    "DriverInfo",
-    "HardwareDeviceAudit",
-    "HardwareChangeItem",
-    "HardwareAuditReport",
-    "HardwareArchiveEntry",
     "get_hardware_sensors",
-    "HardwareAuditor",
-    "HardwareHistoryManager",
+    "DeviceFlappingSensor",
+    "DeviceTransitionEvent",
+    # Хранилище
+    "TelemetryRingBuffer",
+    "init_telemetry_db",
+    "init_telemetry_database",
+    "get_default_telemetry_db_path",
     "TelemetryStorage",
     "TelemetrySqlAggregator",
     "AggregationLevel",
     "sensors_aggregate",
-    "SystemCollector",
     "TelemetryLoggerService",
     "TelemetryConfigManager",
     "TelemetryJsonLogger",
-    "FileCollector",
-    "SensorCollector",
-    "TelemetryAggregator",
-    "DeviceFlappingSensor",
-    "DeviceTransitionEvent",
-    "DeepDiagnosticsEngine",
+    "get_default_telemetry_config_path",
+    # Аналитика
+    "DiagnosticEngine",
+    "SystemDiagnosticEngine",
+    "GroupedTelemetryBuilder",
     "IncidentDetector",
     "WindowsRebootAnalyzer",
-    "GroupedTelemetryBuilder",
+    "RebootAnalyzer",
+    "TelemetryAggregator",
+    "TelemetryAnalyzer",
     "TelemetryCompactor",
-    "AuditStartupChecker",
-    "StorageDiskHealthInfo",
-    "WindowsStorageSensor",
-    "WindowsStorageUsageCollector",
-    "collect_storage_snapshot",
-    "save_snapshot",
-    "W64CollectorStatus",
-    "W64SystemEvent",
-    "ETWTraceEvent",
-    "WindowsSecurityCollector",
-    "SecurityEventNormalizer",
-    "SecurityEventItem",
-    "SecurityEventRaw",
-    "SecurityBookmarkState",
-    "SecurityAuditStatus",
-    "SecurityCollectorReport",
-    "SecurityCorrelationItem",
-    "init_telemetry_database",
-    "get_default_telemetry_db_path",
-    "get_default_telemetry_config_path",
+    "HardwareAuditor",
+    "DeepDiagnosticsEngine",
+    "HardwareHistoryManager",
+    # Каталог
+    "WindowsEventCatalog",
 ]
-
-
-def __getattr__(name: str):
-    """Ленивый импорт диагностического движка для предотвращения циклических зависимостей."""
-    if name in ("DiagnosticEngine", "SystemDiagnosticEngine"):
-        from apps.windows.telemetry_research.diagnostic_engine import DiagnosticEngine, SystemDiagnosticEngine
-        if name == "DiagnosticEngine":
-            return DiagnosticEngine
-        return SystemDiagnosticEngine
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

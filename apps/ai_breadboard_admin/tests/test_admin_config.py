@@ -30,7 +30,7 @@ from apps.ai_breadboard_admin.src.config_manager import AdminConfigManager
 def temp_root(tmp_path: Path) -> Path:
     """Фикстура создания временной структуры каталогов проекта."""
     config_file = tmp_path / 'config.json'
-    initial_data = {'rag': {'mode': 'rag+model'}, 'web_search': {'engine': 'playwright', 'gemini_model': 'gemini-2.5-flash', 'gemini_cli_model': 'gemini-3.1-flash-lite', 'agy_model': 'agy-flash'}}
+    initial_data = {'rag': {'mode': 'rag+model'}, 'web_search': {'engine': 'playwright', 'gemini_model': 'gemini-3.1-flash', 'gemini_cli_model': 'gemini-3.1-flash-lite', 'agy_model': 'agy-flash'}}
     config_file.write_text(json.dumps(initial_data, indent=2), encoding='utf-8')
     test_app_dir = tmp_path / 'apps' / 'test_app'
     test_app_dir.mkdir(parents=True, exist_ok=True)
@@ -56,12 +56,12 @@ def test_get_web_search_config_happy_path(temp_root: Path) -> None:
     manager = AdminConfigManager(root_dir=temp_root)
     search_cfg = manager.get_web_search_config()
     assert search_cfg['engine'] == 'playwright', "Ожидался engine 'playwright'"
-    assert search_cfg['gemini_model'] == 'gemini-2.5-flash'
+    assert search_cfg['gemini_model'] == 'gemini-3.1-flash'
 
 def test_set_web_search_config(temp_root: Path) -> None:
     """Type Variants & Modification: изменение поискового движка и моделей."""
     manager = AdminConfigManager(root_dir=temp_root)
-    success = manager.set_web_search_config(engine='langchain', gemini_model='gemini-1.5-pro', gemini_cli_model='gemini-cli-fast', agy_model='agy-pro')
+    success = manager.set_web_search_config(engine='langchain', gemini_model='gemini-3.1-flash', gemini_cli_model='gemini-cli-fast', agy_model='agy-pro')
     search_cfg = manager.get_web_search_config()
     assert success is True
     assert search_cfg['engine'] == 'langchain'

@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.hardware
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 08:10:00
+# Updated: 2026-10-08 08:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class MemoryMetrics:
 
 @dataclass
 class GpuMetrics:
-    """Метрики графического адаптера (GPU)."""
+    """Метрики графического адаптера (GPU) и вычислительных бэкендов."""
     index: int
     name: str
     vendor: str
@@ -79,6 +79,19 @@ class GpuMetrics:
     engines: Dict[str, float] = field(default_factory=dict)
     shared_memory_used_mb: Optional[float] = None
     dedicated_memory_used_mb: Optional[float] = None
+    gpu_type: str = "Discrete"
+    dedicated_memory_mb: Optional[float] = None
+    shared_memory_mb: Optional[float] = None
+    memory_type: str = "Dedicated VRAM"
+    directx_version: str = "DirectX 12 (FL 12_1)"
+    has_cuda: bool = False
+    has_rocm: bool = False
+    has_oneapi: bool = False
+    has_directml: bool = True
+    has_vulkan: bool = True
+    has_opencl: bool = True
+    compute_apis: List[str] = field(default_factory=list)
+    ai_backends: List[str] = field(default_factory=list)
 
 @dataclass
 class DiskPartitionMetrics:
@@ -255,6 +268,19 @@ class HardwareMonitor:
                     engines=g.engines,
                     shared_memory_used_mb=g.shared_memory_used_mb,
                     dedicated_memory_used_mb=g.dedicated_memory_used_mb,
+                    gpu_type=getattr(g, 'gpu_type', 'Discrete'),
+                    dedicated_memory_mb=getattr(g, 'dedicated_memory_mb', None),
+                    shared_memory_mb=getattr(g, 'shared_memory_mb', None),
+                    memory_type=getattr(g, 'memory_type', 'Dedicated VRAM'),
+                    directx_version=getattr(g, 'directx_version', 'DirectX 12 (FL 12_1)'),
+                    has_cuda=getattr(g, 'has_cuda', False),
+                    has_rocm=getattr(g, 'has_rocm', False),
+                    has_oneapi=getattr(g, 'has_oneapi', False),
+                    has_directml=getattr(g, 'has_directml', True),
+                    has_vulkan=getattr(g, 'has_vulkan', True),
+                    has_opencl=getattr(g, 'has_opencl', True),
+                    compute_apis=getattr(g, 'compute_apis', []),
+                    ai_backends=getattr(g, 'ai_backends', []),
                 ))
         except Exception as e:
             logger.debug(f'Ошибка опроса GPU: {e}')

@@ -17,7 +17,7 @@
 # Package: src.ai.orchestration
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 05:31:00
 # =============================================================================
 
 """Normalize model identifier for consistent comparison."""
@@ -31,6 +31,25 @@ from google import genai
 from header import __root__
 from logger import logger
 from src.utils.jjson import j_dumps, j_loads
+
+
+def _get_active_config_path() -> Path:
+    """Возвращает путь к активному файлу конфигурации с учетом переменных окружения и сценария TC."""
+    cfg_env = os.getenv('AIBREADBOARD_CONFIG') or os.getenv('CONFIG_FILE')
+    if cfg_env:
+        p = Path(cfg_env)
+        if p.is_absolute() and p.exists():
+            return p
+        if (__root__ / cfg_env).exists():
+            return __root__ / cfg_env
+        if (__root__ / 'apps' / 'windows' / p.name).exists():
+            return __root__ / 'apps' / 'windows' / p.name
+    windows_cfg = __root__ / 'apps' / 'windows' / 'config.json'
+    if windows_cfg.exists() and not (__root__ / 'config.json').exists():
+        return windows_cfg
+    return __root__ / 'config.json'
+
+
 _GLOBAL_CONFIG_PATH: Path = __root__ / 'config.json'
 _GEMINI_CONFIG_PATH: Path = __root__ / 'src' / 'ai' / 'gemini' / 'config.json'
 _CACHED_MODELS: Dict[str, List[str]] = {}
@@ -73,7 +92,7 @@ def load_unsupported_models(provider: str='gemini') -> Set[str]:
                 for item in raw_list:
                     if isinstance(item, str) and item.strip():
                         unsupported.add(_normalize_model_name(item))
-    global_cfg = j_loads(_GLOBAL_CONFIG_PATH)
+    global_cfg = j_loads(_get_active_config_path())
     if isinstance(global_cfg, dict):
         ai_sec = global_cfg.get('ai', {})
         if isinstance(ai_sec, dict):
@@ -127,7 +146,8 @@ def add_unsupported_model(provider: str='gemini', model_name: str='', reason: st
                 curr_list.append(norm_name)
                 gemini_cfg['unsupported_models'] = sorted(list(set(curr_list)))
                 j_dumps(gemini_cfg, _GEMINI_CONFIG_PATH)
-    global_cfg = j_loads(_GLOBAL_CONFIG_PATH)
+    active_cfg_path = _get_active_config_path()
+    global_cfg = j_loads(active_cfg_path)
     if isinstance(global_cfg, dict):
         ai_sec = global_cfg.get('ai', {})
         if not isinstance(ai_sec, dict):
@@ -147,7 +167,7 @@ def add_unsupported_model(provider: str='gemini', model_name: str='', reason: st
             providers[prov] = prov_obj
             ai_sec['providers'] = providers
             global_cfg['ai'] = ai_sec
-            j_dumps(global_cfg, _GLOBAL_CONFIG_PATH)
+            j_dumps(global_cfg, active_cfg_path)
     if prov in _CACHED_MODELS:
         _CACHED_MODELS[prov] = [m for m in _CACHED_MODELS[prov] if _normalize_model_name(m) != norm_name]
     if 'agy' in _CACHED_MODELS:
@@ -311,7 +331,7 @@ def _fetch_onnx_models_sync(include_unsupported: bool=False) -> List[str]:
     except Exception as e:
         logger.debug(f'[ModelManager] ONNX memory models check: {e}')
     try:
-        global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH) or {}
+        global_cfg: Dict[str, Any] = j_loads(_get_active_config_path()) or {}
         onnx_cfg: Dict[str, Any] = global_cfg.get('onnx', {}) if isinstance(global_cfg, dict) else {}
         models_dir_rel: str = onnx_cfg.get('models_dir', 'models/onnx')
         models_dir: Path = __root__ / models_dir_rel if not Path(models_dir_rel).is_absolute() else Path(models_dir_rel)
@@ -341,7 +361,7 @@ def _fetch_onnx_models_sync(include_unsupported: bool=False) -> List[str]:
 def _fetch_openai_compat_models_sync(include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of OpenAI-compatible provider models."""
     unsupported: Set[str] = load_unsupported_models('openai')
-    global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH)
+    global_cfg: Dict[str, Any] = j_loads(_get_active_config_path())
     models: List[str] = []
     if isinstance(global_cfg, dict):
         compat_sec: Dict[str, Any] = global_cfg.get('openai_compat', {})

@@ -322,17 +322,17 @@ AI-Breadboard/
     "admin": {
       "enabled_providers": ["all"],
       "default_provider": "gemini",
-      "default_model": "gemini-2.5-flash"
+      "default_model": "gemini-3.1-flash"
     },
     "technician": {
       "enabled_providers": ["gemini", "gemini_cli", "ollama"],
       "default_provider": "gemini",
-      "default_model": "gemini-2.5-flash"
+      "default_model": "gemini-3.1-flash"
     },
     "secretary": {
       "enabled_providers": ["gemini", "openai"],
       "default_provider": "gemini",
-      "default_model": "gemini-2.5-flash"
+      "default_model": "gemini-3.1-flash"
     }
   }
 }

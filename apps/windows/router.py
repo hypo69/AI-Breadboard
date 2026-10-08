@@ -358,7 +358,7 @@ async def run_stress_benchmark(req: StressTestRequest) -> Dict[str, Any]:
 class AIBenchmarkRequest(BaseModel):
     """Модель запроса для AI бенчмарка."""
     provider: str = 'gemini'
-    model_name: str = 'gemini-2.5-flash'
+    model_name: str = 'gemini-3.1-flash'
     prompt: str = 'Тестовый запрос для замера скорости инференса.'
     max_tokens: int = 150
     temperature: float = 0.7

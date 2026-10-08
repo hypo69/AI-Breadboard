@@ -49,14 +49,14 @@ class DiarizationResult:
     transcript: List[Dict[str, Any]] = field(default_factory=list)
     markdown_report: str = ''
     language: str = 'ru'
-    model: str = 'gemini-2.5-flash'
+    model: str = 'gemini-3.1-flash'
 
 class AudioDiarizationService:
     """Service for processing voice notes and meeting audio files,
     extracting speaker-attributed transcripts and executive summaries.
     """
 
-    def __init__(self, default_model: str='gemini-2.5-flash') -> None:
+    def __init__(self, default_model: str='gemini-3.1-flash') -> None:
         """Initialize Audio Diarization Service.
 
         Args:

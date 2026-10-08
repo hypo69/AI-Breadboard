@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 07:25:00
+# Updated: 2026-10-08 08:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -116,7 +116,14 @@ class GpuSpecsInfo(BaseModel):
     directx: str = Field(default="DirectX 12 (FL 12_1)", description="Поддерживаемый графический API")
     pci_bus: str = Field(default="PCIe x16", description="Интерфейс подключения шины")
     cuda_cores: Optional[int] = Field(default=None, description="Количество шейдерных ядер CUDA / блоков")
+    cuda_supported: bool = Field(default=False, description="Поддержка NVIDIA CUDA")
+    rocm_supported: bool = Field(default=False, description="Поддержка AMD ROCm / HIP")
+    oneapi_supported: bool = Field(default=False, description="Поддержка Intel oneAPI")
     directml_supported: bool = Field(default=True, description="Поддержка DirectML ускорения")
+    vulkan_supported: bool = Field(default=True, description="Поддержка Vulkan API")
+    opencl_supported: bool = Field(default=True, description="Поддержка OpenCL API")
+    compute_apis: List[str] = Field(default_factory=list, description="Список поддерживаемых вычислительных API")
+    ai_backends: List[str] = Field(default_factory=list, description="Список поддерживаемых AI бэкендов")
     power_limit_w: Optional[float] = Field(default=None, description="Лимит TDP, Вт")
 
 
@@ -474,6 +481,43 @@ def build_gpu_load(
     cuda_c = inv.get("cuda_cores")
     directml = bool(inv.get("directml_supported", True))
 
+    is_nvidia = vendor == "NVIDIA" or "nvidia" in inv_name.lower() or "geforce" in inv_name.lower()
+    is_amd = vendor == "AMD" or "amd" in inv_name.lower() or "radeon" in inv_name.lower()
+    is_intel = vendor == "Intel" or "intel" in inv_name.lower() or "arc" in inv_name.lower()
+
+    cuda_supp = bool(inv.get("cuda_supported", is_nvidia))
+    rocm_supp = bool(inv.get("rocm_supported", is_amd))
+    oneapi_supp = bool(inv.get("oneapi_supported", is_intel))
+    vulkan_supp = bool(inv.get("vulkan_supported", True))
+    opencl_supp = bool(inv.get("opencl_supported", True))
+
+    cmp_apis: List[str] = []
+    if cuda_supp:
+        cmp_apis.append("CUDA")
+    if rocm_supp:
+        cmp_apis.append("ROCm / HIP")
+    if oneapi_supp:
+        cmp_apis.append("oneAPI")
+    if directml:
+        cmp_apis.append("DirectML")
+    if vulkan_supp:
+        cmp_apis.append("Vulkan")
+    if opencl_supp:
+        cmp_apis.append("OpenCL")
+
+    ai_bkends: List[str] = []
+    if cuda_supp:
+        ai_bkends.append("CUDA")
+    if rocm_supp:
+        ai_bkends.append("ROCm / HIP")
+    if oneapi_supp:
+        ai_bkends.append("OpenVINO / oneAPI")
+    if directml:
+        ai_bkends.append("DirectML")
+    if vulkan_supp:
+        ai_bkends.append("Vulkan")
+    ai_bkends.append("CPU")
+
     specs_obj = GpuSpecsInfo(
         name=inv_name,
         vendor=vendor,
@@ -490,7 +534,14 @@ def build_gpu_load(
         directx="DirectX 12 (FL 12_1)",
         pci_bus=pci_bus_str,
         cuda_cores=cuda_c,
+        cuda_supported=cuda_supp,
+        rocm_supported=rocm_supp,
+        oneapi_supported=oneapi_supp,
         directml_supported=directml,
+        vulkan_supported=vulkan_supp,
+        opencl_supported=opencl_supp,
+        compute_apis=cmp_apis,
+        ai_backends=ai_bkends,
     )
 
     # История параметров GPU
@@ -808,7 +859,7 @@ def _fetch_single_gpu_data(
         history=history_points,
         available_gpus=available_gpus,
         current_gpu_index=target_idx,
-        meta={"source": "telemetry_db_empty", "engines_count": 0},
+        meta={"source": "none" if not history_points else "telemetry_db_empty", "engines_count": 0},
     )
 
 

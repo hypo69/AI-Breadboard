@@ -129,9 +129,9 @@ class AdminConfigManager:
         """
         cfg = self.get_system_config()
         ws = cfg.get('web_search', {})
-        return {'engine': ws.get('engine', 'playwright'), 'gemini_model': ws.get('gemini_model', 'gemini-2.5-flash'), 'gemini_cli_model': ws.get('gemini_cli_model', 'gemini-3.1-flash-lite'), 'agy_model': ws.get('agy_model', 'agy-flash')}
+        return {'engine': ws.get('engine', 'playwright'), 'gemini_model': ws.get('gemini_model', 'gemini-3.1-flash'), 'gemini_cli_model': ws.get('gemini_cli_model', 'gemini-3.1-flash-lite'), 'agy_model': ws.get('agy_model', 'agy-flash')}
 
-    def set_web_search_config(self, engine: str, gemini_model: str='gemini-2.5-flash', gemini_cli_model: str='gemini-3.1-flash-lite', agy_model: str='agy-flash') -> bool:
+    def set_web_search_config(self, engine: str, gemini_model: str='gemini-3.1-flash', gemini_cli_model: str='gemini-3.1-flash-lite', agy_model: str='agy-flash') -> bool:
         """Сохранение параметров подсистемы веб-поиска.
 
         Args:

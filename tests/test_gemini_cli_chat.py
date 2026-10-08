@@ -184,7 +184,7 @@ class TestGeminiCliChat:
         """Проверка нормализации идентификаторов моделей."""
         assert GeminiCliChatBase.normalize_model_id('') == 'gemini-3.1-flash-lite'
         assert GeminiCliChatBase.normalize_model_id('gemini_cli:gemini-3.1-flash-lite') == 'gemini-3.1-flash-lite'
-        assert GeminiCliChatBase.normalize_model_id('gemini-cli-gemini-2.5-flash') == 'gemini-2.5-flash'
+        assert GeminiCliChatBase.normalize_model_id('gemini-cli-gemini-flash-latest') == 'gemini-flash-latest'
         assert GeminiCliChatBase.normalize_model_id('models/gemini-2.5-pro') == 'gemini-2.5-pro'
 
     def test_capabilities_and_availability(self):

@@ -47,7 +47,7 @@ class TestChatAPI:
         mock_model.chat_stream = mock_stream
         plugins = {}
         app.include_router(init_router(mock_model, mock_model, plugins))
-        with patch('src.api.routers.core.router_chat._extract_user_auth', return_value=('user1', '', 'gemini-2.5-flash', {})), patch('src.api.routers.core.router_chat.get_chat_model', return_value=mock_model):
+        with patch('src.api.routers.core.router_chat._extract_user_auth', return_value=('user1', '', 'gemini-flash-latest', {})), patch('src.api.routers.core.router_chat.get_chat_model', return_value=mock_model):
             async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
                 response = await client.post('/api/chat', json={'message': 'What movie should I watch?', 'history': []})
                 assert response.status_code == 200

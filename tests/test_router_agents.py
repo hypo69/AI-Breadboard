@@ -77,7 +77,7 @@ class TestAgentsRouter:
 
     def test_create_and_delete_custom_agent(self):
         """Test creating and subsequent deletion of custom agent."""
-        new_agent = {'id': 'test_research_agent', 'name': 'Research Assistant', 'description': 'Test agent for information search', 'is_system': False, 'enabled': True, 'provider': 'gemini', 'model': 'gemini-2.5-flash', 'temperature': 0.2, 'max_steps': 10, 'timeout_seconds': 45, 'tools': ['web_search', 'rag_search'], 'system_prompt': 'You are a test research agent.'}
+        new_agent = {'id': 'test_research_agent', 'name': 'Research Assistant', 'description': 'Test agent for information search', 'is_system': False, 'enabled': True, 'provider': 'gemini', 'model': 'gemini-flash-latest', 'temperature': 0.2, 'max_steps': 10, 'timeout_seconds': 45, 'tools': ['web_search', 'rag_search'], 'system_prompt': 'You are a test research agent.'}
         create_res = client.post('/api/agents', json=new_agent)
         assert create_res.status_code == 200
         data = create_res.json()
@@ -109,7 +109,7 @@ class TestAgentsRouter:
 
     def test_prevent_duplicate_agent_id(self):
         """Check error on duplicate agent ID creation."""
-        dup_agent = {'id': 'web_search_gemini', 'name': 'Duplicate Agent', 'description': '...', 'enabled': True, 'provider': 'gemini', 'model': 'gemini-2.5-flash', 'temperature': 0.2, 'max_steps': 10, 'timeout_seconds': 30, 'tools': [], 'system_prompt': ''}
+        dup_agent = {'id': 'web_search_gemini', 'name': 'Duplicate Agent', 'description': '...', 'enabled': True, 'provider': 'gemini', 'model': 'gemini-flash-latest', 'temperature': 0.2, 'max_steps': 10, 'timeout_seconds': 30, 'tools': [], 'system_prompt': ''}
         res = client.post('/api/agents', json=dup_agent)
         assert res.status_code == 400
         assert 'already exists' in res.json().get('detail', '').lower()
@@ -120,7 +120,7 @@ class TestAgentsRouter:
         mock_llm = MagicMock()
         mock_llm.ask = AsyncMock(return_value=json.dumps({'name': 'Data Analyst', 'description': 'Analyzes data and performs calculations', 'system_prompt': 'You are a data analyst.', 'recommended_tools': ['python_eval', 'web_search'], 'temperature': 0.4, 'max_steps': 12}))
         mock_get_chat_model.return_value = mock_llm
-        req_payload = {'task_description': 'Create an analytics agent for calculations', 'provider': 'gemini', 'model': 'gemini-2.5-flash'}
+        req_payload = {'task_description': 'Create an analytics agent for calculations', 'provider': 'gemini', 'model': 'gemini-flash-latest'}
         response = client.post('/api/agents/generate-prompt', json=req_payload)
         assert response.status_code == 200
         data = response.json()

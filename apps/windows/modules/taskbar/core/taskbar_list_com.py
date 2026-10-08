@@ -3,7 +3,8 @@
 # Process Name: AI-Breadboard Apps Windows Modules Taskbar - ITaskbarList3 COM
 # =============================================================================
 # Description:
-#   Обертка COM интерфейса ITaskbarList3 для управления индикатором прогресса и оверлеями.
+#   Обертка COM интерфейса ITaskbarList3 для управления индикатором прогресса и оверлеями
+#   с использованием встроенного модуля ctypes (без внешних зависимостей).
 #
 # Usage Examples:
 #   Python API:
@@ -17,7 +18,7 @@
 # Package: apps.windows.modules.taskbar.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 04:20:00
+# Updated: 2026-10-08 04:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,9 +27,11 @@ from __future__ import annotations
 import ctypes
 from ctypes import wintypes
 from enum import IntEnum
+import sys
 from typing import Any, Dict, Optional
 
 from logger import logger
+
 
 # Константы флагов состояния прогресса (TBPFLAG)
 class TaskbarProgressFlag(IntEnum):
@@ -40,6 +43,22 @@ class TaskbarProgressFlag(IntEnum):
     TBPF_PAUSED = 0x8
 
 
+class _GUID(ctypes.Structure):
+    """Структура Win32 GUID для COM интерфейсов."""
+    _fields_ = [
+        ("Data1", wintypes.DWORD),
+        ("Data2", wintypes.WORD),
+        ("Data3", wintypes.WORD),
+        ("Data4", wintypes.BYTE * 8),
+    ]
+
+    def __init__(self, guid_str: str) -> None:
+        """Парсит строковое представление GUID в бинарную структуру."""
+        super().__init__()
+        if sys.platform == "win32":
+            ctypes.windll.ole32.CLSIDFromString(ctypes.c_wchar_p(guid_str), ctypes.byref(self))
+
+
 class TaskbarList3Wrapper:
     """Управление расширенными возможностями панели задач через ITaskbarList3 COM API."""
 
@@ -49,63 +68,120 @@ class TaskbarList3Wrapper:
     def __init__(self) -> None:
         """Инициализирует интерфейс COM ITaskbarList3."""
         self._initialized = False
-        self._com_instance = None
+        self._ptr: Optional[ctypes.c_void_p] = None
+        self._fn_hr_init = None
+        self._fn_set_progress_state = None
+        self._fn_set_progress_value = None
+        self._fn_set_overlay_icon = None
+        self._fn_release = None
         self._init_com()
 
     def _init_com(self) -> None:
-        """Инициализация COM библиотеки и создание экземпляра ITaskbarList3."""
+        """Инициализация COM библиотеки и создание экземпляра ITaskbarList3 через ctypes."""
+        if sys.platform != "win32":
+            return
+
         try:
-            import comtypes.client
-            self._com_instance = comtypes.client.CreateObject(
-                self.CLSID_TaskbarList,
-                interface=comtypes.client.lazybind.IUnknown
+            # Инициализация COM для вызывающего потока
+            ctypes.windll.ole32.CoInitialize(None)
+            clsid = _GUID(self.CLSID_TaskbarList)
+            iid = _GUID(self.IID_ITaskbarList3)
+            p_tbl = ctypes.c_void_p()
+
+            # CLSCTX_INPROC_SERVER (0x1) | CLSCTX_LOCAL_SERVER (0x4)
+            hr = ctypes.windll.ole32.CoCreateInstance(
+                ctypes.byref(clsid),
+                None,
+                0x1 | 0x4,
+                ctypes.byref(iid),
+                ctypes.byref(p_tbl),
             )
-            # Вызов HrInit
-            if hasattr(self._com_instance, "HrInit"):
-                self._com_instance.HrInit()
+            if hr != 0 or not p_tbl.value:
+                logger.warning(f"[TaskbarList3] Не удалось создать экземпляр COM ITaskbarList3 (HRESULT: {hr:#x})")
+                return
+
+            self._ptr = p_tbl
+            vtable = ctypes.cast(p_tbl, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p)))
+
+            # Привязка методов vtable ITaskbarList3:
+            # 2: Release
+            # 3: HrInit
+            # 9: SetProgressValue(HWND, ULONGLONG, ULONGLONG)
+            # 10: SetProgressState(HWND, TBPFLAG)
+            # 18: SetOverlayIcon(HWND, HICON, LPCWSTR)
+            self._fn_release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(vtable.contents[2])
+            self._fn_hr_init = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtable.contents[3])
+            self._fn_set_progress_value = ctypes.WINFUNCTYPE(
+                ctypes.c_long, ctypes.c_void_p, wintypes.HWND, ctypes.c_ulonglong, ctypes.c_ulonglong
+            )(vtable.contents[9])
+            self._fn_set_progress_state = ctypes.WINFUNCTYPE(
+                ctypes.c_long, ctypes.c_void_p, wintypes.HWND, ctypes.c_int
+            )(vtable.contents[10])
+            self._fn_set_overlay_icon = ctypes.WINFUNCTYPE(
+                ctypes.c_long, ctypes.c_void_p, wintypes.HWND, wintypes.HICON, wintypes.LPCWSTR
+            )(vtable.contents[18])
+
+            try:
+                self._fn_hr_init(self._ptr)
+            except Exception:
+                pass
+
             self._initialized = True
         except Exception as exc:
-            logger.error(f"[TaskbarList3] Не удалось инициализировать comtypes ITaskbarList3: {exc}")
+            logger.error(f"[TaskbarList3] Ошибка инициализации ITaskbarList3 COM: {exc}")
             self._initialized = False
 
     def set_progress_state(self, hwnd: int, state: TaskbarProgressFlag) -> bool:
         """Устанавливает состояние индикатора прогресса на кнопке окна."""
-        if not hwnd or not ctypes.windll.user32.IsWindow(hwnd):
+        if not hwnd or not self._initialized or not self._ptr or not self._fn_set_progress_state:
+            return False
+        if not ctypes.windll.user32.IsWindow(hwnd):
             return False
 
-        if self._initialized and self._com_instance and hasattr(self._com_instance, "SetProgressState"):
-            try:
-                self._com_instance.SetProgressState(hwnd, int(state))
-                return True
-            except Exception as exc:
-                logger.error(f"[TaskbarList3] Ошибка SetProgressState COM: {exc}")
-
-        return False
+        try:
+            hr = self._fn_set_progress_state(self._ptr, hwnd, int(state))
+            return hr == 0
+        except Exception as exc:
+            logger.error(f"[TaskbarList3] Ошибка SetProgressState COM: {exc}")
+            return False
 
     def set_progress_value(self, hwnd: int, completed: int, total: int) -> bool:
         """Устанавливает численное значение индикатора прогресса."""
-        if not hwnd or not ctypes.windll.user32.IsWindow(hwnd):
+        if not hwnd or not self._initialized or not self._ptr or not self._fn_set_progress_value:
+            return False
+        if not ctypes.windll.user32.IsWindow(hwnd):
             return False
 
-        if self._initialized and self._com_instance and hasattr(self._com_instance, "SetProgressValue"):
-            try:
-                self._com_instance.SetProgressValue(hwnd, completed, total)
-                return True
-            except Exception as exc:
-                logger.error(f"[TaskbarList3] Ошибка SetProgressValue COM: {exc}")
-
-        return False
+        try:
+            hr = self._fn_set_progress_value(self._ptr, hwnd, completed, total)
+            return hr == 0
+        except Exception as exc:
+            logger.error(f"[TaskbarList3] Ошибка SetProgressValue COM: {exc}")
+            return False
 
     def set_overlay_icon(self, hwnd: int, hicon: Optional[int], description: str = "") -> bool:
         """Устанавливает иконку оверлея (значок уведомления) на кнопку окна."""
-        if not hwnd or not ctypes.windll.user32.IsWindow(hwnd):
+        if not hwnd or not self._initialized or not self._ptr or not self._fn_set_overlay_icon:
+            return False
+        if not ctypes.windll.user32.IsWindow(hwnd):
             return False
 
-        if self._initialized and self._com_instance and hasattr(self._com_instance, "SetOverlayIcon"):
-            try:
-                self._com_instance.SetOverlayIcon(hwnd, hicon or 0, description)
-                return True
-            except Exception as exc:
-                logger.error(f"[TaskbarList3] Ошибка SetOverlayIcon COM: {exc}")
+        try:
+            hr = self._fn_set_overlay_icon(self._ptr, hwnd, hicon or 0, description)
+            return hr == 0
+        except Exception as exc:
+            logger.error(f"[TaskbarList3] Ошибка SetOverlayIcon COM: {exc}")
+            return False
 
-        return False
+    def __del__(self) -> None:
+        """Освобождает COM интерфейс ITaskbarList3 при сборке мусора."""
+        ptr = self._ptr
+        fn_release = self._fn_release
+        self._ptr = None
+        self._fn_release = None
+        if ptr and fn_release:
+            try:
+                fn_release(ptr)
+            except (OSError, Exception):
+                pass
+

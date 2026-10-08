@@ -243,7 +243,12 @@ def get_default_log_dir() -> Path:
     Returns:
         Path: Resolved logs directory path.
     """
-    return Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
+    env_dir = os.environ.get('AI_BREADBOARD_LOGS_DIR') or os.environ.get('LOG_DIR')
+    if env_dir:
+        return Path(env_dir)
+    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+    base_dir = Path(appdata) if appdata and os.path.exists(appdata) else Path.home() / '.config'
+    return base_dir / 'AI-Breadboard' / 'logs'
 
 def get_default_reports_dir() -> Path:
     """Resolve the default reports directory for AI Breadboard.
@@ -251,7 +256,12 @@ def get_default_reports_dir() -> Path:
     Returns:
         Path: Resolved reports directory path.
     """
-    return Path(tempfile.gettempdir()) / 'ai-breadboard' / 'reports'
+    env_dir = os.environ.get('AI_BREADBOARD_REPORTS_DIR') or os.environ.get('REPORTS_DIR')
+    if env_dir:
+        return Path(env_dir)
+    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+    base_dir = Path(appdata) if appdata and os.path.exists(appdata) else Path.home() / '.config'
+    return base_dir / 'AI-Breadboard' / 'reports'
 
 async def main_async(args: argparse.Namespace) -> int:
     """Asynchronous entry point for CLI log analysis.

@@ -40,7 +40,7 @@ class TestAgyChat:
         assert AgyChatBase.normalize_model_id('agy-flash') == 'gemini-flash-lite-latest'
         assert AgyChatBase.normalize_model_id('pro') == 'gemini-pro-latest'
         assert AgyChatBase.normalize_model_id('agy-pro') == 'gemini-pro-latest'
-        assert AgyChatBase.normalize_model_id('2.5-flash') == 'gemini-2.5-flash'
+        assert AgyChatBase.normalize_model_id('2.5-flash') == 'gemini-flash-latest'
 
     @pytest.mark.asyncio
     async def test_persistent_agent_streaming(self):

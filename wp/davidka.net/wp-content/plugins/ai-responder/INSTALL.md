@@ -39,7 +39,7 @@ This guide explains how to install the **AI Responder** plugin on your WordPress
 2. Configure the following fields:
    - **Status:** Check ✅ **Enable AI Auto-Replies**.
    - **AI Backend Endpoint:** `https://kino.davidka.net/api/chat/comment-responder`
-   - **Model Name:** `gemini-2.5-flash` (or your preferred model on Breadboard).
+   - **Model Name:** `gemini-flash-latest` (or your preferred model on Breadboard).
    - **Provider:** `Google Gemini` (or `Microsoft Foundry Local`, `Ollama`, etc.).
    - **Bot User Account:** Select your newly created dedicated user (`AI Assistant`).
    - **Reply Delay:** `10` to `20` seconds.

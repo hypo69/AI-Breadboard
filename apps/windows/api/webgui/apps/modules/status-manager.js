@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 01:12:00
+ * Updated: 2026-10-08 09:01:00
  * =============================================================================
  */
 
@@ -23,7 +23,7 @@
  */
 
 export async function fetchAppsStatus() {
-  const isTcRoute = window.location.pathname.startsWith('/tc');
+  const isTcRoute = window.location.pathname.startsWith('/tc') || window.location.pathname.startsWith('/apps');
   const query = isTcRoute ? '?profile=tc' : '';
   
   // 1. Получаем статус приложений и AI-конфига по стандарту /api/v1/apps/status
@@ -41,8 +41,8 @@ export async function fetchAppsStatus() {
     window.appsStatusMap = statusData.apps;
   }
 
-  // 2. Если в ответе нет секции ai, явно запрашиваем активную модель через /api/v1/chat/active-model
-  if (!statusData?.ai) {
+  // 2. Если в ответе нет секции ai / ai_providers_and_models_configuration, явно запрашиваем активную модель через /api/v1/chat/active-model
+  if (!statusData?.ai && !statusData?.ai_providers_and_models_configuration) {
     try {
       const modelResp = await fetch(`/api/v1/chat/active-model${query}`);
       if (modelResp.ok) {
@@ -65,17 +65,17 @@ export async function fetchAppsStatus() {
 }
 
 export async function updateModelBadge(statusData) {
-  const modelBadgeText = document.getElementById('apps-model-text');
-  const modelBadge = document.getElementById('apps-model-badge');
-  if (!modelBadgeText) return;
+  const modelBadgeContainer = document.getElementById('apps-model-badge') || document.getElementById('chat-model-badge');
+  const modelBadgeText = document.getElementById('apps-model-text') || document.getElementById('chat-model-badge') || modelBadgeContainer;
+  if (!modelBadgeContainer && !modelBadgeText) return;
 
   let prov = '';
   let mod = '';
   let cfgFile = statusData?.config_file || '';
 
-  // 1. Приоритет: запрос актуальной активной модели с сервера (/api/v1/chat/active-model)
+  // 1. Приоритет: прямой запрос актуальной активной модели с сервера (/api/v1/chat/active-model)
   try {
-    const isTcRoute = window.location.pathname.startsWith('/tc');
+    const isTcRoute = window.location.pathname.startsWith('/tc') || window.location.pathname.startsWith('/apps');
     const query = isTcRoute ? '?profile=tc' : '';
     const resp = await fetch(`/api/v1/chat/active-model${query}`);
     if (resp.ok) {
@@ -90,62 +90,63 @@ export async function updateModelBadge(statusData) {
     console.warn('[AppsHub] Failed to fetch active model from /api/v1/chat/active-model:', err);
   }
 
-  // 2. Резервный парсинг конфигурации statusData.ai, если эндпоинт не вернул модель
-  if (!mod && statusData?.ai) {
-    const ai = statusData.ai;
-    if (ai.provider) {
-      const p = String(ai.provider).toLowerCase();
-      prov = String(ai.provider).toUpperCase();
-      mod = ai.model || (ai[p] && typeof ai[p] === 'object' ? ai[p].model : null) || (ai.providers && ai.providers[p] ? ai.providers[p].model : null) || ai[`${p}_model_id`] || '';
-    } else if (ai.providers && typeof ai.providers === 'object') {
-      for (const [pk, pv] of Object.entries(ai.providers)) {
-        if (pv && pv.enabled) {
-          prov = pk.toUpperCase();
-          mod = pv.model || '';
-          break;
-        }
+  // 2. Резервный парсинг конфигурации statusData
+  if (!mod && statusData) {
+    const ai = statusData.ai_providers_and_models_configuration || statusData.ai;
+    if (ai) {
+      if (ai.default_provider) {
+        prov = String(ai.default_provider).toUpperCase();
       }
-    } else if (ai.use_gemini) {
-      prov = 'GEMINI';
-      mod = ai.gemini_model_id || ai.model || 'gemini-2.5-flash';
-    } else if (ai.use_agy) {
-      prov = 'AGY';
-      mod = ai.agy_model_id || ai.model || 'gemini-3.6-flash';
-    } else if (ai.use_ollama) {
-      prov = 'OLLAMA';
-      mod = ai.ollama_model_id || ai.model || 'llama3.1';
-    } else if (ai.use_foundry) {
-      prov = 'FOUNDRY';
-      mod = ai.foundry_model_id || ai.model || 'local';
-    } else if (ai.model) {
-      mod = ai.model;
-      prov = 'AI';
+      if (ai.default_model) {
+        mod = ai.default_model;
+      }
+      if (!mod && ai.provider) {
+        const p = String(ai.provider).toLowerCase();
+        prov = String(ai.provider).toUpperCase();
+        mod = ai.model || (ai[p] && typeof ai[p] === 'object' ? ai[p].model : null) || (ai.providers && ai.providers[p] ? ai.providers[p].model : null) || ai[`${p}_model_id`] || '';
+      } else if (!mod && ai.providers && typeof ai.providers === 'object') {
+        for (const [pk, pv] of Object.entries(ai.providers)) {
+          if (pv && pv.enabled) {
+            prov = pk.toUpperCase();
+            mod = pv.model || '';
+            break;
+          }
+        }
+      } else if (!mod && ai.model) {
+        mod = ai.model;
+        prov = prov || 'AI';
+      }
     }
   }
 
   // 3. Очистка и форматирование отображаемой строки
-  if (mod && mod.startsWith(`${prov.toLowerCase()}:`)) {
+  if (mod && prov && mod.startsWith(`${prov.toLowerCase()}:`)) {
     mod = mod.substring(prov.length + 1);
   }
 
-  if (prov && mod && mod !== 'default') {
-    modelBadgeText.textContent = `${prov}: ${mod}`;
-    if (modelBadge) {
-      const fileLabel = cfgFile ? `, Профиль: ${cfgFile}` : '';
-      modelBadge.title = `Используемая модель: ${mod} (Провайдер: ${prov}${fileLabel})`;
+  const displayText = (prov && mod && mod !== 'default')
+    ? `${prov}: ${mod}`
+    : (mod && mod !== 'default' ? `${mod}` : (prov ? `${prov}` : 'AI: Не определена'));
+
+  const titleText = (mod && mod !== 'default')
+    ? `Используемая модель: ${mod} (Провайдер: ${prov || 'AI'}, Профиль: ${cfgFile || 'config.json'}) — нажмите для перехода к настройкам моделей`
+    : `AI-модель не настроена — нажмите для перехода к настройкам моделей`;
+
+  if (modelBadgeText) {
+    modelBadgeText.textContent = displayText;
+  }
+  if (modelBadgeContainer) {
+    modelBadgeContainer.title = titleText;
+    modelBadgeContainer.style.display = 'inline-flex';
+    if (!modelBadgeContainer._hasClick) {
+      modelBadgeContainer._hasClick = true;
+      modelBadgeContainer.style.cursor = 'pointer';
+      modelBadgeContainer.addEventListener('click', () => {
+        if (typeof window.switchTab === 'function') {
+          window.switchTab('tab-models');
+        }
+      });
     }
-  } else if (mod && mod !== 'default') {
-    modelBadgeText.textContent = `${mod}`;
-    if (modelBadge) {
-      modelBadge.title = `Используемая модель: ${mod}`;
-    }
-  } else if (prov) {
-    modelBadgeText.textContent = `${prov}`;
-    if (modelBadge) {
-      modelBadge.title = `Используемый провайдер: ${prov}`;
-    }
-  } else {
-    modelBadgeText.textContent = 'AI: Не определена';
   }
 }
 

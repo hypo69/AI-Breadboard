@@ -18,7 +18,7 @@
 # Package: src.ai.providers.agy
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 16:35:00
+# Updated: 2026-10-08 08:41:00
 # =============================================================================
 
 """Antigravity SDK chat connection and request routing adapter.
@@ -30,7 +30,6 @@ import os
 import asyncio
 from typing import Optional, List, Dict, AsyncGenerator
 from logger import logger
-from src.ai.gemini.gemini_api_key_state import load_api_keys
 
 class AgyChatBase:
     """Chat adapter for Antigravity SDK models (agy-flash, agy-pro).
@@ -93,6 +92,7 @@ class AgyChatBase:
         if agy_key:
             valid_keys.append(agy_key)
         _api_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
+        from src.ai.gemini.gemini_api_key_state import load_api_keys
         loaded, _, _ = load_api_keys(_api_key_names if _api_key_names else [])
         for k in loaded:
             if k and k not in valid_keys:

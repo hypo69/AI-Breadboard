@@ -56,7 +56,7 @@ def test_router_web_search_endpoints(client: TestClient) -> None:
     """Happy Path: чтение и запись параметров поиска."""
     res_get = client.get('/api/v1/ai_breadboard_admin/config/web-search')
     assert res_get.status_code == 200
-    payload = {'engine': 'playwright', 'gemini_model': 'gemini-2.5-flash', 'gemini_cli_model': 'gemini-3.1-flash-lite', 'agy_model': 'agy-flash'}
+    payload = {'engine': 'playwright', 'gemini_model': 'gemini-3.1-flash', 'gemini_cli_model': 'gemini-3.1-flash-lite', 'agy_model': 'agy-flash'}
     res_post = client.post('/api/v1/ai_breadboard_admin/config/web-search', json=payload)
     assert res_post.status_code == 200
     assert res_post.json()['status'] == 'ok'

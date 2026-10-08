@@ -992,7 +992,7 @@ async def set_rag_config(request: Request, data: RagConfigRequest):
 
 class WebSearchConfigRequest(BaseModel):
     engine: str
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.1-flash"
     gemini_cli_model: str = "gemini-3.1-flash-lite"
     agy_model: str = "agy-flash"
 
@@ -1002,7 +1002,7 @@ async def get_web_search_config(request: Request):
     require_admin_user(request)
     config_path = __root__ / 'config.json'
     engine = "playwright"
-    gemini_model = "gemini-2.5-flash"
+    gemini_model = "gemini-3.1-flash"
     gemini_cli_model = "gemini-3.1-flash-lite"
     agy_model = "agy-flash"
     if config_path.exists():
@@ -1011,7 +1011,7 @@ async def get_web_search_config(request: Request):
                 cfg = json.load(f)
                 ws = cfg.get("web_search", {})
                 engine = ws.get("engine", "playwright")
-                gemini_model = ws.get("gemini_model", "gemini-2.5-flash")
+                gemini_model = ws.get("gemini_model", "gemini-3.1-flash")
                 gemini_cli_model = ws.get("gemini_cli_model", "gemini-3.1-flash-lite")
                 agy_model = ws.get("agy_model", "agy-flash")
         except Exception as e:
@@ -1070,7 +1070,7 @@ async def test_web_search(request: Request, data: WebSearchTestRequest):
         raise HTTPException(status_code=400, detail="Поисковый запрос не может быть пустым")
 
     engine = data.engine
-    gemini_model = "gemini-2.5-flash"
+    gemini_model = "gemini-3.1-flash"
     gemini_cli_model = "gemini-3.1-flash-lite"
     agy_model = "agy-flash"
     config_path = __root__ / 'config.json'
@@ -1081,7 +1081,7 @@ async def test_web_search(request: Request, data: WebSearchTestRequest):
                 ws = cfg.get("web_search", {})
                 if not engine:
                     engine = ws.get("engine", "playwright")
-                gemini_model = ws.get("gemini_model", "gemini-2.5-flash")
+                gemini_model = ws.get("gemini_model", "gemini-3.1-flash")
                 gemini_cli_model = ws.get("gemini_cli_model", "gemini-3.1-flash-lite")
                 agy_model = ws.get("agy_model", "agy-flash")
         except Exception as e:

@@ -129,11 +129,11 @@ def test_resolve_model_info_dynamic(monkeypatch):
     import src.config as config_module
     from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
     engine = DynamicWindowsToolEngine()
-    monkeypatch.setattr(config_module, 'ai_cfg', SimpleNamespace(provider='gemini', model='gemini-2.5-flash'))
+    monkeypatch.setattr(config_module, 'ai_cfg', SimpleNamespace(provider='gemini', model='gemini-flash-latest'))
     provider, model_id, display = engine._resolve_model_info()
     assert provider == 'GEMINI'
-    assert model_id == 'gemini-2.5-flash'
-    assert display == 'GEMINI: gemini-2.5-flash'
+    assert model_id == 'gemini-flash-latest'
+    assert display == 'GEMINI: gemini-flash-latest'
     monkeypatch.setattr(config_module, 'ai_cfg', SimpleNamespace(provider='', model='', use_ollama=True, ollama_model_id='llama3.2:latest'))
     provider, model_id, display = engine._resolve_model_info()
     assert provider == 'OLLAMA'

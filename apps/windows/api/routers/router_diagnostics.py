@@ -16,19 +16,22 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:47:30
+# Updated: 2026-10-08 10:04:00
 # =============================================================================
 
 from __future__ import annotations
 """Универсальный REST API эндпоинт для AI-диагностики, контекстного объяснения"""
 
 import json
+import os
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from header import __root__
 from logger import logger
 
 
@@ -53,6 +56,9 @@ class DiagnosticExplainResponse(BaseModel):
     performance_impact: str = Field(description="Влияние на производительность и ресурсы")
     recommendation: str = Field(description="Практическая рекомендация эксперта")
     action_steps: List[str] = Field(default_factory=list, description="Пошаговые рекомендуемые действия")
+    canonical_key: Optional[str] = Field(default=None, description="Канонический ключ сущности в WikiLLM")
+    source: str = Field(default="gemini", description="Источник ответа (wikillm / gemini / heuristic)")
+    is_verified: bool = Field(default=False, description="Признак верификации знания в WikiLLM")
 
 
 from src.api.diagnostics_prompt_manager import (
@@ -103,55 +109,190 @@ def init_router() -> APIRouter:
         """Сбрасывает шаблон промпта к дефолтной системной версии."""
         return prompt_manager.reset_template(table_type)
 
+    def _resolve_diagnostic_model(requested_model: Optional[str] = None, web_search: bool = False) -> str:
+        """Определяет модель для диагностики из запроса или активного файла конфигурации.
+
+        Если модель не указана явно в запросе и не найдена в конфигурации,
+        выбрасывает HTTPException(400) согласно стандартам разработки (запрет скрытого хардкода).
+
+        Args:
+            requested_model: Модель, переданная в запросе.
+            web_search: Флаг использования веб-поиска.
+
+        Returns:
+            str: Имя валидной модели.
+
+        Raises:
+            HTTPException: Если модель не передана и не определена в конфигурации.
+        """
+        if requested_model and requested_model.strip():
+            m = requested_model.strip()
+            if m.startswith("gemini_cli:"):
+                return m.split(":", 1)[1]
+            return m
+
+        # Поиск активного конфигурационного файла
+        cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+        active_path: Optional[Path] = None
+        if cfg_env:
+            p = Path(cfg_env)
+            active_path = p if p.is_absolute() else (__root__ / cfg_env)
+
+        candidates = [
+            active_path,
+            __root__ / "apps" / "windows" / "config.json",
+            __root__ / "start_scenarios_config" / "tc.json",
+            __root__ / "config" / "tc.json",
+            __root__ / "config.json",
+        ]
+
+        for candidate in candidates:
+            if candidate and candidate.exists():
+                try:
+                    with open(candidate, "r", encoding="utf-8") as f:
+                        cfg = json.load(f)
+
+                    # 1. Если включен web_search, проверяем секцию web_search
+                    if web_search:
+                        ws_cfg = cfg.get("web_search", {})
+                        if isinstance(ws_cfg, dict) and ws_cfg.get("gemini_model"):
+                            val = str(ws_cfg["gemini_model"]).strip()
+                            if val:
+                                return val
+
+                    # 2. Проверяем ai_providers_and_models_configuration
+                    ai_p_cfg = cfg.get("ai_providers_and_models_configuration", {})
+                    if isinstance(ai_p_cfg, dict):
+                        if ai_p_cfg.get("default_model"):
+                            val = str(ai_p_cfg["default_model"]).strip()
+                            if val:
+                                return val
+                        providers = ai_p_cfg.get("providers", {})
+                        if isinstance(providers, dict):
+                            gemini_p = providers.get("gemini", {})
+                            if isinstance(gemini_p, dict) and gemini_p.get("model"):
+                                val = str(gemini_p["model"]).strip()
+                                if val:
+                                    return val
+
+                    # 3. Проверяем секцию ai
+                    ai_sec = cfg.get("ai", {})
+                    if isinstance(ai_sec, dict):
+                        if ai_sec.get("default_model"):
+                            val = str(ai_sec["default_model"]).strip()
+                            if val:
+                                return val
+                        if ai_sec.get("model"):
+                            val = str(ai_sec["model"]).strip()
+                            if val:
+                                return val
+                        providers = ai_sec.get("providers", {})
+                        if isinstance(providers, dict):
+                            gemini_p = providers.get("gemini", {})
+                            if isinstance(gemini_p, dict) and gemini_p.get("model"):
+                                val = str(gemini_p["model"]).strip()
+                                if val:
+                                    return val
+                except Exception as e:
+                    logger.debug(f"[router_diagnostics] Ошибка чтения конфигурации {candidate}: {e}")
+
+        # Если модель не указана и не найдена в конфиге - выбрасываем ошибку (Fail-Fast)
+        raise HTTPException(
+            status_code=400,
+            detail="Модель AI не указана в запросе и не настроена в конфигурации (default_model / web_search.gemini_model)."
+        )
+
     @router.post("/explain", response_model=DiagnosticExplainResponse)
     async def explain_table_item(req: DiagnosticExplainRequest) -> DiagnosticExplainResponse:
         """Генерирует AI-объяснение и оценку для выбранного элемента таблицы."""
+        # 1. Вычисляем канонический ключ для базы знаний WikiLLM
+        canonical_key: Optional[str] = None
+        try:
+            from apps.windows.wikillm.normalizer import CanonicalKeyNormalizer
+            canonical_key = CanonicalKeyNormalizer.compute_key_from_parts(
+                table_type=req.table_type,
+                title=req.title,
+                subtitle=req.subtitle or "",
+            )
+        except Exception as e:
+            logger.debug(f"Ошибка вычисления канонического ключа WikiLLM: {e}")
+
+        # 2. Проверяем наличие верифицированного знания в локальной базе WikiLLM
+        if canonical_key:
+            try:
+                from apps.windows.wikillm.router import get_engine
+                engine = get_engine()
+                entity = engine.storage.get_entity(canonical_key)
+                if entity and (entity.provenance_source.value == "documented" or any(c.verified for c in entity.claims)):
+                    rec_text = "Оставить без изменений."
+                    for c in entity.claims:
+                        if "Рекомендация:" in c.statement:
+                            rec_text = c.statement.replace("Рекомендация:", "").strip()
+                            break
+                    actions = [s.title for s in entity.diagnostic_info.remediation_steps] if entity.diagnostic_info else []
+                    sec_text = entity.diagnostic_info.symptoms[0] if entity.diagnostic_info and entity.diagnostic_info.symptoms else "Проверено в базе знаний WikiLLM"
+                    dev_text = entity.diagnostic_info.related_components[0] if entity.diagnostic_info and entity.diagnostic_info.related_components else req.subtitle or "Верифицировано"
+
+                    logger.info(f"[WikiLLM] Мгновенный ответ из базы знаний для '{canonical_key}' (верифицировано)")
+                    return DiagnosticExplainResponse(
+                        summary=entity.summary,
+                        developer=dev_text,
+                        category=entity.category,
+                        security_verdict=sec_text,
+                        performance_impact="В пределах нормы (из базы знаний WikiLLM)",
+                        recommendation=rec_text,
+                        action_steps=actions or ["Действий не требуется."],
+                        canonical_key=canonical_key,
+                        source="wikillm",
+                        is_verified=True,
+                    )
+            except Exception as e:
+                logger.debug(f"Проверка WikiLLM пропущена: {e}")
+
         # Получаем соответствующий шаблон промпта для типа таблицы
         tmpl = prompt_manager.get_template(req.table_type)
 
-        # Попытка вызова языковой модели через чат-роутер
+        # 3. Вызов языковой модели через прямой GoogleGenerativeAI с Web Grounding
         try:
-            from src.api.routers.core.router_chat import get_chat_model
-            model_key = req.model or "gemini_cli:gemini-2.5-flash"
-            llm = get_chat_model(
-                model_key,
-                system_instruction=tmpl.system_instruction,
+            from src.ai.gemini.generative_ai import GoogleGenerativeAI
+
+            gen_cfg: Dict[str, Any] = {}
+            if req.web_search:
+                gen_cfg["use_google_search"] = True
+
+            model_name = _resolve_diagnostic_model(
+                requested_model=req.model,
+                web_search=req.web_search,
             )
 
-            # Обогащение веб-поиском при необходимости
-            web_context = ""
-            if req.web_search and req.title:
-                try:
-                    from src.ai.agents.tools import web_search as run_web_search
-                    search_query = f"{req.title} {req.subtitle or ''} {req.table_type} software security purpose"
-                    web_res = await run_web_search(search_query.strip())
-                    if web_res and not str(web_res).startswith('{"error"'):
-                        web_context = f"\n\nСВЕДЕНИЯ ИЗ ИНТЕРНЕТА (Web Search):\n{web_res[:1500]}"
-                except Exception as ws_err:
-                    logger.debug(f"Веб-поиск для '{req.title}' завершился с ошибкой: {ws_err}")
-
-            raw_with_web = (req.raw_data or "") + web_context
+            ai = GoogleGenerativeAI(
+                model_name=model_name,
+                system_instruction=tmpl.system_instruction,
+                generation_config=gen_cfg,
+            )
 
             prompt = tmpl.format_prompt(
                 title=req.title,
                 subtitle=req.subtitle or "",
                 metadata=req.metadata,
-                raw_data=raw_with_web or "",
+                raw_data=req.raw_data or "",
             )
 
-            resp_text = ""
-            if hasattr(llm, "ask"):
-                resp_text = await llm.ask(prompt)
-            elif hasattr(llm, "chat"):
-                resp_text = await llm.chat(prompt)
-            elif hasattr(llm, "generate_response"):
-                resp_text = await llm.generate_response(prompt)
+            resp_text = await ai.ask(prompt, generation_config=gen_cfg)
 
-            if resp_text:
+            if resp_text and not resp_text.startswith("Model error:"):
                 cleaned = resp_text.strip()
-                if cleaned.startswith("```"):
-                    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
-                    cleaned = re.sub(r"\s*```$", "", cleaned)
+                # Извлекаем JSON если вокруг есть Markdown блок
+                json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", cleaned)
+                if json_match:
+                    cleaned = json_match.group(1).strip()
+
+                # Извлекаем JSON по внешним фигурным скобкам
+                if "{" in cleaned and "}" in cleaned:
+                    start_idx = cleaned.find("{")
+                    end_idx = cleaned.rfind("}") + 1
+                    cleaned = cleaned[start_idx:end_idx]
+
                 data = json.loads(cleaned)
                 return DiagnosticExplainResponse(
                     summary=data.get("summary", ""),
@@ -161,14 +302,32 @@ def init_router() -> APIRouter:
                     performance_impact=data.get("performance_impact", "В пределах нормы."),
                     recommendation=data.get("recommendation", "Оставить как есть."),
                     action_steps=data.get("action_steps", ["Проверьте актуальность конфигурации."]),
+                    canonical_key=canonical_key,
+                    source="gemini",
+                    is_verified=False,
                 )
+        except HTTPException:
+            raise
         except Exception as e:
             logger.debug(f"AI LLM generation fallback triggered for diagnostic '{req.title}': {e}")
 
         # Надежный эвристический fallback
-        return _generate_heuristic_explanation(req)
+        resp = _generate_heuristic_explanation(req)
+        resp.canonical_key = canonical_key
+        resp.source = "heuristic"
+        resp.is_verified = False
+        return resp
+
+    @router.post("/approve")
+    @router.post("/wikillm/approve")
+    async def approve_knowledge_endpoint(req: Dict[str, Any]) -> Dict[str, Any]:
+        """Одобряет результат диагностики и фиксирует его в базе знаний WikiLLM."""
+        from apps.windows.wikillm.router import approve_knowledge as wikillm_approve, ApproveKnowledgeRequest
+        req_obj = ApproveKnowledgeRequest(**req)
+        return await wikillm_approve(req_obj)
 
     return router
+
 
 
 def _generate_heuristic_explanation(req: DiagnosticExplainRequest) -> DiagnosticExplainResponse:
@@ -199,6 +358,21 @@ def _generate_heuristic_explanation(req: DiagnosticExplainRequest) -> Diagnostic
 
     # 2. Процессы Windows (System Inspector)
     if tt == "process":
+        # Специфические утилиты мониторинга и разработки
+        if "librehardwaremonitor" in title_lower:
+            return DiagnosticExplainResponse(
+                summary="Утилита мониторинга аппаратных компонентов и датчиков ПК с открытым исходным кодом (Open Source). Развилка проекта Open Hardware Monitor.",
+                developer="LibreHardwareMonitor Community (GitHub Open Source)",
+                category="Системная диагностика / Мониторинг аппаратных компонентов",
+                security_verdict="Легитимное доверенное ПО с открытым исходным кодом. Для прямого чтения низкоуровневых датчиков материнской платы, CPU и GPU использует драйвер кольца ядра (Ring-0).",
+                performance_impact=f"Минимальная нагрузка при стандартном интервале опроса сенсоров. CPU: {req.metadata.get('cpu_percent', req.metadata.get('cpu', '0.1'))}%, RAM: {req.metadata.get('memory_mb', req.metadata.get('memory', '35'))} MB.",
+                recommendation="Безопасная утилита телеметрии. Необходима для отслеживания температур, напряжений, оборотов кулеров и нагрузки системы.",
+                action_steps=[
+                    "Используйте для контроля температурных режимов и предотвращения перегрева компонентов.",
+                    "При необходимости закройте или остановите сбор телеметрии, если мониторинг больше не требуется.",
+                ],
+            )
+
         is_system_proc = title_lower in ("explorer.exe", "svchost.exe", "services.exe", "lsass.exe", "system", "csrss.exe", "winlogon.exe", "smss.exe", "dwm.exe")
         is_temp = "temp" in raw_lower or "appdata" in raw_lower
         sec = "Критический системный процесс ядра Windows. Завершение приведет к сбою ОС." if is_system_proc else (
@@ -285,19 +459,85 @@ def _generate_heuristic_explanation(req: DiagnosticExplainRequest) -> Diagnostic
             ],
         )
 
-    # 7. Пользователи и группы (Windows Admin)
-    if tt == "user" or tt == "group":
+    # 7. Пользователи и группы (Windows Admin & Identity)
+    if tt in ("user", "user_account", "group"):
+        if "defaultaccount" in title_lower or "-503" in sub_lower:
+            return DiagnosticExplainResponse(
+                summary="Встроенная системная учетная запись Windows (System Managed Account). Введена начиная с Windows 10 для выполнения изолированных многопользовательских процессов и приложений UWP/AppContainer.",
+                developer="Microsoft Corporation (Операционная система Windows)",
+                category="Встроенная системная учетная запись (RID 503)",
+                security_verdict="Штатный системный аккаунт. По умолчанию отключен (Disabled), прямой интерактивный вход в систему заблокирован, пароль управляется ОС.",
+                performance_impact="Не потребляет ресурсы в фоновом режиме. Активируется только при запуске контейнеризированных сценариев Windows.",
+                recommendation="Не удаляйте и не включайте учетную запись вручную. Оставьте в исходном состоянии (Disabled), управляемом операционной системой.",
+                action_steps=[
+                    "Убедитесь, что аккаунт находится в состоянии 'Отключен' (Disabled).",
+                    "Не назначайте учетной записи административные привилегии.",
+                ],
+            )
+        if "wdagutilityaccount" in title_lower or "-504" in sub_lower:
+            return DiagnosticExplainResponse(
+                summary="Служебная учетная запись Windows Defender Application Guard (WDAG). Используется для запуска изолированных сессий браузера Edge и песочниц.",
+                developer="Microsoft Corporation (Windows Security)",
+                category="Служебная учетная запись изоляции (RID 504)",
+                security_verdict="Легитимный изолированный аккаунт безопасности. Заблокирован для прямого входа.",
+                performance_impact="Используется только во время активных изолированных сессий Application Guard.",
+                recommendation="Оставьте под управлением Windows Defender.",
+                action_steps=[
+                    "Не изменяйте параметры аккаунта вручную.",
+                ],
+            )
+        if "guest" in title_lower or "гость" in title_lower or "-501" in sub_lower:
+            return DiagnosticExplainResponse(
+                summary="Встроенная гостевая учетная запись Windows для временного доступа пользователей без собственного аккаунта.",
+                developer="Microsoft Corporation",
+                category="Встроенная гостевая учетная запись (RID 501)",
+                security_verdict="По соображениям безопасности в современных версиях Windows должна быть строго отключена (Disabled).",
+                performance_impact="Минимальное.",
+                recommendation="Рекомендуется держать гостевую запись отключенной во избежание несанкционированного доступа.",
+                action_steps=[
+                    "Убедитесь, что учетная запись 'Гость' отключена.",
+                ],
+            )
+        if "administrator" in title_lower or "администратор" in title_lower or "-500" in sub_lower:
+            return DiagnosticExplainResponse(
+                summary="Встроенная учетная запись главного локального администратора Windows (RID 500). Обладает полным безусловным контролем над операционной системой.",
+                developer="Microsoft Corporation",
+                category="Встроенный локальный администратор (RID 500)",
+                security_verdict="Обладает максимальными привилегиями в системе. Требует строгого контроля и сложного пароля.",
+                performance_impact="Зависит от выполняемых задач администратора.",
+                recommendation="По рекомендациям Microsoft встроенного администратора лучше держать отключенным или переименованным, используя персонализированные учетные записи с UAC.",
+                action_steps=[
+                    "Установите надежный сложный пароль.",
+                    "Используйте повседневную работу под стандартной учетной записью с подтверждением через UAC.",
+                ],
+            )
+
         is_admin = "admin" in title_lower or "администратор" in title_lower
         return DiagnosticExplainResponse(
             summary=f"Учетная запись / Группа безопасности Windows «{req.title}».",
             developer="Security Accounts Manager (SAM) / Active Directory",
-            category="Учетная запись" if tt == "user" else "Группа безопасности",
+            category="Учетная запись пользователя" if tt in ("user", "user_account") else "Группа безопасности",
             security_verdict="Обладает повышенными административными привилегиями в системе." if is_admin else "Обычная пользовательская учетная запись со стандартными правами доступа.",
-            performance_impact="Низкое — аутентификация при входе в сессию.",
+            performance_impact=f"Профиль: {req.metadata.get('profile_path', 'Стандартный')}, Процессов: {req.metadata.get('process_count', 0)}.",
             recommendation="Соблюдайте принцип наименьших привилегий (Least Privilege). Не используйте права администратора для повседневной работы.",
             action_steps=[
                 "Проверьте актуальность членства в группах безопасности.",
                 "Убедитесь в наличии сложного пароля для учетной записи.",
+            ],
+        )
+
+    # 8. События безопасности (Security Events)
+    if tt in ("security_event", "event"):
+        return DiagnosticExplainResponse(
+            summary=f"Событие аудита безопасности Windows «{req.title}» ({req.subtitle or ''}).",
+            developer="Подсистема безопасности Windows (LSA / SAM / Defender)",
+            category="Событие журнала безопасности",
+            security_verdict="Зафиксировано в журнале аудита безопасности Windows.",
+            performance_impact="Не влияет на быстродействие ОС.",
+            recommendation="Проверьте статус события и инициатора при наличии повторяющихся ошибок входа.",
+            action_steps=[
+                "Проверьте учетную запись инициатора события.",
+                "Сопоставьте время события с активностью пользователя.",
             ],
         )
 

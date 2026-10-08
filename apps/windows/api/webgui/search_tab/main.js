@@ -40,7 +40,7 @@ async function initSearchTab() {
       const modelsData = await window.api.fetch('/api/chat/models');
       const modelsGrouped = modelsData.models || {};
       const geminiList = modelsGrouped.gemini || [];
-      const geminiCliList = modelsGrouped.gemini_cli || ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro'];
+      const geminiCliList = modelsGrouped.gemini_cli || ['gemini-3.1-flash-lite', 'gemini-3.1-flash', 'gemini-2.5-pro'];
       const agyList = modelsGrouped.agy || [];
 
       if (geminiModelSelect && geminiList.length > 0) {

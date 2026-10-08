@@ -248,7 +248,26 @@
         "factory": "init_router",
         "enabled": true,
         "description": "Управление сессиями фокусировки внимания и Do Not Disturb (/api/windows/focus/*)"
+    },
+    {
+        "module": "apps.windows.api.routers.router_app_logs",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Анализ и стриминг внутренних логов программы (%APPDATA%/AI-Breadboard/logs) (/api/v1/app_logs/*)"
+    },
+    {
+        "module": "apps.windows.wikillm.router",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Progressive Knowledge Base WikiLLM (/api/windows/wikillm/*)"
+    },
+    {
+        "module": "apps.windows.api.router_capabilities",
+        "factory": "init_router",
+        "enabled": true,
+        "description": "Каталог атомарных возможностей Windows CLI и API (/api/v1/capabilities/*)"
     }
   ]
 }
+
 

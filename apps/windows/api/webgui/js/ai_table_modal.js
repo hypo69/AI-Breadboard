@@ -7,14 +7,14 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/js/ai_table_modal.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/js/ai_table_modal.js?v=20261008_v4" type="module"></script>
  *
  * File: ai_table_modal.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-08 09:50:00
  * =============================================================================
  */
 
@@ -68,17 +68,12 @@
                     <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить промпт для этого типа таблицы">
                       <i class="bi bi-gear-fill me-1"></i>Промпт
                     </button>
-                    <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ">
-                      <i class="bi bi-arrow-clockwise"></i>
+                    <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ" style="display: none;">
+                      <i class="bi bi-arrow-clockwise me-1"></i>Обновить
                     </button>
                   </div>
                 </div>
-                <div class="small" id="uai-modal-ai-explanation">
-                  <div class="d-flex align-items-center gap-2 py-2 text-info">
-                    <div class="spinner-border spinner-border-sm" role="status"></div>
-                    <span>Выполняется экспертный AI-анализ и поиск сведений в интернете...</span>
-                  </div>
-                </div>
+                <div class="small" id="uai-modal-ai-explanation"></div>
               </div>
             </div>
             <div class="modal-footer border-secondary py-2 px-3 d-flex justify-content-between">
@@ -118,6 +113,7 @@
       rawContent: '',
       tableType: 'generic',
       requestData: {},
+      autoRun: false,
       actions: []
     }, options);
 
@@ -174,11 +170,33 @@
       }
     }
 
-    // Reset AI Diagnostic section
-    const aiExplanation = document.getElementById('uai-modal-ai-explanation');
-    if (aiExplanation) {
-      aiExplanation.innerHTML = `Нажмите «Анализ контекста», чтобы получить экспертное объяснение от языковой модели, оценку безопасности и рекомендации.`;
+    const refreshBtn = document.getElementById('btn-uai-modal-refresh');
+    if (refreshBtn) {
+      refreshBtn.style.display = 'none';
+      refreshBtn.onclick = () => executeDiagnostics();
     }
+
+    // Reset AI Diagnostic section with on-demand trigger button
+    const aiExplanation = document.getElementById('uai-modal-ai-explanation');
+    function renderPromptCallout() {
+      if (!aiExplanation) return;
+      aiExplanation.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 py-2">
+          <div class="text-secondary small">
+            <i class="bi bi-info-circle me-1"></i>Нажмите кнопку для отправки запроса к модели ИИ и получения экспертного анализа, оценки рисков и рекомендаций.
+          </div>
+          <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5" id="btn-uai-modal-run-ai">
+            <i class="bi bi-robot"></i> Запросить AI-анализ
+          </button>
+        </div>
+      `;
+      const runBtn = document.getElementById('btn-uai-modal-run-ai');
+      if (runBtn) {
+        runBtn.onclick = () => executeDiagnostics();
+      }
+    }
+
+    renderPromptCallout();
 
     // Wire up Prompt Editor button
     const editPromptBtn = document.getElementById('btn-uai-modal-edit-prompt');
@@ -221,7 +239,24 @@
         });
         const data = (res && typeof res.json === 'function') ? await res.json() : res;
 
+        const isVerified = Boolean(data.is_verified || data.source === 'wikillm');
+        const wikillmBadge = isVerified
+          ? `<div class="badge bg-success-subtle text-success border border-success p-1 px-2 mb-2 d-inline-flex align-items-center gap-1.5"><i class="bi bi-shield-check"></i> Верифицировано в базе знаний WikiLLM (L1 Exact Cache)</div>`
+          : '';
+
+        const approvalBlock = !isVerified ? `
+          <div class="p-2 mt-2 rounded bg-dark border border-secondary d-flex align-items-center justify-content-between flex-wrap gap-2" id="uai-approval-container">
+            <div class="small text-secondary">
+              <i class="bi bi-patch-question me-1 text-warning"></i>Ответ сгенерирован моделью ИИ. Одобрить результат для базы знаний?
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1.5" id="btn-uai-approve-wikillm">
+              <i class="bi bi-hand-thumbs-up"></i> Одобрить и сохранить в WikiLLM
+            </button>
+          </div>
+        ` : '';
+
         aiExplanation.innerHTML = `
+          ${wikillmBadge}
           <div class="mb-2"><strong class="text-info"><i class="bi bi-card-text me-1"></i>Назначение:</strong> ${escapeHtml(data.summary)}</div>
           <div class="mb-2"><strong class="text-secondary"><i class="bi bi-building me-1"></i>Разработчик / Категория:</strong> ${escapeHtml(data.developer || 'Неизвестен')} (${escapeHtml(data.category || 'Компонент')})</div>
           <div class="mb-2"><strong class="text-warning"><i class="bi bi-shield-lock me-1"></i>Оценка безопасности:</strong> ${escapeHtml(data.security_verdict)}</div>
@@ -235,20 +270,102 @@
               ${data.action_steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
             </ul>
           ` : ''}
+          ${approvalBlock}
         `;
+
+        const approveBtn = document.getElementById('btn-uai-approve-wikillm');
+        if (approveBtn) {
+          approveBtn.onclick = () => approveInWikiLLM(data, opts);
+        }
+
+        if (refreshBtn) {
+          refreshBtn.style.display = 'inline-flex';
+        }
       } catch (err) {
-        aiExplanation.innerHTML = `<div class="text-danger py-2"><i class="bi bi-exclamation-octagon me-1"></i>Ошибка получения AI-анализа: ${escapeHtml(err.message)}</div>`;
+        aiExplanation.innerHTML = `
+          <div class="text-danger py-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div><i class="bi bi-exclamation-octagon me-1"></i>Ошибка получения AI-анализа: ${escapeHtml(err.message)}</div>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="btn-uai-modal-retry">
+              <i class="bi bi-arrow-clockwise me-1"></i>Повторить
+            </button>
+          </div>
+        `;
+        const retryBtn = document.getElementById('btn-uai-modal-retry');
+        if (retryBtn) {
+          retryBtn.onclick = () => executeDiagnostics();
+        }
       }
     }
 
-    // Wire up refresh button
-    const refreshBtn = document.getElementById('btn-uai-modal-refresh');
-    if (refreshBtn) {
-      refreshBtn.onclick = () => executeDiagnostics();
+    async function approveInWikiLLM(aiData, options) {
+      const approveBtn = document.getElementById('btn-uai-approve-wikillm');
+      const container = document.getElementById('uai-approval-container');
+      if (approveBtn) approveBtn.disabled = true;
+
+      try {
+        const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
+        const payload = {
+          canonical_key: aiData.canonical_key || undefined,
+          table_type: options.tableType || 'generic',
+          title: options.title || '',
+          subtitle: options.subtitle || '',
+          summary: aiData.summary || '',
+          category: aiData.category || 'system',
+          security_verdict: aiData.security_verdict || '',
+          performance_impact: aiData.performance_impact || '',
+          recommendation: aiData.recommendation || '',
+          action_steps: aiData.action_steps || [],
+          possible_causes: [],
+          tags: [options.tableType || 'generic', 'user_approved'],
+          model_name: 'gemini'
+        };
+
+        let res = await fetchFn('/api/windows/wikillm/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        // Fallback если роутер смонтирован по /api/v1/diagnostics/approve
+        if (res && res.status === 404) {
+          res = await fetchFn('/api/v1/diagnostics/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        if (res && res.ok === false) {
+          throw new Error(`${res.status} ${res.statusText}`);
+        }
+
+        const respData = (res && typeof res.json === 'function') ? await res.json() : res;
+        if (respData && respData.success) {
+          if (container) {
+            container.className = 'p-2 mt-2 rounded bg-success bg-opacity-10 border border-success d-flex align-items-center justify-content-between flex-wrap gap-2';
+            container.innerHTML = `
+              <div class="small text-success fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i>Знание верифицировано и сохранено в WikiLLM (${escapeHtml(respData.canonical_key)})
+              </div>
+              <span class="badge bg-success text-dark">L1 Exact Cache O(1)</span>
+            `;
+          }
+          if (window.showToast) {
+            window.showToast(`Знание «${options.title}» зафиксировано в WikiLLM`, 'success');
+          }
+        } else {
+          throw new Error(respData?.detail || 'Не удалось сохранить знание');
+        }
+      } catch (err) {
+        if (approveBtn) approveBtn.disabled = false;
+        alert(`Ошибка сохранения в WikiLLM: ${err.message}`);
+      }
     }
 
-    // Auto-run AI diagnostic on show
-    executeDiagnostics();
+    // Only run AI diagnostic automatically if explicitly requested in options
+    if (opts.autoRun === true) {
+      executeDiagnostics();
+    }
 
     // Custom Footer Actions
     const actionsContainer = document.getElementById('uai-modal-custom-actions');

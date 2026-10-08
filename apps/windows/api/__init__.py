@@ -1,26 +1,35 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Apps Windows Api -   Init  
+# Process Name: AI-Breadboard Apps Windows API - Package Root
 # =============================================================================
 # Description:
-#   Внутренний FastAPI-сервис подсистемы Windows.
+#   Слой 7: Внутренний FastAPI-сервис подсистемы Windows и Auto-Discovery роутеров.
 #
 # Usage Examples:
-#
+#   Python API:
+#     from apps.windows.api import create_app, discover_and_register_routers
 #
 # File: __init__.py
 # Project: ai-breadboard
 # Package: apps.windows.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 09:38:00
 # =============================================================================
 
-"""Внутренний FastAPI-сервис подсистемы Windows."""
+from __future__ import annotations
+"""Внутренний FastAPI-сервис подсистемы Windows (Слой 7)."""
 
-from .internal_app import create_internal_app, load_config
+from apps.windows.api.server import (
+    create_app,
+    create_internal_app,
+    discover_and_register_routers,
+    load_config,
+)
 
 __all__ = [
-    'create_internal_app',
-    'load_config',
+    "create_app",
+    "create_internal_app",
+    "discover_and_register_routers",
+    "load_config",
 ]

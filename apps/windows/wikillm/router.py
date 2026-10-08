@@ -16,7 +16,7 @@
 # Package: apps.windows.wikillm
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-08 09:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -175,3 +175,119 @@ async def get_system_stats() -> Dict[str, Any]:
     """Возвращает метрики эффективности, статистику кэш-хитов и состояние хранилища."""
     engine = get_engine()
     return engine.get_metrics()
+
+
+class ApproveKnowledgeRequest(BaseModel):
+    """Схема одобрения и фиксации знания в базе знаний WikiLLM."""
+
+    canonical_key: Optional[str] = Field(default=None, description="Канонический ключ сущности")
+    table_type: str = Field(default="generic", description="Тип таблицы / артефакта")
+    title: str = Field(description="Заголовок или имя сущности")
+    subtitle: Optional[str] = Field(default="", description="Подзаголовок / разработчик")
+    summary: str = Field(description="Краткое описание / назначение")
+    category: Optional[str] = Field(default="system", description="Категория")
+    severity: Optional[str] = Field(default="info", description="Критичность (info/warning/error/critical)")
+    security_verdict: Optional[str] = Field(default="", description="Оценка безопасности")
+    performance_impact: Optional[str] = Field(default="", description="Влияние на ресурсы")
+    recommendation: Optional[str] = Field(default="", description="Рекомендация")
+    action_steps: List[str] = Field(default_factory=list, description="Пошаговые действия")
+    possible_causes: List[str] = Field(default_factory=list, description="Возможные причины")
+    tags: List[str] = Field(default_factory=list, description="Теги для поиска")
+    model_name: Optional[str] = Field(default=None, description="Модель, сгенерировавшая исходный ответ")
+
+
+@router.post("/approve", response_model=Dict[str, Any])
+async def approve_knowledge(req: ApproveKnowledgeRequest) -> Dict[str, Any]:
+    """Фиксирует и одобряет проверенное пользователем знание в локальной базе WikiLLM."""
+    engine = get_engine()
+
+    canonical_key = req.canonical_key
+    if not canonical_key or canonical_key == "unknown:unspecified":
+        from .normalizer import CanonicalKeyNormalizer
+        canonical_key = CanonicalKeyNormalizer.compute_key_from_parts(
+            table_type=req.table_type,
+            title=req.title,
+            subtitle=req.subtitle or "",
+        )
+
+    from .models import (
+        Claim,
+        DiagnosticKnowledge,
+        KnowledgeSource,
+        ResolutionAction,
+    )
+
+    # Определяем тип артефакта
+    type_map = {
+        "process": ArtifactType.PROCESS,
+        "service": ArtifactType.SERVICE,
+        "driver": ArtifactType.DRIVER,
+        "registry": ArtifactType.REGISTRY_KEY,
+        "software": ArtifactType.SOFTWARE,
+        "task": ArtifactType.TASK,
+        "network": ArtifactType.NETWORK,
+        "website": ArtifactType.WEBSITE,
+        "disk": ArtifactType.DISK,
+        "user": ArtifactType.USER,
+        "windows_event": ArtifactType.WINDOWS_EVENT,
+        "windows_error": ArtifactType.WINDOWS_ERROR,
+    }
+    entity_type = type_map.get(req.table_type.lower(), ArtifactType.GENERIC)
+
+    # Формируем диагностические шаги
+    remediation_steps = [
+        ResolutionAction(title=step, description="", risk_level="safe", is_automated=False)
+        for step in req.action_steps
+    ]
+
+    diag_info = DiagnosticKnowledge(
+        symptoms=[req.security_verdict] if req.security_verdict else [],
+        possible_causes=req.possible_causes,
+        remediation_steps=remediation_steps,
+        related_components=[req.subtitle] if req.subtitle else [],
+    )
+
+    claims = [
+        Claim(
+            statement=req.summary,
+            confidence=1.0,
+            source=KnowledgeSource.DOCUMENTED,
+            verified=True,
+        )
+    ]
+    if req.recommendation:
+        claims.append(
+            Claim(
+                statement=f"Рекомендация: {req.recommendation}",
+                confidence=1.0,
+                source=KnowledgeSource.DOCUMENTED,
+                verified=True,
+            )
+        )
+
+    entity = KnowledgeEntity(
+        canonical_key=canonical_key,
+        entity_type=entity_type,
+        name=req.title,
+        summary=req.summary,
+        category=req.category or "system",
+        severity=req.severity or "info",
+        confidence=1.0,
+        provenance_source=KnowledgeSource.DOCUMENTED,
+        provenance_model=req.model_name,
+        diagnostic_info=diag_info,
+        claims=claims,
+        tags=list(set(req.tags + [req.table_type, "verified", "user_approved"])),
+    )
+
+    # Сохраняем сущность и обновляем счетчик наблюдений
+    engine.storage.save_entity(entity)
+    engine.storage.record_observation(canonical_key)
+
+    logger.info(f"[WikiLLM] Знание для '{canonical_key}' успешно одобрено пользователем и сохранено.")
+    return {
+        "success": True,
+        "canonical_key": canonical_key,
+        "message": f"Знание '{canonical_key}' верифицировано и сохранено в локальной базе WikiLLM.",
+        "entity": entity.model_dump(),
+    }

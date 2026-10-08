@@ -11,7 +11,7 @@ except ImportError:
     FastMCP = None
     mcp = None
 
-async def _run_gemini_search(query: str, model: str='gemini-2.5-flash') -> str:
+async def _run_gemini_search(query: str, model: str='gemini-3.1-flash') -> str:
     try:
         searcher = GeminiWebSearcher()
         result_markdown = await searcher.search_and_extract(query=query, model=model)
@@ -28,7 +28,7 @@ def _run_key_pool_status() -> str:
         logger.error(f'[gemini_search_mcp_server] Error статуса пула ключей: {e}')
         return json.dumps({'status': 'error', 'message': str(e)}, ensure_ascii=False)
 
-async def gemini_web_search(query: str, model: str='gemini-2.5-flash') -> str:
+async def gemini_web_search(query: str, model: str='gemini-3.1-flash') -> str:
     """Выполнить веб-поиск в Google через Gemini Search Grounding."""
     return await _run_gemini_search(query=query, model=model)
 

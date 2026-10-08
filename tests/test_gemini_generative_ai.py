@@ -354,13 +354,13 @@ class TestGoogleGenerativeAI_ErrorScenarios:
     @pytest.mark.asyncio
     async def test_error_unsupported_modalities_switches_model(self):
         """Error 400 with unsupported response modalities must add model to unsupported and switch."""
-        error_400_modalities: Exception = RuntimeError('400 INVALID_ARGUMENT: The requested combination of response modalities (TEXT) is not supported by the model. models/gemini-2.5-flash-preview-tts accepts the following combination of response modalities:\n* AUDIO')
+        error_400_modalities: Exception = RuntimeError('400 INVALID_ARGUMENT: The requested combination of response modalities (TEXT) is not supported by the model. models/gemini-flash-latest-preview-tts accepts the following combination of response modalities:\n* AUDIO')
         success_response: MagicMock = MagicMock()
         success_response.text = 'Success with fallback text model'
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_400_modalities, success_response]
-        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), patch('src.ai.gemini.core.get_status'), patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-2.5-flash-preview-tts', 'gemini-flash-latest']), patch('src.ai.gemini.errors.add_unsupported_model') as mock_add_unsupp:
-            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-2.5-flash-preview-tts')
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), patch('src.ai.gemini.core.get_status'), patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-flash-latest-preview-tts', 'gemini-flash-latest']), patch('src.ai.gemini.errors.add_unsupported_model') as mock_add_unsupp:
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-flash-latest-preview-tts')
             result: str = await ai_instance.ask('Test TTS Modality')
             assert result == 'Success with fallback text model', f'On modality mismatch error must transition to available model, got: {result!r}'
             assert ai_instance.model_name == 'gemini-flash-latest', f'Active model name must update to gemini-flash-latest, current: {ai_instance.model_name}'

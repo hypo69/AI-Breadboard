@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 11:06:00
+# Updated: 2026-10-08 09:01:00
 # =============================================================================
 
 from __future__ import annotations
@@ -126,7 +126,7 @@ class TcSetModelPayload(BaseModel):
     """Модель данных для установки активной AI-модели Test Computer."""
     model: str = Field(
         ...,
-        description="Имя модели для установки (например: gemini-2.5-flash, gemini-3.1-flash-lite, agy-gemini-3.6-flash, llama3.1).",
+        description="Имя модели для установки (например: gemini-3.1-flash, gemini-3.1-flash-lite, agy-gemini-3.6-flash, llama3.1).",
     )
     provider: str = Field(
         default="",
@@ -176,9 +176,17 @@ def _find_tc_config_path() -> Optional[Path]:
     """Находит актуальный путь к файлу конфигурации Test Computer.
 
     Returns:
-        Optional[Path]: Путь к найденному файлу tc.json или None.
+        Optional[Path]: Путь к найденному файлу конфигурации или None.
     """
+    cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    if cfg_env:
+        p = Path(cfg_env)
+        active_p = p if p.is_absolute() else (__root__ / cfg_env)
+        if active_p.exists():
+            return active_p
+
     candidates = [
+        __root__ / "apps" / "windows" / "config.json",
         __root__ / "start_scenarios_config" / "tc.json",
         __root__ / "config" / "tc.json",
         __root__ / "config_tc.json",
@@ -232,18 +240,31 @@ def _resolve_tc_model_and_provider() -> Tuple[str, str, str]:
         try:
             with open(cfg_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                ai_sec = data.get("ai", {})
-                if ai_sec.get("provider"):
-                    prov_key = str(ai_sec.get("provider")).lower()
-                    provider = prov_key.upper()
-                    if isinstance(ai_sec.get(prov_key), dict) and ai_sec[prov_key].get("model"):
-                        model_name = ai_sec[prov_key].get("model")
-                    elif isinstance(ai_sec.get("providers"), dict) and isinstance(ai_sec["providers"].get(prov_key), dict) and ai_sec["providers"][prov_key].get("model"):
-                        model_name = ai_sec["providers"][prov_key].get("model")
+                ai_sec = data.get("ai_providers_and_models_configuration") or data.get("ai") or {}
+                if ai_sec.get("default_provider"):
+                    provider = str(ai_sec.get("default_provider")).upper()
+                if ai_sec.get("default_model"):
+                    model_name = str(ai_sec.get("default_model")).strip()
+
+                if not model_name:
+                    if ai_sec.get("provider"):
+                        prov_key = str(ai_sec.get("provider")).lower()
+                        provider = prov_key.upper()
+                        if isinstance(ai_sec.get(prov_key), dict) and ai_sec[prov_key].get("model"):
+                            model_name = ai_sec[prov_key].get("model")
+                        elif isinstance(ai_sec.get("providers"), dict) and isinstance(ai_sec["providers"].get(prov_key), dict) and ai_sec["providers"][prov_key].get("model"):
+                            model_name = ai_sec["providers"][prov_key].get("model")
+                        elif ai_sec.get("model"):
+                            model_name = ai_sec.get("model")
+                    elif isinstance(ai_sec.get("providers"), dict):
+                        prov_dict = ai_sec.get("providers", {})
+                        for prov_key, prov_cfg in prov_dict.items():
+                            if isinstance(prov_cfg, dict) and prov_cfg.get("enabled"):
+                                provider = prov_key.upper()
+                                model_name = prov_cfg.get("model") or ""
+                                break
                     elif ai_sec.get("model"):
                         model_name = ai_sec.get("model")
-                elif ai_sec.get("model"):
-                    model_name = ai_sec.get("model")
         except Exception as e:
             logger.debug(f"[router_tc] Ошибка чтения конфигурации TC {cfg_path}: {e}")
 
@@ -287,7 +308,7 @@ def _normalize_tc_model_and_provider(target_model: str = "", target_provider: st
         if provider in ("gemini_cli", "gemini-cli"):
             model = "gemini-3.1-flash-lite"
         elif provider == "gemini":
-            model = "gemini-2.5-flash"
+            model = "gemini-3.1-flash"
         elif provider == "agy":
             model = "gemini-3.6-flash"
         elif provider == "ollama":

@@ -31,7 +31,7 @@
 
 ### Пример записи в системном логе:
 ```text
-INFO - Gemini Outgoing [chat_stream] -> Model: "gemini-2.5-flash" | Prompt (45 chars): 'Какая погода сегодня?' | History: 4 msgs (~850 chars) | SysInstruction (320 chars): 'CRITICAL: You must format...' | Tools: none | GenConfig: {}
+INFO - Gemini Outgoing [chat_stream] -> Model: "gemini-3.1-flash" | Prompt (45 chars): 'Какая погода сегодня?' | History: 4 msgs (~850 chars) | SysInstruction (320 chars): 'CRITICAL: You must format...' | Tools: none | GenConfig: {}
 ```
 
 ---

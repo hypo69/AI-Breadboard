@@ -98,7 +98,7 @@ if ($Help) {
     Write-Host "PARAMETERS:" -ForegroundColor Yellow
     Write-Host "  -Action <string>    Action: check (default), install, chat, version."
     Write-Host "  -Prompt <string>    Execute one-off request to model."
-    Write-Host "  -Model <string>     Model (e.g.: gemini-2.5-flash, gemini-3.1-flash-lite)."
+    Write-Host "  -Model <string>     Model (e.g.: gemini-3.1-flash, gemini-3.1-flash-lite)."
     Write-Host "  -Help, -h, --help   Show this help and exit."
     Write-Host ""
     Write-Host "EXAMPLES:" -ForegroundColor Yellow
@@ -149,7 +149,7 @@ $configPath = if ($env:AIBREADBOARD_CONFIG) {
     $configPath
 }
 
-$defaultModel = "gemini-2.5-flash"
+$defaultModel = "gemini-3.1-flash"
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Raw | ConvertFrom-Json

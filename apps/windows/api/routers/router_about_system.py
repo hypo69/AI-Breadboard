@@ -17,7 +17,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 19:05:00
+# Updated: 2026-10-08 08:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -667,7 +667,7 @@ def query_about_system_from_db(storage: TelemetryStorage) -> AboutSystemPanelOve
                 break
     gpu_load = float((snap_row.get("gpu_load_percent") if snap_row else 0.0) or 0.0)
     gpu_temp = float(snap_row["gpu_temp_c"]) if snap_row and snap_row.get("gpu_temp_c") is not None else None
-    caps = ["CUDA", "DirectML"] if ("GeForce" in gpu_name or "NVIDIA" in gpu_name) else ["Active GPU"]
+    caps = ["CUDA", "DirectML"] if ("GeForce" in gpu_name or "NVIDIA" in gpu_name) else (["ROCm", "DirectML"] if ("Radeon" in gpu_name or "AMD" in gpu_name) else (["oneAPI", "DirectML"] if "Intel" in gpu_name else ["Active GPU"]))
     badge_str = " + ".join(caps)
 
     gpu_res = GpuPanelResponse(

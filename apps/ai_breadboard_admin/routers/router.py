@@ -73,7 +73,7 @@ class RagModeRequest(BaseModel):
 
 class WebSearchConfigRequest(BaseModel):
     engine: str
-    gemini_model: str = 'gemini-2.5-flash'
+    gemini_model: str = 'gemini-3.1-flash'
     gemini_cli_model: str = 'gemini-3.1-flash-lite'
     agy_model: str = 'agy-flash'
 

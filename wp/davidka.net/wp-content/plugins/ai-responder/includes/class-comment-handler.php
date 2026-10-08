@@ -198,7 +198,7 @@ class Comment_Handler {
             'comment_author'  => $comment->comment_author,
             'comment_content' => $comment->comment_content,
             'parent_context'  => $parent_context,
-            'model'           => Config::get('model', 'gemini-2.5-flash'),
+            'model'           => Config::get('model', 'gemini-flash-latest'),
             'provider'        => Config::get('provider', 'gemini'),
             'system_instruction' => Config::get('system_instruction', ''),
         ];

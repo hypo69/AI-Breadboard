@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.hardware
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-06 08:10:00
+# Updated: 2026-10-08 08:43:00
 # =============================================================================
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -32,7 +33,7 @@ from logger import logger
 
 @dataclass
 class GpuDeviceTelemetry:
-    """Detailed GPU telemetry metrics."""
+    """Detailed GPU telemetry metrics with compute backends and capabilities."""
     index: int
     name: str
     vendor: str
@@ -50,6 +51,158 @@ class GpuDeviceTelemetry:
     engines: Dict[str, float] = field(default_factory=dict)
     shared_memory_used_mb: Optional[float] = None
     dedicated_memory_used_mb: Optional[float] = None
+    gpu_type: str = "Discrete"  # 'Discrete' or 'Integrated'
+    dedicated_memory_mb: Optional[float] = None
+    shared_memory_mb: Optional[float] = None
+    memory_type: str = "Dedicated VRAM"  # 'Dedicated GDDR/HBM' or 'Shared System Memory'
+    directx_version: str = "DirectX 12 (FL 12_1)"
+    has_cuda: bool = False
+    has_rocm: bool = False
+    has_oneapi: bool = False
+    has_directml: bool = True
+    has_vulkan: bool = True
+    has_opencl: bool = True
+    compute_apis: List[str] = field(default_factory=list)
+    ai_backends: List[str] = field(default_factory=list)
+
+
+@dataclass
+class NpuDeviceTelemetry:
+    """Detailed NPU accelerator telemetry metrics."""
+    index: int
+    name: str
+    vendor: str
+    driver_version: str = ""
+    pnp_device_id: str = ""
+    status: str = "OK (Активно)"
+    tops: Optional[float] = None
+    has_directml: bool = True
+    has_qnn: bool = False
+    has_openvino: bool = False
+    ai_backends: List[str] = field(default_factory=list)
+
+
+def determine_gpu_compute_backends(
+    vendor: str,
+    name: str,
+    memory_total_mb: Optional[float] = None,
+    dedicated_mb: Optional[float] = None,
+    shared_mb: Optional[float] = None,
+) -> Dict[str, Any]:
+    """Определяет тип GPU (Integrated/Discrete), память, вычислительные API и AI бэкенды.
+
+    Args:
+        vendor: Название производителя (NVIDIA, AMD, Intel, Generic).
+        name: Модель видеокарты.
+        memory_total_mb: Общий объем памяти видеокарты.
+        dedicated_mb: Выделенная память VRAM.
+        shared_mb: Общая системная память GPU.
+
+    Returns:
+        Dict[str, Any]: Словарь структурированных характеристик GPU.
+    """
+    v_l = (vendor or '').lower()
+    n_l = (name or '').lower()
+
+    is_nvidia = 'nvidia' in v_l or 'geforce' in n_l or 'rtx' in n_l or 'gtx' in n_l or 'quadro' in n_l or 'tesla' in n_l
+    is_amd = 'amd' in v_l or 'radeon' in n_l or 'advanced micro devices' in v_l or 'firepro' in n_l
+    is_intel = 'intel' in v_l or 'arc' in n_l or 'iris' in n_l or 'uhd' in n_l or 'hd graphics' in n_l
+
+    # Определение типа GPU (Integrated vs Discrete)
+    if is_intel:
+        if 'arc' in n_l:
+            gpu_type = 'Discrete'
+            memory_type = 'Dedicated GDDR6'
+        else:
+            gpu_type = 'Integrated'
+            memory_type = 'Shared System Memory'
+    elif is_amd:
+        if 'radeon(tm) graphics' in n_l or 'vega' in n_l or 'integrated' in n_l:
+            gpu_type = 'Integrated'
+            memory_type = 'Shared System Memory'
+        else:
+            gpu_type = 'Discrete'
+            memory_type = 'Dedicated GDDR6'
+    elif is_nvidia:
+        gpu_type = 'Discrete'
+        memory_type = 'Dedicated GDDR'
+    else:
+        if (memory_total_mb and memory_total_mb <= 512) or (dedicated_mb and dedicated_mb <= 512):
+            gpu_type = 'Integrated'
+            memory_type = 'Shared System Memory'
+        else:
+            gpu_type = 'Discrete'
+            memory_type = 'Dedicated VRAM'
+
+    # Разделение памяти (Dedicated VRAM vs Shared System Memory)
+    calc_dedicated_mb = dedicated_mb
+    calc_shared_mb = shared_mb
+
+    if gpu_type == 'Integrated':
+        if calc_dedicated_mb is None or calc_dedicated_mb == 0:
+            calc_dedicated_mb = 128.0
+        if calc_shared_mb is None or calc_shared_mb == 0:
+            calc_shared_mb = 8192.0
+    else:
+        if calc_dedicated_mb is None or calc_dedicated_mb == 0:
+            calc_dedicated_mb = memory_total_mb or 2048.0
+        if calc_shared_mb is None or calc_shared_mb == 0:
+            calc_shared_mb = 16384.0
+
+    has_cuda = is_nvidia
+    has_rocm = is_amd
+    has_oneapi = is_intel
+    has_directml = True
+    has_vulkan = True
+    has_opencl = True
+    directx_ver = "DirectX 12 (FL 12_1)"
+
+    compute_apis: List[str] = []
+    if has_cuda:
+        compute_apis.append("CUDA")
+    if has_rocm:
+        compute_apis.append("ROCm / HIP")
+    if has_oneapi:
+        compute_apis.append("oneAPI")
+    if has_directml:
+        compute_apis.append("DirectML")
+    if has_vulkan:
+        compute_apis.append("Vulkan")
+    if has_opencl:
+        compute_apis.append("OpenCL")
+
+    ai_backends: List[str] = []
+    if has_cuda:
+        ai_backends.append("CUDA")
+    if has_rocm:
+        ai_backends.append("ROCm / HIP")
+    if has_oneapi:
+        ai_backends.append("DirectML")
+        ai_backends.append("Intel GPU runtime (oneAPI/OpenVINO)")
+    elif has_directml:
+        ai_backends.append("DirectML")
+    if has_vulkan:
+        ai_backends.append("Vulkan")
+    ai_backends.append("CPU")
+
+    resolved_vendor = 'NVIDIA' if is_nvidia else ('AMD' if is_amd else ('Intel' if is_intel else (vendor or 'Generic')))
+
+    return {
+        'vendor': resolved_vendor,
+        'gpu_type': gpu_type,
+        'memory_type': memory_type,
+        'dedicated_memory_mb': calc_dedicated_mb,
+        'shared_memory_mb': calc_shared_mb,
+        'directx_version': directx_ver,
+        'has_cuda': has_cuda,
+        'has_rocm': has_rocm,
+        'has_oneapi': has_oneapi,
+        'has_directml': has_directml,
+        'has_vulkan': has_vulkan,
+        'has_opencl': has_opencl,
+        'compute_apis': compute_apis,
+        'ai_backends': ai_backends,
+    }
 
 
 def _normalize_name_tokens(name: str) -> set[str]:
@@ -83,6 +236,10 @@ class GpuProber:
         self._nvidia_smi = shutil.which('nvidia-smi') or shutil.which('nvidia-smi.exe')
         self._amd_smi = shutil.which('amd-smi') or shutil.which('amd-smi.exe')
         self._xpu_smi = shutil.which('xpu-smi') or shutil.which('xpu-smi.exe')
+
+    def probe(self) -> List[GpuDeviceTelemetry]:
+        """Алиас для probe_all."""
+        return self.probe_all()
 
     def probe_all(self) -> List[GpuDeviceTelemetry]:
         """Опрашивает все доступные GPU в системе (NVIDIA, AMD, Intel Arc, WMI и WDDM счетчики).
@@ -231,7 +388,37 @@ class GpuProber:
                 for line in res.stdout.strip().splitlines():
                     parts = [p.strip() for p in line.split(',')]
                     if len(parts) >= 11:
-                        results.append(GpuDeviceTelemetry(index=int(parts[0]) if parts[0].isdigit() else 0, name=parts[1], vendor='NVIDIA', driver_version=parts[2], temperature_gpu_c=float(parts[3]) if parts[3] != '[N/A]' else None, utilization_gpu_pct=float(parts[4]) if parts[4] != '[N/A]' else None, utilization_memory_pct=float(parts[5]) if parts[5] != '[N/A]' else None, memory_used_mb=float(parts[6]) if parts[6] != '[N/A]' else None, memory_total_mb=float(parts[7]) if parts[7] != '[N/A]' else None, power_draw_w=float(parts[8]) if parts[8] != '[N/A]' else None, power_limit_w=float(parts[9]) if parts[9] != '[N/A]' else None, fan_speed_pct=float(parts[10]) if parts[10] != '[N/A]' else None))
+                        gpu_name = parts[1]
+                        ram_mb = float(parts[7]) if parts[7] != '[N/A]' else None
+                        used_ram_mb = float(parts[6]) if parts[6] != '[N/A]' else None
+                        caps = determine_gpu_compute_backends('NVIDIA', gpu_name, memory_total_mb=ram_mb, dedicated_mb=ram_mb)
+                        results.append(GpuDeviceTelemetry(
+                            index=int(parts[0]) if parts[0].isdigit() else 0,
+                            name=gpu_name,
+                            vendor='NVIDIA',
+                            driver_version=parts[2],
+                            temperature_gpu_c=float(parts[3]) if parts[3] != '[N/A]' else None,
+                            utilization_gpu_pct=float(parts[4]) if parts[4] != '[N/A]' else None,
+                            utilization_memory_pct=float(parts[5]) if parts[5] != '[N/A]' else None,
+                            memory_used_mb=used_ram_mb,
+                            memory_total_mb=ram_mb,
+                            power_draw_w=float(parts[8]) if parts[8] != '[N/A]' else None,
+                            power_limit_w=float(parts[9]) if parts[9] != '[N/A]' else None,
+                            fan_speed_pct=float(parts[10]) if parts[10] != '[N/A]' else None,
+                            gpu_type=caps['gpu_type'],
+                            dedicated_memory_mb=caps['dedicated_memory_mb'],
+                            shared_memory_mb=caps['shared_memory_mb'],
+                            memory_type=caps['memory_type'],
+                            directx_version=caps['directx_version'],
+                            has_cuda=caps['has_cuda'],
+                            has_rocm=caps['has_rocm'],
+                            has_oneapi=caps['has_oneapi'],
+                            has_directml=caps['has_directml'],
+                            has_vulkan=caps['has_vulkan'],
+                            has_opencl=caps['has_opencl'],
+                            compute_apis=caps['compute_apis'],
+                            ai_backends=caps['ai_backends'],
+                        ))
         except Exception as e:
             logger.error(f'Error querying nvidia-smi: {e}')
         return results
@@ -246,7 +433,33 @@ class GpuProber:
                 data = json.loads(res.stdout)
                 items = data if isinstance(data, list) else [data]
                 for idx, item in enumerate(items):
-                    results.append(GpuDeviceTelemetry(index=idx, name=str(item.get('card_model', 'AMD Radeon GPU')), vendor='AMD', driver_version=str(item.get('driver_version', 'Unknown')), temperature_gpu_c=item.get('temperature_edge'), utilization_gpu_pct=item.get('gpu_utilization'), memory_used_mb=item.get('vram_used'), memory_total_mb=item.get('vram_total'), power_draw_w=item.get('power_usage')))
+                    gpu_name = str(item.get('card_model', 'AMD Radeon GPU'))
+                    v_tot = item.get('vram_total')
+                    caps = determine_gpu_compute_backends('AMD', gpu_name, memory_total_mb=v_tot, dedicated_mb=v_tot)
+                    results.append(GpuDeviceTelemetry(
+                        index=idx,
+                        name=gpu_name,
+                        vendor='AMD',
+                        driver_version=str(item.get('driver_version', 'Unknown')),
+                        temperature_gpu_c=item.get('temperature_edge'),
+                        utilization_gpu_pct=item.get('gpu_utilization'),
+                        memory_used_mb=item.get('vram_used'),
+                        memory_total_mb=v_tot,
+                        power_draw_w=item.get('power_usage'),
+                        gpu_type=caps['gpu_type'],
+                        dedicated_memory_mb=caps['dedicated_memory_mb'],
+                        shared_memory_mb=caps['shared_memory_mb'],
+                        memory_type=caps['memory_type'],
+                        directx_version=caps['directx_version'],
+                        has_cuda=caps['has_cuda'],
+                        has_rocm=caps['has_rocm'],
+                        has_oneapi=caps['has_oneapi'],
+                        has_directml=caps['has_directml'],
+                        has_vulkan=caps['has_vulkan'],
+                        has_opencl=caps['has_opencl'],
+                        compute_apis=caps['compute_apis'],
+                        ai_backends=caps['ai_backends'],
+                    ))
         except Exception as e:
             logger.error(f'Error querying amd-smi: {e}')
         return results
@@ -263,22 +476,83 @@ class GpuProber:
                 for idx, item in enumerate(items):
                     name = str(item.get('Name', 'Generic Display Adapter')).strip()
                     ram_bytes = int(item.get('AdapterRAM') or 0)
-                    name_l = name.lower()
-                    if 'nvidia' in name_l or 'geforce' in name_l:
-                        vendor = 'NVIDIA'
-                    elif 'amd' in name_l or 'radeon' in name_l:
-                        vendor = 'AMD'
-                    elif 'intel' in name_l or 'arc' in name_l or 'uhd' in name_l or 'hd graphics' in name_l:
-                        vendor = 'Intel'
-                    else:
-                        vendor = 'Generic'
+                    ram_mb = round(ram_bytes / 1024 ** 2, 1) if ram_bytes > 0 else None
+                    caps = determine_gpu_compute_backends('', name, memory_total_mb=ram_mb, dedicated_mb=ram_mb)
                     results.append(GpuDeviceTelemetry(
                         index=idx,
                         name=name,
-                        vendor=vendor,
+                        vendor=caps['vendor'],
                         driver_version=str(item.get('DriverVersion', 'N/A')),
-                        memory_total_mb=round(ram_bytes / 1024 ** 2, 1) if ram_bytes > 0 else None
+                        memory_total_mb=ram_mb,
+                        gpu_type=caps['gpu_type'],
+                        dedicated_memory_mb=caps['dedicated_memory_mb'],
+                        shared_memory_mb=caps['shared_memory_mb'],
+                        memory_type=caps['memory_type'],
+                        directx_version=caps['directx_version'],
+                        has_cuda=caps['has_cuda'],
+                        has_rocm=caps['has_rocm'],
+                        has_oneapi=caps['has_oneapi'],
+                        has_directml=caps['has_directml'],
+                        has_vulkan=caps['has_vulkan'],
+                        has_opencl=caps['has_opencl'],
+                        compute_apis=caps['compute_apis'],
+                        ai_backends=caps['ai_backends'],
                     ))
         except Exception as e:
             logger.error(f'WMI GPU probe error: {e}')
-        return results
+        return results
+
+    def probe_npus(self) -> List[NpuDeviceTelemetry]:
+        """Опрашивает систему на наличие специализированных нейропроцессоров (NPU / AI Accelerators).
+
+        Returns:
+            List[NpuDeviceTelemetry]: Список обнаруженных NPU ускорителей.
+        """
+        npus: List[NpuDeviceTelemetry] = []
+        try:
+            ps_cmd = "Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*NPU*' -or $_.Name -like '*AI Boost*' -or $_.Name -like '*Hexagon*' -or $_.Name -like '*IPU*' -or $_.PNPClass -eq 'ComputeAccelerator' } | Select-Object Name, Manufacturer, DeviceID, Status | ConvertTo-Json -Compress"
+            res = subprocess.run(['powershell', '-NoProfile', '-Command', ps_cmd], capture_output=True, text=True, timeout=5)
+            if res.returncode == 0 and res.stdout.strip():
+                raw = json.loads(res.stdout)
+                items = [raw] if isinstance(raw, dict) else raw
+                for idx, item in enumerate(items):
+                    name = str(item.get('Name', 'NPU Compute Accelerator')).strip()
+                    mfg = str(item.get('Manufacturer', '')).strip()
+                    status = str(item.get('Status', 'OK')).strip() or 'OK (Активно)'
+                    name_l = name.lower()
+                    mfg_l = mfg.lower()
+
+                    if 'intel' in name_l or 'intel' in mfg_l:
+                        vendor = 'Intel'
+                        ai_backends = ['DirectML', 'Intel OpenVINO NPU', 'ONNX DirectML']
+                        has_openvino = True
+                        has_qnn = False
+                    elif 'qualcomm' in name_l or 'hexagon' in name_l or 'snapdragon' in name_l:
+                        vendor = 'Qualcomm'
+                        ai_backends = ['Qualcomm QNN', 'DirectML NPU', 'ONNX QNN']
+                        has_openvino = False
+                        has_qnn = True
+                    elif 'amd' in name_l or 'ryzen' in name_l or 'ipu' in name_l:
+                        vendor = 'AMD'
+                        ai_backends = ['AMD Ryzen AI (Vitis)', 'DirectML NPU', 'ONNX DirectML']
+                        has_openvino = False
+                        has_qnn = False
+                    else:
+                        vendor = mfg or 'Generic'
+                        ai_backends = ['DirectML NPU', 'ONNX DirectML']
+                        has_openvino = False
+                        has_qnn = False
+
+                    npus.append(NpuDeviceTelemetry(
+                        index=idx,
+                        name=name,
+                        vendor=vendor,
+                        status=status,
+                        has_directml=True,
+                        has_qnn=has_qnn,
+                        has_openvino=has_openvino,
+                        ai_backends=ai_backends,
+                    ))
+        except Exception as exc:
+            logger.debug(f'NPU probe error: {exc}')
+        return npus

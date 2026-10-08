@@ -87,11 +87,11 @@ class TestChatRagToggle(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('favorite_models', data)
-        response = self.client.post('/auth/settings', json={'model': 'gemini-2.5-flash'})
+        response = self.client.post('/auth/settings', json={'model': 'gemini-flash-latest'})
         self.assertEqual(response.status_code, 200)
         response = self.client.get('/auth/settings')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json().get('model'), 'gemini-2.5-flash')
+        self.assertEqual(response.json().get('model'), 'gemini-flash-latest')
 
     def test_auth_favorites_api(self) -> None:
         """Test adding, getting, and deleting favorite models via API."""

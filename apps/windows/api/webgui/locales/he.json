@@ -319,6 +319,7 @@
     "modeRaw": "📄 רשומה גולמית",
     "modeActivity": "⚙️ יומן פעילות",
     "modeEventLogs": "📝 יומני WevtAPI ו-Intel",
+    "modePowerLifecycle": "⚡ מחזור חיי חשמל והפעלה (Power Lifecycle)",
     "btnAskAi": "שאל בינה מלאכותית",
     "searchPlaceholder": "חיפוש לפי טקסט, מקור...",
     "allLevels": "כל הרמות",

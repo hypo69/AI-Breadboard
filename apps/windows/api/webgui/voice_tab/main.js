@@ -233,7 +233,7 @@
     if (loadingState) loadingState.classList.remove('d-none');
     if (saveRagBtn) saveRagBtn.classList.add('d-none');
 
-    const model = document.getElementById('vtab-model-select')?.value || 'gemini-2.5-flash';
+    const model = document.getElementById('vtab-model-select')?.value || 'gemini-3.1-flash';
     const lang = document.getElementById('vtab-lang-select')?.value || 'ru';
     const apiKey = document.getElementById('vtab-api-key')?.value || '';
 

@@ -191,7 +191,7 @@
     "gemini": {
       "name": "Google Gemini",
       "description": "Official Google GenAI SDK with API key pool",
-      "default_model": "gemini-2.5-flash"
+      "default_model": "gemini-flash-latest"
     },
     "gemini_cli": {
       "name": "Google Gemini CLI",

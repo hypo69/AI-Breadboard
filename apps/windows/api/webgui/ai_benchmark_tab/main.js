@@ -32,7 +32,7 @@ export async function initAiBenchmarkTab() {
   const promptInput = document.getElementById('bm-prompt-input');
   const statusBadge = document.getElementById('bm-status-badgei18n.t('auto__if_providerselect_providerselect_addeventlistener__df8f21')change', () => {
       const p = providerSelect.value;
-      if (p === 'gemini') modelInput.value = 'gemini-2.5-flash';
+      if (p === 'gemini') modelInput.value = 'gemini-3.1-flash';
       else if (p === 'ollama') modelInput.value = 'llama3.2:latest';
       else if (p === 'foundry') modelInput.value = 'phi-3.5-mini';
       else if (p === 'onnx') modelInput.value = 'directml-phi3i18n.t('auto__if_runbtn_runbtn_addeventlistener__c4d4ca')click', async () => {
@@ -46,7 +46,7 @@ export async function initAiBenchmarkTab() {
       try {
         const payload = {
           provider: providerSelect ? providerSelect.value : 'gemini',
-          model_name: modelInput ? modelInput.value : 'gemini-2.5-flash',
+          model_name: modelInput ? modelInput.value : 'gemini-3.1-flash',
           prompt: promptInput ? promptInput.value : i18n.t('auto___387814'),
           max_tokens: tokensInput ? parseInt(tokensInput.value, 10) || 150 : 150,
           temperature: tempInput ? parseFloat(tempInput.value) || 0.7 : 0.7,

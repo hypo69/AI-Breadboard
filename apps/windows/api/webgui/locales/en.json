@@ -309,6 +309,7 @@
     "modeRaw": "📄 Raw Record",
     "modeActivity": "⚙️ App Activity Log",
     "modeEventLogs": "📝 Event Logs (WevtAPI & Intel)",
+    "modePowerLifecycle": "⚡ Power Lifecycle & Boot",
     "btnAskAi": "Ask AI",
     "searchPlaceholder": "Search by text, provider...",
     "allLevels": "All Levels",

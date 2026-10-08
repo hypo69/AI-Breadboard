@@ -7,14 +7,14 @@
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/software_transparency_tab/main.js?v=20261001_v1" type="module"></script>
+ *     <script src="/windows/api/webgui/software_transparency_tab/main.js?v=20261008_v1" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/software_transparency_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-08 09:25:00
  * =============================================================================
  */
 
@@ -174,19 +174,57 @@
     }
   }
 
-  async function openResearchModal(appId) {
+  function openResearchModal(appId) {
     const app = allApps.find(a => a.id === appId);
     const titleEl = document.getElementById('st-research-modal-title');
     const bodyEl = document.getElementById('st-research-modal-body');
 
     if (titleEl) titleEl.innerText = 'AI Исследование: ' + (app ? app.name : appId);
     if (bodyEl) {
-      bodyEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Выполняется аналитическое исследование программы через Gemini...</div>';
+      bodyEl.innerHTML = `
+        <div class="p-3 bg-secondary bg-opacity-10 rounded border border-secondary mb-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h6 class="fw-bold text-info mb-1">${escapeHtml(app ? app.name : appId)}</h6>
+              <div class="text-muted small">Издатель: ${escapeHtml(app?.publisher || 'Неизвестен')} | Версия: ${escapeHtml(app?.version || 'N/A')}</div>
+            </div>
+            <button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5" id="btn-st-start-research">
+              <i class="bi bi-robot"></i> Запросить AI-исследование
+            </button>
+          </div>
+        </div>
+        <div id="st-research-result-container">
+          <div class="text-secondary small">
+            <i class="bi bi-info-circle me-1"></i>Нажмите кнопку «Запросить AI-исследование», чтобы отправить запрос к модели ИИ для анализа рисков, безопасности и назначений конфигураций приложения.
+          </div>
+        </div>
+      `;
+
+      const startBtn = document.getElementById('btn-st-start-research');
+      if (startBtn) {
+        startBtn.onclick = () => executeAppResearch(appId);
+      }
     }
 
     const modalEl = document.getElementById('st-research-modal');
     if (modalEl && window.bootstrap) {
-      new bootstrap.Modal(modalEl).show();
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      bsModal.show();
+    }
+  }
+
+  async function executeAppResearch(appId) {
+    const container = document.getElementById('st-research-result-container');
+    const startBtn = document.getElementById('btn-st-start-research');
+
+    if (startBtn) startBtn.disabled = true;
+    if (container) {
+      container.innerHTML = `
+        <div class="text-center py-4 text-info">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+          <span>Выполняется аналитическое исследование программы через языковую модель...</span>
+        </div>
+      `;
     }
 
     try {
@@ -198,18 +236,31 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      if (bodyEl) {
-        bodyEl.innerHTML = `
-          <h6>📋 Описание программы:</h6>
-          <p>${escapeHtml(data.summary || data.description || 'Нет данных')}</p>
-          ${data.risk_score !== undefined ? `<div class="mb-2"><strong>Оценка риска:</strong> <span class="badge bg-${data.risk_score > 5 ? 'danger' : 'success'}">${data.risk_score}/10</span></div>` : ''}
-          ${data.recommendations ? `<h6>💡 Рекомендации:</h6><p>${escapeHtml(data.recommendations)}</p>` : ''}
+      if (container) {
+        container.innerHTML = `
+          <div class="card bg-black border-secondary p-3 mb-2">
+            <h6 class="text-info fw-bold mb-2">📋 Описание программы:</h6>
+            <p class="mb-2 text-light small">${escapeHtml(data.summary || data.description || 'Нет данных')}</p>
+            ${data.risk_score !== undefined ? `<div class="mb-2 small"><strong>Оценка риска:</strong> <span class="badge bg-${data.risk_score > 5 ? 'danger' : 'success'}">${data.risk_score}/10</span></div>` : ''}
+            ${data.recommendations ? `<h6 class="text-warning fw-bold mt-2 mb-1">💡 Рекомендации:</h6><p class="mb-0 text-light small">${escapeHtml(data.recommendations)}</p>` : ''}
+          </div>
         `;
       }
     } catch (err) {
-      if (bodyEl) {
-        bodyEl.innerHTML = `<div class="alert alert-danger">Ошибка анализа: ${err.message}</div>`;
+      if (container) {
+        container.innerHTML = `
+          <div class="alert alert-danger py-2 d-flex align-items-center justify-content-between flex-wrap gap-2 small">
+            <div><i class="bi bi-exclamation-triangle me-1"></i>Ошибка анализа: ${escapeHtml(err.message)}</div>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="btn-st-retry-research">Повторить</button>
+          </div>
+        `;
+        const retryBtn = document.getElementById('btn-st-retry-research');
+        if (retryBtn) {
+          retryBtn.onclick = () => executeAppResearch(appId);
+        }
       }
+    } finally {
+      if (startBtn) startBtn.disabled = false;
     }
   }
 

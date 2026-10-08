@@ -286,7 +286,7 @@ class MyAgent:
 
         if self.llm_type == 'gemini':
             from langchain_google_genai import ChatGoogleGenerativeAI
-            model_name = getattr(self._langchain_cfg, 'gemini_model', 'gemini-2.5-flash')
+            model_name = getattr(self._langchain_cfg, 'gemini_model', 'gemini-3.1-flash')
             api_key = os.environ.get('GEMINI_API_KEY', '')
             if not api_key:
                 from src.ai.gemini.gemini_api_key_state import load_api_keys
@@ -408,7 +408,7 @@ __all__ = [
   "is_system": false,
   "enabled": true,
   "provider": "gemini",
-  "model": "gemini-2.5-flash",
+  "model": "gemini-3.1-flash",
   "temperature": 0.2,
   "max_steps": 15,
   "timeout_seconds": 60,

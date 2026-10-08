@@ -14,9 +14,11 @@
 # Package: src.ai.chat
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-08 08:41:00
 # =============================================================================
 
 """Модуль основной системы (`agy`)."""
 
-from src.ai.providers.agy.chat import *
+from src.ai.providers.agy.chat import AgyChatBase
+
+__all__ = ['AgyChatBase']

@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:47:30
+# Updated: 2026-10-08 09:01:00
 # =============================================================================
 
 """Handles AI conversational endpoints, streaming responses across multiple providers,"""
@@ -107,7 +107,7 @@ class SetModelPayload(BaseModel):
     """Модель данных для установки активной AI-модели."""
     model: str = Field(
         ...,
-        description="Имя модели для установки (например: gemini-2.5-flash, ollama:llama3.1, agy-gemini-3.6-flash).",
+        description="Имя модели для установки (например: gemini-3.1-flash, ollama:llama3.1, agy-gemini-3.6-flash).",
     )
     provider: str = Field(
         default="",
@@ -400,68 +400,88 @@ def _resolve_default_model_and_provider(profile: str = "") -> tuple[str, str, st
 
     cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
     active_path = None
-    if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
-        for candidate in [__root__ / "start_scenarios_config" / "tc.json", __root__ / "config" / "tc.json", __root__ / "config_tc.json", __root__ / "tc.json"]:
-            if candidate.exists():
-                active_path = candidate
-                break
-    elif cfg_env:
+    if cfg_env:
         p = Path(cfg_env)
         active_path = p if p.is_absolute() else (__root__ / cfg_env)
 
     if not active_path or not active_path.exists():
-        for candidate in [__root__ / "start_scenarios_config" / "tc.json", __root__ / "config" / "tc.json", __root__ / "config_tc.json", __root__ / "tc.json"]:
-            if candidate.exists() and not (__root__ / "config.json").exists() and not (__root__ / "config" / "dashboard.json").exists():
-                active_path = candidate
-                break
+        if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
+            for candidate in [
+                __root__ / "apps" / "windows" / "config.json",
+                __root__ / "start_scenarios_config" / "tc.json",
+                __root__ / "config" / "tc.json",
+                __root__ / "config_tc.json",
+                __root__ / "tc.json",
+            ]:
+                if candidate.exists():
+                    active_path = candidate
+                    break
+        else:
+            for candidate in [
+                __root__ / "apps" / "windows" / "config.json",
+                __root__ / "start_scenarios_config" / "tc.json",
+                __root__ / "config" / "tc.json",
+                __root__ / "config_tc.json",
+                __root__ / "tc.json",
+            ]:
+                if candidate.exists() and not (__root__ / "config.json").exists() and not (__root__ / "config" / "dashboard.json").exists():
+                    active_path = candidate
+                    break
+
         if not active_path or not active_path.exists():
             active_path = (__root__ / "start_scenarios_config" / "dashboard.json") if (__root__ / "start_scenarios_config" / "dashboard.json").exists() else ((__root__ / "config" / "dashboard.json") if (__root__ / "config" / "dashboard.json").exists() else (__root__ / "config.json"))
 
     provider = "GEMINI"
-    model_name = "gemini-2.5-flash"
+    model_name = ""
     config_file = active_path.name if active_path else "config.json"
 
     if active_path and active_path.exists():
         try:
             with open(active_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                ai_sec = data.get("ai", {})
-                # Format in tc.json or explicit provider: ai.provider = "gemini_cli", ai.gemini_cli.model = "..."
-                if ai_sec.get("provider"):
-                    prov_key = str(ai_sec.get("provider")).lower()
-                    provider = prov_key.upper()
-                    if isinstance(ai_sec.get(prov_key), dict) and ai_sec[prov_key].get("model"):
-                        model_name = ai_sec[prov_key].get("model")
-                    elif isinstance(ai_sec.get("providers"), dict) and isinstance(ai_sec["providers"].get(prov_key), dict) and ai_sec["providers"][prov_key].get("model"):
-                        model_name = ai_sec["providers"][prov_key].get("model")
-                    elif ai_sec.get(f"{prov_key}_model_id"):
-                        model_name = ai_sec.get(f"{prov_key}_model_id")
+                ai_sec = data.get("ai_providers_and_models_configuration") or data.get("ai") or {}
+                
+                # 1. Проверяем явные default_provider и default_model
+                if ai_sec.get("default_provider"):
+                    provider = str(ai_sec.get("default_provider")).upper()
+                if ai_sec.get("default_model"):
+                    model_name = str(ai_sec.get("default_model")).strip()
+
+                # 2. Если модель не найдена, проверяем секции provider/providers
+                if not model_name:
+                    if ai_sec.get("provider"):
+                        prov_key = str(ai_sec.get("provider")).lower()
+                        provider = prov_key.upper()
+                        if isinstance(ai_sec.get(prov_key), dict) and ai_sec[prov_key].get("model"):
+                            model_name = ai_sec[prov_key].get("model")
+                        elif isinstance(ai_sec.get("providers"), dict) and isinstance(ai_sec["providers"].get(prov_key), dict) and ai_sec["providers"][prov_key].get("model"):
+                            model_name = ai_sec["providers"][prov_key].get("model")
+                        elif ai_sec.get(f"{prov_key}_model_id"):
+                            model_name = ai_sec.get(f"{prov_key}_model_id")
+                        elif ai_sec.get("model"):
+                            model_name = ai_sec.get("model")
+                    elif isinstance(ai_sec.get("providers"), dict):
+                        providers = ai_sec.get("providers", {})
+                        for prov_key, prov_cfg in providers.items():
+                            if isinstance(prov_cfg, dict) and prov_cfg.get("enabled"):
+                                provider = prov_key.upper()
+                                model_name = prov_cfg.get("model") or model_name
+                                break
+                    elif ai_sec.get("use_agy"):
+                        provider = "AGY"
+                        model_name = ai_sec.get("agy_model_id") or ai_sec.get("model") or ""
+                    elif ai_sec.get("use_gemini"):
+                        provider = "GEMINI"
+                        model_name = ai_sec.get("gemini_model_id") or ai_sec.get("model") or ""
+                    elif ai_sec.get("use_ollama"):
+                        provider = "OLLAMA"
+                        model_name = ai_sec.get("ollama_model_id") or ai_sec.get("model") or ""
+                    elif ai_sec.get("use_foundry"):
+                        provider = "FOUNDRY"
+                        model_name = ai_sec.get("foundry_model_id") or ai_sec.get("model") or ""
                     elif ai_sec.get("model"):
                         model_name = ai_sec.get("model")
-                # New format: providers.<prov>.enabled + providers.<prov>.model
-                elif isinstance(ai_sec.get("providers"), dict):
-                    providers = ai_sec.get("providers", {})
-                    for prov_key, prov_cfg in providers.items():
-                        if isinstance(prov_cfg, dict) and prov_cfg.get("enabled"):
-                            provider = prov_key.upper()
-                            model_name = prov_cfg.get("model") or model_name
-                            break
-                # Legacy format: use_agy, use_gemini, use_ollama, use_foundry
-                elif ai_sec.get("use_agy"):
-                    provider = "AGY"
-                    model_name = ai_sec.get("agy_model_id") or ai_sec.get("model") or "gemini-3.6-flash"
-                elif ai_sec.get("use_gemini"):
-                    provider = "GEMINI"
-                    model_name = ai_sec.get("gemini_model_id") or ai_sec.get("model") or "gemini-2.5-flash"
-                elif ai_sec.get("use_ollama"):
-                    provider = "OLLAMA"
-                    model_name = ai_sec.get("ollama_model_id") or ai_sec.get("model") or "llama3.1"
-                elif ai_sec.get("use_foundry"):
-                    provider = "FOUNDRY"
-                    model_name = ai_sec.get("foundry_model_id") or ai_sec.get("model") or "local"
-                elif ai_sec.get("model"):
-                    model_name = ai_sec.get("model")
-                    provider = "AI"
+                        provider = "AI"
         except Exception as e:
             logger.debug(f"[router_chat] Could not read active config {active_path}: {e}")
 
@@ -517,7 +537,7 @@ def _normalize_model_and_provider(target_model: str = "", target_provider: str =
 
     if not model:
         if provider == 'gemini':
-            model = 'gemini-2.5-flash'
+            model = 'gemini-3.1-flash'
         elif provider == 'agy':
             model = 'gemini-3.6-flash'
         elif provider == 'ollama':
@@ -533,7 +553,7 @@ def _normalize_model_and_provider(target_model: str = "", target_provider: str =
         elif provider == 'onnx':
             model = 'cpu-int4-rt'
         else:
-            model = 'gemini-2.5-flash'
+            model = 'gemini-3.1-flash'
 
     if provider == 'foundry' and not model.startswith('foundry:'):
         model = f"foundry:{model}"
@@ -820,7 +840,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 if provider == def_provider.lower() and def_model:
                     target_model = def_model
                 elif provider == 'gemini':
-                    target_model = 'gemini-2.5-flash'
+                    target_model = 'gemini-3.1-flash'
                 elif provider == 'agy':
                     target_model = 'gemini-3.6-flash'
                 elif provider == 'ollama':
@@ -1146,7 +1166,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     from src.ai.agents.system_logs_agent import SystemLogsAgent
                     agent = SystemLogsAgent()
                     
-                    selected_model_name = chat_req.generation_config.get('model') or selected_model or 'gemini-2.5-flash'
+                    selected_model_name = chat_req.generation_config.get('model') or selected_model or 'gemini-3.1-flash'
                     active_model = get_chat_model(selected_model_name, system_instruction or "", user_id=user_identifier)
                     
                     yield f"data: {json.dumps({'status': '🔍 Сбор и кластеризация событий из Windows Event Log...'})}\n\n"

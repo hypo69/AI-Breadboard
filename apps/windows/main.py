@@ -646,7 +646,7 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         """Список доступных моделей ИИ для дропдауна."""
         return {
             'models': {
-                'gemini': ['gemini-3.1-flash-lite', 'gemini-2.5-flash'],
+                'gemini': ['gemini-3.1-flash-lite', 'gemini-3.1-flash'],
                 'gemini_cli': ['gemini:gemini-3.1-flash-lite'],
                 'agy': ['agy-gemini-3.6-flash'],
             }
