@@ -27,8 +27,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector, _format_bytes
-from apps.windows.modules.storage_manager.core.raw_disk_io import WindowsRawDiskIO
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor
+from apps.windows.sdk.modules.storage_manager.core.raw_disk_io import WindowsRawDiskIO
+from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.models import AppDiskUsageItem, DiskUsagePeriodReport, PhysicalDiskHealth
 

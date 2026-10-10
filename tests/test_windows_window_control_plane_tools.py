@@ -26,7 +26,7 @@ from src.ai.agents.windows_tools.window_control_plane import (
     windows_control_plane_audit,
     windows_control_plane_action,
 )
-from apps.windows.modules.window_control_plane.models import ControlPlaneSummaryResponse
+from apps.windows.sdk.modules.window_control_plane.models import ControlPlaneSummaryResponse
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -60,7 +60,7 @@ def mock_summary():
 @pytest.mark.asyncio
 async def test_windows_control_plane_audit_summary(mock_summary):
     """Тестирование получения сводной аналитики Window Control Plane."""
-    with patch("apps.windows.modules.window_control_plane.manager.WindowManagementControlPlane.get_summary", return_value=mock_summary):
+    with patch("apps.windows.sdk.modules.window_control_plane.manager.WindowManagementControlPlane.get_summary", return_value=mock_summary):
         res_raw = await call_tool(windows_control_plane_audit, action="summary")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

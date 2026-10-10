@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты инспекции, аудита дисковых накопителей, томов и выполнения
-#   безопасных административных операций над хранилищем Windows SafeOps (apps.windows.modules.storage_manager).
+#   безопасных административных операций над хранилищем Windows SafeOps (apps.windows.sdk.modules.storage_manager).
 #   Включают:
 #     1. Инспекция и аудит дисков и томов (windows_storage_audit)
 #     2. Административные действия над хранилищем SafeOps (windows_storage_action)
@@ -101,7 +101,7 @@ async def windows_storage_audit(
         JSON с результатами инспекции дискового хранилища.
     """
     try:
-        from apps.windows.modules.storage_manager.core.manager import StorageManager
+        from apps.windows.sdk.modules.storage_manager.core.manager import StorageManager
 
         sm = StorageManager()
         loop = asyncio.get_running_loop()
@@ -187,7 +187,7 @@ async def windows_storage_action(
                 "message": f"Симуляция операции '{action}' для цели '{target}' прошла успешно (оператор: {operator}).",
             }, ensure_ascii=False)
 
-        from apps.windows.modules.storage_manager.core.manager import StorageManager
+        from apps.windows.sdk.modules.storage_manager.core.manager import StorageManager
         sm = StorageManager()
         loop = asyncio.get_running_loop()
 

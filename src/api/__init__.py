@@ -13,7 +13,7 @@
 # Package: src.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 03:35:00
+# Updated: 2026-10-10 12:48:00
 # =============================================================================
 
 """Модуль инициализации API‑роутеров.
@@ -45,10 +45,8 @@ from .routers.core.router_openai import router as router_openai
 from .routers.core.router_news import init_router as init_news_router
 from .routers.core.router_system import init_router as init_system_router
 from .routers.core.router_ifttt import init_router as init_ifttt_router
-from .routers.tc.router_windows_admin import init_router as init_windows_admin_router
 from .routers.core.router_telegram_rag import init_router as init_telegram_rag_router
 from .routers.core.router_version import init_router as init_version_router
-from .routers.tc.telemetry.router_telemetry import init_router as init_telemetry_router
 from .routers.core.router_system_logs import init_router as init_system_logs_router
 from .routers.core.router_registry_viewer import init_router as init_registry_viewer_router
 from .routers.core.router_diagnostics import init_router as init_diagnostics_router
@@ -58,14 +56,12 @@ from .routers.core.router_menu import init_router as init_menu_router
 from .pixel_rag_router import get_pixel_rag_router
 from .routers.core.router_ninite import init_router as init_ninite_router
 from .routers.core.router_recovery import init_router as init_recovery_router
-from .routers.tc.router_tc import init_router as init_tc_router
 
 __all__ = [
     "get_pixel_rag_router",
     "init_menu_router",
     "init_diagnostics_router",
     "init_scenarios_router",
-    "init_tc_router",
     "init_auth_router",
     "is_local_request",
     "get_current_user_data",
@@ -91,10 +87,8 @@ __all__ = [
     "init_news_router",
     "init_system_router",
     "init_ifttt_router",
-    "init_windows_admin_router",
     "init_telegram_rag_router",
     "init_version_router",
-    "init_telemetry_router",
     "init_system_logs_router",
     "init_registry_viewer_router",
     "init_user_directories_router",

@@ -3,55 +3,65 @@
 # Process Name: AI-Breadboard APP - Server Config Module
 # =============================================================================
 # Description:
-#   Server configuration and startup utilities.
+#   Конфигурация параметров запуска главного FastAPI сервера и интеграция
+#   логирования Uvicorn в выделенный файл fastapi.log.
 #
 # Usage Examples:
 #   Python API:
-#     from src.app.server_config import get_server_config
+#     from src.app.server_config import get_server_config, run_server
 #
-#     res = get_server_config()
-#     print(res)
+#     config = get_server_config()
+#     run_server(app)
 #
 # File: server_config.py
 # Project: ai-breadboard
 # Package: src.app
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 12:11:00
 # =============================================================================
 
 from __future__ import annotations
-"""Server configuration and startup utilities."""
+"""Конфигурация параметров запуска главного FastAPI сервера."""
 
 import os
 import sys
 from pathlib import Path
+from typing import Any, Dict
+
 from src.config import server_cfg
-from logger import logger
+from logger import logger, get_uvicorn_log_config
+
 __root__ = Path(__file__).parent.parent
 
-def get_server_config():
-    """Get server configuration."""
+
+def get_server_config() -> Dict[str, Any]:
+    """Получает параметры конфигурации главного веб-сервера."""
     port: int = int(getattr(server_cfg, 'port', 8000))
     if not port:
         logger.error('Port not configured')
         sys.exit(1)
+
     _ssl_cfg = getattr(server_cfg, 'ssl', None)
     _cert_str = (getattr(_ssl_cfg, 'cert', '') or '').strip() if _ssl_cfg else ''
     _key_str = (getattr(_ssl_cfg, 'key', '') or '').strip() if _ssl_cfg else ''
     _cert_str = _cert_str or os.getenv('SSL_CERT_FILE', '').strip()
     _key_str = _key_str or os.getenv('SSL_KEY_FILE', '').strip()
+
     _default_certs = Path.home() / '.certs'
     cert_file = Path(_cert_str).expanduser() if _cert_str else _default_certs / 'localhost+2.pem'
     key_file = Path(_key_str).expanduser() if _key_str else _default_certs / 'localhost+2-key.pem'
+
     protocol = getattr(server_cfg, 'protocol', None)
     if protocol is not None:
         use_ssl = str(protocol).strip().lower() == 'https'
     else:
         use_ssl = getattr(server_cfg, 'use_ssl', True)
+
     host = getattr(server_cfg, 'host', '0.0.0.0')
     reload = bool(getattr(server_cfg, 'reload', True))
     ssl_kwargs = {}
+
     if use_ssl and cert_file.exists() and key_file.exists():
         ssl_kwargs = {'ssl_certfile': str(cert_file), 'ssl_keyfile': str(key_file)}
         logger.info(f'Server starting https://{host}:{port} (SSL enabled)')
@@ -61,11 +71,29 @@ def get_server_config():
         else:
             logger.warning('Starting HTTP server (SSL disabled)')
         logger.info(f'Server starting http://{host}:{port}')
-    logger.info(f"Uvicorn autoreload: {('ON' if reload else 'OFF')}")
-    return {'host': host, 'port': port, 'protocol': 'https' if ssl_kwargs else 'http', 'reload': reload, 'ssl_kwargs': ssl_kwargs, 'branch': str(os.getenv('GIT_BRANCH', 'main'))}
 
-def run_server(app):
-    """Run the FastAPI server with configured settings."""
+    logger.info(f"Uvicorn autoreload: {('ON' if reload else 'OFF')}")
+    return {
+        'host': host,
+        'port': port,
+        'protocol': 'https' if ssl_kwargs else 'http',
+        'reload': reload,
+        'ssl_kwargs': ssl_kwargs,
+        'branch': str(os.getenv('GIT_BRANCH', 'main')),
+    }
+
+
+def run_server(app: Any = None) -> None:
+    """Запускает главный сервер FastAPI через uvicorn с выделенным логированием в fastapi.log."""
     import uvicorn
     config = get_server_config()
-    uvicorn.run('main:app', host=config['host'], port=config['port'], reload=config['reload'], **config['ssl_kwargs'])
+    uvicorn.run(
+        'main:app',
+        host=config['host'],
+        port=config['port'],
+        reload=config['reload'],
+        log_config=get_uvicorn_log_config('fastapi.log'),
+        access_log=True,
+        server_header=False,
+        **config['ssl_kwargs'],
+    )

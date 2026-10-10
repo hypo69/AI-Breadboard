@@ -24,7 +24,13 @@ import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from pathlib import Path
-from langchain_core.messages import AIMessage
+
+try:
+    from langchain_core.messages import AIMessage
+except ImportError:
+    class AIMessage:
+        def __init__(self, content: str = "") -> None:
+            self.content = content
 
 from src.ai.agents.loader import load_agent_from_manifest
 from src.ai.agents.windows_controller_agent import WindowsControllerAgent
@@ -43,17 +49,23 @@ from src.skills.registry import SkillRegistry
 
 
 
+import inspect
+
 async def call_tool(tool, **kwargs):
     """Вспомогательная функция для вызова инструмента (LangChain StructuredTool или функции)."""
+    func = getattr(tool, 'func', tool)
     if hasattr(tool, 'ainvoke'):
-        return await tool.ainvoke(kwargs)
+        res = await tool.ainvoke(kwargs)
     elif hasattr(tool, 'invoke'):
-        return tool.invoke(kwargs)
-    elif hasattr(tool, 'func') and tool.func:
-        func = tool.func
-        return await func(**kwargs) if asyncio.iscoroutinefunction(func) else func(**kwargs)
+        res = tool.invoke(kwargs)
+    elif callable(func):
+        res = func(**kwargs)
     else:
-        return await tool(**kwargs)
+        res = tool(**kwargs)
+
+    if inspect.iscoroutine(res) or asyncio.iscoroutine(res):
+        return await res
+    return res
 
 
 class TestWindowsTools:
@@ -150,7 +162,7 @@ class TestWindowsTools:
     @pytest.mark.asyncio
     async def test_windows_manage_optional_feature_mock(self):
         """Проверка работы инструмента управления optional features с моком manager."""
-        with patch('apps.windows.features.manager.get_windows_features', return_value=[{'FeatureName': 'TelnetClient', 'State': 'Disabled'}]):
+        with patch('apps.windows.sdk.features.manager.get_windows_features', return_value=[{'FeatureName': 'TelnetClient', 'State': 'Disabled'}]):
             raw_res = await call_tool(windows_manage_optional_feature, action='list')
             data = json.loads(raw_res)
             assert data['status'] == 'ok'
@@ -185,18 +197,15 @@ class TestWindowsControllerAgent:
 
     @pytest.mark.asyncio
     async def test_agent_search_mock(self):
-        """Проверка выполнения ReAct цикла с мок-моделью."""
+        """Проверка выполнения цикла агента с мок-моделью."""
         agent = WindowsControllerAgent()
         mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content='{"action": "windows_control_report", "summary": "Аудит завершен успешно"}'))
         agent._llm = mock_llm
-        with patch('langgraph.prebuilt.create_react_agent') as mock_create_agent:
-            mock_executor = MagicMock()
-            mock_executor.ainvoke = AsyncMock(return_value={'messages': [AIMessage(content='{"action": "windows_control_report", "summary": "Аудит завершен успешно"}')]})
-            mock_create_agent.return_value = mock_executor
 
-            res = await agent.search("Проведи диагностику дисков и сети")
-            assert res.get('action') == 'windows_control_report'
-            assert 'summary' in res or 'text' in res
+        res = await agent.search("Проведи диагностику дисков и сети")
+        assert res.get('action') == 'windows_control_report'
+        assert 'summary' in res or 'text' in res
 
     @pytest.mark.asyncio
     async def test_agent_search_stream(self):

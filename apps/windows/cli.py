@@ -37,7 +37,7 @@ if _project_root not in sys.path:
 
 from apps.windows.ai.diagnostician import WindowsAIDiagnostician
 from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
-from apps.windows.core.root_cause_engine import RootCauseEngine
+from apps.windows.sdk.core.root_cause_engine import RootCauseEngine
 
 def print_banner() -> None:
     """Печать приветственного баннера."""
@@ -317,7 +317,7 @@ def main() -> None:
             for d in report.discrepancies:
                 print(f' - [{d.severity}] {d.component} -> {d.parameter}: {d.sources} ({d.explanation})')
     if args.identity:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service, format_principal_tree
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service, format_principal_tree
         srv = get_accounts_identity_service()
         cur_tok = srv.get_current_identity()
         if args.json:
@@ -329,7 +329,7 @@ def main() -> None:
         return
 
     if args.explain_user:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service, format_principal_tree
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service, format_principal_tree
         srv = get_accounts_identity_service()
         principal = srv.explain(args.explain_user)
         if args.json:
@@ -340,7 +340,7 @@ def main() -> None:
         return
 
     if args.explain_pid is not None:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service, format_pid_tree
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service, format_pid_tree
         srv = get_accounts_identity_service()
         pid_info = srv.explain_pid(args.explain_pid)
         if args.json:
@@ -351,7 +351,7 @@ def main() -> None:
         return
 
     if args.who_is_admin:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service
         srv = get_accounts_identity_service()
         admins = srv.who_is_admin()
         if args.json:
@@ -366,7 +366,7 @@ def main() -> None:
         return
 
     if args.who_can_logon_as_service:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service
         srv = get_accounts_identity_service()
         accounts = srv.who_can_logon_as_service()
         if args.json:
@@ -378,7 +378,7 @@ def main() -> None:
         return
 
     if args.who_can_rdp:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service
         srv = get_accounts_identity_service()
         accounts = srv.who_can_rdp()
         if args.json:
@@ -390,7 +390,7 @@ def main() -> None:
         return
 
     if args.orphaned_sids:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service
         srv = get_accounts_identity_service()
         orphaned = srv.find_orphaned_sids()
         if args.json:
@@ -404,7 +404,7 @@ def main() -> None:
         return
 
     if args.identity_graph:
-        from apps.windows.modules.accounts_identity import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity import get_accounts_identity_service
         srv = get_accounts_identity_service()
         graph = srv.get_identity_graph()
         if args.json:

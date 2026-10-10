@@ -16,7 +16,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:46:50
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Mixin class for centralized error handling in GoogleGenerativeAI."""
@@ -179,6 +179,10 @@ class GoogleGenerativeAIErrorMixin:
             max_attempts=max_attempts,
         )
         logger.error(f'Gemini Model Error (Attempt {attempt + 1}/{max_attempts}):\n{err_json}')
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            logger.critical(f'[DEBUG MODE] Ошибка ответа модели Gemini ({active_model}) на попытке {attempt + 1}/{max_attempts}. Немедленная остановка выполнения.')
+            raise ex
         if '401' in ex_str or 'API_KEY_INVALID' in ex_str or 'PERMISSION_DENIED' in ex_str:
             logger.warning(f'GoogleGenerativeAI: Authorization error (API key invalid/expired). Rotating key...', exc_info=False)
             record_model_error(provider='gemini', model_name=active_model, error=ex_str, status_code=401, attempt=attempt, max_attempts=max_attempts, action_taken='rotate_key')

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/windows_admin_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 11:46:00
+ * Updated: 2026-10-10 11:47:00
  * =============================================================================
  */
 
@@ -188,7 +188,8 @@
   }
 
   function openUserDossier(u) {
-    if (!window.AITableModal) return;
+    const modal = window.AIModalDialog || window.AITableModal;
+    if (!modal) return;
 
     const metadata = [
       { label: 'Имя пользователя', value: u.name },
@@ -214,10 +215,11 @@
     if (u.is_hidden) badges.push({ text: 'Скрытый', class: 'badge bg-secondary-subtle text-secondary border border-secondary-subtle' });
     if (!u.enabled) badges.push({ text: 'Отключен', class: 'badge bg-danger-subtle text-danger border border-danger-subtle' });
 
-    window.AITableModal.show({
+    modal.show({
       icon: '👤',
       title: `Учетная запись: ${u.name}`,
       subtitle: `${u.full_name ? u.full_name + ' | ' : ''}SID: ${u.sid}`,
+      panelId: 'panel-winadmin-users',
       tableType: 'user_account',
       badges: badges,
       metadata: metadata,
@@ -267,12 +269,14 @@
             const e = displayEvents[idx];
             if (!e) return;
 
-            if (window.AITableModal) {
-              window.AITableModal.show({
+            const modal = window.AIModalDialog || window.AITableModal;
+            if (modal) {
+              modal.show({
                 icon: '📋',
                 title: `Событие #${e.event_id} (${e.source})`,
                 subtitle: `Уровень: ${e.level} | ${e.timestamp || ''}`,
-                tableType: 'generic',
+                panelId: 'panel-winadmin-security-events',
+                tableType: 'security_event',
                 badges: [
                   { text: e.level || 'Info', class: e.level === 'Warning' ? 'badge bg-warning-subtle text-warning border border-warning-subtle' : (e.level === 'Error' ? 'badge bg-danger-subtle text-danger border border-danger-subtle' : 'badge bg-info-subtle text-info border border-info-subtle') }
                 ],

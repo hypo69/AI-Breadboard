@@ -17,7 +17,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 11:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -28,8 +28,10 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from types import SimpleNamespace
 from header import __root__
 from logger import logger
+from src.utils.jjson import j_loads_ns, j_dumps
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _KEYS_FILE: Path = _SECRETS_DIR / 'gemini_keys.json'
 _ENV_FILE: Path = __root__ / '.env'
@@ -76,7 +78,7 @@ def _iso_to_ts(iso_str: str) -> float:
         return 0.0
 
 def _load_keys_file() -> Dict[str, Dict[str, Any]]:
-    """Load keys data dictionary from gemini_keys.json.
+    """Загружает словарь ключей из gemini_keys.json через j_loads_ns.
 
     If file does not exist, attempts initial migration from .env.
 
@@ -85,19 +87,33 @@ def _load_keys_file() -> Dict[str, Dict[str, Any]]:
     """
     if _KEYS_FILE.exists():
         try:
-            from src.utils.jjson import j_loads
-            data = j_loads(_KEYS_FILE)
-            if data and isinstance(data, dict):
+            ns = j_loads_ns(_KEYS_FILE)
+            if isinstance(ns, SimpleNamespace) and len(vars(ns)) > 0:
                 normalized: Dict[str, Dict[str, Any]] = {}
-                for k, v in data.items():
-                    if isinstance(v, dict):
+                for k, v in vars(ns).items():
+                    if isinstance(v, SimpleNamespace):
+                        val = getattr(v, 'value', '') or getattr(v, 'api_key', '') or ''
+                        normalized[k] = {
+                            'value': str(val),
+                            'last_run': str(getattr(v, 'last_run', '') or ''),
+                            'status': str(getattr(v, 'status', 'active') or 'active'),
+                            'exhausted_at': str(getattr(v, 'exhausted_at', '') or ''),
+                            'is_active': bool(getattr(v, 'is_active', False)),
+                        }
+                    elif isinstance(v, dict):
                         val = v.get('value') or v.get('api_key') or ''
-                        normalized[k] = {'value': str(val), 'last_run': str(v.get('last_run') or ''), 'status': str(v.get('status') or 'active'), 'exhausted_at': str(v.get('exhausted_at') or '')}
+                        normalized[k] = {
+                            'value': str(val),
+                            'last_run': str(v.get('last_run') or ''),
+                            'status': str(v.get('status') or 'active'),
+                            'exhausted_at': str(v.get('exhausted_at') or ''),
+                            'is_active': bool(v.get('is_active', False)),
+                        }
                     elif isinstance(v, str):
-                        normalized[k] = {'value': v, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
+                        normalized[k] = {'value': v, 'last_run': '', 'status': 'active', 'exhausted_at': '', 'is_active': False}
                 return normalized
         except Exception as ex:
-            logger.warning(f'Error reading {_KEYS_FILE}: {ex}')
+            logger.warning(f'Error reading {_KEYS_FILE} via j_loads_ns: {ex}')
     bootstrapped = _bootstrap_from_env()
     if bootstrapped:
         _save_keys_file(bootstrapped)
@@ -140,23 +156,21 @@ def _bootstrap_from_env() -> Dict[str, Dict[str, Any]]:
             keys[env_k] = {'value': v_clean, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
     return keys
 
-def _save_keys_file(data: Dict[str, Dict[str, Any]]) -> bool:
-    """Write keys dictionary to JSON file safely.
+def _save_keys_file(data: Dict[str, Dict[str, Any]] | SimpleNamespace) -> bool:
+    """Сохраняет объект конфигурации в gemini_keys.json через j_dumps.
 
     Args:
-        data (Dict[str, Dict[str, Any]]): Keys data to serialize.
+        data (Dict[str, Dict[str, Any]] | SimpleNamespace): Данные конфигурации для сериализации.
 
     Returns:
-        bool: True on success, False on failure.
+        bool: True при успехе, False при ошибке.
     """
     try:
-        from src.utils.jjson import j_dumps
         _ensure_secrets_dir()
-        _KEYS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        j_dumps(data, file_path=_KEYS_FILE, ensure_ascii=False)
-        return True
+        res = j_dumps(data, file_path=_KEYS_FILE, ensure_ascii=False)
+        return res is not None
     except Exception as ex:
-        logger.error(f'Failed to save keys to {_KEYS_FILE}: {ex}')
+        logger.error(f'Failed to save keys to {_KEYS_FILE} via j_dumps: {ex}')
         return False
 
 def _sync_environment(active_val: str) -> None:
@@ -227,6 +241,16 @@ def load_api_keys(names: Optional[List[str]]=None, skip_exhausted: bool=True) ->
         result_keys.append(val)
         result_names.append(name)
         result_states.append(data)
+    
+    # Приоритет: активный ключ всегда идет первым элементом в кортеже
+    active_name = get_active_key_name()
+    if active_name and active_name in result_names:
+        idx = result_names.index(active_name)
+        if idx > 0:
+            result_keys.insert(0, result_keys.pop(idx))
+            result_names.insert(0, result_names.pop(idx))
+            result_states.insert(0, result_states.pop(idx))
+
     if updated_needed:
         _save_keys_file(keys_data)
     if result_keys:
@@ -241,10 +265,10 @@ def load_api_keys(names: Optional[List[str]]=None, skip_exhausted: bool=True) ->
     return (result_keys, result_names, result_states)
 
 def mark_exhausted(key_name: str) -> None:
-    """Mark an API key as exhausted and rotate to next available active key.
+    """Отмечает ключ как исчерпавший квоту и переключает активный на следующий доступный.
 
     Args:
-        key_name (str): Key identifier or value to mark exhausted.
+        key_name (str): Имя или значение ключа.
     """
     if not key_name:
         return
@@ -257,16 +281,30 @@ def mark_exhausted(key_name: str) -> None:
                 target_name = name
                 break
     if target_name not in keys_data:
-        keys_data[target_name] = {'value': key_name, 'last_run': '', 'status': 'exhausted', 'exhausted_at': now_str}
+        keys_data[target_name] = {'value': key_name, 'last_run': '', 'status': 'exhausted', 'exhausted_at': now_str, 'is_active': False}
+    
     keys_data[target_name]['status'] = 'exhausted'
     keys_data[target_name]['exhausted_at'] = now_str
+    keys_data[target_name]['is_active'] = False
+
+    # Ротация: находим следующий включенный неисчерпанный ключ и делаем его единственным активным
+    new_active_name = ""
+    new_active_val = ""
+    for name, data in keys_data.items():
+        if data.get('status') == 'active' and not data.get('exhausted_at') and (data.get('value') or data.get('api_key')):
+            new_active_name = name
+            new_active_val = str(data.get('value') or data.get('api_key'))
+            break
+
+    for name, data in keys_data.items():
+        data['is_active'] = (name == new_active_name) if new_active_name else False
+
     _save_keys_file(keys_data)
     logger.warning(f'API key "{target_name}" marked as exhausted.')
-    for name, data in keys_data.items():
-        if data.get('status') == 'active' and (data.get('value') or data.get('api_key')):
-            active_val = str(data.get('value') or data.get('api_key'))
-            _sync_environment(active_val)
-            break
+    if new_active_val:
+        _sync_environment(new_active_val)
+    elif not new_active_name:
+        os.environ.pop('GEMINI_API_KEY', None)
 
 def update_last_run(key_name: str) -> None:
     """Update last executed timestamp for specified API key.
@@ -444,3 +482,67 @@ def reset_all_quotas() -> int:
             _sync_environment(first_active)
         logger.info(f'Reset quota for {reset_count} keys.')
     return reset_count
+
+
+def get_active_key_name() -> str:
+    """Возвращает имя текущего активного API-ключа.
+
+    Returns:
+        str: Название активного ключа или пустая строка.
+    """
+    keys_data = _load_keys_file()
+    current_env = os.environ.get('GEMINI_API_KEY', '').strip()
+
+    # 1. Поиск по явной отметке is_active
+    for name, data in keys_data.items():
+        if data.get('is_active') and data.get('status') == 'active':
+            return name
+
+    # 2. Поиск по текущему значению в GEMINI_API_KEY
+    if current_env:
+        for name, data in keys_data.items():
+            if (data.get('value') == current_env or data.get('api_key') == current_env) and data.get('status') == 'active':
+                return name
+
+    # 3. Первый активный неисчерпанный ключ
+    for name, data in keys_data.items():
+        if data.get('status') == 'active' and not data.get('exhausted_at'):
+            return name
+
+    return ""
+
+
+def set_active_key(key_name: str) -> bool:
+    """Устанавливает конкретный API-ключ активным по умолчанию.
+
+    Args:
+        key_name (str): Имя ключа для активации.
+
+    Returns:
+        bool: True если ключ успешно активирован.
+    """
+    if not key_name:
+        return False
+    clean_name = key_name.strip()
+    keys_data = _load_keys_file()
+    if clean_name not in keys_data:
+        return False
+
+    target_entry = keys_data[clean_name]
+    target_val = target_entry.get('value') or target_entry.get('api_key') or ''
+    if not target_val:
+        return False
+
+    # Сбрасываем флаг is_active у всех остальных ключей
+    for name, data in keys_data.items():
+        data['is_active'] = (name == clean_name)
+
+    # Если ключ был отключен или исчерпан, возвращаем в активный
+    target_entry['status'] = 'active'
+    target_entry['exhausted_at'] = ''
+
+    success = _save_keys_file(keys_data)
+    if success:
+        _sync_environment(target_val)
+        logger.info(f'API-ключ "{clean_name}" назначен активным.')
+    return success

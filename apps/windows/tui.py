@@ -44,8 +44,8 @@ except ImportError:
     Text = None
     Tree = None
     RICH_AVAILABLE = False
-from apps.windows.core.models import FullAuditReport, RiskLevel
-from apps.windows.core.root_cause_engine import RootCauseEngine
+from apps.windows.sdk.core.models import FullAuditReport, RiskLevel
+from apps.windows.sdk.core.root_cause_engine import RootCauseEngine
 
 def render_dashboard(report: FullAuditReport, console: Console) -> None:
     """Отрисовка главного дашборда здоровья системы."""
@@ -89,7 +89,7 @@ async def run_log_dashboard(interval: float=2.0, channel: str='System', level: s
     """Запуск интерактивного дашборда системных журналов в терминале (System Log Viewer)."""
     import asyncio
     import datetime
-    from apps.windows.core.audits.log_discovery_engine import LogDiscoveryEngine
+    from apps.windows.sdk.core.audits.log_discovery_engine import LogDiscoveryEngine
     discovery = LogDiscoveryEngine()
     level_display = level.capitalize() if level else 'Все'
     title_header = f'Windows Logs Monitor (Канал/Файл: {channel} | Уровень: {level_display})'

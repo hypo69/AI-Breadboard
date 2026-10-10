@@ -33,7 +33,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from logger import logger
-from apps.windows.core.audits.log_discovery_engine import LogDiscoveryEngine
+from apps.windows.sdk.core.audits.log_discovery_engine import LogDiscoveryEngine
 from apps.windows.log_intelligence.src.models import LogEntry as IntelLogEntry
 from apps.windows.log_intelligence.src.pipeline import LogIntelligencePipeline
 from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI

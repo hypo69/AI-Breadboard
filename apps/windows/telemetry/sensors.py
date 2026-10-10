@@ -228,7 +228,7 @@ def _probe_storage_sensors() -> List[HardwareSensor]:
     if os.name != 'nt':
         return sensors
     try:
-        from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor(timeout_sec=30)
         disks = sensor.get_physical_disks()
         for disk in disks:

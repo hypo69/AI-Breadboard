@@ -17,83 +17,80 @@ Project: ai-breadboard
 Package: windows/api/webgui/software_manager_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-10 10:37:00
 =============================================================================
 -->
-
 <!-- Windows Software Manager Tab -->
 <div class="container-fluid py-2 px-3">
-  <!-- Top Stat Cards -->
-  <div class="row g-2 mb-3">
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Установлено пакетов 📦</div>
-        <div class="fs-4 fw-bold mt-1 text-primary" id="sw-installed-count">--</div>
-        <div class="small text-muted mt-1" id="sw-installed-sub">winget list / MSI</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Доступно обновлений ⬆️</div>
-        <div class="fs-4 fw-bold mt-1 text-warning" id="sw-upgrades-count">--</div>
-        <div class="small text-muted mt-1" id="sw-upgrades-sub">winget upgrade</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Источники пакетов (Sources) 🌐</div>
-        <div class="fs-4 fw-bold mt-1 text-info" id="sw-sources-count">--</div>
-        <div class="small text-muted mt-1" id="sw-sources-sub">winget / msstore</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">MSI Инсталлятор ⚙️</div>
-        <div class="fs-4 fw-bold mt-1 text-success" id="sw-msi-status">Готов</div>
-        <div class="small text-muted mt-1" id="sw-msi-sub">msiexec.exe engine</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Action Bar -->
-  <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="sw-refresh-btn">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить список</span>
-      </button>
-      <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1.5" id="sw-check-upgrades-btn">
-        <i class="bi bi-arrow-up-circle"></i>
-        <span>Проверить обновления</span>
-      </button>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="sw-search-input" placeholder="Поиск пакета по имени или ID..." style="width: 260px;">
-    </div>
-  </div>
-
-  <!-- Software Table -->
-  <div class="card bg-dark text-white border-secondary shadow-sm">
-    <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
-      <span class="fw-semibold"><i class="bi bi-box-seam text-primary me-2"></i>Установленные приложения и пакеты (Winget & MSI)</span>
-      <span class="badge bg-secondary" id="sw-table-badge">0 пакетов</span>
-    </div>
-    <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
-      <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="sw-table">
-        <thead class="sticky-top bg-dark">
-          <tr class="text-secondary">
-            <th>Имя приложения</th>
-            <th>Идентификатор (ID)</th>
-            <th>Версия</th>
-            <th>Доступная версия</th>
-            <th>Источник</th>
-            <th class="text-end">Действия</th>
-          </tr>
-        </thead>
-        <tbody id="sw-tbody">
-          <tr><td colspan="6" class="text-center text-muted py-4">Опрос установленных программ через winget...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<!-- Top Stat Cards -->
+<div class="row g-2 mb-3">
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-software-manager-1" id="panel-software-manager-1">
+<div class="text-muted small text-uppercase fw-semibold">Установлено пакетов 📦</div>
+<div class="fs-4 fw-bold mt-1 text-primary" id="sw-installed-count">--</div>
+<div class="small text-muted mt-1" id="sw-installed-sub">winget list / MSI</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-software-manager-2" id="panel-software-manager-2">
+<div class="text-muted small text-uppercase fw-semibold">Доступно обновлений ⬆️</div>
+<div class="fs-4 fw-bold mt-1 text-warning" id="sw-upgrades-count">--</div>
+<div class="small text-muted mt-1" id="sw-upgrades-sub">winget upgrade</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-software-manager-3" id="panel-software-manager-3">
+<div class="text-muted small text-uppercase fw-semibold">Источники пакетов (Sources) 🌐</div>
+<div class="fs-4 fw-bold mt-1 text-info" id="sw-sources-count">--</div>
+<div class="small text-muted mt-1" id="sw-sources-sub">winget / msstore</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-software-manager-4" id="panel-software-manager-4">
+<div class="text-muted small text-uppercase fw-semibold">MSI Инсталлятор ⚙️</div>
+<div class="fs-4 fw-bold mt-1 text-success" id="sw-msi-status">Готов</div>
+<div class="small text-muted mt-1" id="sw-msi-sub">msiexec.exe engine</div>
+</div>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="sw-refresh-btn">
+<i class="bi bi-arrow-clockwise"></i>
+<span>Обновить список</span>
+</button>
+<button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1.5" id="sw-check-upgrades-btn">
+<i class="bi bi-arrow-up-circle"></i>
+<span>Проверить обновления</span>
+</button>
+</div>
+<div class="d-flex align-items-center gap-2">
+<input class="form-control form-control-sm bg-dark text-white border-secondary" id="sw-search-input" placeholder="Поиск пакета по имени или ID..." style="width: 260px;" type="text"/>
+</div>
+</div>
+<!-- Software Table -->
+<div class="card bg-dark text-white border-secondary shadow-sm" data-panel-id="panel-software-manager-ustanovlennye-prilozheniya-i-pak" id="panel-software-manager-ustanovlennye-prilozheniya-i-pak">
+<div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+<span class="fw-semibold"><i class="bi bi-box-seam text-primary me-2"></i>Установленные приложения и пакеты (Winget &amp; MSI)</span>
+<span class="badge bg-secondary" id="sw-table-badge">0 пакетов</span>
+</div>
+<div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
+<table class="table table-dark table-hover table-striped align-middle mb-0 small" id="sw-table">
+<thead class="sticky-top bg-dark">
+<tr class="text-secondary">
+<th>Имя приложения</th>
+<th>Идентификатор (ID)</th>
+<th>Версия</th>
+<th>Доступная версия</th>
+<th>Источник</th>
+<th class="text-end">Действия</th>
+</tr>
+</thead>
+<tbody id="sw-tbody">
+<tr><td class="text-center text-muted py-4" colspan="6">Опрос установленных программ через winget...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>

@@ -27,7 +27,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
-from apps.windows.core.system_restore import WindowsSystemRestoreManager
+from apps.windows.sdk.core.system_restore import WindowsSystemRestoreManager
 
 class TestWindowsSystemRestoreManager:
     """Набор тестов для класса WindowsSystemRestoreManager."""

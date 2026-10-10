@@ -16,7 +16,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 13:36:00
+# Updated: 2026-10-10 11:26:00
 # =============================================================================
 
 """Router для управления API ключами."""
@@ -46,21 +46,10 @@ def _mask_key(key: str) -> str:
     return "*" * (len(key) - 4) + key[-4:]
 
 def _load_keys_from_file() -> List[dict]:
-    """Загружает ключи из gemini_keys.json."""
+    """Загружает ключи из gemini_keys.json: открыл -> прочитал -> закрыл."""
     try:
-        from src.utils.jjson import j_loads_ns
-        from src.ai.gemini.gemini_api_key_state import _SECRETS_DIR, _KEYS_FILE
-        
-        if not _KEYS_FILE.exists():
-            logger.warning(f'Файл ключей не найден: {_KEYS_FILE}')
-            return []
-        
-        keys_data = j_loads_ns(_KEYS_FILE)
-        # Convert SimpleNamespace to dict recursively
-        if isinstance(keys_data, SimpleNamespace):
-            keys_data = {k: vars(v) if isinstance(v, SimpleNamespace) else v 
-                        for k, v in vars(keys_data).items()}
-        
+        from src.ai.gemini.gemini_api_key_state import _load_keys_file
+        keys_data = _load_keys_file()
         result = []
         for name, data in keys_data.items():
             if isinstance(data, dict):
@@ -70,9 +59,10 @@ def _load_keys_from_file() -> List[dict]:
                     "role": "admin",
                     "key": data.get("value", ""),
                     "status": data.get("status", "active"),
-                    "exhausted": data.get("status") == "exhausted",
+                    "exhausted": data.get("status") == "exhausted" or bool(data.get("exhausted_at")),
                     "exhausted_at": data.get("exhausted_at", ""),
-                    "last_run": data.get("last_run", "")
+                    "last_run": data.get("last_run", ""),
+                    "is_active": bool(data.get("is_active", False))
                 })
         return result
     except Exception as e:
@@ -94,10 +84,13 @@ class KeyEntry(BaseModel):
     exhausted: bool = False
     exhausted_at: str = ""
     last_run: str = ""
+    is_active: bool = False
 
 @router.get("/", response_model=List[KeyEntry])
 async def list_keys() -> List[KeyEntry]:
+    from src.ai.gemini.gemini_api_key_state import get_active_key_name
     keys = _load_keys_from_file()
+    active_key = get_active_key_name()
     return [KeyEntry(
         id=rec["id"],
         name=rec["name"],
@@ -106,7 +99,8 @@ async def list_keys() -> List[KeyEntry]:
         status=rec.get("status", "active"),
         exhausted=rec.get("exhausted", False),
         exhausted_at=rec.get("exhausted_at", ""),
-        last_run=rec.get("last_run", "")
+        last_run=rec.get("last_run", ""),
+        is_active=(rec["name"] == active_key or rec.get("is_active", False))
     ) for rec in keys]
 
 @router.post("/", response_model=KeyEntry)
@@ -135,20 +129,19 @@ async def create_key(req: KeyCreateRequest) -> KeyEntry:
 @router.put("/{key_name}", response_model=KeyEntry)
 async def update_key(key_name: str, req: KeyUpdateRequest) -> KeyEntry:
     try:
-        from src.ai.gemini.gemini_api_key_state import load_api_keys, save_api_key
-        keys_data = load_api_keys()[0] if isinstance(load_api_keys(), tuple) else {}
+        from src.ai.gemini.gemini_api_key_state import _load_keys_file, _save_keys_file, _sync_environment
+        keys_data = _load_keys_file()
         
         if key_name not in keys_data:
             raise HTTPException(status_code=404, detail=f"Ключ '{key_name}' не найден")
         
         # Обновляем данные ключа
         keys_data[key_name]["status"] = keys_data[key_name].get("status", "active")
-        if req.name is not None:
+        if req.name is not None and req.name != key_name:
             # Renaming keys is not supported in gemini_api_key_state
             raise HTTPException(status_code=400, detail="Переименование ключей не поддерживается")
         
         # Сохраняем
-        from src.ai.gemini.gemini_api_key_state import _save_keys_file, _sync_environment
         _save_keys_file(keys_data)
         _sync_environment(keys_data[key_name].get("value", ""))
         
@@ -208,8 +201,8 @@ async def reset_key_quota(key_name: str) -> dict:
 async def toggle_key_status(key_name: str, req: dict) -> dict:
     """Переключить статус ключа (active/disabled)."""
     try:
-        from src.ai.gemini.gemini_api_key_state import save_api_key, load_api_keys
-        keys_data = load_api_keys()[0] if isinstance(load_api_keys(), tuple) else {}
+        from src.ai.gemini.gemini_api_key_state import _load_keys_file, _save_keys_file, _sync_environment
+        keys_data = _load_keys_file()
         
         if key_name not in keys_data:
             raise HTTPException(status_code=404, detail=f"Ключ '{key_name}' не найден")
@@ -220,14 +213,32 @@ async def toggle_key_status(key_name: str, req: dict) -> dict:
         
         # Обновляем статус
         keys_data[key_name]["status"] = new_status
-        if new_status == "active" and keys_data[key_name].get("exhausted_at"):
-            keys_data[key_name]["exhausted_at"] = ""
-        
+        if new_status == "disabled":
+            was_active = bool(keys_data[key_name].get("is_active"))
+            keys_data[key_name]["is_active"] = False
+            if was_active:
+                new_active_val = ""
+                for name, data in keys_data.items():
+                    if data.get("status") == "active" and not data.get("exhausted_at") and (data.get("value") or data.get("api_key")):
+                        data["is_active"] = True
+                        new_active_val = str(data.get("value") or data.get("api_key"))
+                        break
+                if new_active_val:
+                    _sync_environment(new_active_val)
+                else:
+                    import os
+                    os.environ.pop("GEMINI_API_KEY", None)
+        elif new_status == "active":
+            if keys_data[key_name].get("exhausted_at"):
+                keys_data[key_name]["exhausted_at"] = ""
+            has_active = any(d.get("is_active") and d.get("status") == "active" and not d.get("exhausted_at") for d in keys_data.values())
+            if not has_active:
+                for name, data in keys_data.items():
+                    data["is_active"] = (name == key_name)
+                _sync_environment(str(keys_data[key_name].get("value") or keys_data[key_name].get("api_key") or ""))
+
         # Сохраняем
-        from src.ai.gemini.gemini_api_key_state import _save_keys_file, _sync_environment
         _save_keys_file(keys_data)
-        _sync_environment(keys_data[key_name].get("value", ""))
-        
         return {"status": "success", "message": f"Статус ключа '{key_name}' изменен на '{new_status}'"}
     except HTTPException:
         raise
@@ -235,8 +246,102 @@ async def toggle_key_status(key_name: str, req: dict) -> dict:
         logger.error(f"Ошибка переключения статуса ключа '{key_name}': {e}")
         raise HTTPException(status_code=500, detail=f"Ошибка переключения статуса: {str(e)}")
 
+@router.post("/{key_name}/activate", response_model=dict)
+@router.post("/{key_name}/set-active", response_model=dict)
+async def activate_key(key_name: str) -> dict:
+    """Назначить конкретный API-ключ активным по умолчанию."""
+    try:
+        from src.ai.gemini.gemini_api_key_state import set_active_key
+        success = set_active_key(key_name)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Ключ '{key_name}' не найден или пустой")
+        return {"status": "success", "message": f"Ключ '{key_name}' назначен активным", "active_key": key_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка активации ключа '{key_name}': {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка активации ключа: {str(e)}")
+
+class KeyTestPayload(BaseModel):
+    """Параметры проверки валидности ключа."""
+    model: str = Field(default="gemini-3.1-flash-lite", description="Имя модели для проверки")
+    message: str = Field(default="hello world", description="Тестовое сообщение")
+
+
+@router.post("/{key_name}/test", response_model=dict)
+async def test_api_key(key_name: str, payload: KeyTestPayload = None) -> dict:
+    """Проверка валидности конкретного API-ключа Gemini отправкой тестового запроса (hello world)."""
+    import time
+    from google import genai
+    from src.ai.gemini.gemini_api_key_state import update_last_run, mark_exhausted, reset_quota, _load_keys_file
+
+    target_model = payload.model if payload and payload.model else "gemini-3.1-flash-lite"
+    test_msg = payload.message if payload and payload.message else "hello world"
+
+    # Загружаем ключи
+    all_keys = _load_keys_file()
+    if key_name not in all_keys:
+        raise HTTPException(status_code=404, detail=f"Ключ '{key_name}' не найден")
+
+    raw_key = all_keys[key_name].get("value") or all_keys[key_name].get("api_key") or ""
+
+    if not raw_key:
+        raise HTTPException(status_code=400, detail=f"Значение токена для ключа '{key_name}' пустое")
+
+    masked = _mask_key(raw_key)
+    start_t = time.perf_counter()
+
+    try:
+        client = genai.Client(api_key=raw_key)
+        response = client.models.generate_content(
+            model=target_model,
+            contents=test_msg,
+        )
+        duration_ms = round((time.perf_counter() - start_t) * 1000, 1)
+        resp_text = response.text or ""
+
+        # Успешный ответ — обновляем метки и сбрасываем бан квоты
+        try:
+            update_last_run(key_name)
+            reset_quota(key_name)
+        except Exception:
+            pass
+
+        return {
+            "status": "success",
+            "valid": True,
+            "key_name": key_name,
+            "masked_key": masked,
+            "model": target_model,
+            "message": test_msg,
+            "response": resp_text,
+            "duration_ms": duration_ms,
+        }
+    except Exception as exc:
+        duration_ms = round((time.perf_counter() - start_t) * 1000, 1)
+        err_str = str(exc)
+        logger.warning(f"[RouterKeys] Ошибка валидации ключа '{key_name}': {err_str}")
+
+        if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+            try:
+                mark_exhausted(key_name)
+            except Exception:
+                pass
+
+        return {
+            "status": "error",
+            "valid": False,
+            "key_name": key_name,
+            "masked_key": masked,
+            "model": target_model,
+            "message": test_msg,
+            "error": err_str,
+            "duration_ms": duration_ms,
+        }
+
+
 def init_router() -> APIRouter:
     """Инициализация роутера ключей."""
     return router
 
-__all__ = ["init_router", "router", "KeyCreateRequest", "KeyEntry", "KeyUpdateRequest", "_check_exhaustion", "_mask_key"]
+__all__ = ["init_router", "router", "KeyCreateRequest", "KeyEntry", "KeyUpdateRequest", "KeyTestPayload", "_check_exhaustion", "_mask_key"]

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой сетевой диагностики и сканирования LAN
-#   (apps.windows.modules.network).
+#   (apps.windows.sdk.modules.network).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Обнаружение и сканирование устройств в локальной сети (windows_network_scan_lan)
 #     2. Мониторинг сетевого трафика адаптеров и процессов (windows_network_usage_stats)
@@ -105,7 +105,7 @@ async def windows_network_scan_lan(
         JSON со списком обнаруженных устройств (IP, MAC, Hostname, Vendor, State) или подсетей.
     """
     try:
-        from apps.windows.modules.network.lan_scanner import WindowsLanScanner
+        from apps.windows.sdk.modules.network.lan_scanner import WindowsLanScanner
 
         scanner = WindowsLanScanner()
         loop = asyncio.get_running_loop()
@@ -147,7 +147,7 @@ async def windows_network_usage_stats(
         JSON со статистикой сетевых адаптеров или трафиком процессов.
     """
     try:
-        from apps.windows.modules.network.network_usage import WindowsNetworkUsageCollector
+        from apps.windows.sdk.modules.network.network_usage import WindowsNetworkUsageCollector
 
         collector = WindowsNetworkUsageCollector()
         loop = asyncio.get_running_loop()
@@ -183,7 +183,7 @@ async def windows_network_speedtest(
         JSON с результатами замера скорости (Mbps, latency_ms, bufferbloat_grade, rating).
     """
     try:
-        from apps.windows.modules.network.speedtest import NetworkSpeedTester
+        from apps.windows.sdk.modules.network.speedtest import NetworkSpeedTester
 
         tester = NetworkSpeedTester(duration_s=float(duration_seconds))
         res = await tester.run_full_speedtest()

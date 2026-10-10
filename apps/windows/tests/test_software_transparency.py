@@ -24,7 +24,7 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from apps.windows.core.software_transparency import (
+from apps.windows.sdk.core.software_transparency import (
     ConfigFile,
     ConfigInspector,
     EvidenceStatus,
@@ -146,4 +146,4 @@ def test_fastapi_router():
 
     db_details = storage.get_software_app_details_from_db(first_app_id)
     assert db_details is not None
-    assert db_details['app_id'] == first_app_id
+    assert db_details['app_id'] == first_app_id

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого чтения, поиска и управления системным реестром Windows
-#   (apps.windows.modules.registry).
+#   (apps.windows.sdk.modules.registry).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Чтение ключей и быстрых закладок реестра (windows_registry_read)
 #     2. Поиск по ключам и значениям реестра (windows_registry_search)
@@ -105,7 +105,7 @@ async def windows_registry_read(
         JSON с содержимым ключа или списком закладок реестра.
     """
     try:
-        from apps.windows.modules.registry.viewer import RegistryViewer
+        from apps.windows.sdk.modules.registry.viewer import RegistryViewer
 
         rv = RegistryViewer()
         loop = asyncio.get_running_loop()
@@ -158,7 +158,7 @@ async def windows_registry_search(
         JSON с найденными ключами и значениями реестра.
     """
     try:
-        from apps.windows.modules.registry.viewer import RegistryViewer
+        from apps.windows.sdk.modules.registry.viewer import RegistryViewer
 
         rv = RegistryViewer()
         loop = asyncio.get_running_loop()
@@ -213,7 +213,7 @@ async def windows_registry_action(
         JSON с результатом операции модификации реестра.
     """
     try:
-        from apps.windows.modules.registry.viewer import RegistryViewer
+        from apps.windows.sdk.modules.registry.viewer import RegistryViewer
 
         rv = RegistryViewer()
         loop = asyncio.get_running_loop()

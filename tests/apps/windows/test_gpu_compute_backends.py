@@ -20,7 +20,7 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from apps.windows.modules.hardware.gpu_prober import (
+from apps.windows.sdk.modules.hardware.gpu_prober import (
     GpuDeviceTelemetry,
     NpuDeviceTelemetry,
     determine_gpu_compute_backends,
@@ -134,7 +134,7 @@ class TestGpuComputeBackends:
             ),
         ]
 
-        with patch("apps.windows.modules.hardware.gpu_prober.GpuProber.probe_all", return_value=mock_devices):
+        with patch("apps.windows.sdk.modules.hardware.gpu_prober.GpuProber.probe_all", return_value=mock_devices):
             gpus = collector.get_gpu_metrics()
             assert len(gpus) == 3
 

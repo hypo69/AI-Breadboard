@@ -129,7 +129,7 @@ py -m apps.windows.wikillm tui
      "min_confidence_threshold": 0.70,
      "max_queue_size": 1000,
      "async_workers": 2,
-     "gemini_model_id": "gemini-3.5-flash-lite",
+     "gemini_model_id": "gemini-3.1-flash-lite",
      "enable_code_indexer": true,
      "enable_semantic_search": true,
      "cache_exact_hits": true

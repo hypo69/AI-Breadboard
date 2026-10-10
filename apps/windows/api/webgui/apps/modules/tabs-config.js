@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 12:35:00
+ * Updated: 2026-10-10 11:49:00
  * =============================================================================
  */
 
@@ -28,7 +28,7 @@ export const APP_TAB_DEFS = [
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
   { id: 'system_inspector', tab: 'hardware-load-inspector', tabId: 'tab-hardware-load-inspector', html: '/html/system_inspector_tab/index.html?v=20261008_v1', js: '/html/system_inspector_tab/main.js?v=20261008_v1' },
   { id: 'processes_load_inspector', tab: 'processes-load-inspector', tabId: 'tab-processes-load-inspector', html: '/html/processes_load_inspector_tab/index.html?v=20261008_v1', js: '/html/processes_load_inspector_tab/main.js?v=20261008_v1' },
-  { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
+  { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html?v=20261010_v2', js: '/html/windows_admin_tab/main.js?v=20261010_v2' },
   { id: 'focus_settings', tab: 'focus-settings', tabId: 'tab-focus-settings', html: '/html/focus_settings_tab/index.html?v=20261006_v1', js: '/html/focus_settings_tab/main.js?v=20261006_v1' },
   { id: 'system32_commands', tab: 'system32-commands', tabId: 'tab-system32-commands', html: '/html/system32_commands_tab/index.html?v=20261006_v1', js: '/html/system32_commands_tab/main.js?v=20261006_v1' },
   { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20261008_v1', js: '/html/system_control_tab/main.js?v=20261008_v1' },
@@ -64,7 +64,7 @@ export const APP_TAB_DEFS = [
   { id: 'peripherals', tab: 'peripherals', tabId: 'tab-peripherals', html: '/html/peripherals_tab/index.html?v=20260924_v1', js: '/html/peripherals_tab/main.js?v=20260924_v1' },
   { id: 'rag', tab: 'rag', tabId: 'tab-rag', html: '/html/rag_tab/index.html', js: '/html/rag_tab/main.js' },
   { id: 'pixelrag', tab: 'pixelrag', tabId: 'tab-pixelrag', html: '/html/pixelrag_tab/index.html', js: '/html/pixelrag_tab/main.js' },
-  { id: 'models', tab: 'models', tabId: 'tab-models', html: '/html/models_tab/index.html', js: '/html/models_tab/main.js' },
+  { id: 'models', tab: 'models', tabId: 'tab-models', html: '/html/models_tab/index.html?v=20261010_v1', js: '/html/models_tab/main.js?v=20261010_v1' },
   { id: 'agents', tab: 'agents', tabId: 'tab-agents', html: '/html/agents_tab/index.html', js: '/html/agents_tab/main.js' },
   { id: 'skills', tab: 'skills', tabId: 'tab-skills', html: '/html/skills_tab/index.html', js: '/html/skills_tab/main.js' },
   { id: 'mcp', tab: 'mcp', tabId: 'tab-mcp', html: '/html/mcp_tab/index.html', js: '/html/mcp_tab/main.js' },
@@ -86,7 +86,7 @@ export const APP_TAB_DEFS = [
   { id: 'taskbar_controller', tab: 'taskbar-controller', tabId: 'tab-taskbar-controller', html: '/html/taskbar_tab/index.html?v=20261006_v1', js: '/html/taskbar_tab/main.js?v=20261006_v1' },
   { id: 'accounts_identity', tab: 'accounts-identity', tabId: 'tab-accounts-identity', html: '/html/accounts_identity_tab/index.html?v=20261008_v1', js: '/html/accounts_identity_tab/main.js?v=20261008_v1' },
   { id: 'power_lifecycle', tab: 'power-lifecycle', tabId: 'tab-power-lifecycle', html: '/html/power_lifecycle_tab/index.html?v=20261008_v2', js: '/html/power_lifecycle_tab/main.js?v=20261008_v2' },
-  { id: 'app_logs', tab: 'app-logs', tabId: 'tab-app-logs', html: '/html/app_logs_tab/index.html?v=20261008_v2', js: '/html/app_logs_tab/main.js?v=20261008_v2' },
+  { id: 'app_logs', tab: 'app-logs', tabId: 'tab-app-logs', html: '/html/app_logs_tab/index.html?v=20261010_v3', js: '/html/app_logs_tab/main.js?v=20261010_v3' },
 ];
 
 export const TC_EXCLUDES = new Set([

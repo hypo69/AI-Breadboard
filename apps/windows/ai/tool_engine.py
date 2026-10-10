@@ -20,7 +20,7 @@
 from __future__ import annotations
 """Динамический генератор инструментов и исполнитель навыков ИИ для Windows."""
 
-from apps.windows.core.dynamic_tool_engine import (
+from apps.windows.sdk.core.dynamic_tool_engine import (
     DynamicToolPlan,
     lookup_vendor,
     CreateCustomToolMetaTool,

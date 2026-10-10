@@ -31,7 +31,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from logger import logger
-from apps.windows.modules.network.speedtest import NetworkSpeedTester
+from apps.windows.sdk.modules.network.speedtest import NetworkSpeedTester
 
 _speed_cache: Optional[tuple[float, Dict[str, Any]]] = None
 _CACHE_TTL = 3600  # 1 час между замерами скорости для снижения нагрузки на сеть

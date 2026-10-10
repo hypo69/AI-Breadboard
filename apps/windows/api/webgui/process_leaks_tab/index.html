@@ -17,24 +17,23 @@ Usage Examples:
  * Package: windows/api/webgui/process_leaks_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 03:08:00
+ * Updated: 2026-10-10 12:56:00
  * =============================================================================
 -->
-
 <style>
   .leaks-tab-wrapper {
     padding: 0.75rem;
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
   }
   .diag-meter-card {
-    background: var(--surface-2, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md, 8px);
     padding: 0.75rem 1rem;
   }
   .diag-badge-critical {
     background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
+    color: #ef4444;
     border: 1px solid rgba(239, 68, 68, 0.4);
     font-size: 0.70rem;
     padding: 2px 6px;
@@ -43,7 +42,7 @@ Usage Examples:
   }
   .diag-badge-warning {
     background: rgba(234, 179, 8, 0.2);
-    color: #fde047;
+    color: #d97706;
     border: 1px solid rgba(234, 179, 8, 0.4);
     font-size: 0.70rem;
     padding: 2px 6px;
@@ -52,7 +51,7 @@ Usage Examples:
   }
   .diag-badge-normal {
     background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
+    color: #16a34a;
     border: 1px solid rgba(34, 197, 94, 0.3);
     font-size: 0.70rem;
     padding: 2px 6px;
@@ -60,133 +59,130 @@ Usage Examples:
     font-weight: 500;
   }
   .diag-panel {
-    background: var(--surface-2, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
   }
   .diag-panel-header {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--surface-2);
     padding: 8px 14px;
-    border-bottom: 1px solid var(--border-color, #334155);
+    border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 0.85rem;
+    color: var(--nav-active);
   }
 </style>
-
 <div class="leaks-tab-wrapper">
-  <!-- Top Header & Status -->
-  <div class="card shadow-sm border-secondary-subtle mb-3">
-    <div class="card-body p-3">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div class="d-flex align-items-center gap-2">
-          <div class="fs-4">🔍</div>
-          <div>
-            <h5 class="mb-0 fw-bold">1. Утечки ресурсов и микрофризы (Leak Hunter)</h5>
-            <small class="text-muted">Глубокий Win32 аудит: дескрипторы Handles, GDI/USER объекты GUI, Hard Page Faults и риски утечек</small>
-          </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <select class="form-select form-select-sm poll-freq-select" id="diag-leaks-poll-freq" data-poll-id="process_leaks" title="Частота опроса: Утечки процессов">
-            <option value="start">Только при старте</option>
-            <option value="manual" selected>По запросу</option>
-            <option value="3">Каждые 3 сек</option>
-            <option value="5">Каждые 5 сек</option>
-            <option value="10">Каждые 10 сек</option>
-            <option value="30">Каждые 30 сек</option>
-            <option value="60">Каждые 60 сек</option>
-            <option value="120">Каждые 120 сек</option>
-          </select>
-          <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-leaks-refresh">
-            <i class="bi bi-arrow-clockwise"></i> Обновить
+<!-- Top Header & Status -->
+<div class="card shadow-sm border-secondary-subtle mb-3" data-panel-id="panel-process-leaks-1-utechki-resursov-i-mikrofrizy" id="panel-process-leaks-1-utechki-resursov-i-mikrofrizy">
+<div class="card-body p-3">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+<div class="d-flex align-items-center gap-2">
+<div class="fs-4">🔍</div>
+<div>
+<h5 class="mb-0 fw-bold">1. Утечки ресурсов и микрофризы (Leak Hunter)</h5>
+<small class="text-muted">Глубокий Win32 аудит: дескрипторы Handles, GDI/USER объекты GUI, Hard Page Faults и риски утечек</small>
+</div>
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<select class="form-select form-select-sm poll-freq-select" data-poll-id="process_leaks" id="diag-leaks-poll-freq" title="Частота опроса: Утечки процессов">
+<option value="start">Только при старте</option>
+<option selected="" value="manual">По запросу</option>
+<option value="3">Каждые 3 сек</option>
+<option value="5">Каждые 5 сек</option>
+<option value="10">Каждые 10 сек</option>
+<option value="30">Каждые 30 сек</option>
+<option value="60">Каждые 60 сек</option>
+<option value="120">Каждые 120 сек</option>
+</select>
+<button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-leaks-refresh">
+<i class="bi bi-arrow-clockwise"></i> Обновить
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Top Leak Hunter KPI Metrics -->
-  <div class="row g-2 mb-3">
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="diag-meter-card">
-        <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>Проанализировано процессов</span>
-          <i class="bi bi-cpu text-info"></i>
-        </div>
-        <div class="fs-4 fw-bold text-info mt-1" id="diag-leaks-total-proc">0</div>
-        <div class="small text-muted">Полнотекстовый срез Win32 API</div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="diag-meter-card">
-        <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>С признаками утечек</span>
-          <i class="bi bi-exclamation-triangle text-danger"></i>
-        </div>
-        <div class="fs-4 fw-bold text-danger mt-1" id="diag-leaks-suspicious-count">0</div>
-        <div class="small text-muted">Handles / GDI / Page Faults</div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="diag-meter-card">
-        <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>Пик дескрипторов (Handles)</span>
-          <i class="bi bi-box text-warning"></i>
-        </div>
-        <div class="fs-4 fw-bold text-warning mt-1" id="diag-leaks-peak-handles">--</div>
-        <div class="small text-muted text-truncate" id="diag-leaks-peak-handles-proc">Процесс: --</div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="diag-meter-card">
-        <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>Пик GDI объектов</span>
-          <i class="bi bi-palette text-primary"></i>
-        </div>
-        <div class="fs-4 fw-bold text-primary mt-1" id="diag-leaks-peak-gdi">--</div>
-        <div class="small text-muted text-truncate" id="diag-leaks-peak-gdi-proc">Лимит OS: 10 000</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Process Leak Hunter Table -->
-  <div class="diag-panel">
-    <div class="diag-panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-shield-shaded text-warning"></i>
-        <span class="text-white">Детектор утечек дескрипторов, GDI и страничных ошибок (Leak Hunter)</span>
-      </div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="btn-group btn-group-sm" role="group" id="diag-leaks-filter-group">
-          <button type="button" class="btn btn-outline-info active py-0.5 px-2" data-filter="all" style="font-size: 0.72rem;">Все</button>
-          <button type="button" class="btn btn-outline-danger py-0.5 px-2" data-filter="suspicious" style="font-size: 0.72rem;">⚠️ Подозрительные</button>
-          <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-filter="gdi" style="font-size: 0.72rem;">GDI > 500</button>
-          <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-filter="handles" style="font-size: 0.72rem;">Handles > 1500</button>
-        </div>
-        <input type="text" class="form-control form-control-sm" id="diag-leaks-search" placeholder="Поиск по PID или имени..." style="max-width: 180px; font-size: 0.74rem; height: 26px;">
-      </div>
-    </div>
-    <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
-      <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
-        <thead>
-          <tr class="text-secondary border-secondary">
-            <th style="width: 70px;">PID</th>
-            <th>Имя процесса</th>
-            <th style="width: 90px; text-align: right;">Handles</th>
-            <th style="width: 90px; text-align: right;">GDI Объекты</th>
-            <th style="width: 90px; text-align: right;">USER Объекты</th>
-            <th style="width: 120px; text-align: right;">Page Faults</th>
-            <th style="width: 90px; text-align: right;">Память (RSS)</th>
-            <th style="width: 70px; text-align: right;">Потоки</th>
-            <th style="width: 100px;">Статус риска</th>
-            <th>Признаки / Аномалии</th>
-          </tr>
-        </thead>
-        <tbody id="diag-leaks-tbody">
-          <tr><td colspan="10" class="text-center py-4 text-muted">Загрузка данных глубокой диагностики процессов...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Top Leak Hunter KPI Metrics -->
+<div class="row g-2 mb-3">
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="diag-meter-card">
+<div class="d-flex justify-content-between align-items-center small text-muted">
+<span>Проанализировано процессов</span>
+<i class="bi bi-cpu text-info"></i>
+</div>
+<div class="fs-4 fw-bold text-info mt-1" id="diag-leaks-total-proc">0</div>
+<div class="small text-muted">Полнотекстовый срез Win32 API</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="diag-meter-card">
+<div class="d-flex justify-content-between align-items-center small text-muted">
+<span>С признаками утечек</span>
+<i class="bi bi-exclamation-triangle text-danger"></i>
+</div>
+<div class="fs-4 fw-bold text-danger mt-1" id="diag-leaks-suspicious-count">0</div>
+<div class="small text-muted">Handles / GDI / Page Faults</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="diag-meter-card">
+<div class="d-flex justify-content-between align-items-center small text-muted">
+<span>Пик дескрипторов (Handles)</span>
+<i class="bi bi-box text-warning"></i>
+</div>
+<div class="fs-4 fw-bold text-warning mt-1" id="diag-leaks-peak-handles">--</div>
+<div class="small text-muted text-truncate" id="diag-leaks-peak-handles-proc">Процесс: --</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-lg-3">
+<div class="diag-meter-card">
+<div class="d-flex justify-content-between align-items-center small text-muted">
+<span>Пик GDI объектов</span>
+<i class="bi bi-palette text-primary"></i>
+</div>
+<div class="fs-4 fw-bold text-primary mt-1" id="diag-leaks-peak-gdi">--</div>
+<div class="small text-muted text-truncate" id="diag-leaks-peak-gdi-proc">Лимит OS: 10 000</div>
+</div>
+</div>
+</div>
+<!-- Main Process Leak Hunter Table -->
+<div class="diag-panel" data-panel-id="panel-process-leaks-1" id="panel-process-leaks-1">
+<div class="diag-panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<i class="bi bi-shield-shaded text-warning"></i>
+<span class="text-body">Детектор утечек дескрипторов, GDI и страничных ошибок (Leak Hunter)</span>
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<div class="btn-group btn-group-sm" id="diag-leaks-filter-group" role="group">
+<button class="btn btn-outline-info active py-0.5 px-2" data-filter="all" style="font-size: 0.72rem;" type="button">Все</button>
+<button class="btn btn-outline-danger py-0.5 px-2" data-filter="suspicious" style="font-size: 0.72rem;" type="button">⚠️ Подозрительные</button>
+<button class="btn btn-outline-secondary py-0.5 px-2" data-filter="gdi" style="font-size: 0.72rem;" type="button">GDI &gt; 500</button>
+<button class="btn btn-outline-secondary py-0.5 px-2" data-filter="handles" style="font-size: 0.72rem;" type="button">Handles &gt; 1500</button>
+</div>
+<input class="form-control form-control-sm" id="diag-leaks-search" placeholder="Поиск по PID или имени..." style="max-width: 180px; font-size: 0.74rem; height: 26px;" type="text"/>
+</div>
+</div>
+<div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+<table class="table table-hover table-sm mb-0" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+<thead>
+<tr>
+<th style="width: 70px;">PID</th>
+<th>Имя процесса</th>
+<th style="width: 90px; text-align: right;">Handles</th>
+<th style="width: 90px; text-align: right;">GDI Объекты</th>
+<th style="width: 90px; text-align: right;">USER Объекты</th>
+<th style="width: 120px; text-align: right;">Page Faults</th>
+<th style="width: 90px; text-align: right;">Память (RSS)</th>
+<th style="width: 70px; text-align: right;">Потоки</th>
+<th style="width: 100px;">Статус риска</th>
+<th>Признаки / Аномалии</th>
+</tr>
+</thead>
+<tbody id="diag-leaks-tbody">
+<tr><td class="text-center py-4 text-muted" colspan="10">Загрузка данных глубокой диагностики процессов...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>

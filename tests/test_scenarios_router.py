@@ -64,7 +64,7 @@ def test_get_questions_endpoint(client):
 
 def test_scenario_chat_and_save_skill(client, monkeypatch):
     """Проверка работы чата без автосохранения и ручного сохранения через /save-skill."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
 
     async def mock_get_model(self):
         return None
@@ -84,7 +84,7 @@ def test_scenario_chat_and_save_skill(client, monkeypatch):
 
 def test_scenario_chat_stream(client, monkeypatch):
     """Проверка потокового SSE эндпоинта /api/v1/scenarios/chat/stream."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
 
     async def mock_get_model(self):
         return None
@@ -100,8 +100,8 @@ def test_scenario_chat_stream(client, monkeypatch):
 
 def test_scenario_execute_fix_endpoint(client, monkeypatch):
     """Проверка работы эндпоинта /api/v1/scenarios/execute-fix."""
-    from apps.windows.core.safe_executor import SafeExecutor
-    from apps.windows.core.models import RemediationAction
+    from apps.windows.sdk.core.safe_executor import SafeExecutor
+    from apps.windows.sdk.core.models import RemediationAction
 
     def mock_execute(self, action: RemediationAction, confirmed_by_user: bool=False):
         action.executed = True
@@ -117,7 +117,7 @@ def test_scenario_execute_fix_endpoint(client, monkeypatch):
 
 def test_services_collector_resolve_binary_and_protection():
     """Проверка корректного разрешения путей и защиты системных служб."""
-    from apps.windows.core.audits.services_collector import _resolve_service_binary, PROTECTED_SYSTEM_SERVICES
+    from apps.windows.sdk.core.audits.services_collector import _resolve_service_binary, PROTECTED_SYSTEM_SERVICES
     assert 'appxsvc' in PROTECTED_SYSTEM_SERVICES
     assert 'bfe' in PROTECTED_SYSTEM_SERVICES
     assert 'rpcss' in PROTECTED_SYSTEM_SERVICES
@@ -128,7 +128,7 @@ def test_services_collector_resolve_binary_and_protection():
 
 def test_dormant_software_audit_chat_and_metadata(client, monkeypatch):
     """Проверка правильного планирования и двухэтапного аудита давно не запускавшегося ПО с метаданными знаний и агентов."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
 
     async def mock_get_model(self):
         return None
@@ -155,7 +155,7 @@ def test_dormant_software_audit_chat_and_metadata(client, monkeypatch):
 
 def test_extract_remediation_actions_structured_and_audit():
     """Тестирование извлечения структурированных действий SafeOps, auditpol и предложений аудита."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
     engine = DynamicWindowsToolEngine()
     reply_with_block = '\nВсе проверено. Для включения аудита используйте кнопку ниже.\n```action\n{\n  "action_id": "custom_audit_fix",\n  "action_type": "custom_command",\n  "title": "Включить аудит процессов",\n  "description": "Включает аудит создания процессов",\n  "target": "Audit",\n  "risk": "caution",\n  "execution_command": "auditpol /set /subcategory:\\"Process Creation\\" /success:enable /failure:enable"\n}\n```\n'
     actions = engine.extract_remediation_actions({}, reply_with_block)
@@ -177,7 +177,7 @@ def test_extract_remediation_actions_structured_and_audit():
 
 def test_scenario_chat_with_use_rag(client, monkeypatch):
     """Проверка передачи флага use_rag в эндпоинты чата."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
 
     async def mock_get_model(self):
         return None
@@ -210,7 +210,7 @@ def test_save_approved_response_endpoint(client, tmp_path):
 
 def test_scenario_chat_keep_context_default_is_false(client, monkeypatch):
     """Проверка, что по умолчанию история диалога НЕ сохраняется (keep_context=False)."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
 
     async def mock_get_model(self):
         return None
@@ -228,7 +228,7 @@ def test_scenario_chat_keep_context_default_is_false(client, monkeypatch):
 
 def test_scenario_chat_keep_context_toggle_enabled(client, monkeypatch):
     """Проверка, что при явном включении keep_context=True история сохраняется в контексте."""
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
 
     async def mock_get_model(self):
         return None

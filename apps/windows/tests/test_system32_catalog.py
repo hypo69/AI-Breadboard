@@ -24,8 +24,8 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from apps.windows.core.system32_catalog import System32Catalog
-from apps.windows.core.system32_models import (
+from apps.windows.sdk.core.system32_catalog import System32Catalog
+from apps.windows.sdk.core.system32_models import (
     AccessType,
     ControlPlaneType,
     System32QueryFilter,
@@ -34,7 +34,7 @@ from apps.windows.core.system32_models import (
     ToolDangerLevel,
     ToolPrivilegeLevel,
 )
-from apps.windows.core.etw_pipeline import EtwTelemetryPipeline
+from apps.windows.sdk.core.etw_pipeline import EtwTelemetryPipeline
 from apps.windows.api.routers.router_system32_catalog import router as system32_router
 
 

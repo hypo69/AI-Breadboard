@@ -23,8 +23,8 @@
 
 import pytest
 from unittest.mock import patch
-from apps.windows.core.models import DomainAuditResult
-from apps.windows.core.audits.performance_collector import PerformanceCollector
+from apps.windows.sdk.core.models import DomainAuditResult
+from apps.windows.sdk.core.audits.performance_collector import PerformanceCollector
 
 def test_performance_collector_sensors():
     """Тест регистрации сенсоров производительности."""

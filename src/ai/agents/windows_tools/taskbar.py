@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты управления панелью задач, окнами и закрепленными приложениями
-#   Windows 10/11 (apps.windows.modules.taskbar).
+#   Windows 10/11 (apps.windows.sdk.modules.taskbar).
 #   Включают:
 #     1. Инспекция панели задач, окон и закрепленных программ (windows_taskbar_audit)
 #     2. Выполнение команд управления панелью задач SafeOps (windows_taskbar_action)
@@ -102,7 +102,7 @@ async def windows_taskbar_audit(
         JSON с результатами инспекции панели задач.
     """
     try:
-        from apps.windows.modules.taskbar.core.manager import TaskbarController
+        from apps.windows.sdk.modules.taskbar.core.manager import TaskbarController
 
         ctrl = TaskbarController()
         loop = asyncio.get_running_loop()

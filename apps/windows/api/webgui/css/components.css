@@ -13,7 +13,7 @@
  * Project: ai-breadboard
  * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-08 02:56:00
+ * Updated: 2026-10-10 05:55:00
  * =============================================================================
  */
 
@@ -345,6 +345,8 @@
   --bs-table-color: var(--text-color);
   --bs-table-bg: transparent;
   --bs-table-border-color: var(--border-color);
+  --bs-table-hover-bg: var(--nav-hover-bg);
+  --bs-table-hover-color: var(--text-color);
   font-size: 0.82rem;
 }
 
@@ -352,15 +354,43 @@
 .table td {
   padding: 0.4rem 0.6rem;
   vertical-align: middle;
+  color: var(--text-color);
 }
 
-.table-hover tbody tr:hover {
-  background-color: var(--nav-hover-bg);
+.table-hover tbody tr:hover,
+.table-hover tbody tr:hover > * {
+  background-color: var(--nav-hover-bg) !important;
+  color: var(--text-color) !important;
 }
 
 .table-dark {
-  --bs-table-bg: var(--surface-2);
+  --bs-table-bg: var(--surface-1);
   --bs-table-color: var(--text-color);
+  --bs-table-border-color: var(--border-color);
+  --bs-table-hover-bg: var(--nav-hover-bg);
+  --bs-table-hover-color: var(--text-color);
+  color: var(--text-color) !important;
+}
+
+.table-dark th,
+.table-dark td {
+  color: var(--text-color);
+}
+
+.table-dark.table-hover tbody tr:hover,
+.table-dark.table-hover tbody tr:hover > * {
+  background-color: var(--nav-hover-bg) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .table-dark,
+[data-theme="brick"] .table-dark {
+  --bs-table-bg: var(--surface-1) !important;
+  --bs-table-color: var(--text-color) !important;
+  --bs-table-border-color: var(--border-color) !important;
+  --bs-table-hover-bg: var(--nav-hover-bg) !important;
+  --bs-table-hover-color: var(--text-color) !important;
+  color: var(--text-color) !important;
 }
 
 [data-theme="dark"] .table-light,

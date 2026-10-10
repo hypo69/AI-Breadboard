@@ -26,7 +26,7 @@ from src.ai.agents.windows_tools.storage_manager import (
     windows_storage_audit,
     windows_storage_action,
 )
-from apps.windows.modules.storage_manager.core.models import (
+from apps.windows.sdk.modules.storage_manager.core.models import (
     DiskInfo,
     StorageReport,
     VolumeInfo,
@@ -74,7 +74,7 @@ def mock_storage_report():
 @pytest.mark.asyncio
 async def test_windows_storage_audit_summary(mock_storage_report):
     """Тест сводной статистики дискового хранилища."""
-    with patch("apps.windows.modules.storage_manager.core.manager.StorageManager.generate_report", return_value=mock_storage_report):
+    with patch("apps.windows.sdk.modules.storage_manager.core.manager.StorageManager.generate_report", return_value=mock_storage_report):
         res_raw = await call_tool(windows_storage_audit, action="summary")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"
@@ -85,7 +85,7 @@ async def test_windows_storage_audit_summary(mock_storage_report):
 @pytest.mark.asyncio
 async def test_windows_storage_audit_volumes(mock_storage_report):
     """Тест инспекции логических томов."""
-    with patch("apps.windows.modules.storage_manager.core.manager.StorageManager.get_volumes", return_value=mock_storage_report.volumes):
+    with patch("apps.windows.sdk.modules.storage_manager.core.manager.StorageManager.get_volumes", return_value=mock_storage_report.volumes):
         res_raw = await call_tool(windows_storage_audit, action="volumes")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

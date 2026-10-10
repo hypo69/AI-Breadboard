@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 13:31:00
+# Updated: 2026-10-10 05:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1022,6 +1022,7 @@ class TelemetryStorage:
         user: Optional[str] = None,
         process_name: Optional[str] = None,
         pid: Optional[int] = None,
+        channel: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
         since_epoch: Optional[float] = None,
@@ -1032,6 +1033,7 @@ class TelemetryStorage:
             user=user,
             process_name=process_name,
             pid=pid,
+            channel=channel,
             limit=limit,
             offset=offset,
             since_epoch=since_epoch,

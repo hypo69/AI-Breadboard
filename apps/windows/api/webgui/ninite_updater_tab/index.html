@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/ninite_updater_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
 
@@ -29,22 +29,23 @@ Updated: 2026-10-01 13:04:40
     margin: 0 auto;
   }
   .ninite-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 10px;
     padding: 1.25rem;
-    color: #f8fafc;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
   }
   .ninite-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border: 1px solid #334155;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 0.85rem 1.25rem;
+    color: var(--text-color);
   }
   .ninite-dropzone {
-    border: 2px dashed #38bdf8;
-    background: rgba(56, 189, 248, 0.05);
+    border: 2px dashed var(--nav-active);
+    background: var(--surface-2);
     border-radius: 10px;
     padding: 2rem 1.5rem;
     text-align: center;
@@ -52,12 +53,12 @@ Updated: 2026-10-01 13:04:40
     transition: all 0.2s ease-in-out;
   }
   .ninite-dropzone:hover, .ninite-dropzone.dragover {
-    background: rgba(56, 189, 248, 0.12);
-    border-color: #0ea5e9;
+    background: var(--nav-hover-bg, rgba(56, 189, 248, 0.12));
+    border-color: var(--nav-active);
   }
   .ninite-stat-box {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0.75rem 1rem;
   }
@@ -65,19 +66,30 @@ Updated: 2026-10-01 13:04:40
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
   }
   .ninite-stat-val {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-color);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .ninite-log-terminal {
+    background: var(--surface-2);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.65rem 0.85rem;
+    max-height: 180px;
+    overflow-y: auto;
+    font-family: ui-monospace, monospace;
+    white-space: pre-wrap;
   }
 </style>
 
 <div class="ninite-container">
   <!-- Верхняя информационная панель -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 ninite-header text-white">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 ninite-header">
     <div class="d-flex align-items-center gap-2.5">
       <span class="fs-4">⚡</span>
       <div>
@@ -86,7 +98,7 @@ Updated: 2026-10-01 13:04:40
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-dark border border-secondary text-info px-2.5 py-1.5" id="ninite-status-badge">
+      <span class="badge rounded-pill bg-body-secondary border border-secondary text-body px-2.5 py-1.5" id="ninite-status-badge">
         Загрузка статуса...
       </span>
       <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-ninite-refresh" type="button">
@@ -107,7 +119,7 @@ Updated: 2026-10-01 13:04:40
           <!-- Dropzone для выбора файла -->
           <label for="ninite-file-input" class="ninite-dropzone mb-3 d-block text-decoration-none" id="ninite-dropzone">
             <i class="bi bi-file-earmark-arrow-up fs-1 text-info mb-2 d-block"></i>
-            <div class="fw-semibold mb-1 text-white" id="ninite-file-label">Перетащите файл установщика Ninite или нажмите для выбора</div>
+            <div class="fw-semibold mb-1 text-body" id="ninite-file-label">Перетащите файл установщика Ninite или нажмите для выбора</div>
             <div class="text-secondary small">Файл будет сохранён и переименован в <code>C:\Program Files\Ninite\ninite.exe</code></div>
             <input type="file" id="ninite-file-input" class="d-none" accept=".exe">
           </label>
@@ -118,7 +130,7 @@ Updated: 2026-10-01 13:04:40
               <label for="ninite-interval" class="form-label small text-secondary fw-semibold">
                 <i class="bi bi-calendar-range me-1"></i> Интервал обновления
               </label>
-              <select class="form-select form-select-sm bg-dark text-white border-secondary" id="ninite-interval">
+              <select class="form-select form-select-sm" id="ninite-interval">
                 <option value="1">Каждую неделю (1 неделя)</option>
                 <option value="2" selected>Каждые 2 недели (по умолчанию)</option>
                 <option value="3">Каждые 3 недели</option>
@@ -130,7 +142,7 @@ Updated: 2026-10-01 13:04:40
               <label for="ninite-time" class="form-label small text-secondary fw-semibold">
                 <i class="bi bi-clock me-1"></i> Время запуска
               </label>
-              <input type="time" class="form-control form-control-sm bg-dark text-white border-secondary" id="ninite-time" value="20:00">
+              <input type="time" class="form-control form-control-sm" id="ninite-time" value="20:00">
             </div>
           </div>
 
@@ -138,7 +150,7 @@ Updated: 2026-10-01 13:04:40
             <label for="ninite-day" class="form-label small text-secondary fw-semibold">
               <i class="bi bi-calendar-event me-1"></i> День недели
             </label>
-            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="ninite-day">
+            <select class="form-select form-select-sm" id="ninite-day">
               <option value="Sunday" selected>Воскресенье</option>
               <option value="Monday">Понедельник</option>
               <option value="Tuesday">Вторник</option>
@@ -220,6 +232,6 @@ Updated: 2026-10-01 13:04:40
       </h6>
       <span class="text-secondary small" id="ninite-log-timestamp"></span>
     </div>
-    <pre class="p-2.5 rounded bg-dark border border-secondary text-light small mb-0" id="ninite-log-viewer" style="max-height: 180px; overflow-y: auto; font-family: ui-monospace, monospace; white-space: pre-wrap;">Логи обновлений пока отсутствуют.</pre>
+    <pre class="ninite-log-terminal small mb-0" id="ninite-log-viewer">Логи обновлений пока отсутствуют.</pre>
   </div>
 </div>

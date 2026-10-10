@@ -31,7 +31,7 @@ from src.ai.agents.windows_tools import (
     windows_services_action,
     WINDOWS_SERVICES_MANAGER_TOOLS,
 )
-from apps.windows.modules.services_manager.core.models import (
+from apps.windows.sdk.modules.services_manager.core.models import (
     ServiceItem,
     ServicesReport,
 )
@@ -64,7 +64,7 @@ async def test_windows_services_list_summary():
         ],
         timestamp="2026-10-08T22:00:00",
     )
-    with patch("apps.windows.modules.services_manager.core.manager.ServicesManager.generate_report", return_value=sample_report):
+    with patch("apps.windows.sdk.modules.services_manager.core.manager.ServicesManager.generate_report", return_value=sample_report):
         res_str = await call_tool(windows_services_list, action="summary")
         res = json.loads(res_str)
         assert res["status"] == "ok"
@@ -82,7 +82,7 @@ async def test_windows_services_action_dry_run():
         "action": "restart",
         "message": "Симуляция restart для службы wuauserv выполнена успешно.",
     }
-    with patch("apps.windows.modules.services_manager.core.manager.ServicesManager.execute_service_action", return_value=sample_res):
+    with patch("apps.windows.sdk.modules.services_manager.core.manager.ServicesManager.execute_service_action", return_value=sample_res):
         res_str = await call_tool(
             windows_services_action,
             name="wuauserv",

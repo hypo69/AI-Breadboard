@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/models_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-10 12:48:00
  * =============================================================================
  */
 
@@ -185,8 +185,12 @@ async function initModelsTab() {
   }
 
   if (modelSelect) {
-    modelSelect.addEventListener('change', () => {
+    modelSelect.addEventListener('change', async () => {
       updateModelFavoriteUI(modelSelect);
+      const curProv = document.getElementById('provider-tab-select')?.value || '';
+      if (modelSelect.value) {
+        await persistSelectedModelAndProvider(modelSelect.value, curProv, true);
+      }
     });
   }
 
@@ -426,31 +430,95 @@ async function initModelsTab() {
   }
   */
 
+  async function persistSelectedModelAndProvider(selectedModel, selectedProvider, showNotify = true) {
+    if (!selectedModel) return;
+    const providerSelect = document.getElementById('provider-tab-select');
+    const actualProvider = selectedProvider || (providerSelect ? providerSelect.value : '');
+
+    try {
+      await Promise.allSettled([
+        window.api.fetch('/auth/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: selectedModel, provider: actualProvider })
+        }),
+        window.api.fetch('/api/v1/tc/model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: selectedModel, provider: actualProvider, save_to_config: true })
+        }),
+        window.api.fetch('/api/v1/tc/provider', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: actualProvider, model: selectedModel, save_to_config: true })
+        }),
+        window.api.fetch('/api/v1/chat/model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: selectedModel, provider: actualProvider })
+        }),
+        window.api.fetch('/api/v1/chat/provider', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: actualProvider, model: selectedModel })
+        })
+      ]);
+
+      // Обновляем бейдж модели по умолчанию на карточке
+      const savedCardBadge = document.getElementById('saved-default-model-badge');
+      if (savedCardBadge) {
+        savedCardBadge.textContent = selectedModel;
+        savedCardBadge.className = 'badge bg-success font-monospace px-2 py-1';
+        savedCardBadge.title = `В вашем профиле и config.json сохранена модель: ${selectedModel}`;
+      }
+
+      // Обновляем верхний навигационный бейдж
+      const appsModelText = document.getElementById('apps-model-text');
+      if (appsModelText) {
+        const cleanModelName = stripModelPrefix(selectedModel);
+        appsModelText.textContent = `${(actualProvider || 'AI').toUpperCase()}: ${cleanModelName}`;
+      }
+
+      const otherModelSelect = document.getElementById('admin-model-select');
+      if (otherModelSelect) {
+        otherModelSelect.value = selectedModel;
+      }
+      if (typeof window.updateChatBadges === 'function') {
+        window.updateChatBadges(selectedModel);
+      }
+
+      if (showNotify) {
+        showModelsNotification(`Модель и провайдер зафиксированы в config.json: ${actualProvider} -> ${selectedModel}`, 'success');
+        if (window.toast && typeof window.toast.success === 'function') {
+          window.toast.success('Настройки сохранены', `Модель ${selectedModel} (${actualProvider}) сохранена в config.json`);
+        }
+      }
+    } catch (err) {
+      console.error('Ошибка сохранения модели/провайдера:', err);
+      if (showNotify) {
+        showModelsNotification('Ошибка сохранения в config.json: ' + err.message, 'danger');
+      }
+    }
+  }
+  window._persistSelectedModelAndProvider = persistSelectedModelAndProvider;
+
   if (saveBtn && modelSelect) {
     saveBtn.onclick = async () => {
       const selectedModel = modelSelect.value;
+      const providerSelect = document.getElementById('provider-tab-select');
+      const selectedProvider = providerSelect ? providerSelect.value : '';
+
+      if (!selectedModel) {
+        showModelsNotification('Сначала выберите модель из списка', 'warning');
+        return;
+      }
+
       saveBtn.disabled = true;
       const originalText = saveBtn.textContent;
-      saveBtn.textContent = 'Сохранение...';
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Сохранение...';
       
       try {
-        await window.api.fetch('/auth/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: selectedModel })
-        });
-        showModelsNotification('Модель успешно обновлена на: ' + selectedModel, 'success');
-        
-        const otherModelSelect = document.getElementById('admin-model-select');
-        if (otherModelSelect) {
-          otherModelSelect.value = selectedModel;
-        }
-        if (typeof window.updateChatBadges === 'function') {
-          window.updateChatBadges(selectedModel);
-        }
-      } catch (err) {
-        console.error('Ошибка сохранения модели:', err);
-        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+        await persistSelectedModelAndProvider(selectedModel, selectedProvider, true);
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
@@ -768,13 +836,15 @@ function renderFavoriteModelsChips(modelSelect) {
       : 'btn btn-sm btn-outline-warning py-0 px-2 font-monospace';
     btnSelect.innerHTML = `<i class="bi bi-star-fill me-1 text-warning"></i>${escapeHtml(modelName)}`;
     btnSelect.title = `Выбрать модель: ${modelName}${note}`;
-    btnSelect.onclick = () => {
+    btnSelect.onclick = async () => {
       if (modelSelect) {
         // Try finding which provider has this model
         const providerSelect = document.getElementById('provider-tab-select');
+        let matchedProv = providerSelect ? providerSelect.value : '';
         if (providerSelect && window._modelsGrouped) {
           for (const p of Object.keys(window._modelsGrouped)) {
             if (window._modelsGrouped[p]?.includes(modelName)) {
+              matchedProv = p;
               if (providerSelect.value !== p) {
                 providerSelect.value = p;
                 if (typeof window._populateModels === 'function') {
@@ -787,6 +857,7 @@ function renderFavoriteModelsChips(modelSelect) {
         }
         modelSelect.value = modelName;
         updateModelFavoriteUI(modelSelect);
+        await persistSelectedModelAndProvider(modelName, matchedProv, true);
       }
     };
 
@@ -812,6 +883,15 @@ function renderFavoriteModelsChips(modelSelect) {
     chip.appendChild(btnRemove);
     container.appendChild(chip);
   });
+}
+
+// Вспомогательная функция очистки префиксов моделей для сравнения и отображения
+function stripModelPrefix(name) {
+  if (!name) return '';
+  return String(name)
+    .replace(/^(gemini|gemini_cli|foundry|ollama|openai|hf|onnx):+/i, '')
+    .replace(/^agy-+/i, '')
+    .trim();
 }
 
 // Helper to load models list
@@ -850,7 +930,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
     showModelsNotification('Список моделей успешно обновлен', 'success');
   }
 
-  // Fetch favorite models and current settings
+  // Загружаем избранные модели
   try {
     const settingsData = await window.api.fetch('/auth/settings');
     if (settingsData && settingsData.favorite_models) {
@@ -865,6 +945,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
     console.warn('Failed to load favorite models:', e);
   }
 
+  // Получаем список доступных провайдеров
   const providers = Object.keys(modelsGrouped).filter(p => modelsGrouped[p] && modelsGrouped[p].length > 0);
 
   if (providers.length === 0) {
@@ -898,17 +979,12 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
       providerModels.forEach(modelName => {
         const option = document.createElement('option');
         option.value = modelName;
-        let cleanName = modelName;
-        if (cleanName.startsWith('foundry:')) cleanName = cleanName.substring(8);
-        else if (cleanName.startsWith('ollama:')) cleanName = cleanName.substring(7);
-        else if (cleanName.startsWith('gemini_cli:')) cleanName = cleanName.substring(11);
-        else if (cleanName.startsWith('agy-')) cleanName = cleanName.substring(4);
-        else if (cleanName.startsWith('onnx:')) cleanName = cleanName.substring(5);
+        let cleanName = stripModelPrefix(modelName);
         
         const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[modelName]);
         const isUnsupported = unsupList.includes(cleanName) || unsupList.includes(modelName);
         
-        let label = cleanName;
+        let label = cleanName || modelName;
         if (isFav) label = `⭐ ${label}`;
         if (isUnsupported) label = `${label} ⚠️ [отфильтрована]`;
 
@@ -924,65 +1000,148 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
   if (providerSelect) {
     providerSelect.onchange = async () => {
       const chosenProvider = providerSelect.value;
-      // При каждом выборе провайдера актуализируем список доступных моделей
-      modelSelect.innerHTML = '<option value="">Обновление списка моделей...</option>';
-      saveBtn.disabled = true;
-      try {
-        const updatedGrouped = await fetchModels(true);
-        if (updatedGrouped && Object.keys(updatedGrouped).length > 0) {
-          modelsGrouped = updatedGrouped;
-          window._modelsGrouped = modelsGrouped;
-        }
-      } catch (e) {
-        console.warn('Failed to refresh models on provider change:', e);
-      }
       populateModels(chosenProvider, modelsGrouped[chosenProvider]);
+      if (modelSelect.options.length > 0) {
+        modelSelect.selectedIndex = 0;
+      }
+      saveBtn.disabled = !modelSelect.value;
+      updateModelFavoriteUI(modelSelect);
+      if (modelSelect.value) {
+        await persistSelectedModelAndProvider(modelSelect.value, chosenProvider, true);
+      }
     };
-    populateModels(providerSelect.value, modelsGrouped[providerSelect.value]);
   } else {
     let allModels = [];
     providers.forEach(p => allModels = allModels.concat(modelsGrouped[p]));
     allModels.forEach(modelName => {
-        const option = document.createElement('option');
-        option.value = modelName;
-        const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[modelName]);
-        option.textContent = isFav ? `⭐ ${modelName}` : modelName;
-        modelSelect.appendChild(option);
+      const option = document.createElement('option');
+      option.value = modelName;
+      const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[modelName]);
+      option.textContent = isFav ? `⭐ ${modelName}` : modelName;
+      modelSelect.appendChild(option);
     });
     saveBtn.disabled = allModels.length === 0;
     updateModelFavoriteUI(modelSelect);
   }
 
+  // Запрашиваем активную модель и провайдер
+  let activeProvider = '';
+  let activeModel = '';
+
   try {
-    const settingsData = await window.api.fetch('/auth/settings');
-    const savedModel = settingsData && settingsData.model ? settingsData.model : '';
-    if (savedModel) {
-      let foundProvider = null;
-      for (const p of providers) {
-        if (modelsGrouped[p] && modelsGrouped[p].includes(savedModel)) {
-          foundProvider = p;
-          break;
-        }
+    const isTcRoute = window.location.pathname.startsWith('/tc') || window.location.pathname.startsWith('/apps');
+    const query = isTcRoute ? '?profile=tc' : '';
+    
+    // 1. Приоритет: активная модель из /api/v1/chat/active-model или /api/v1/tc/model
+    try {
+      const activeResp = await window.api.fetch(`/api/v1/chat/active-model${query}`);
+      if (activeResp && activeResp.model) {
+        activeModel = activeResp.model;
+        activeProvider = activeResp.provider || '';
       }
-      if (foundProvider && providerSelect) {
-        providerSelect.value = foundProvider;
-        populateModels(foundProvider, modelsGrouped[foundProvider]);
-      }
-      modelSelect.value = savedModel;
-      updateModelFavoriteUI(modelSelect);
+    } catch (e) {
+      console.debug('Failed to fetch /api/v1/chat/active-model:', e);
     }
-    if (typeof window.updateChatBadges === 'function') {
-      window.updateChatBadges(savedModel);
+
+    // 2. Резерв: /auth/settings
+    if (!activeModel) {
+      const settingsData = await window.api.fetch('/auth/settings');
+      if (settingsData && settingsData.model) {
+        activeModel = settingsData.model;
+        if (settingsData.provider) activeProvider = settingsData.provider;
+      }
     }
   } catch (err) {
-    console.error('Error loading user AI settings:', err);
+    console.error('Error loading active model settings:', err);
+  }
+
+  // Интеллектуальное сопоставление (Smart Match)
+  let targetProvider = activeProvider ? activeProvider.toLowerCase() : '';
+  const cleanActiveModel = stripModelPrefix(activeModel);
+
+  if (!targetProvider && activeModel) {
+    if (activeModel.startsWith('foundry:')) targetProvider = 'foundry';
+    else if (activeModel.startsWith('ollama:')) targetProvider = 'ollama';
+    else if (activeModel.startsWith('agy-')) targetProvider = 'agy';
+    else if (activeModel.startsWith('gemini_cli:')) targetProvider = 'gemini_cli';
+    else if (activeModel.startsWith('hf:') || activeModel.startsWith('hf::')) targetProvider = 'hf';
+    else if (activeModel.startsWith('onnx:') || activeModel.startsWith('onnx::')) targetProvider = 'onnx';
+    else if (activeModel.toLowerCase().includes('gemini')) targetProvider = 'gemini';
+  }
+
+  // Поиск подходящего провайдера в списке providers
+  let matchedProvider = providers.find(p => p.toLowerCase() === targetProvider);
+
+  if (!matchedProvider && activeModel) {
+    for (const p of providers) {
+      const list = modelsGrouped[p] || [];
+      if (list.some(m => m === activeModel || stripModelPrefix(m) === cleanActiveModel)) {
+        matchedProvider = p;
+        break;
+      }
+    }
+  }
+
+  if (!matchedProvider) {
+    matchedProvider = providers.includes('gemini') ? 'gemini' : providers[0];
+  }
+
+  // Устанавливаем провайдер в селект и заполняем список моделей
+  if (providerSelect) {
+    providerSelect.value = matchedProvider;
+  }
+  populateModels(matchedProvider, modelsGrouped[matchedProvider]);
+
+  // Выбираем подходящую модель в дропдауне
+  let matchedModelVal = null;
+  const currentOptions = Array.from(modelSelect.options);
+
+  if (activeModel) {
+    // 1. Прямое совпадение
+    const exactOpt = currentOptions.find(opt => opt.value === activeModel);
+    if (exactOpt) {
+      matchedModelVal = exactOpt.value;
+    } else {
+      // 2. Совпадение без префикса
+      const cleanOpt = currentOptions.find(opt => stripModelPrefix(opt.value) === cleanActiveModel);
+      if (cleanOpt) {
+        matchedModelVal = cleanOpt.value;
+      }
+    }
+  }
+
+  if (matchedModelVal) {
+    modelSelect.value = matchedModelVal;
+  } else if (currentOptions.length > 0) {
+    modelSelect.selectedIndex = 0;
+  }
+
+  saveBtn.disabled = !modelSelect.value;
+  updateModelFavoriteUI(modelSelect);
+
+  // Обновляем бейдж дефолтной модели
+  const effectiveModelName = modelSelect.value || activeModel;
+  const savedCardBadge = document.getElementById('saved-default-model-badge');
+  if (savedCardBadge) {
+    if (effectiveModelName) {
+      savedCardBadge.textContent = effectiveModelName;
+      savedCardBadge.className = 'badge bg-success font-monospace px-2 py-1';
+      savedCardBadge.title = `В вашем профиле сохранена модель: ${effectiveModelName}`;
+    } else {
+      savedCardBadge.textContent = 'Не задана (системный fallback)';
+      savedCardBadge.className = 'badge bg-secondary font-monospace px-2 py-1';
+    }
+  }
+
+  if (typeof window.updateChatBadges === 'function') {
+    window.updateChatBadges(effectiveModelName);
   }
 }
 
 // Helper to refresh keys list table
 async function refreshKeysList(container) {
   try {
-    container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Загрузка ключей...</td></tr>';
+    container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Загрузка ключей...</td></tr>';
     const keysData = await window.api.fetch('/api/keys/');
     const keys = Array.isArray(keysData) ? keysData : (keysData.keys || []);
 
@@ -994,26 +1153,58 @@ async function refreshKeysList(container) {
     container.innerHTML = '';
     keys.forEach(key => {
       const row = document.createElement('tr');
+      row.style.cursor = 'pointer';
+      row.title = `Нажмите для проверки ключа "${key.name}" (отправка hello world)`;
 
+      const isCurrentActive = Boolean(key.is_active);
+      const isExhausted = Boolean(key.exhausted || key.status === 'exhausted' || key.exhausted_at);
+      const isEnabled = key.status === 'active';
+
+      if (isCurrentActive) {
+        row.className = 'table-success border border-2 border-success align-middle';
+        row.style.boxShadow = 'inset 0 0 0 1px var(--bs-success, #198754)';
+      } else {
+        row.className = 'align-middle';
+      }
+
+      // Клик по строке (кроме кнопок действий) открывает модальное окно проверки
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+        openKeyTestModal(key, container);
+      });
+
+      // 1. Имя ключа
       const tdName = document.createElement('td');
-      tdName.innerHTML = `<strong>${key.name}</strong>`;
+      if (isCurrentActive) {
+        tdName.innerHTML = `<strong class="text-success">${escapeHtml(key.name)}</strong> <span class="badge bg-success font-monospace ms-1" style="font-size: 0.72rem;"><i class="bi bi-check-circle-fill me-1"></i>Активен</span>`;
+      } else {
+        tdName.innerHTML = `<strong>${escapeHtml(key.name)}</strong>`;
+      }
       row.appendChild(tdName);
 
+      // 2. Токен (маскированный)
       const tdKey = document.createElement('td');
       tdKey.className = 'font-monospace text-muted small';
       tdKey.textContent = key.masked_key || key.api_key_masked || '';
       row.appendChild(tdKey);
 
+      // 3. Состояние ключа
       const tdStatus = document.createElement('td');
-      const isEnabled = key.status === 'active';
-      const statusClass = isEnabled ? 'bg-success' : 'bg-secondary';
-      const statusText = isEnabled ? 'Активен' : 'Отключен';
-      tdStatus.innerHTML = `<span class="badge ${statusClass}">${statusText}</span>`;
+      if (isCurrentActive) {
+        tdStatus.innerHTML = `<span class="badge bg-success" title="Используется моделью в данный момент"><i class="bi bi-play-circle-fill me-1"></i>Используется</span>`;
+      } else if (isExhausted) {
+        tdStatus.innerHTML = `<span class="badge bg-danger" title="Превышена суточная квота запросов"><i class="bi bi-exclamation-octagon me-1"></i>Превысил квоту</span>`;
+      } else if (isEnabled) {
+        tdStatus.innerHTML = `<span class="badge bg-primary-subtle text-primary border border-primary" title="Включен в резерве/пуле ротации"><i class="bi bi-check2 me-1"></i>Включен</span>`;
+      } else {
+        tdStatus.innerHTML = `<span class="badge bg-secondary" title="Отключен пользователем"><i class="bi bi-slash-circle me-1"></i>Выключен</span>`;
+      }
       row.appendChild(tdStatus);
 
+      // 4. Суточная квота (24ч)
       const tdQuota = document.createElement('td');
-      if (key.exhausted) {
-        let resetText = 'Лимит';
+      if (isExhausted) {
+        let resetText = 'Лимит исчерпан';
         if (key.reset_in_seconds) {
           const hours = Math.floor(key.reset_in_seconds / 3600);
           const mins = Math.floor((key.reset_in_seconds % 3600) / 60);
@@ -1021,32 +1212,71 @@ async function refreshKeysList(container) {
         }
         tdQuota.innerHTML = `<span class="badge bg-danger d-block mb-1" title="Превышен лимит запросов в сутки">${resetText}</span>`;
       } else {
-        tdQuota.innerHTML = `<span class="badge bg-success d-block mb-1">OK</span>`;
+        tdQuota.innerHTML = `<span class="badge bg-success-subtle text-success border border-success d-block mb-1">OK</span>`;
       }
       row.appendChild(tdQuota);
 
+      // 5. Действия
       const tdActions = document.createElement('td');
-      tdActions.className = 'text-end';
+      tdActions.className = 'text-end text-nowrap';
+
+      // Кнопка или бейдж "Сделать активным" / "Активен"
+      if (isCurrentActive) {
+        const activeBadge = document.createElement('span');
+        activeBadge.className = 'badge bg-success text-white py-1 px-2 me-1 font-monospace';
+        activeBadge.innerHTML = '<i class="bi bi-star-fill text-warning me-1"></i>Активен';
+        activeBadge.title = 'Этот ключ в данный момент используется моделью';
+        tdActions.appendChild(activeBadge);
+      } else {
+        const btnMakeActive = document.createElement('button');
+        btnMakeActive.className = 'btn btn-xs btn-outline-success btn-sm me-1';
+        btnMakeActive.innerHTML = '<i class="bi bi-star me-1"></i>Сделать активным';
+        btnMakeActive.title = `Назначить ключ "${key.name}" активным (использовать в данный момент)`;
+        btnMakeActive.onclick = async (e) => {
+          e.stopPropagation();
+          await activateApiKey(key.name, container);
+        };
+        tdActions.appendChild(btnMakeActive);
+      }
+
+      const btnTest = document.createElement('button');
+      btnTest.className = 'btn btn-xs btn-outline-info btn-sm me-1';
+      btnTest.innerHTML = '<i class="bi bi-lightning-charge"></i> Тест';
+      btnTest.title = `Проверить валидность ключа "${key.name}"`;
+      btnTest.onclick = (e) => {
+        e.stopPropagation();
+        openKeyTestModal(key, container);
+      };
+      tdActions.appendChild(btnTest);
 
       const btnToggle = document.createElement('button');
       btnToggle.className = `btn btn-xs btn-sm me-1 ${isEnabled ? 'btn-outline-secondary' : 'btn-outline-success'}`;
       btnToggle.textContent = isEnabled ? 'Откл' : 'Вкл';
-      btnToggle.onclick = () => toggleKeyStatus(key.name, isEnabled ? 'disabled' : 'active', container);
+      btnToggle.onclick = (e) => {
+        e.stopPropagation();
+        toggleKeyStatus(key.name, isEnabled ? 'disabled' : 'active', container);
+      };
       tdActions.appendChild(btnToggle);
 
-      if (key.exhausted) {
+      if (isExhausted) {
         const btnReset = document.createElement('button');
         btnReset.className = 'btn btn-xs btn-outline-warning btn-sm me-1';
         btnReset.innerHTML = 'Сброс';
         btnReset.title = 'Сбросить 24-часовой бан квоты';
-        btnReset.onclick = () => resetKeyQuota(key.name, container);
+        btnReset.onclick = (e) => {
+          e.stopPropagation();
+          resetKeyQuota(key.name, container);
+        };
         tdActions.appendChild(btnReset);
       }
 
       const btnDelete = document.createElement('button');
       btnDelete.className = 'btn btn-xs btn-outline-danger btn-sm';
       btnDelete.textContent = 'Удалить';
-      btnDelete.onclick = () => deleteKey(key.name, container);
+      btnDelete.onclick = (e) => {
+        e.stopPropagation();
+        deleteKey(key.name, container);
+      };
       tdActions.appendChild(btnDelete);
 
       row.appendChild(tdActions);
@@ -1056,6 +1286,131 @@ async function refreshKeysList(container) {
   } catch (err) {
     console.error('Ошибка загрузки ключей:', err);
     container.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Ошибка: ${err.message}</td></tr>`;
+  }
+}
+
+async function activateApiKey(name, container) {
+  try {
+    await window.api.fetch(`/api/keys/${encodeURIComponent(name)}/activate`, {
+      method: 'POST'
+    });
+    showModelsNotification(`Ключ "${name}" успешно назначен активным`, 'success');
+    if (window.toast && typeof window.toast.success === 'function') {
+      window.toast.success('Ключ активирован', `Ключ "${name}" теперь активен для генерации`);
+    }
+    if (container) await refreshKeysList(container);
+  } catch (err) {
+    console.error('Ошибка активации ключа:', err);
+    showModelsNotification('Ошибка активации ключа: ' + err.message, 'danger');
+  }
+}
+
+// Модальное окно проверки валидности ключа
+async function openKeyTestModal(key, container) {
+  const modalEl = document.getElementById('modal-test-key');
+  if (!modalEl) return;
+
+  const keyNameEl = document.getElementById('modal-test-key-name');
+  const keyMaskedEl = document.getElementById('modal-test-key-masked');
+  const keyStatusEl = document.getElementById('modal-test-key-status-badge');
+  const keyDurationEl = document.getElementById('modal-test-key-duration');
+  const resultBox = document.getElementById('modal-test-key-result-box');
+  const promptInput = document.getElementById('modal-test-key-prompt');
+  const modelSelect = document.getElementById('modal-test-key-model');
+  const retryBtn = document.getElementById('modal-test-key-retry-btn');
+
+  if (keyNameEl) keyNameEl.textContent = key.name || '-';
+  if (keyMaskedEl) keyMaskedEl.textContent = key.masked_key || key.api_key_masked || '****************';
+  if (keyStatusEl) {
+    const isAct = key.status === 'active';
+    keyStatusEl.className = `badge ${isAct ? 'bg-success' : 'bg-secondary'}`;
+    keyStatusEl.textContent = isAct ? 'Активен' : 'Отключен';
+  }
+  if (keyDurationEl) keyDurationEl.textContent = '⏱️ -- ms';
+  if (resultBox) resultBox.style.display = 'none';
+
+  // Инициализация Bootstrap Modal
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modalInstance.show();
+  }
+
+  // Привязка кнопки повторного теста
+  if (retryBtn) {
+    retryBtn.onclick = () => runKeyTest(key.name, promptInput?.value || 'hello world', modelSelect?.value || 'gemini-3.1-flash-lite', container);
+  }
+
+  // Автоматическая отправка проверочного запроса 'hello world'
+  await runKeyTest(key.name, promptInput?.value || 'hello world', modelSelect?.value || 'gemini-3.1-flash-lite', container);
+}
+
+async function runKeyTest(keyName, message, model, container) {
+  const progressEl = document.getElementById('modal-test-key-progress');
+  const resultBox = document.getElementById('modal-test-key-result-box');
+  const resultContent = document.getElementById('modal-test-key-result-content');
+  const validBadge = document.getElementById('modal-test-key-valid-badge');
+  const keyDurationEl = document.getElementById('modal-test-key-duration');
+  const retryBtn = document.getElementById('modal-test-key-retry-btn');
+
+  if (progressEl) progressEl.style.display = 'block';
+  if (resultBox) resultBox.style.display = 'none';
+  if (retryBtn) retryBtn.disabled = true;
+
+  try {
+    const res = await window.api.fetch(`/api/keys/${encodeURIComponent(keyName)}/test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message || 'hello world', model: model || 'gemini-3.1-flash-lite' }),
+    });
+
+    if (progressEl) progressEl.style.display = 'none';
+    if (resultBox) resultBox.style.display = 'block';
+    if (retryBtn) retryBtn.disabled = false;
+
+    if (keyDurationEl && res && res.duration_ms !== undefined) {
+      keyDurationEl.textContent = `⏱️ ${res.duration_ms} ms`;
+    }
+
+    if (res && res.status === 'success' && res.valid) {
+      if (validBadge) {
+        validBadge.className = 'badge bg-success';
+        validBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i> Валиден (OK)';
+      }
+      if (resultContent) {
+        resultContent.className = 'p-2.5 rounded font-monospace small border border-success-subtle bg-success-subtle text-success-emphasis';
+        resultContent.textContent = res.response || '(Пустой ответ)';
+      }
+      showModelsNotification(`Ключ "${keyName}" успешно прошел проверку (${res.duration_ms} мс)`, 'success');
+    } else {
+      if (validBadge) {
+        validBadge.className = 'badge bg-danger';
+        validBadge.innerHTML = '<i class="bi bi-x-circle me-1"></i> Ошибка валидации';
+      }
+      if (resultContent) {
+        resultContent.className = 'p-2.5 rounded font-monospace small border border-danger-subtle bg-danger-subtle text-danger-emphasis';
+        resultContent.textContent = (res && (res.error || res.message)) ? (res.error || res.message) : 'Неизвестная ошибка валидации ключа';
+      }
+      showModelsNotification(`Ошибка проверки ключа "${keyName}": ${(res && res.error) ? res.error : 'Ошибка API'}`, 'danger');
+    }
+
+    // Обновляем список ключей для синхронизации статуса и квоты
+    if (container) {
+      await refreshKeysList(container);
+    }
+  } catch (err) {
+    console.error('Ошибка проверки ключа:', err);
+    if (progressEl) progressEl.style.display = 'none';
+    if (resultBox) resultBox.style.display = 'block';
+    if (retryBtn) retryBtn.disabled = false;
+    if (validBadge) {
+      validBadge.className = 'badge bg-danger';
+      validBadge.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Сбой сети / API';
+    }
+    if (resultContent) {
+      resultContent.className = 'p-2.5 rounded font-monospace small border border-danger-subtle bg-danger-subtle text-danger-emphasis';
+      resultContent.textContent = err.message || String(err);
+    }
+    showModelsNotification('Сбой запроса проверки ключа: ' + err.message, 'danger');
   }
 }
 
@@ -1212,8 +1567,25 @@ async function loadSystemInstruction() {
   }
   
   try {
-    const data = await window.api.fetch('/api/admin/system_instruction');
-    editor.value = data.content || '';
+    let instructionText = '';
+    const endpoints = [
+      '/api/v1/tc/model-instruction',
+      '/api/v1/chat/model-instruction',
+      '/api/admin/system_instruction',
+      '/api/v1/admin/system_instruction'
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const data = await window.api.fetch(ep);
+        if (data && (data.instruction || data.system_instruction || data.content)) {
+          instructionText = data.instruction || data.system_instruction || data.content;
+          break;
+        }
+      } catch {}
+    }
+
+    editor.value = instructionText || '';
     if (statusBadge) {
       statusBadge.className = 'badge bg-success';
       statusBadge.textContent = 'Загружено';
@@ -1245,11 +1617,25 @@ async function saveSystemInstruction() {
   saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Сохранение...';
 
   try {
-    await window.api.fetch('/api/admin/system_instruction', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: editor.value })
-    });
+    const textVal = editor.value;
+    await Promise.allSettled([
+      window.api.fetch('/api/v1/tc/model-instruction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instruction: textVal, content: textVal, system_instruction: textVal, save_to_disk: true })
+      }),
+      window.api.fetch('/api/v1/chat/model-instruction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instruction: textVal, content: textVal, system_instruction: textVal, save_to_disk: true })
+      }),
+      window.api.fetch('/api/admin/system_instruction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: textVal })
+      })
+    ]);
+
     showModelsNotification('✅ Системная инструкция успешно сохранена', 'success');
     if (statusBadge) {
       statusBadge.className = 'badge bg-success';
@@ -1258,6 +1644,9 @@ async function saveSystemInstruction() {
       setTimeout(() => {
         if (statusBadge) statusBadge.style.display = 'none';
       }, 3000);
+    }
+    if (window.toast && typeof window.toast.success === 'function') {
+      window.toast.success('Инструкция сохранена', 'Системная инструкция обновлена для всех моделей');
     }
   } catch (err) {
     console.error('Ошибка сохранения системной инструкции:', err);

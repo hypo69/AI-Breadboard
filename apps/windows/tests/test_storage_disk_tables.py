@@ -19,7 +19,7 @@ import pytest
 from pathlib import Path
 
 from apps.windows.telemetry.sqlite.storage import TelemetryStorage
-from apps.windows.modules.storage_manager.core.models import (
+from apps.windows.sdk.modules.storage_manager.core.models import (
     VolumeInfo,
     DiskDetailedInfo,
     DiskPerformanceMetrics,

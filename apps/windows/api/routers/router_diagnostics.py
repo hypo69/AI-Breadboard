@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:28:00
+# Updated: 2026-10-10 11:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -38,6 +38,8 @@ from logger import logger
 class DiagnosticExplainRequest(BaseModel):
     """Запрос на AI-объяснение элемента таблицы."""
     table_type: str = Field(default="generic", description="Тип таблицы (software, process, service, task, network, registry, user, website, rag_doc, disk)")
+    panel_id: Optional[str] = Field(default=None, description="Идентификатор вызывающей панели интерфейса (например, panel-winadmin-users)")
+    system_instruction: Optional[str] = Field(default=None, description="Пользовательская или переопределенная системная инструкция для LLM")
     title: str = Field(default="", description="Основное имя или заголовок элемента")
     subtitle: Optional[str] = Field(default="", description="Вторичный заголовок (издатель, путь, IP, статус)")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Набор ключевых атрибутов записи")
@@ -64,7 +66,7 @@ class DiagnosticExplainResponse(BaseModel):
 
 
 
-from src.api.diagnostics_prompt_manager import (
+from apps.windows.api.diagnostics_prompt_manager import (
     DiagnosticPromptTemplate,
     prompt_manager,
 )
@@ -269,7 +271,7 @@ def init_router() -> APIRouter:
 
         # Получаем соответствующий шаблон промпта для типа таблицы
         tmpl = prompt_manager.get_template(req.table_type)
-
+        sys_instruction = req.system_instruction.strip() if (req.system_instruction and req.system_instruction.strip()) else tmpl.system_instruction
 
         # 3. Вызов языковой модели через прямой GoogleGenerativeAI с Web Grounding
         try:
@@ -286,10 +288,11 @@ def init_router() -> APIRouter:
 
             ai = GoogleGenerativeAI(
                 model_name=model_name,
-                system_instruction=tmpl.system_instruction,
+                system_instruction=sys_instruction,
                 generation_config=gen_cfg,
             )
 
+            import asyncio
             prompt = tmpl.format_prompt(
                 title=req.title,
                 subtitle=req.subtitle or "",
@@ -297,7 +300,10 @@ def init_router() -> APIRouter:
                 raw_data=req.raw_data or "",
             )
 
-            resp_text = await ai.ask(prompt, generation_config=gen_cfg)
+            resp_text = await asyncio.wait_for(
+                ai.ask(prompt, attempts=1, generation_config=gen_cfg),
+                timeout=6.0
+            )
 
             if resp_text and not resp_text.startswith("Model error:"):
                 cleaned = resp_text.strip()

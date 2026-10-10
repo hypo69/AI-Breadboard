@@ -14,7 +14,7 @@
 # Package: apps.windows.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 13:36:00
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from logger import logger
+from apps.windows.api.config_helper import save_ai_config, resolve_active_config_path
 
 # Пути к статике и конфигурации
 _MODULE_DIR = Path(__file__).resolve().parent
@@ -171,8 +172,24 @@ def create_app() -> FastAPI:
     
     try:
         from src.ai.orchestration.unified_chat import UnifiedChatModel
-        chat_model = UnifiedChatModel()
-        narrator_model = UnifiedChatModel()
+        tc_cfg = load_tc_config()
+        ai_cfg_sec = tc_cfg.get("ai_providers_and_models_configuration") or tc_cfg.get("ai") or {}
+        default_provider = ai_cfg_sec.get("default_provider", "")
+        default_model = ai_cfg_sec.get("default_model", "")
+        if not default_provider:
+            default_provider = "gemini"
+        if not default_model:
+            providers = ai_cfg_sec.get("providers", {})
+            if isinstance(providers, dict) and default_provider in providers:
+                default_model = providers[default_provider].get("default_model") or providers[default_provider].get("model", "")
+        if not default_model:
+            default_model = "gemini-3.1-flash-lite"
+
+        chat_model = UnifiedChatModel(provider=default_provider, model=default_model)
+        if ai_cfg_sec.get("enable_narrator", False):
+            narrator_model = UnifiedChatModel(provider=default_provider, model=default_model)
+        else:
+            narrator_model = None
     except Exception as model_err:
         logger.warning(f"[API Server] Не удалось инициализировать модели: {model_err}")
     
@@ -213,8 +230,6 @@ def create_app() -> FastAPI:
         fav_candidates = [
             _WEBGUI_DIR / "favicon.ico",
             _WEBGUI_DIR / "assets" / "favicon.ico",
-            _PROJECT_ROOT / "src" / "api" / "webgui" / "favicon.ico",
-            _PROJECT_ROOT / "src" / "api" / "webgui" / "assets" / "favicon.ico",
         ]
         for fav in fav_candidates:
             if fav.exists() and fav.is_file():
@@ -296,10 +311,11 @@ def create_app() -> FastAPI:
 
         if not settings.get("model"):
             cfg = load_tc_config()
-            ai_sec = cfg.get("ai", {})
-            prov = ai_sec.get("provider", "gemini")
-            model = ai_sec.get(prov, {}).get("model", "")
-            settings.setdefault("model", f"{prov}:{model}" if model else prov)
+            ai_sec = cfg.get("ai_providers_and_models_configuration") or cfg.get("ai", {})
+            prov = ai_sec.get("default_provider") or ai_sec.get("provider", "gemini")
+            model = ai_sec.get("default_model") or (ai_sec.get(prov, {}).get("model", "") if isinstance(ai_sec.get(prov), dict) else "")
+            settings.setdefault("model", f"{prov}:{model}" if model else (model or prov))
+            settings.setdefault("provider", prov)
 
         settings.setdefault("status", "ok")
         settings.setdefault("favorite_models", {})
@@ -326,29 +342,106 @@ def create_app() -> FastAPI:
                 )
             except Exception:
                 pass
+
+            if body.get("model") or body.get("provider"):
+                save_ai_config(provider=body.get("provider", ""), model_name=body.get("model", ""))
+
             return {"status": "ok", "saved": body}
         except Exception:
             return {"status": "ok"}
 
     @app.get("/api/v1/chat/active-model", tags=["chat"])
+    @app.get("/api/v1/tc/model", tags=["chat"])
     async def get_chat_active_model(profile: Optional[str] = None) -> Dict[str, Any]:
         """Возвращает активную модель ИИ."""
+        try:
+            from src.user_manager import user_manager
+            settings = user_manager.get_user_settings(1) or {}
+            if settings.get("model"):
+                user_model = settings.get("model")
+                if ":" in user_model:
+                    prov, mod = user_model.split(":", 1)
+                elif user_model.startswith("agy-"):
+                    prov, mod = "agy", user_model
+                else:
+                    prov, mod = "gemini", user_model
+                return {"status": "ok", "provider": prov, "model": mod, "config_file": "user_settings"}
+        except Exception:
+            pass
+
         cfg = load_tc_config(profile)
-        ai_sec = cfg.get("ai", {})
-        prov = ai_sec.get("provider", "gemini")
-        model = ai_sec.get(prov, {}).get("model", "")
-        return {"status": "ok", "provider": prov, "model": model, "config_file": "tc.json"}
+        ai_sec = cfg.get("ai_providers_and_models_configuration") or cfg.get("ai", {})
+        prov = ai_sec.get("default_provider") or ai_sec.get("provider", "gemini")
+        model = ai_sec.get("default_model") or (ai_sec.get(prov, {}).get("model", "") if isinstance(ai_sec.get(prov), dict) else "")
+        if not model and isinstance(ai_sec.get("providers"), dict) and prov in ai_sec["providers"]:
+            model = ai_sec["providers"][prov].get("model", "")
+        return {"status": "ok", "provider": prov, "model": model or "gemini-3.1-flash-lite", "config_file": "tc.json"}
 
     @app.get("/api/v1/chat/models", tags=["chat"])
     async def get_available_chat_models() -> Dict[str, Any]:
         """Список доступных моделей ИИ для дропдауна."""
-        return {
-            "models": {
-                "gemini": ["gemini-3.1-flash-lite", "gemini-3.1-flash"],
-                "gemini_cli": ["gemini:gemini-3.1-flash-lite"],
-                "agy": ["agy-gemini-3.6-flash"],
+        try:
+            from src.ai.model_manager import get_available_models
+            return {
+                "models": {
+                    "gemini": get_available_models("gemini") or ["gemini-3.1-flash-lite", "gemini-3.1-flash"],
+                    "gemini_cli": get_available_models("gemini_cli") or ["gemini_cli:gemini-3.1-flash-lite"],
+                    "agy": get_available_models("agy") or ["agy-gemini-3.6-flash"],
+                    "foundry": get_available_models("foundry") or ["foundry:qwen2.5-1.5b"],
+                    "ollama": get_available_models("ollama") or ["ollama:llama3.1"],
+                }
             }
-        }
+        except Exception:
+            return {
+                "models": {
+                    "gemini": ["gemini-3.1-flash-lite", "gemini-3.1-flash"],
+                    "gemini_cli": ["gemini_cli:gemini-3.1-flash-lite"],
+                    "agy": ["agy-gemini-3.6-flash"],
+                }
+            }
+
+    @app.get("/api/admin/system_instruction", tags=["admin"])
+    @app.get("/api/v1/admin/system_instruction", tags=["admin"])
+    @app.get("/api/v1/tc/model-instruction", tags=["admin"])
+    async def get_system_instruction_fallback() -> Dict[str, Any]:
+        """Получение системной инструкции."""
+        try:
+            from src.user_manager import user_manager
+            settings = user_manager.get_user_settings(1) or {}
+            if settings.get("system_instruction") or settings.get("tc_system_instruction"):
+                return {"status": "success", "content": settings.get("system_instruction") or settings.get("tc_system_instruction")}
+        except Exception:
+            pass
+        prompt_file = _PROJECT_ROOT / "prompts" / "tc" / "system_instruction.md"
+        if not prompt_file.exists():
+            prompt_file = _PROJECT_ROOT / "prompts" / "chat" / "system_instruction.md"
+        if prompt_file.exists():
+            try:
+                return {"status": "success", "content": prompt_file.read_text(encoding="utf-8", errors="replace")}
+            except Exception:
+                pass
+        return {"status": "success", "content": "Вы — интеллектуальный ассистент платформы AI Breadboard."}
+
+    @app.post("/api/admin/system_instruction", tags=["admin"])
+    @app.post("/api/v1/admin/system_instruction", tags=["admin"])
+    @app.post("/api/v1/tc/model-instruction", tags=["admin"])
+    async def set_system_instruction_fallback(request: Request) -> Dict[str, Any]:
+        """Сохранение системной инструкции."""
+        try:
+            body = await request.json()
+            content = body.get("content") or body.get("instruction") or body.get("system_instruction") or ""
+            if content:
+                try:
+                    from src.user_manager import user_manager
+                    user_manager.update_user_settings(1, system_instruction=content, tc_system_instruction=content)
+                except Exception:
+                    pass
+                prompt_file = _PROJECT_ROOT / "prompts" / "tc" / "system_instruction.md"
+                prompt_file.parent.mkdir(parents=True, exist_ok=True)
+                prompt_file.write_text(content, encoding="utf-8")
+            return {"status": "success", "content": content}
+        except Exception as exc:
+            return {"status": "error", "message": str(exc)}
 
     # Статические файлы TC
     if _WEBGUI_DIR.exists():

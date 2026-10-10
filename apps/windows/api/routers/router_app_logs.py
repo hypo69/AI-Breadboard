@@ -3,8 +3,10 @@
 # Process Name: AI-Breadboard Apps Windows Api Routers - Router App Logs
 # =============================================================================
 # Description:
-#   FastAPI роутер для анализа и потокового мониторинга внутренних логов
-#   программы строго из %APPDATA%\AI-Breadboard\logs (log.json, info.log, errors.log и др.).
+#   FastAPI роутер для интеллектуального анализа, экспорта и потокового
+#   мониторинга внутренних логов программы строго из %APPDATA%\AI-Breadboard\logs
+#   (log.json, info.log, errors.log, debug.log, windows_api.log и др.).
+#   Оптимизирован для высокопроизводительной работы с большими файлами (>20MB).
 #
 # Usage Examples:
 #   Python API:
@@ -17,23 +19,25 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:15:00
+# Updated: 2026-10-10 12:35:00
 # =============================================================================
 
 from __future__ import annotations
-"""FastAPI роутер для анализа и потокового мониторинга внутренних логов программы."""
+"""FastAPI роутер для анализа, фильтрации, экспорта и потокового мониторинга внутренних логов программы."""
 
 import asyncio
 from collections import Counter, defaultdict
+import csv
 import datetime
+import io
 import json
 import os
 from pathlib import Path
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from logger import logger
@@ -42,9 +46,8 @@ router = APIRouter(prefix="/api/v1/app_logs", tags=["Internal Application Logs"]
 
 
 def get_logs_dir() -> Path:
-    """
-    Определяет базовую директорию внутренних логов программы.
-    
+    """Определяет базовую директорию внутренних логов программы.
+
     Строго использует каталог %APPDATA%/AI-Breadboard/logs либо
     переопределенный через AI_BREADBOARD_LOGS_DIR / LOG_DIR.
     """
@@ -70,10 +73,58 @@ def _format_size(size_bytes: int) -> str:
     return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
+def _read_tail_lines(file_path: Path, max_lines: int = 500, buffer_size: int = 65536) -> List[str]:
+    """Быстро считывает последние N строк файла с конца диска без полной загрузки файла в память.
+
+    Args:
+        file_path: Путь к файлу
+        max_lines: Максимальное количество строк с хвоста
+        buffer_size: Размер блока чтения
+
+    Returns:
+        List[str]: Список строк с хвоста файла в прямом хронологическом порядке.
+    """
+    if not file_path.is_file():
+        return []
+
+    file_size = file_path.stat().st_size
+    if file_size == 0:
+        return []
+
+    lines: List[str] = []
+    with open(file_path, "rb") as f:
+        # Для небольших файлов (< 512 KB) читаем напрямую
+        if file_size < 512 * 1024:
+            f.seek(0)
+            raw_data = f.read().decode("utf-8", errors="replace")
+            all_lines = raw_data.splitlines()
+            return all_lines[-max_lines:] if len(all_lines) > max_lines else all_lines
+
+        # Для больших файлов читаем блоками с конца
+        f.seek(0, os.SEEK_END)
+        pos = f.tell()
+        remainder = b""
+
+        while pos > 0 and len(lines) <= max_lines:
+            read_len = min(buffer_size, pos)
+            pos -= read_len
+            f.seek(pos)
+            chunk = f.read(read_len) + remainder
+            split_chunk = chunk.split(b"\n")
+            remainder = split_chunk[0]
+            new_lines = [l.decode("utf-8", errors="replace").rstrip("\r") for l in split_chunk[1:]]
+            lines = new_lines + lines
+
+        if remainder and len(lines) <= max_lines:
+            lines = [remainder.decode("utf-8", errors="replace").rstrip("\r")] + lines
+
+    return lines[-max_lines:] if len(lines) > max_lines else lines
+
+
 class DiagnoseLogsRequest(BaseModel):
-    """Запрос на диагностику логов."""
+    """Запрос на расширенную диагностику логов."""
     file_name: str = Field("log.json", description="Имя файла логов")
-    limit: int = Field(50, ge=5, le=300, description="Количество последних записей для анализа")
+    limit: int = Field(150, ge=5, le=1000, description="Количество последних записей для анализа")
     focus_errors_only: bool = Field(True, description="Фокусироваться только на ошибках и предупреждениях")
 
 
@@ -82,11 +133,99 @@ class ClearLogRequest(BaseModel):
     file_name: str = Field(..., description="Имя файла логов для очистки")
 
 
+@router.get("/overview")
+async def get_logs_overview() -> Dict[str, Any]:
+    """Возвращает сводную информацию по всем файлам логов системы AI-Breadboard.
+
+    Включает общий объем, распределение по подсистемам и количество активных ошибок.
+    """
+    def _do_overview():
+        logs_dir = get_logs_dir()
+        if not logs_dir.exists():
+            return {
+                "total_files": 0,
+                "total_size_bytes": 0,
+                "total_size_formatted": "0 B",
+                "logs_dir": str(logs_dir),
+                "subsystems": [],
+                "recent_critical_count": 0,
+                "recent_error_count": 0,
+                "recent_warning_count": 0,
+            }
+
+        total_size = 0
+        file_stats = []
+        recent_crit = 0
+        recent_err = 0
+        recent_warn = 0
+
+        for fp in logs_dir.glob("*"):
+            if not fp.is_file():
+                continue
+
+            try:
+                st = fp.stat()
+                total_size += st.st_size
+                is_json = fp.name.endswith(".json")
+
+                # Быстрый подсчет ошибок в хвосте файла (последние 100 строк)
+                tail_sample = _read_tail_lines(fp, max_lines=100)
+                file_errs = 0
+                file_warns = 0
+
+                for line in tail_sample:
+                    u_line = line.upper()
+                    if "CRITICAL" in u_line or "FATAL" in u_line:
+                        recent_crit += 1
+                        file_errs += 1
+                    elif "ERROR" in u_line:
+                        recent_err += 1
+                        file_errs += 1
+                    elif "WARNING" in u_line or "WARN" in u_line:
+                        recent_warn += 1
+                        file_warns += 1
+
+                file_stats.append({
+                    "name": fp.name,
+                    "size_bytes": st.st_size,
+                    "size_formatted": _format_size(st.st_size),
+                    "modified_iso": datetime.datetime.fromtimestamp(st.st_mtime).isoformat(),
+                    "is_json": is_json,
+                    "recent_errors": file_errs,
+                    "recent_warnings": file_warns,
+                    "has_issues": file_errs > 0,
+                })
+            except Exception as e:
+                logger.debug(f"[AppLogs] Ошибка обзора файла {fp}: {e}")
+
+        # Сортируем: сначала файлы с ошибками, затем log.json, затем по размеру
+        def _sort_ov_key(item):
+            if item["has_issues"]:
+                return (0, -item["size_bytes"])
+            if item["name"] == "log.json":
+                return (1, -item["size_bytes"])
+            return (2, -item["size_bytes"])
+
+        file_stats.sort(key=_sort_ov_key)
+
+        return {
+            "total_files": len(file_stats),
+            "total_size_bytes": total_size,
+            "total_size_formatted": _format_size(total_size),
+            "logs_dir": str(logs_dir),
+            "files": file_stats,
+            "recent_critical_count": recent_crit,
+            "recent_error_count": recent_err,
+            "recent_warning_count": recent_warn,
+            "system_health": max(0, min(100, 100 - (recent_err * 5) - (recent_warn * 2))),
+        }
+
+    return await asyncio.to_thread(_do_overview)
+
+
 @router.get("/files")
 async def list_log_files() -> Dict[str, Any]:
-    """
-    Возвращает список всех доступных файлов внутренних логов в %APPDATA%/AI-Breadboard/logs.
-    """
+    """Возвращает список всех доступных файлов внутренних логов в %APPDATA%/AI-Breadboard/logs."""
     def _scan_files():
         logs_dir = get_logs_dir()
         if not logs_dir.exists():
@@ -127,7 +266,7 @@ async def list_log_files() -> Dict[str, Any]:
             except Exception as item_err:
                 logger.debug(f"[AppLogs] Ошибка чтения метаданных файла {file_path}: {item_err}")
 
-        # Сортируем: сначала log.json, затем по размеру/имени
+        # Сортируем: сначала log.json, затем errors.log, info.log, debug.log, затем по размеру/имени
         def _sort_key(item):
             name = item["name"]
             if name == "log.json":
@@ -138,7 +277,11 @@ async def list_log_files() -> Dict[str, Any]:
                 return (2, name)
             if name == "debug.log":
                 return (3, name)
-            return (4, name)
+            if name == "windows_api.log":
+                return (4, name)
+            if name == "fastapi.log":
+                return (5, name)
+            return (6, name)
 
         file_list.sort(key=_sort_key)
 
@@ -155,16 +298,17 @@ async def list_log_files() -> Dict[str, Any]:
 @router.get("/records")
 async def get_log_records(
     file_name: str = Query("log.json", description="Имя файла логов"),
-    level: str = Query("", description="Фильтр уровня (DEBUG, INFO, WARNING, ERROR, CRITICAL)"),
+    level: str = Query("", description="Фильтр уровня (DEBUG, INFO, WARNING, ERROR, CRITICAL, ERRORS)"),
     search: str = Query("", description="Текстовый фильтр / поисковый запрос"),
     component: str = Query("", description="Фильтр по компоненту (например: [InternalApp])"),
+    time_preset: str = Query("", description="Временной фильтр (15m, 1h, 6h, 24h, all)"),
+    time_from: str = Query("", description="Начальная временная метка ISO/строка"),
+    time_to: str = Query("", description="Конечная временная метка ISO/строка"),
     limit: int = Query(200, ge=1, le=2000, description="Максимум возвращаемых записей"),
     offset: int = Query(0, ge=0, description="Смещение пагинации"),
     reverse: bool = Query(True, description="Новые записи первыми"),
 ) -> Dict[str, Any]:
-    """
-    Считывает, парсит и фильтрует структурированные записи из выбранного лог-файла.
-    """
+    """Считывает, парсит и фильтрует структурированные записи из выбранного лог-файла."""
     def _read_and_parse():
         logs_dir = get_logs_dir()
         target_file = (logs_dir / file_name).resolve()
@@ -188,10 +332,8 @@ async def get_log_records(
                 "file_info": {"name": file_name, "exists": False},
             }
 
-        records: List[Dict[str, Any]] = []
-        is_json = target_file.name.endswith(".json")
-
         stat = target_file.stat()
+        is_json = target_file.name.endswith(".json")
         file_info = {
             "name": target_file.name,
             "size_bytes": stat.st_size,
@@ -205,16 +347,38 @@ async def get_log_records(
         component_pattern = re.compile(r"\[([a-zA-Z0-9_\-.: ]+)\]")
         # Регулярка для сжатых записей вида [Nx] message
         compressed_pattern = re.compile(r"^\[(\d+)x\]\s*(.*)$")
-        # Регулярка для стандартного текстового лога: "YYYY-MM-DD HH:MM:SS,MS LEVEL: Message" или "LEVEL: Message"
+        # Регулярка для стандартного текстового лога
         text_log_pattern = re.compile(
             r"^(?:(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?)\s+)?(?:\[?(\w+)\]?\s*:\s*)?(.*)$",
             re.IGNORECASE
         )
 
-        with open(target_file, "r", encoding="utf-8", errors="replace") as f:
-            lines = f.readlines()
+        # Безопасное приведение типов параметров
+        clean_search = str(search).strip() if (search and not hasattr(search, "default")) else ""
+        clean_level = str(level).strip() if (level and not hasattr(level, "default")) else ""
+        clean_comp = str(component).strip() if (component and not hasattr(component, "default")) else ""
+        clean_preset = str(time_preset).strip() if (time_preset and not hasattr(time_preset, "default")) else ""
+        int_offset = int(offset.default) if hasattr(offset, "default") else int(offset or 0)
+        int_limit = int(limit.default) if hasattr(limit, "default") else int(limit or 200)
 
+        # Вычисляем фильтрацию по времени
+        cutoff_dt: Optional[datetime.datetime] = None
+        now_dt = datetime.datetime.now()
+        if clean_preset == "15m":
+            cutoff_dt = now_dt - datetime.timedelta(minutes=15)
+        elif clean_preset == "1h":
+            cutoff_dt = now_dt - datetime.timedelta(hours=1)
+        elif clean_preset == "6h":
+            cutoff_dt = now_dt - datetime.timedelta(hours=6)
+        elif clean_preset == "24h":
+            cutoff_dt = now_dt - datetime.timedelta(hours=24)
+
+        # Читаем файл
+        # Для больших файлов (> 8MB) считываем последние 15000 строк для высокой отзывчивости
+        max_scan_lines = 15000 if stat.st_size > 8 * 1024 * 1024 else 50000
+        lines = _read_tail_lines(target_file, max_lines=max_scan_lines)
         total_lines = len(lines)
+
         parsed_entries = []
 
         for idx, line in enumerate(lines):
@@ -236,7 +400,6 @@ async def get_log_records(
                     ts = str(data.get("timestamp", ""))
                     exc = data.get("exc_info")
 
-                    # Извлечение компонента
                     comp_name = "System"
                     m = component_pattern.search(msg)
                     if m:
@@ -253,7 +416,6 @@ async def get_log_records(
                         "raw": line_str,
                     })
                 except Exception:
-                    # Fallback для некорректного JSON
                     parsed_entries.append({
                         "id": idx + 1,
                         "timestamp": "",
@@ -265,7 +427,6 @@ async def get_log_records(
                         "raw": line_str,
                     })
             else:
-                # Текстовый формат (.log)
                 match = text_log_pattern.match(line_str)
                 ts = ""
                 lvl = "INFO"
@@ -303,45 +464,54 @@ async def get_log_records(
                     "raw": line_str,
                 })
 
-        # Сбор общей статистики до фильтрации
+        # Статистика до фильтрации
         level_counter = Counter()
         component_counter = Counter()
-        timeline_buckets = defaultdict(lambda: {"total": 0, "errors": 0, "warnings": 0})
+        timeline_buckets = defaultdict(lambda: {"total": 0, "errors": 0, "warnings": 0, "info": 0})
 
         for entry in parsed_entries:
             lvl = entry["level"]
-            level_counter[lvl] += entry["repeat_count"]
-            component_counter[entry["component"]] += entry["repeat_count"]
+            rc = entry["repeat_count"]
+            level_counter[lvl] += rc
+            component_counter[entry["component"]] += rc
 
             ts = entry["timestamp"]
             if ts and len(ts) >= 13:
-                # Группировка по часам: YYYY-MM-DD HH:00
                 bucket_key = ts[:13] + ":00"
-                timeline_buckets[bucket_key]["total"] += entry["repeat_count"]
-                if lvl in ("ERROR", "CRITICAL"):
-                    timeline_buckets[bucket_key]["errors"] += entry["repeat_count"]
-                elif lvl == "WARNING":
-                    timeline_buckets[bucket_key]["warnings"] += entry["repeat_count"]
+                timeline_buckets[bucket_key]["total"] += rc
+                if lvl in ("ERROR", "CRITICAL", "FATAL"):
+                    timeline_buckets[bucket_key]["errors"] += rc
+                elif lvl in ("WARNING", "WARN"):
+                    timeline_buckets[bucket_key]["warnings"] += rc
+                else:
+                    timeline_buckets[bucket_key]["info"] += rc
 
         # Применяем фильтры
         filtered = parsed_entries
 
         # Фильтр по уровню
-        if level:
-            level_clean = level.strip().upper()
+        if clean_level:
+            level_clean = clean_level.upper()
             if level_clean == "ERRORS":
-                filtered = [e for e in filtered if e["level"] in ("ERROR", "CRITICAL")]
+                filtered = [e for e in filtered if e["level"] in ("ERROR", "CRITICAL", "FATAL")]
+            elif level_clean == "WARNINGS_ERRORS":
+                filtered = [e for e in filtered if e["level"] in ("WARNING", "WARN", "ERROR", "CRITICAL", "FATAL")]
             else:
                 filtered = [e for e in filtered if e["level"] == level_clean]
 
         # Фильтр по компоненту
-        if component:
-            comp_clean = component.strip().lower()
+        if clean_comp:
+            comp_clean = clean_comp.lower()
             filtered = [e for e in filtered if comp_clean in e["component"].lower()]
 
+        # Фильтр по времени (cutoff)
+        if cutoff_dt:
+            cutoff_str = cutoff_dt.strftime("%Y-%m-%d %H:%M:%S")
+            filtered = [e for e in filtered if not e["timestamp"] or e["timestamp"] >= cutoff_str]
+
         # Полнотекстовый поиск
-        if search:
-            search_clean = search.strip().lower()
+        if clean_search:
+            search_clean = clean_search.lower()
             filtered = [
                 e for e in filtered
                 if (
@@ -359,35 +529,41 @@ async def get_log_records(
             filtered.reverse()
 
         # Пагинация
-        paginated = filtered[offset : offset + limit]
+        paginated = filtered[int_offset : int_offset + int_limit]
 
-        # Подготовка timeline для графика (сортировка по времени)
+        # Подготовка timeline для графика
         timeline_list = [
-            {"time": k, "total": v["total"], "errors": v["errors"], "warnings": v["warnings"]}
+            {
+                "time": k,
+                "total": v["total"],
+                "errors": v["errors"],
+                "warnings": v["warnings"],
+                "info": v["info"],
+            }
             for k, v in sorted(timeline_buckets.items())[-24:]
         ]
 
         top_components = [
             {"name": k, "count": v}
-            for k, v in component_counter.most_common(12)
+            for k, v in component_counter.most_common(16)
         ]
 
         return {
             "records": paginated,
             "total_matches": total_matches,
             "total_file_records": total_lines,
-            "limit": limit,
-            "offset": offset,
+            "limit": int_limit,
+            "offset": int_offset,
             "stats": {
                 "levels": {
-                    "CRITICAL": level_counter.get("CRITICAL", 0),
+                    "CRITICAL": level_counter.get("CRITICAL", 0) + level_counter.get("FATAL", 0),
                     "ERROR": level_counter.get("ERROR", 0),
-                    "WARNING": level_counter.get("WARNING", 0),
+                    "WARNING": level_counter.get("WARNING", 0) + level_counter.get("WARN", 0),
                     "INFO": level_counter.get("INFO", 0),
                     "DEBUG": level_counter.get("DEBUG", 0),
                 },
-                "errors_count": level_counter.get("ERROR", 0) + level_counter.get("CRITICAL", 0),
-                "warnings_count": level_counter.get("WARNING", 0),
+                "errors_count": level_counter.get("ERROR", 0) + level_counter.get("CRITICAL", 0) + level_counter.get("FATAL", 0),
+                "warnings_count": level_counter.get("WARNING", 0) + level_counter.get("WARN", 0),
                 "components": top_components,
                 "timeline": timeline_list,
             },
@@ -397,14 +573,91 @@ async def get_log_records(
     return await asyncio.to_thread(_read_and_parse)
 
 
+@router.get("/export")
+async def export_logs(
+    file_name: str = Query("log.json", description="Имя файла логов"),
+    export_format: str = Query("csv", pattern="^(csv|json|markdown)$", description="Формат экспорта"),
+    level: str = Query("", description="Фильтр уровня"),
+    search: str = Query("", description="Текстовый фильтр"),
+    limit: int = Query(1000, ge=1, le=5000, description="Максимум записей для экспорта"),
+) -> Response:
+    """Экспортирует отфильтрованные записи логов в CSV, JSON или Markdown отчёт."""
+    records_data = await get_log_records(
+        file_name=file_name,
+        level=level,
+        search=search,
+        component="",
+        time_preset="",
+        time_from="",
+        time_to="",
+        limit=limit,
+        offset=0,
+        reverse=True
+    )
+    records = records_data.get("records", [])
+
+    ts_now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    if export_format == "json":
+        json_content = json.dumps(records, ensure_ascii=False, indent=2)
+        return Response(
+            content=json_content,
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="app_logs_{ts_now}.json"'}
+        )
+
+    elif export_format == "csv":
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(["ID", "Timestamp", "Level", "Component", "Message", "RepeatCount", "HasException"])
+        for r in records:
+            writer.writerow([
+                r.get("id"),
+                r.get("timestamp"),
+                r.get("level"),
+                r.get("component"),
+                r.get("message"),
+                r.get("repeat_count", 1),
+                "Yes" if r.get("exc_info") else "No"
+            ])
+        return Response(
+            content=output.getvalue(),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="app_logs_{ts_now}.csv"'}
+        )
+
+    else:
+        # Markdown report
+        md = [
+            f"# 📑 Аналитический отчет по журналу `{file_name}`",
+            f"**Дата генерации:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"**Всего записей:** {len(records)} (найдено: {records_data.get('total_matches')})",
+            "",
+            "## Статистика инцидентов",
+            f"- 🔴 Ошибки (Error/Critical): {records_data.get('stats', {}).get('errors_count', 0)}",
+            f"- 🟡 Предупреждения: {records_data.get('stats', {}).get('warnings_count', 0)}",
+            "",
+            "## Таблица записей",
+            "| Время | Уровень | Компонент | Сообщение |",
+            "|---|---|---|---|"
+        ]
+        for r in records[:200]:
+            clean_msg = r.get("message", "").replace("|", "\\|").replace("\n", " ")[:150]
+            md.append(f"| {r.get('timestamp')} | `{r.get('level')}` | {r.get('component')} | {clean_msg} |")
+
+        return Response(
+            content="\n".join(md),
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="app_logs_report_{ts_now}.md"'}
+        )
+
+
 @router.get("/tail")
 async def tail_log(
     file_name: str = Query("log.json", description="Имя файла логов"),
     lines: int = Query(100, ge=1, le=2000, description="Количество хвостовых строк"),
 ) -> Dict[str, Any]:
-    """
-    Возвращает последние строки выбранного файла для быстрого потокового отображения.
-    """
+    """Возвращает последние строки выбранного файла для быстрого потокового отображения."""
     def _do_tail():
         logs_dir = get_logs_dir()
         target_file = (logs_dir / file_name).resolve()
@@ -415,16 +668,13 @@ async def tail_log(
         if not target_file.is_file():
             return {"lines": [], "file_name": file_name, "exists": False}
 
-        with open(target_file, "r", encoding="utf-8", errors="replace") as f:
-            all_lines = f.readlines()
-
-        tail_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
+        tail_lines = _read_tail_lines(target_file, max_lines=lines)
         stat = target_file.stat()
 
         return {
             "lines": [l.rstrip("\r\n") for l in tail_lines],
             "file_name": file_name,
-            "total_lines": len(all_lines),
+            "total_lines": len(tail_lines),
             "returned_lines": len(tail_lines),
             "size_bytes": stat.st_size,
             "size_formatted": _format_size(stat.st_size),
@@ -439,9 +689,7 @@ async def tail_log(
 async def download_log_file(
     file_name: str = Query("log.json", description="Имя файла логов для скачивания")
 ) -> FileResponse:
-    """
-    Позволяет скачать файл логов целиком.
-    """
+    """Позволяет скачать файл логов целиком."""
     logs_dir = get_logs_dir()
     target_file = (logs_dir / file_name).resolve()
 
@@ -460,9 +708,7 @@ async def download_log_file(
 
 @router.post("/clear")
 async def clear_log_file(payload: ClearLogRequest) -> Dict[str, Any]:
-    """
-    Очищает (усекает) указанный файл логов с созданием безопасной резервной копии.
-    """
+    """Очищает (усекает) указанный файл логов с созданием безопасной резервной копии."""
     def _do_clear():
         logs_dir = get_logs_dir()
         target_file = (logs_dir / payload.file_name).resolve()
@@ -493,9 +739,9 @@ async def clear_log_file(payload: ClearLogRequest) -> Dict[str, Any]:
 
 @router.post("/diagnose")
 async def diagnose_log_file(payload: DiagnoseLogsRequest) -> Dict[str, Any]:
-    """
-    Проводит диагностику и кластеризацию сбоев во внутренних логах программы
-    с формированием аналитического отчета и практических рекомендаций.
+    """Проводит глубокую диагностику и кластеризацию сбоев во внутренних логах программы
+
+    с распознаванием сигнатур типичных ошибок Windows, сети, SQLite, JSON и AI API.
     """
     def _do_diagnose():
         logs_dir = get_logs_dir()
@@ -516,10 +762,7 @@ async def diagnose_log_file(payload: DiagnoseLogsRequest) -> Dict[str, Any]:
         is_json = target_file.name.endswith(".json")
         entries = []
 
-        with open(target_file, "r", encoding="utf-8", errors="replace") as f:
-            lines = f.readlines()
-
-        tail_lines = lines[-payload.limit:] if len(lines) > payload.limit else lines
+        tail_lines = _read_tail_lines(target_file, max_lines=payload.limit)
 
         for line in tail_lines:
             line_str = line.strip()
@@ -545,8 +788,8 @@ async def diagnose_log_file(payload: DiagnoseLogsRequest) -> Dict[str, Any]:
                 entries.append({"timestamp": "", "level": lvl, "message": line_str, "exc_info": None})
 
         # Фильтруем ошибки и предупреждения
-        faults = [e for e in entries if e["level"] in ("ERROR", "CRITICAL", "WARNING")]
-        errors_only = [e for e in entries if e["level"] in ("ERROR", "CRITICAL")]
+        faults = [e for e in entries if e["level"] in ("ERROR", "CRITICAL", "WARNING", "FATAL")]
+        errors_only = [e for e in entries if e["level"] in ("ERROR", "CRITICAL", "FATAL")]
 
         # Кластеризация похожих сообщений об ошибках
         cluster_map: Dict[str, Dict[str, Any]] = {}
@@ -582,39 +825,60 @@ async def diagnose_log_file(payload: DiagnoseLogsRequest) -> Dict[str, Any]:
         fault_ratio = len(faults) / total_inspected
         health_score = max(0, min(100, int(100 - (fault_ratio * 100) - (len(errors_only) * 5))))
 
-        # Формирование рекомендаций на основе найденных паттернов
+        # Формирование расширенных рекомендаций на основе найденных паттернов
         recommendations = []
         for c in clusters:
             pat = c["pattern"].lower()
             sample = c["sample_message"].lower()
 
-            if "extra data" in sample or "json" in pat:
+            if "database is locked" in sample or "sqlite" in pat:
+                recommendations.append({
+                    "title": "Блокировка базы данных SQLite (Database is locked)",
+                    "description": f"Параллельные процессы пытаются одновременно записать в SQLite: '{c['sample_message']}'.",
+                    "severity": "high",
+                    "action": "Включить режим WAL (Write-Ahead Logging) для SQLite или использовать connection pooling.",
+                })
+            elif "extra data" in sample or "json" in pat:
                 recommendations.append({
                     "title": "Синтаксическая ошибка в конфигурационном JSON файле",
-                    "description": f"Обнаружена ошибка парсинга JSON: '{c['sample_message']}'. Проверьте целостность и валидность файла конфигурации.",
+                    "description": f"Обнаружена ошибка парсинга JSON: '{c['sample_message']}'.",
                     "severity": "high",
-                    "action": "Проверить и отформатировать поврежденный JSON файл.",
+                    "action": "Проверить целостность и валидность файла конфигурации через JSON-валидатор.",
                 })
-            elif "not found" in pat or "cannot find" in pat or "file not found" in pat:
+            elif "resourceexhausted" in sample or "quota" in sample or "rate limit" in sample:
+                recommendations.append({
+                    "title": "Превышена квота или лимит запросов AI API (Rate Limit)",
+                    "description": f"Провайдер ИИ временно отклонил запрос из-за лимитов: '{c['sample_message']}'.",
+                    "severity": "medium",
+                    "action": "Переключить на резервную локальную модель (Foundry/Ollama) или подождать сброса лимита.",
+                })
+            elif "not found" in pat or "cannot find" in pat or "file not found" in pat or "filenotfounderror" in sample:
                 recommendations.append({
                     "title": "Отсутствие требуемого файла или директории",
                     "description": f"Приложение не смогло обнаружить файл: '{c['sample_message']}'.",
                     "severity": "medium",
                     "action": "Проверить корректность путей в config.json или восстановить недостающий ресурс.",
                 })
-            elif "timeout" in pat or "timed out" in pat:
+            elif "timeout" in pat or "timed out" in pat or "connection timed out" in sample:
                 recommendations.append({
                     "title": "Таймаут сетевого или системного запроса",
                     "description": f"Операция прервана по таймауту: '{c['sample_message']}'.",
                     "severity": "medium",
                     "action": "Проверить сетевое подключение или увеличить лимит времени ожидания сервиса.",
                 })
-            elif "permission" in pat or "access denied" in pat:
+            elif "permission" in pat or "access denied" in pat or "access is denied" in sample:
                 recommendations.append({
-                    "title": "Ограничение прав доступа (Access Denied)",
+                    "title": "Ограничение прав доступа Windows (Access Denied)",
                     "description": f"Отказано в доступе к ресурсу: '{c['sample_message']}'.",
                     "severity": "high",
-                    "action": "Запустить процесс с правами Администратора или проверить ACL папки.",
+                    "action": "Запустить процесс с повышенными правами Администратора или проверить ACL папки.",
+                })
+            elif "modulenotfounderror" in sample or "no module named" in sample:
+                recommendations.append({
+                    "title": "Не установлен Python-модуль",
+                    "description": f"Отсутствует библиотека: '{c['sample_message']}'.",
+                    "severity": "high",
+                    "action": "Выполнить pip install <пакет> в активном виртуальном окружении venv.",
                 })
 
         if not recommendations and faults:

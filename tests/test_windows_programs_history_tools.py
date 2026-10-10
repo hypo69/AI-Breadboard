@@ -56,7 +56,7 @@ async def test_windows_programs_history_report_summary():
         "mapped_artifacts": [],
         "unknown_artifacts": [],
     }
-    with patch("apps.windows.modules.programms_history_deep_researh.report.generate_report", return_value=sample_report):
+    with patch("apps.windows.sdk.modules.programms_history_deep_researh.report.generate_report", return_value=sample_report):
         res_str = await call_tool(windows_programs_history_report, action="summary", limit=5)
         res = json.loads(res_str)
         assert res["status"] == "ok"
@@ -71,7 +71,7 @@ async def test_windows_programs_history_audit():
         {"displayname": "Google Chrome", "publisher": "Google LLC"},
         {"displayname": "Python 3.12", "publisher": "Python Software Foundation"},
     ]
-    with patch("apps.windows.modules.programms_history_deep_researh.registry_extractor.get_installed_programs", return_value=sample_progs):
+    with patch("apps.windows.sdk.modules.programms_history_deep_researh.registry_extractor.get_installed_programs", return_value=sample_progs):
         res_str = await call_tool(windows_programs_history_audit, query_name="Chrome")
         res = json.loads(res_str)
         assert res["status"] == "ok"

@@ -28,9 +28,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from apps.windows.system_control_center.router import init_router
-from apps.windows.core.models import RiskLevel
-from apps.windows.core.system_param_manager import ParameterCategory, ParameterType, SafeSystemParamManager, SystemParameter
-from apps.windows.core.system_restore import WindowsSystemRestoreManager
+from apps.windows.sdk.core.models import RiskLevel
+from apps.windows.sdk.core.system_param_manager import ParameterCategory, ParameterType, SafeSystemParamManager, SystemParameter
+from apps.windows.sdk.core.system_restore import WindowsSystemRestoreManager
 
 @pytest.fixture
 def mock_restore_manager() -> MagicMock:
@@ -176,7 +176,7 @@ class TestSystemControlRouter:
         assert data['is_sensitive'] is True
         assert data['will_create_restore_point'] is True
 
-    @patch('apps.windows.core.system_param_manager.SafeSystemParamManager.apply_change')
+    @patch('apps.windows.sdk.core.system_param_manager.SafeSystemParamManager.apply_change')
     def test_apply_param_endpoint(self, mock_apply: MagicMock, client: TestClient) -> None:
         """Тест POST /api/system-control/params/apply."""
         mock_apply.return_value = {'status': 'SUCCESS', 'change_id': '1234-uuid', 'param_id': 'sec.uac_level', 'param_name': 'UAC', 'old_value': 1, 'new_value': 0, 'is_sensitive': True, 'restore_point': {'success': True, 'description': 'Test RP'}, 'message': 'Параметр успешно изменен.'}
@@ -196,7 +196,7 @@ class TestSystemControlRouter:
         assert 'max_points' in data
         assert 'schedule_trigger' in data
 
-    @patch('apps.windows.core.system_restore.WindowsSystemRestoreManager.save_policy')
+    @patch('apps.windows.sdk.core.system_restore.WindowsSystemRestoreManager.save_policy')
     def test_update_restore_policy_config_endpoint(self, mock_save: MagicMock, client: TestClient) -> None:
         """Тест POST /api/system-control/restore-points/config."""
         mock_save.return_value = {'success': True, 'config': {'max_points': 7, 'max_storage_size': '15%'}, 'message': 'Политика обновлена'}
@@ -207,7 +207,7 @@ class TestSystemControlRouter:
         assert data['success'] is True
         assert data['config']['max_points'] == 7
 
-    @patch('apps.windows.core.system_restore.WindowsSystemRestoreManager.prune_old_restore_points')
+    @patch('apps.windows.sdk.core.system_restore.WindowsSystemRestoreManager.prune_old_restore_points')
     def test_prune_restore_points_endpoint(self, mock_prune: MagicMock, client: TestClient) -> None:
         """Тест POST /api/system-control/restore-points/prune."""
         mock_prune.return_value = {'success': True, 'deleted_count': 2, 'target_keep': 5, 'remaining_count': 5}

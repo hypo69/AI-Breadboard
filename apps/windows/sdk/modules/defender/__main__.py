@@ -1,0 +1,72 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Modules Defender -   Main  
+# =============================================================================
+# Description:
+#   Точка входа для запуска Windows Defender & Security Center.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.sdk.modules.defender.__main__
+#   Python API:
+#     from apps.windows.sdk.modules.defender.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.windows.sdk.modules.defender
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-08 04:11:30
+# =============================================================================
+
+from __future__ import annotations
+"""Точка входа для запуска Windows Defender & Security Center."""
+
+import argparse
+import sys
+from apps.windows.sdk.modules.defender.core.defender_service import DefenderService
+from apps.windows.sdk.modules.defender.core.models import ScanRequest, ScanType
+from apps.windows.sdk.modules.defender.tui import DefenderTUI
+
+def main() -> None:
+    """Основная функция запуска CLI/TUI Windows Defender."""
+    parser = argparse.ArgumentParser(description='Microsoft Defender & AI Security Diagnostic Center')
+    parser.add_argument('--scan', choices=['quick', 'full', 'custom', 'offline'], help='Запуск антивирусного сканирования')
+    parser.add_argument('--path', type=str, help='Путь для выборочного сканирования (custom)')
+    parser.add_argument('--update', action='store_true', help='Обновление антивирусных баз сигнатур')
+    parser.add_argument('--server', action='store_true', help='Запуск выделенного HTTP API сервера')
+    parser.add_argument('--port', type=int, default=8113, help='Порт для выделенного сервера (по умолчанию 8113)')
+    parser.add_argument('--host', type=str, default='127.0.0.1', help='Хост для выделенного сервера')
+    args = parser.parse_args()
+    svc = DefenderService()
+    if args.update:
+        print('Обновление баз сигнатур Microsoft Defender...')
+        resp = svc.update_signatures()
+        print(f'Результат: {resp.message}')
+        if resp.output:
+            print(resp.output)
+        return
+    if args.scan:
+        st_map = {'quick': ScanType.QUICK, 'full': ScanType.FULL, 'custom': ScanType.CUSTOM, 'offline': ScanType.OFFLINE}
+        req = ScanRequest(scan_type=st_map[args.scan], target_path=args.path)
+        print(f'Запуск сканирования ({args.scan})...')
+        resp = svc.trigger_scan(req)
+        print(f'Результат: {resp.message}')
+        if resp.output:
+            print(resp.output)
+        return
+    if args.server:
+        import uvicorn
+        from fastapi import FastAPI
+        from apps.windows.sdk.modules.defender.router import init_router
+        app = FastAPI(title='Windows Defender Security API', version='1.0.0')
+        app.include_router(init_router())
+        print(f'Запуск сервера Windows Defender API на http://{args.host}:{args.port} ...')
+        uvicorn.run(app, host=args.host, port=args.port)
+        return
+    tui = DefenderTUI()
+    tui.render_dashboard()
+if __name__ == '__main__':
+    main()

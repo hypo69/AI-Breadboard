@@ -101,7 +101,7 @@ def test_wevtapi_channel_enumeration() -> None:
 
 def test_log_discovery_engine_sources() -> None:
     """Проверка обнаружения всех источников логов в системе через LogDiscoveryEngine."""
-    from apps.windows.core.audits.log_discovery_engine import LogDiscoveryEngine
+    from apps.windows.sdk.core.audits.log_discovery_engine import LogDiscoveryEngine
     engine = LogDiscoveryEngine()
     sources = engine.discover_all_sources()
     assert len(sources) > 50

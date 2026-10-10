@@ -32,7 +32,7 @@ from src.ai.agents.windows_tools import (
     windows_network_speedtest,
     WINDOWS_NETWORK_TOOLS,
 )
-from apps.windows.modules.network.lan_scanner import LanDevice
+from apps.windows.sdk.modules.network.lan_scanner import LanDevice
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -51,7 +51,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_network_scan_lan_devices():
     """Тест сканирования и инспекции устройств LAN."""
-    with patch("apps.windows.modules.network.lan_scanner.WindowsLanScanner.discover_devices") as mock_func:
+    with patch("apps.windows.sdk.modules.network.lan_scanner.WindowsLanScanner.discover_devices") as mock_func:
         mock_func.return_value = [
             LanDevice(ip="192.168.1.1", mac="00:11:22:33:44:55", hostname="router.local", state="Online", is_gateway=True)
         ]
@@ -65,7 +65,7 @@ async def test_windows_network_scan_lan_devices():
 @pytest.mark.asyncio
 async def test_windows_network_usage_stats_adapters():
     """Тест получения накопительной статистики сетевых адаптеров."""
-    with patch("apps.windows.modules.network.network_usage.WindowsNetworkUsageCollector.get_adapter_statistics") as mock_func:
+    with patch("apps.windows.sdk.modules.network.network_usage.WindowsNetworkUsageCollector.get_adapter_statistics") as mock_func:
         mock_func.return_value = [{"name": "Ethernet", "received_bytes": 1024000, "sent_bytes": 512000}]
         res_str = await call_tool(windows_network_usage_stats, action="adapters")
         res = json.loads(res_str)
@@ -77,7 +77,7 @@ async def test_windows_network_usage_stats_adapters():
 @pytest.mark.asyncio
 async def test_windows_network_speedtest():
     """Тест выполнения замера скорости и качества соединения."""
-    with patch("apps.windows.modules.network.speedtest.NetworkSpeedTester.run_full_speedtest") as mock_func:
+    with patch("apps.windows.sdk.modules.network.speedtest.NetworkSpeedTester.run_full_speedtest") as mock_func:
         mock_func.return_value = {
             "download_mbps": 250.5,
             "upload_mbps": 100.2,

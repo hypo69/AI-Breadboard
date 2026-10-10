@@ -31,7 +31,7 @@ from src.ai.agents.windows_tools import (
     windows_process_action,
     WINDOWS_PROCESS_TOOLS,
 )
-from apps.windows.modules.process_manager.core.models import (
+from apps.windows.sdk.modules.process_manager.core.models import (
     CategorizedProcessReport,
     ProcessItem,
     ProcessReport,
@@ -68,7 +68,7 @@ async def test_windows_process_list_summary():
             ProcessItem(pid=1234, name="python.exe", cpu_percent=25.5, memory_mb=150.0)
         ],
     )
-    with patch("apps.windows.modules.process_manager.core.manager.ProcessManager.generate_report", return_value=sample_report):
+    with patch("apps.windows.sdk.modules.process_manager.core.manager.ProcessManager.generate_report", return_value=sample_report):
         res_str = await call_tool(windows_process_list, action="summary", limit=5)
         res = json.loads(res_str)
         assert res["status"] == "ok"
@@ -86,7 +86,7 @@ async def test_windows_process_action_dry_run():
         "kill_tree": False,
         "message": "Симуляция завершения процесса PID=1234 выполнена успешно."
     }
-    with patch("apps.windows.modules.process_manager.core.manager.ProcessManager.kill_process", return_value=sample_res):
+    with patch("apps.windows.sdk.modules.process_manager.core.manager.ProcessManager.kill_process", return_value=sample_res):
         res_str = await call_tool(windows_process_action, pid=1234, dry_run=True)
         res = json.loads(res_str)
         assert res["status"] == "ok"

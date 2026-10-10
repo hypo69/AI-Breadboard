@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой счетчиков производительности и трассировки ETW
-#   (apps.windows.modules.performance_tracing).
+#   (apps.windows.sdk.modules.performance_tracing).
 #   Сгруппированы по 2 логическим блокам:
 #     1. Инспекция счетчиков производительности и сессий ETW (windows_performance_tracing_audit)
 #     2. Безопасные действия со сборщиками трассировки ETW по SafeOps (windows_performance_collector_action)
@@ -95,7 +95,7 @@ async def windows_performance_tracing_audit(
         JSON с результатами замера счетчиков, списком сборщиков или сводным отчетом.
     """
     try:
-        from apps.windows.modules.performance_tracing.core.manager import PerformanceTracingManager
+        from apps.windows.sdk.modules.performance_tracing.core.manager import PerformanceTracingManager
 
         mgr = PerformanceTracingManager()
         loop = asyncio.get_running_loop()
@@ -140,8 +140,8 @@ async def windows_performance_collector_action(
         JSON с результатом выполнения или симуляции операции над сборщиком трассировки.
     """
     try:
-        from apps.windows.modules.performance_tracing.core.manager import PerformanceTracingManager
-        from apps.windows.modules.performance_tracing.core.models import CollectorActionRequest
+        from apps.windows.sdk.modules.performance_tracing.core.manager import PerformanceTracingManager
+        from apps.windows.sdk.modules.performance_tracing.core.models import CollectorActionRequest
 
         mgr = PerformanceTracingManager()
         req = CollectorActionRequest(

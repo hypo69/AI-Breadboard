@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 02:00:00
+ * Updated: 2026-10-10 09:49:00
  * =============================================================================
  */
 
@@ -270,6 +270,11 @@ export function switchTab(tabId) {
     try {
       window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
     } catch (err) { console.debug('activate tab hook error:', err); }
+
+    const targetPane = document.getElementById(id);
+    if (targetPane && typeof window.initPanels === 'function') {
+      window.initPanels(targetPane);
+    }
     
     document.dispatchEvent(new CustomEvent('tab:activated', { detail: { tabId: id, name } }));
   });
@@ -330,6 +335,9 @@ export async function loadTab(tabName, htmlUrl, jsUrl) {
       } catch (err) {
         console.debug(`[TabCore] Ошибка вызова ${initName}:`, err);
       }
+    }
+    if (typeof window.initPanels === 'function') {
+      window.initPanels(container);
     }
   } catch (e) {
     const safeName = String(tabName).replace(/[^a-zA-Z0-9_-]/g, '');

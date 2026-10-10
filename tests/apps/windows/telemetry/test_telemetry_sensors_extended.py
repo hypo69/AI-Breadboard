@@ -30,7 +30,7 @@ from apps.windows.telemetry.sampling_controller import SamplingController
 from apps.windows.telemetry.sensor_collector import SensorCollector
 from apps.windows.telemetry.device_flapping_sensor import DeviceFlappingSensor
 from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
 from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
 from apps.windows.telemetry.telemetry_config import TelemetryConfigManager

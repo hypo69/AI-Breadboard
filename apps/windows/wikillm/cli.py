@@ -18,7 +18,7 @@
 # Package: apps.windows.wikillm
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-10 07:54:00
 # =============================================================================
 
 from __future__ import annotations
@@ -30,14 +30,20 @@ import json
 import sys
 from pathlib import Path
 from .code_indexer import CodeKnowledgeIndexer
+from .command_indexer import CommandKnowledgeIndexer
+from .config import WikiLLMConfig
 from .engine import WikiLLMEngine
 from .extractor import ArtifactExtractor
 from .models import ArtifactInput
+from .storage import WikiStorage
 
 
 async def _async_cli_main(args: argparse.Namespace) -> None:
     """Асинхронная точка входа для командной строки."""
-    engine = WikiLLMEngine()
+    db_path = getattr(args, "db", None)
+    config = WikiLLMConfig(database_path=db_path) if db_path else None
+    storage = WikiStorage(db_path) if db_path else None
+    engine = WikiLLMEngine(config=config, storage=storage)
 
     if args.command == "resolve":
         extracted = ArtifactExtractor.from_raw_text(args.query)
@@ -51,11 +57,13 @@ async def _async_cli_main(args: argparse.Namespace) -> None:
             print(f"  Категория:   {res.entity.category} ({res.entity.severity})")
             print(f"  Сводка:      {res.entity.summary}")
             if res.entity.diagnostic_info:
-                print(f"  Причины:     {', '.join(res.entity.diagnostic_info.possible_causes)}")
+                if res.entity.diagnostic_info.possible_causes:
+                    print(f"  Причины:     {', '.join(res.entity.diagnostic_info.possible_causes)}")
                 if res.entity.diagnostic_info.remediation_steps:
-                    print("  Шаги устранения:")
+                    print("  Шаги устранения / Команда:")
                     for s in res.entity.diagnostic_info.remediation_steps:
-                        print(f"    • {s.title}: {s.description}")
+                        cmd_info = f" -> `{s.command}`" if s.command else ""
+                        print(f"    • {s.title}: {s.description}{cmd_info}")
         else:
             print(f"  [-] {res.message}")
 
@@ -70,6 +78,16 @@ async def _async_cli_main(args: argparse.Namespace) -> None:
         print(f"[*] Индексация исходного кода из {args.path}...")
         count = indexer.index_directory(args.path)
         print(f"[+] Успешно проиндексировано {count} символов.")
+
+    elif args.command == "index-commands":
+        indexer = CommandKnowledgeIndexer(engine.storage)
+        print(f"[*] Индексация атомарных команд, скриптов и коллекторов телеметрии...")
+        stats = indexer.index_all()
+        print(f"[+] Индексация завершена успешно:")
+        print(f"    • Атомарные команды Windows: {stats['atomic_capabilities']}")
+        print(f"    • Коллекторы телеметрии:     {stats['telemetry_collectors']}")
+        print(f"    • Параметры SafeOps:         {stats['system_params']}")
+        print(f"    • ИТОГО в базе знаний:       {stats['total_commands_indexed']}")
 
     elif args.command == "stats":
         metrics = engine.get_metrics()
@@ -86,11 +104,12 @@ async def _async_cli_main(args: argparse.Namespace) -> None:
 def main() -> None:
     """Главная синхронная точка входа CLI."""
     parser = argparse.ArgumentParser(description="WikiLLM: Progressive Knowledge Base CLI")
+    parser.add_argument("--db", default=None, help="Пользовательский путь к базе SQLite (по умолчанию: data/windows_wikillm/knowledge.db)")
     subparsers = parser.add_subparsers(dest="command", help="Команды")
 
     # resolve
-    p_res = subparsers.add_parser("resolve", help="Разрешить ошибку, Event ID или симптом")
-    p_res.add_argument("query", help="Код ошибки, Event ID или сообщение")
+    p_res = subparsers.add_parser("resolve", help="Разрешить ошибку, команду, Event ID или симптом")
+    p_res.add_argument("query", help="Код ошибки, команда (cmd:diskpart.disk.list) или запрос")
     p_res.add_argument("--no-llm", action="store_true", help="Не вызывать Gemini при промахе кэша")
 
     # search
@@ -101,6 +120,9 @@ def main() -> None:
     # index-code
     p_idx = subparsers.add_parser("index-code", help="Индексация кода в слой Code Knowledge")
     p_idx.add_argument("--path", default="apps/windows", help="Путь к каталогу с кодом")
+
+    # index-commands
+    subparsers.add_parser("index-commands", help="Индексация команд, скриптов и коллекторов телеметрии")
 
     # stats
     subparsers.add_parser("stats", help="Статистика базы знаний и эффективность кэша")

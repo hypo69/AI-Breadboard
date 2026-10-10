@@ -13,7 +13,7 @@
 #
 #     res = load_tc_config()
 #
-# Updated: 2026-10-08 01:30:00
+# Updated: 2026-10-10 12:48:00
 # =============================================================================
 
 from __future__ import annotations
@@ -340,21 +340,21 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
 
     # 2. Windows Sysadmin (AD, аудит файлов и безопасности)
     try:
-        from apps.windows.modules.sysadmin.router import init_router as init_sysadmin_router
+        from apps.windows.sdk.modules.sysadmin.router import init_router as init_sysadmin_router
         app.include_router(init_sysadmin_router())
     except Exception as exc:
         logger.debug(f'Роутер sysadmin не зарегистрирован: {exc}')
 
     # 3. Сетевой терминал
     try:
-        from apps.windows.modules.network.router import init_router as init_network_router
+        from apps.windows.sdk.modules.network.router import init_router as init_network_router
         app.include_router(init_network_router())
     except Exception as exc:
         logger.debug(f'Роутер network не зарегистрирован: {exc}')
 
     # 4. Центр управления системой
     try:
-        from apps.windows.modules.system_control_center.router import init_router as init_scc_router
+        from apps.windows.sdk.modules.system_control_center.router import init_router as init_scc_router
         app.include_router(init_scc_router())
     except Exception as exc:
         logger.debug(f'Роутер system_control_center не зарегистрирован: {exc}')
@@ -410,12 +410,6 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         logger.debug(f'Роутер router_about_system не зарегистрирован: {exc}')
 
     try:
-        from src.api.routers.core.router_system import init_router as init_system_diagnostics_router
-        app.include_router(init_system_diagnostics_router(chat_model=state.chat_model))
-    except Exception as exc:
-        logger.debug(f'Роутер router_system не зарегистрирован: {exc}')
-
-    try:
         from apps.windows.api.routers.router_windows_admin import init_router as init_win_admin_router
         app.include_router(init_win_admin_router())
     except Exception as exc:
@@ -442,100 +436,106 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     except Exception as exc:
         logger.debug(f'Роутер router_admin не зарегистрирован: {exc}')
 
+    try:
+        from apps.windows.api.routers.router_google_accounts import init_router as init_google_accounts_router
+        app.include_router(init_google_accounts_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_google_accounts не зарегистрирован: {exc}')
+
     # 6. Аудитор автозагрузки
     try:
-        from apps.windows.modules.startup.router import init_router as init_startup_router
+        from apps.windows.sdk.modules.startup.router import init_router as init_startup_router
         app.include_router(init_startup_router())
     except Exception as exc:
         logger.debug(f'Роутер startup не зарегистрирован: {exc}')
 
     # 7. Диспетчер резервного копирования
     try:
-        from apps.windows.modules.backup_manager.router import init_router as init_backup_router
+        from apps.windows.sdk.modules.backup_manager.router import init_router as init_backup_router
         app.include_router(init_backup_router())
     except Exception as exc:
         logger.debug(f'Роутер backup_manager не зарегистрирован: {exc}')
 
     # 8. Защитник Windows
     try:
-        from apps.windows.modules.defender.router import init_router as init_defender_router
+        from apps.windows.sdk.modules.defender.router import init_router as init_defender_router
         app.include_router(init_defender_router())
     except Exception as exc:
         logger.debug(f'Роутер defender не зарегистрирован: {exc}')
 
     # 8.1. Управление хранилищем (Storage Manager)
     try:
-        from apps.windows.modules.storage_manager.router import init_router as init_storage_mgr_router
+        from apps.windows.sdk.modules.storage_manager.router import init_router as init_storage_mgr_router
         app.include_router(init_storage_mgr_router())
     except Exception as exc:
         logger.debug(f'Роутер storage_manager не зарегистрирован: {exc}')
 
     # 8.2. Загрузка и восстановление (Boot & Recovery)
     try:
-        from apps.windows.modules.boot_recovery.router import init_router as init_boot_router
+        from apps.windows.sdk.modules.boot_recovery.router import init_router as init_boot_router
         app.include_router(init_boot_router())
     except Exception as exc:
         logger.debug(f'Роутер boot_recovery не зарегистрирован: {exc}')
 
     # 8.3. Целостность системных файлов (Servicing & Integrity)
     try:
-        from apps.windows.modules.servicing_integrity.router import init_router as init_servicing_router
+        from apps.windows.sdk.modules.servicing_integrity.router import init_router as init_servicing_router
         app.include_router(init_servicing_router())
     except Exception as exc:
         logger.debug(f'Роутер servicing_integrity не зарегистрирован: {exc}')
 
     # 8.4. Системные службы (Services Manager)
     try:
-        from apps.windows.modules.services_manager.router import init_router as init_services_mgr_router
+        from apps.windows.sdk.modules.services_manager.router import init_router as init_services_mgr_router
         app.include_router(init_services_mgr_router())
     except Exception as exc:
         logger.debug(f'Роутер services_manager не зарегистрирован: {exc}')
 
     # 8.5. Планировщик заданий (Task Scheduler)
     try:
-        from apps.windows.modules.task_scheduler.router import init_router as init_sched_router
+        from apps.windows.sdk.modules.task_scheduler.router import init_router as init_sched_router
         app.include_router(init_sched_router())
     except Exception as exc:
         logger.debug(f'Роутер task_scheduler не зарегистрирован: {exc}')
 
     # 8.6. Управление процессами (Process Manager)
     try:
-        from apps.windows.modules.process_manager.router import init_router as init_proc_router
+        from apps.windows.sdk.modules.process_manager.router import init_router as init_proc_router
         app.include_router(init_proc_router())
     except Exception as exc:
         logger.debug(f'Роутер process_manager не зарегистрирован: {exc}')
 
     # 8.7. Брандмауэр Windows (Firewall Manager)
     try:
-        from apps.windows.modules.firewall_manager.router import init_router as init_firewall_router
+        from apps.windows.sdk.modules.firewall_manager.router import init_router as init_firewall_router
         app.include_router(init_firewall_router())
     except Exception as exc:
         logger.debug(f'Роутер firewall_manager не зарегистрирован: {exc}')
 
     # 8.8. Безопасность и ACL (Security & ACL)
     try:
-        from apps.windows.modules.security_acl.router import init_router as init_sec_acl_router
+        from apps.windows.sdk.modules.security_acl.router import init_router as init_sec_acl_router
         app.include_router(init_sec_acl_router())
     except Exception as exc:
         logger.debug(f'Роутер security_acl не зарегистрирован: {exc}')
 
     # 8.9. Производительность и трассировка (Performance & Tracing)
     try:
-        from apps.windows.modules.performance_tracing.router import init_router as init_perf_tracing_router
+        from apps.windows.sdk.modules.performance_tracing.router import init_router as init_perf_tracing_router
         app.include_router(init_perf_tracing_router())
     except Exception as exc:
         logger.debug(f'Роутер performance_tracing не зарегистрирован: {exc}')
 
     # 8.10. Журналы событий (Event Logs)
     try:
-        from apps.windows.modules.event_logs.router import init_router as init_event_logs_router
+        from apps.windows.sdk.modules.event_logs.router import init_router as init_event_logs_router
         app.include_router(init_event_logs_router())
     except Exception as exc:
         logger.debug(f'Роутер event_logs не зарегистрирован: {exc}')
 
     # 8.11. Управление ПО и пакетами (Software Manager)
     try:
-        from apps.windows.modules.software_manager.router import init_router as init_sw_mgr_router
+        from apps.windows.sdk.modules.software_manager.router import init_router as init_sw_mgr_router
         app.include_router(init_sw_mgr_router())
     except Exception as exc:
         logger.debug(f'Роутер software_manager не зарегистрирован: {exc}')
@@ -549,14 +549,14 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
 
     # 10.1. Windows Window Management Control Plane (/api/v1/window-management)
     try:
-        from apps.windows.modules.window_control_plane.router import init_router as init_wcp_router
+        from apps.windows.sdk.modules.window_control_plane.router import init_router as init_wcp_router
         app.include_router(init_wcp_router())
     except Exception as exc:
         logger.debug(f'Роутер window_control_plane не зарегистрирован: {exc}')
 
     # 10.2. Windows Personalization & Appearance (/api/v1/windows/personalization)
     try:
-        from apps.windows.modules.personalization.router import init_router as init_personalization_router
+        from apps.windows.sdk.modules.personalization.router import init_router as init_personalization_router
         app.include_router(init_personalization_router())
     except Exception as exc:
         logger.debug(f'Роутер personalization не зарегистрирован: {exc}')
@@ -570,44 +570,32 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
 
     # 11. Роутер Test Computer (/tc/model, /tc/model_instruction, /tc/telemetry)
     try:
-        from src.api.routers.tc.router_tc import init_router as init_tc_router
+        from apps.windows.api.routers.router_tc import init_router as init_tc_router
         app.include_router(init_tc_router())
     except Exception as exc:
         logger.warning(f'Роутер TC не зарегистрирован: {exc}')
 
     # 12. Вспомогательные роутеры меню и утилит
     try:
-        from src.api.routers.core.router_menu import init_router as init_menu_router
+        from apps.windows.api.routers.router_menu import init_router as init_menu_router
         app.include_router(init_menu_router())
     except Exception:
         pass
 
     try:
-        from src.api.routers.core.router_recovery import init_router as init_recovery_router
-        app.include_router(init_recovery_router())
-    except Exception:
-        pass
-
-    try:
-        from src.api.routers.core.router_ninite import init_router as init_ninite_router
-        app.include_router(init_ninite_router())
-    except Exception:
-        pass
-
-    try:
-        from src.api.routers.core.router_registry_viewer import init_router as init_reg_router
+        from apps.windows.api.routers.router_registry_viewer import init_router as init_reg_router
         app.include_router(init_reg_router())
     except Exception:
         pass
 
     try:
-        from src.api.routers.core.router_system_logs import init_router as init_sys_logs_router
+        from apps.windows.api.routers.router_system_logs import init_router as init_sys_logs_router
         app.include_router(init_sys_logs_router())
     except Exception:
         pass
 
     try:
-        from src.api.routers.core.router_scenarios import init_router as init_scenarios_router
+        from apps.windows.api.routers.router_scenarios import init_router as init_scenarios_router
         app.include_router(init_scenarios_router())
     except Exception:
         pass

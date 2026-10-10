@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 08:35:00
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -412,9 +412,10 @@ async def _run_quick_check_scenario() -> ScenarioRunResult:
     # Шаг 5: Проверка активных микроприложений (/apps)
     step5_start = time.perf_counter()
     try:
-        from src.api.routers.core.router_admin import get_apps_status
-        apps_status = get_apps_status()
-        enabled_apps = [app_id for app_id, app in apps_status.get("apps", {}).items() if app.get("enabled")]
+        from apps.windows.api.server import load_tc_config
+        tc_cfg = load_tc_config()
+        apps_sec = tc_cfg.get("apps", {})
+        enabled_apps = apps_sec.get("enabled", []) if isinstance(apps_sec, dict) else []
         step5_dur = (time.perf_counter() - step5_start) * 1000
         steps.append(ScenarioStepResult(
             name="Конфигурация микросервисов Test Computer",
@@ -523,7 +524,7 @@ async def _run_log_audit_scenario() -> ScenarioRunResult:
     win_event_errors = 0
     if platform.system() == "Windows":
         try:
-            from apps.windows.core.audits.eventlog_collector import EventLogCollector
+            from apps.windows.sdk.core.audits.eventlog_collector import EventLogCollector
             collector = EventLogCollector()
             events = collector.fetch_events(channel="Application", limit=30, level="Error")
             win_event_errors = len(events)
@@ -861,7 +862,7 @@ async def _run_safe_update_guard_scenario() -> ScenarioRunResult:
     # Шаг 2: Диагностика среды восстановления Windows RE (WinRE)
     s2_start = time.perf_counter()
     try:
-        from apps.windows.modules.system_checkpoints.core.winre_manager import WinREManager
+        from apps.windows.sdk.modules.system_checkpoints.core.winre_manager import WinREManager
         winre_mgr = WinREManager()
         winre_stat = await asyncio.to_thread(winre_mgr.get_status)
         s2_dur = (time.perf_counter() - s2_start) * 1000
@@ -885,7 +886,7 @@ async def _run_safe_update_guard_scenario() -> ScenarioRunResult:
     # Шаг 3: Проверка и создание точки восстановления Windows (VSS)
     s3_start = time.perf_counter()
     try:
-        from apps.windows.core.system_restore import WindowsSystemRestoreManager
+        from apps.windows.sdk.core.system_restore import WindowsSystemRestoreManager
         sr_mgr = WindowsSystemRestoreManager()
         prot_stat = sr_mgr.check_protection_status()
 
@@ -926,8 +927,8 @@ async def _run_safe_update_guard_scenario() -> ScenarioRunResult:
     # Шаг 4: Регистрация контрольной точки PRE_UPDATE в координаторе
     s4_start = time.perf_counter()
     try:
-        from apps.windows.modules.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
-        from apps.windows.modules.system_checkpoints.models import CheckpointCreateRequest, CheckpointType
+        from apps.windows.sdk.modules.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
+        from apps.windows.sdk.modules.system_checkpoints.models import CheckpointCreateRequest, CheckpointType
 
         coord = CheckpointCoordinator()
         chk_req = CheckpointCreateRequest(
@@ -1211,7 +1212,7 @@ def _get_dynamic_tool_engine() -> Any:
     global _dynamic_tool_engine
     if _dynamic_tool_engine is None:
         try:
-            from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+            from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
             _dynamic_tool_engine = DynamicWindowsToolEngine()
         except Exception as e:
             logger.warning(f"Не удалось инициализировать DynamicWindowsToolEngine: {e}")
@@ -1291,7 +1292,7 @@ async def _execute_disk_benchmark_telemetry_step() -> ScenarioStepResult:
     """Выполняет экспресс-бенчмарк всех накопителей через StorageBenchmarkSensor и фиксирует телеметрию."""
     t0 = time.perf_counter()
     try:
-        from apps.windows.modules.storage_manager.core.benchmark_sensor import get_storage_benchmark_sensor
+        from apps.windows.sdk.modules.storage_manager.core.benchmark_sensor import get_storage_benchmark_sensor
         sensor = get_storage_benchmark_sensor()
         report = await asyncio.to_thread(sensor.run_quick_benchmark, None, 16, 1)
         dur_ms = (time.perf_counter() - t0) * 1000
@@ -1496,7 +1497,7 @@ def init_router() -> APIRouter:
         if not engine:
             raise HTTPException(status_code=500, detail="Движок DynamicWindowsToolEngine недоступен.")
 
-        from apps.windows.core.dynamic_tool_engine import DynamicToolPlan
+        from apps.windows.sdk.core.dynamic_tool_engine import DynamicToolPlan
         plan = DynamicToolPlan(
             intent=req.tool_title,
             tool_name=req.tool_name,
@@ -1519,8 +1520,8 @@ def init_router() -> APIRouter:
     @router.post("/execute-fix", response_model=ScenarioExecuteFixResponse)
     async def execute_scenario_fix(req: ScenarioExecuteFixRequest) -> ScenarioExecuteFixResponse:
         """Безопасное выполнение SafeOps-исправления из интерфейса чата."""
-        from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
-        from apps.windows.core.safe_executor import SafeExecutor
+        from apps.windows.sdk.core.models import ActionType, RemediationAction, RiskLevel
+        from apps.windows.sdk.core.safe_executor import SafeExecutor
 
         executor = SafeExecutor()
         try:

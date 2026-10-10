@@ -67,7 +67,7 @@ async def windows_collector_audit(collector_name: str) -> str:
             - 'integrity': целостность системных файлов и компонентов (SFC/DISM)
     """
     try:
-        from apps.windows.core.tools.system_tools import WindowsCollectorTool
+        from apps.windows.sdk.core.tools.system_tools import WindowsCollectorTool
         collector_tool = WindowsCollectorTool()
         result = await collector_tool.execute(collector_name=collector_name)
         payload = {
@@ -100,8 +100,8 @@ async def windows_execute_atomic_op(
         dry_run: Если True, возвращает предварительный просмотр формируемой команды без ее реального выполнения.
     """
     try:
-        from apps.windows.core.atomic_capabilities import get_atomic_registry
-        from apps.windows.core.atomic_models import AtomicOperationExecutionRequest
+        from apps.windows.sdk.core.atomic_capabilities import get_atomic_registry
+        from apps.windows.sdk.core.atomic_models import AtomicOperationExecutionRequest
 
         registry = get_atomic_registry()
         req = AtomicOperationExecutionRequest(
@@ -137,8 +137,8 @@ async def windows_manage_service(service_name: str, action: str = 'status') -> s
         action: Действие со службой: 'status' (проверить статус), 'start' (запустить), 'stop' (остановить), 'restart' (перезапустить).
     """
     try:
-        from apps.windows.modules.services_manager.core.manager import ServicesManager
-        from apps.windows.modules.services_manager.core.models import ServiceActionRequest
+        from apps.windows.sdk.modules.services_manager.core.manager import ServicesManager
+        from apps.windows.sdk.modules.services_manager.core.models import ServiceActionRequest
 
         manager = ServicesManager()
         normalized_action = action.strip().lower()
@@ -231,7 +231,7 @@ async def windows_manage_restore_point(action: str = 'list', description: str = 
         sequence_number: Номер точки восстановления для удаления или отката.
     """
     try:
-        from apps.windows.core.system_restore import WindowsSystemRestoreManager
+        from apps.windows.sdk.core.system_restore import WindowsSystemRestoreManager
         manager = WindowsSystemRestoreManager()
         normalized_action = action.strip().lower()
 
@@ -270,7 +270,7 @@ async def windows_manage_sys_param(action: str = 'list', param_id: Optional[str]
         create_restore_point: Создавать ли автоматическую контрольную точку восстановления перед модификацией.
     """
     try:
-        from apps.windows.core.system_param_manager import SafeSystemParamManager
+        from apps.windows.sdk.core.system_param_manager import SafeSystemParamManager
         manager = SafeSystemParamManager()
         normalized_action = action.strip().lower()
 
@@ -309,7 +309,7 @@ async def windows_safe_probe(script: str, timeout_sec: int = 15) -> str:
         timeout_sec: Таймаут выполнения в секундах.
     """
     try:
-        from apps.windows.core.tools.system_tools import SafePowerShellProbeTool
+        from apps.windows.sdk.core.tools.system_tools import SafePowerShellProbeTool
         probe = SafePowerShellProbeTool()
         result = await probe.execute(script=script, timeout_sec=timeout_sec)
         payload = {
@@ -424,7 +424,7 @@ async def windows_manage_optional_feature(
 ) -> str:
     """Управление опциональными компонентами Windows (Windows Optional Features / DISM).
 
-    Использует функции подсистемы apps.windows.features для аудита, включения и отключения компонентов ОС.
+    Использует функции подсистемы apps.windows.sdk.features для аудита, включения и отключения компонентов ОС.
 
     Args:
         action: Действие для выполнения:
@@ -435,7 +435,7 @@ async def windows_manage_optional_feature(
         include_all: Если True (по умолчанию), при включении компонента также устанавливаются его зависимости (-All).
     """
     try:
-        from apps.windows.features.manager import (
+        from apps.windows.sdk.features.manager import (
             get_windows_features,
             enable_windows_feature,
             disable_windows_feature,
@@ -473,7 +473,7 @@ async def windows_manage_accounts_identity(
 ) -> str:
     """Управление учетными записями, группами, сессиями, правами LSA, токенами и аудитом Windows Identity.
 
-    Использует центральный сервис подсистемы apps.windows.modules.accounts_identity.
+    Использует центральный сервис подсистемы apps.windows.sdk.modules.accounts_identity.
 
     Args:
         action: Выполняемая операция:
@@ -500,7 +500,7 @@ async def windows_manage_accounts_identity(
         params: Опциональный словарь дополнительных параметров (пароль, имя, лимит).
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         act = action.strip().lower()

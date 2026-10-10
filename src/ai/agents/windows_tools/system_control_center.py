@@ -5,7 +5,7 @@
 # Description:
 #   Инструменты единого центра управления Windows (System Control Center),
 #   агрегирующие телеметрию безопасности, оперативной памяти, торов дисков
-#   и точек восстановления (apps.windows.modules.system_control_center).
+#   и точек восстановления (apps.windows.sdk.modules.system_control_center).
 #   Включают:
 #     1. Сводный аудит и телеметрия центра управления (windows_system_control_audit)
 #     2. Системные действия центров управления SafeOps (windows_system_control_action)
@@ -99,7 +99,7 @@ async def windows_system_control_audit(
         JSON со статусом центра управления Windows.
     """
     try:
-        from apps.windows.modules.system_control_center.router import _collect_status_sync
+        from apps.windows.sdk.modules.system_control_center.router import _collect_status_sync
 
         loop = asyncio.get_running_loop()
         act = action.strip().lower()

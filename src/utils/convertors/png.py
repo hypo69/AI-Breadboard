@@ -14,7 +14,7 @@
 # Package: src.utils.convertors
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 10:52:30
 # =============================================================================
 
 """Text to PNG image conversion utilities."""
@@ -22,7 +22,7 @@
 from pathlib import Path
 from typing import List, Tuple
 from PIL import Image, ImageDraw, ImageFont
-from logger.logger import logger  # Logging
+from logger import logger
 
 class TextToImageGenerator:
     """

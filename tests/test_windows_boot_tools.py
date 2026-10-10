@@ -49,7 +49,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_boot_recovery_audit():
     """Тест выполнения аудита BCD и WinRE."""
-    with patch("apps.windows.modules.boot_recovery.core.manager.BootRecoveryManager.generate_report") as mock_func:
+    with patch("apps.windows.sdk.modules.boot_recovery.core.manager.BootRecoveryManager.generate_report") as mock_func:
         mock_func.return_value = {"timeout_seconds": 30, "default_os": "Windows 11", "secure_boot_enabled": True}
         res_str = await call_tool(windows_boot_recovery_audit)
         res = json.loads(res_str)

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой аппаратного мониторинга и диагностики
-#   (apps.windows.modules.hardware).
+#   (apps.windows.sdk.modules.hardware).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Телеметрия и мониторинг оборудования в реальном времени (windows_hardware_monitor)
 #     2. Аппаратная инвентаризация и S.M.A.R.T. накопителей (windows_hardware_inventory)
@@ -101,7 +101,7 @@ async def windows_hardware_monitor(
         JSON с метриками телеметрии или сводкой состояния оборудования.
     """
     try:
-        from apps.windows.modules.hardware.hardware_monitor import HardwareMonitor
+        from apps.windows.sdk.modules.hardware.hardware_monitor import HardwareMonitor
 
         mon = HardwareMonitor()
         loop = asyncio.get_running_loop()
@@ -159,7 +159,7 @@ async def windows_hardware_inventory(
         JSON с аппаратными характеристиками оборудования или показаниями S.M.A.R.T.
     """
     try:
-        from apps.windows.modules.hardware.hardware_monitor import HardwareMonitor
+        from apps.windows.sdk.modules.hardware.hardware_monitor import HardwareMonitor
 
         mon = HardwareMonitor()
         loop = asyncio.get_running_loop()
@@ -167,7 +167,7 @@ async def windows_hardware_inventory(
 
         if act == "summary":
             try:
-                from apps.windows.modules.hardware.discovery import HardwareDiscovery
+                from apps.windows.sdk.modules.hardware.discovery import HardwareDiscovery
                 disc = HardwareDiscovery()
                 res = await loop.run_in_executor(None, disc.get_full_inventory)
             except Exception:
@@ -217,7 +217,7 @@ async def windows_hardware_benchmark(
         JSON с результатами стресс-теста или метриками скорости ИИ-инференса.
     """
     try:
-        from apps.windows.modules.hardware.stress_benchmark import StressBenchmarkEngine
+        from apps.windows.sdk.modules.hardware.stress_benchmark import StressBenchmarkEngine
 
         engine = StressBenchmarkEngine(max_safe_temp_c=max_safe_temp_c)
         loop = asyncio.get_running_loop()

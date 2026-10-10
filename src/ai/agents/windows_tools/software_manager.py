@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты управления пакетами программного обеспечения Windows (WinGet, MSI)
-#   (apps.windows.modules.software_manager).
+#   (apps.windows.sdk.modules.software_manager).
 #   Включают:
 #     1. Список установленного ПО, поиск в репозитории WinGet и проверка обновлений (windows_software_list)
 #     2. Установка, обновление и удаление пакетов ПО по протоколу SafeOps/dry_run (windows_software_action)
@@ -99,7 +99,7 @@ async def windows_software_list(
         JSON со списком пакетов ПО или отчётом WinGet.
     """
     try:
-        from apps.windows.modules.software_manager.core.manager import SoftwarePackagesManager
+        from apps.windows.sdk.modules.software_manager.core.manager import SoftwarePackagesManager
 
         spm = SoftwarePackagesManager()
         loop = asyncio.get_running_loop()
@@ -149,8 +149,8 @@ async def windows_software_action(
         JSON с результатом выполнения операции над пакетом ПО.
     """
     try:
-        from apps.windows.modules.software_manager.core.manager import SoftwarePackagesManager
-        from apps.windows.modules.software_manager.core.models import PackageActionRequest
+        from apps.windows.sdk.modules.software_manager.core.manager import SoftwarePackagesManager
+        from apps.windows.sdk.modules.software_manager.core.models import PackageActionRequest
 
         spm = SoftwarePackagesManager()
         req = PackageActionRequest(

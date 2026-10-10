@@ -16,11 +16,11 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:15:00
+# Updated: 2026-10-10 05:40:00
 # =============================================================================
 
 from __future__ import annotations
-"""Модульные тесты для подсистемы сбора и анализа событий журнала безопасности Windows."""
+"""Модульные тесты для подсистемы сбора и анализа событий журнала безопасности Windows и Defender."""
 
 import sqlite3
 import time
@@ -36,6 +36,8 @@ from apps.windows.telemetry.models import (
     SecurityEventRaw,
 )
 from apps.windows.telemetry.security_collector import (
+    DEFENDER_CHANNEL,
+    DEFAULT_DEFENDER_EVENT_IDS,
     DEFAULT_SECURITY_EVENT_IDS,
     WindowsSecurityCollector,
 )
@@ -178,6 +180,52 @@ class TestSecurityNormalizer:
         assert item.event_id == 1102
         assert "ВНИМАНИЕ: Журнал аудита безопасности был очищен" in item.message
         assert "Attacker" in item.message
+
+    def test_normalize_defender_threat_1116(self):
+        """Проверка нормализации обнаружения угрозы Microsoft Defender (Event ID 1116)."""
+        normalizer = SecurityEventNormalizer()
+        raw_event = {
+            "event_id": 1116,
+            "record_id": 9812,
+            "timestamp": "2026-10-10 05:30:00",
+            "computer": "WORKSTATION-01",
+            "channel": DEFENDER_CHANNEL,
+            "level": "Warning",
+            "event_data": {
+                "Threat Name": "Trojan:Win32/Wacatac.B!ml",
+                "Path": "C:\\Downloads\\malware.exe",
+                "Process Name": "C:\\Windows\\explorer.exe",
+                "Detection User": "ONELA\\onela",
+                "Severity Name": "Severe",
+                "Action Name": "Quarantine",
+            },
+        }
+
+        item, _ = normalizer.normalize_event(raw_event)
+        assert item.event_id == 1116
+        assert item.channel == DEFENDER_CHANNEL
+        assert item.object_name == "Trojan:Win32/Wacatac.B!ml"
+        assert item.command_line == "C:\\Downloads\\malware.exe"
+        assert item.process_name == "C:\\Windows\\explorer.exe"
+        assert item.subject_user == "ONELA\\onela"
+        assert "Trojan:Win32/Wacatac.B!ml" in item.message
+        assert "Обнаружена угроза" in item.message
+
+    def test_normalize_defender_realtime_disabled_5001(self):
+        """Проверка нормализации отключения защиты в реальном времени Defender (Event ID 5001)."""
+        normalizer = SecurityEventNormalizer()
+        raw_event = {
+            "event_id": 5001,
+            "record_id": 9815,
+            "timestamp": "2026-10-10 05:32:00",
+            "channel": DEFENDER_CHANNEL,
+            "level": "Error",
+            "event_data": {},
+        }
+
+        item, _ = normalizer.normalize_event(raw_event)
+        assert item.event_id == 5001
+        assert "отключена" in item.message
 
 
 class TestSecurityDatabaseStorage:
@@ -405,3 +453,85 @@ class TestWindowsSecurityCollector:
         assert c.pid == 8420
         assert any("powershell.exe" in note for note in c.notes)
         assert any("повышенными привилегиями" in note for note in c.notes)
+
+    def test_collect_defender_incremental(self, in_memory_storage):
+        """Проверка инкрементального сбора событий Microsoft Defender Operational."""
+        mock_wevtapi = MagicMock(spec=WevtAPI)
+        mock_wevtapi.check_channel_access.return_value = {
+            "accessible": True,
+            "channel": DEFENDER_CHANNEL,
+            "error": None,
+            "record_count": 500,
+        }
+
+        mock_defender_events = [
+            {
+                "event_id": 1116,
+                "record_id": 501,
+                "timestamp": "2026-10-10 05:20:00",
+                "computer": "PC-01",
+                "channel": DEFENDER_CHANNEL,
+                "level": "Warning",
+                "raw_data": "<Event/>",
+                "event_data": {
+                    "Threat Name": "Trojan:Win32/FakeAlert",
+                    "Path": "C:\\temp\\threat.dll",
+                },
+            },
+            {
+                "event_id": 1117,
+                "record_id": 502,
+                "timestamp": "2026-10-10 05:20:01",
+                "computer": "PC-01",
+                "channel": DEFENDER_CHANNEL,
+                "level": "Information",
+                "raw_data": "<Event/>",
+                "event_data": {
+                    "Threat Name": "Trojan:Win32/FakeAlert",
+                    "Action Name": "Quarantine",
+                },
+            },
+        ]
+
+        mock_wevtapi.read_events_incremental.side_effect = [
+            (mock_defender_events, "<Bookmark XML Def 502>", 502),
+            ([], "<Bookmark XML Def 502>", 502),
+        ]
+
+        collector = WindowsSecurityCollector(storage=in_memory_storage, wevtapi=mock_wevtapi)
+        report = collector.collect_defender_events(batch_size=10, max_records=20)
+
+        assert isinstance(report, SecurityCollectorReport)
+        assert report.channel == DEFENDER_CHANNEL
+        assert report.total_events_ingested == 2
+        assert report.last_record_id == 502
+        assert report.events_by_id.get(1116) == 1
+        assert report.events_by_id.get(1117) == 1
+
+        # Проверка сохранения в SQLite с правильным каналом
+        events = in_memory_storage.get_security_events(channel=DEFENDER_CHANNEL)
+        assert len(events) == 2
+        assert events[0]["channel"] == DEFENDER_CHANNEL
+
+        # Проверка сохранения закладки для канала Defender
+        bm = in_memory_storage.get_security_bookmark(DEFENDER_CHANNEL)
+        assert bm is not None
+        assert bm["last_record_id"] == 502
+
+    def test_collect_all_security_and_defender(self, in_memory_storage):
+        """Проверка одновременного сбора Security и Defender журналов."""
+        mock_wevtapi = MagicMock(spec=WevtAPI)
+        mock_wevtapi.check_channel_access.return_value = {
+            "accessible": True,
+            "error": None,
+            "record_count": 100,
+        }
+        mock_wevtapi.read_events_incremental.return_value = ([], "<BM>", 10)
+
+        collector = WindowsSecurityCollector(storage=in_memory_storage, wevtapi=mock_wevtapi)
+        results = collector.collect_all_security_and_defender(batch_size=50, max_records=100)
+
+        assert "Security" in results
+        assert DEFENDER_CHANNEL in results
+        assert isinstance(results["Security"], SecurityCollectorReport)
+        assert isinstance(results[DEFENDER_CHANNEL], SecurityCollectorReport)

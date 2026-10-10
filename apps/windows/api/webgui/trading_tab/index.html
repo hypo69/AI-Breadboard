@@ -17,49 +17,51 @@ Project: ai-breadboard
 Package: windows/api/webgui/trading_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 03:08:00
+Updated: 2026-10-10 12:55:00
 =============================================================================
 -->
-
 <!-- Trading Terminal Application Tab -->
 <style>
   .trading-container {
     padding: 1rem;
   }
   .trading-metric-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 1rem;
+    background: var(--surface-1) !important;
+    border: 1.5px solid var(--border-color) !important;
+    border-radius: var(--radius-md, 8px);
+    padding: 0.75rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.08));
   }
   .trading-metric-label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    font-weight: 600;
+    color: var(--text-muted);
   }
   .trading-metric-value {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     font-weight: 700;
-    color: #f8fafc;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--text-color);
+    font-family: var(--font-mono, monospace);
   }
   .trading-panel {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md, 8px);
     overflow: hidden;
+    box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.08));
   }
   .trading-panel-header {
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
-    padding: 0.75rem 1rem;
+    background: var(--surface-2) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 0.6rem 0.9rem;
     font-weight: 600;
-    font-size: 0.88rem;
-    color: #38bdf8;
+    font-size: 0.85rem;
+    color: var(--text-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -67,27 +69,28 @@ Updated: 2026-10-08 03:08:00
   .trading-orderbook-table {
     width: 100%;
     font-size: 0.8rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono, monospace);
     border-collapse: collapse;
   }
   .trading-orderbook-table th {
-    background: #1e293b;
+    background: var(--surface-2);
     padding: 6px 12px;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 600;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
   }
   .trading-orderbook-table td {
     padding: 5px 12px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    border-bottom: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.2));
+    color: var(--text-color);
   }
   .trading-ask-row {
-    color: #f87171;
-    background: rgba(239, 68, 68, 0.05);
+    color: var(--status-danger-text, #dc2626);
+    background: var(--status-danger-bg, rgba(239, 68, 68, 0.08));
   }
   .trading-bid-row {
-    color: #4ade80;
-    background: rgba(34, 197, 94, 0.05);
+    color: var(--status-success-text, #16a34a);
+    background: var(--status-success-bg, rgba(34, 197, 94, 0.08));
   }
   .btn-kill-switch {
     background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
@@ -101,173 +104,167 @@ Updated: 2026-10-08 03:08:00
     box-shadow: 0 0 18px rgba(239, 68, 68, 0.7);
   }
 </style>
-
 <div class="trading-container">
-  <!-- Header Alert & Status -->
-  <div class="card shadow-sm border-secondary-subtle p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-      <h5 class="mb-1 fw-bold d-flex align-items-center gap-2">
-        <span class="fs-4">📈</span> Торговый терминал (Exchange Trading Desk)
+<!-- Header Alert & Status -->
+<div class="card shadow-sm border-secondary-subtle p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3" data-panel-id="panel-trading-torgovyy-terminal-exchange-tra" id="panel-trading-torgovyy-terminal-exchange-tra">
+<div>
+<h5 class="mb-1 fw-bold d-flex align-items-center gap-2">
+<span class="fs-4">📈</span> Торговый терминал (Exchange Trading Desk)
       </h5>
-      <p class="mb-0 small text-muted" >
+<p class="mb-0 small text-muted">
         Автономный торговый терминал с обновлением стакана цен L2, расчётом PnL и кнопкой экстренной ликвидации (Kill-Switch).
       </p>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="trading-stream-status">
+</div>
+<div class="d-flex align-items-center gap-2">
+<span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="trading-stream-status">
         ● Стрим активен
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-refresh-trading">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+<button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-refresh-trading">
+<i class="bi bi-arrow-clockwise me-1"></i> Обновить
       </button>
-      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-trading-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+<button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-trading-config">
+<i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
       </button>
-      <button class="btn btn-sm btn-kill-switch rounded-pill px-3" id="btn-trigger-kill-switch">
+<button class="btn btn-sm btn-kill-switch rounded-pill px-3" id="btn-trigger-kill-switch">
         ⚠️ Kill-Switch (Ликвидация)
       </button>
-    </div>
-  </div>
-
-  <!-- Top Metrics Bar -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
-      <div class="trading-metric-card">
-        <span class="trading-metric-label">Торговая пара</span>
-        <span class="trading-metric-value" style="color: #38bdf8;" id="trading-symbol">BTC/USDT</span>
-        <span class="small text-muted" id="trading-spread-info">Спред: --</span>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="trading-metric-card">
-        <span class="trading-metric-label">Текущая цена</span>
-        <span class="trading-metric-value" id="trading-current-price">$0.00</span>
-        <span class="small" id="trading-price-delta" style="color: #4ade80;">Bid: $0 | Ask: $0</span>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="trading-metric-card">
-        <span class="trading-metric-label">Баланс USDT / Эквити</span>
-        <span class="trading-metric-value" id="trading-total-equity">$0.00</span>
-        <span class="small text-muted" id="trading-cash-balance">Доступно: $0.00</span>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="trading-metric-card">
-        <span class="trading-metric-label">Позиция / PnL</span>
-        <span class="trading-metric-value" id="trading-pnl-val" style="color: #4ade80;">+$0.00</span>
-        <span class="small text-muted" id="trading-pos-size">Размер позиции: 0.0 BTC</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Trading Desk Grid -->
-  <div class="row g-3">
-    <!-- Left Column: Orderbook (L2 Depth) -->
-    <div class="col-lg-5">
-      <div class="trading-panel h-100">
-        <div class="trading-panel-header">
-          <span><i class="bi bi-bar-chart-fill me-1"></i> Стакан котировок (L2 Orderbook)</span>
-          <span class="badge bg-secondary" id="trading-orderbook-depth">Глубина: 6</span>
-        </div>
-        <div class="p-0">
-          <table class="trading-orderbook-table">
-            <thead>
-              <tr>
-                <th>Цена (USDT)</th>
-                <th style="text-align: right;">Объём</th>
-                <th style="text-align: right;">Сумма</th>
-              </tr>
-            </thead>
-            <tbody id="trading-asks-tbody">
-              <tr><td colspan="3" class="text-center py-2 text-muted">Загрузка заявок на продажу...</td></tr>
-            </tbody>
-            <tbody >
-              <tr >
-                <td colspan="3" class="text-center py-2 fw-bold" id="trading-orderbook-midprice" style="font-size: 0.95rem; color: #f8fafc;">
+</div>
+</div>
+<!-- Top Metrics Bar -->
+<div class="row g-3 mb-3">
+<div class="col-md-3 col-sm-6">
+<div class="trading-metric-card">
+<span class="trading-metric-label">Торговая пара</span>
+<span class="trading-metric-value text-info" id="trading-symbol">BTC/USDT</span>
+<span class="small text-muted" id="trading-spread-info">Спред: --</span>
+</div>
+</div>
+<div class="col-md-3 col-sm-6">
+<div class="trading-metric-card">
+<span class="trading-metric-label">Текущая цена</span>
+<span class="trading-metric-value" id="trading-current-price">$0.00</span>
+<span class="small text-success" id="trading-price-delta">Bid: $0 | Ask: $0</span>
+</div>
+</div>
+<div class="col-md-3 col-sm-6">
+<div class="trading-metric-card">
+<span class="trading-metric-label">Баланс USDT / Эквити</span>
+<span class="trading-metric-value" id="trading-total-equity">$0.00</span>
+<span class="small text-muted" id="trading-cash-balance">Доступно: $0.00</span>
+</div>
+</div>
+<div class="col-md-3 col-sm-6">
+<div class="trading-metric-card">
+<span class="trading-metric-label">Позиция / PnL</span>
+<span class="trading-metric-value text-success" id="trading-pnl-val">+$0.00</span>
+<span class="small text-muted" id="trading-pos-size">Размер позиции: 0.0 BTC</span>
+</div>
+</div>
+</div>
+<!-- Main Trading Desk Grid -->
+<div class="row g-3">
+<!-- Left Column: Orderbook (L2 Depth) -->
+<div class="col-lg-5">
+<div class="trading-panel h-100">
+<div class="trading-panel-header">
+<span><i class="bi bi-bar-chart-fill me-1 text-info"></i> Стакан котировок (L2 Orderbook)</span>
+<span class="badge bg-secondary" id="trading-orderbook-depth">Глубина: 6</span>
+</div>
+<div class="p-0">
+<table class="trading-orderbook-table">
+<thead>
+<tr>
+<th>Цена (USDT)</th>
+<th style="text-align: right;">Объём</th>
+<th style="text-align: right;">Сумма</th>
+</tr>
+</thead>
+<tbody id="trading-asks-tbody">
+<tr><td class="text-center py-2 text-muted" colspan="3">Загрузка заявок на продажу...</td></tr>
+</tbody>
+<tbody>
+<tr>
+<td class="text-center py-2 fw-bold" colspan="3" id="trading-orderbook-midprice" style="font-size: 0.95rem; color: var(--text-color);">
                   $0.00
                 </td>
-              </tr>
-            </tbody>
-            <tbody id="trading-bids-tbody">
-              <tr><td colspan="3" class="text-center py-2 text-muted">Загрузка заявок на покупку...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Order Placement & Recent Orders -->
-    <div class="col-lg-7 d-flex flex-column gap-3">
-      <!-- Order Form -->
-      <div class="trading-panel">
-        <div class="trading-panel-header">
-          <span><i class="bi bi-lightning-charge-fill me-1"></i> Выставление ордера</span>
-          <span class="badge bg-primary" id="trading-mode-badge">Direct Execution</span>
-        </div>
-        <div class="p-3">
-          <form id="trading-order-form">
-            <div class="row g-3">
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold text-light">Тип ордера:</label>
-                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="trading-order-type">
-                  <option value="MARKET">Рыночный (Market)</option>
-                  <option value="LIMIT">Лимитный (Limit)</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold text-light">Количество:</label>
-                <div class="input-group input-group-sm">
-                  <input type="number" step="0.01" min="0.001" class="form-control bg-dark text-white border-secondary" id="trading-order-amount" value="0.1" required>
-                  <span class="input-group-text bg-secondary text-white border-secondary">BTC</span>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold text-light">Цена (для Limit):</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-secondary text-white border-secondary">$</span>
-                  <input type="number" step="1" class="form-control bg-dark text-white border-secondary" id="trading-order-price" placeholder="По рынку">
-                </div>
-              </div>
-            </div>
-
-            <div class="d-flex justify-content-end gap-3 mt-3">
-              <button type="button" class="btn btn-success fw-bold px-4 rounded-pill" id="btn-order-buy">
-                <i class="bi bi-arrow-up-circle me-1"></i> Купить (BUY)
+</tr>
+</tbody>
+<tbody id="trading-bids-tbody">
+<tr><td class="text-center py-2 text-muted" colspan="3">Загрузка заявок на покупку...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column: Order Placement & Recent Orders -->
+<div class="col-lg-7 d-flex flex-column gap-3">
+<!-- Order Form -->
+<div class="trading-panel">
+<div class="trading-panel-header">
+<span><i class="bi bi-lightning-charge-fill me-1 text-warning"></i> Выставление ордера</span>
+<span class="badge bg-primary" id="trading-mode-badge">Direct Execution</span>
+</div>
+<div class="p-3">
+<form id="trading-order-form">
+<div class="row g-3">
+<div class="col-md-4">
+<label class="form-label small fw-semibold text-body">Тип ордера:</label>
+<select class="form-select form-select-sm" id="trading-order-type">
+<option value="MARKET">Рыночный (Market)</option>
+<option value="LIMIT">Лимитный (Limit)</option>
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-semibold text-body">Количество:</label>
+<div class="input-group input-group-sm">
+<input class="form-control" id="trading-order-amount" min="0.001" required="" step="0.01" type="number" value="0.1"/>
+<span class="input-group-text bg-body-secondary text-body border-secondary">BTC</span>
+</div>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-semibold text-body">Цена (для Limit):</label>
+<div class="input-group input-group-sm">
+<span class="input-group-text bg-body-secondary text-body border-secondary">$</span>
+<input class="form-control" id="trading-order-price" placeholder="По рынку" step="1" type="number"/>
+</div>
+</div>
+</div>
+<div class="d-flex justify-content-end gap-3 mt-3">
+<button class="btn btn-success fw-bold px-4 rounded-pill" id="btn-order-buy" type="button">
+<i class="bi bi-arrow-up-circle me-1"></i> Купить (BUY)
               </button>
-              <button type="button" class="btn btn-danger fw-bold px-4 rounded-pill" id="btn-order-sell">
-                <i class="bi bi-arrow-down-circle me-1"></i> Продать (SELL)
+<button class="btn btn-danger fw-bold px-4 rounded-pill" id="btn-order-sell" type="button">
+<i class="bi bi-arrow-down-circle me-1"></i> Продать (SELL)
               </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Recent Orders Table -->
-      <div class="trading-panel flex-grow-1">
-        <div class="trading-panel-header">
-          <span><i class="bi bi-clock-history me-1"></i> История ордеров и исполнений</span>
-          <span class="badge bg-secondary" id="trading-orders-count">0 ордеров</span>
-        </div>
-        <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-          <table class="table table-dark table-hover table-sm mb-0 small font-monospace">
-            <thead>
-              <tr class="table-secondary text-dark">
-                <th>Время</th>
-                <th>ID</th>
-                <th>Направление</th>
-                <th>Тип</th>
-                <th style="text-align: right;">Объём</th>
-                <th style="text-align: right;">Цена исполнения</th>
-                <th style="text-align: right;">Статус</th>
-              </tr>
-            </thead>
-            <tbody id="trading-orders-tbody">
-              <tr><td colspan="7" class="text-center py-3 text-muted">История сделок пуста</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+</div>
+</form>
+</div>
+</div>
+<!-- Recent Orders Table -->
+<div class="trading-panel flex-grow-1">
+<div class="trading-panel-header">
+<span><i class="bi bi-clock-history me-1 text-info"></i> История ордеров и исполнений</span>
+<span class="badge bg-secondary" id="trading-orders-count">0 ордеров</span>
+</div>
+<div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+<table class="table table-hover table-sm mb-0 small font-monospace">
+<thead>
+<tr class="text-muted">
+<th>Время</th>
+<th>ID</th>
+<th>Направление</th>
+<th>Тип</th>
+<th style="text-align: right;">Объём</th>
+<th style="text-align: right;">Цена исполнения</th>
+<th style="text-align: right;">Статус</th>
+</tr>
+</thead>
+<tbody id="trading-orders-tbody">
+<tr><td class="text-center py-3 text-muted" colspan="7">История сделок пуста</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 </div>

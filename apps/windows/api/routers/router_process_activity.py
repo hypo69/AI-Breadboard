@@ -36,7 +36,7 @@ except ImportError:
     import logging
     logger = logging.getLogger(__name__)
 
-from apps.windows.core.process_activity_engine import ProcessActivityEngine
+from apps.windows.sdk.core.process_activity_engine import ProcessActivityEngine
 from apps.windows.telemetry.models import (
     ProcessFileEventRecord,
     ProcessInstanceRecord,

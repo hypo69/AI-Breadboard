@@ -26,11 +26,11 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from apps.windows.modules.window_control_plane.catalog import (
+from apps.windows.sdk.modules.window_control_plane.catalog import (
     WindowControlPlaneCatalog,
     get_window_catalog,
 )
-from apps.windows.modules.window_control_plane.models import (
+from apps.windows.sdk.modules.window_control_plane.models import (
     BatchApplyRequest,
     BatchSettingItem,
     DocStatus,
@@ -40,9 +40,9 @@ from apps.windows.modules.window_control_plane.models import (
     SettingValueType,
     SupportStatus,
 )
-from apps.windows.modules.window_control_plane.resolver import WindowBackendResolver
-from apps.windows.modules.window_control_plane.manager import WindowManagementControlPlane
-from apps.windows.modules.window_control_plane.router import init_router
+from apps.windows.sdk.modules.window_control_plane.resolver import WindowBackendResolver
+from apps.windows.sdk.modules.window_control_plane.manager import WindowManagementControlPlane
+from apps.windows.sdk.modules.window_control_plane.router import init_router
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def resolver() -> WindowBackendResolver:
 @pytest.fixture
 def temp_plane(tmp_path: Path, catalog: WindowControlPlaneCatalog, resolver: WindowBackendResolver) -> WindowManagementControlPlane:
     """Фикстура изолированного Control Plane с временной базой SQLite и файлом аудита."""
-    from apps.windows.modules.window_control_plane.history import WindowManagementHistoryManager
+    from apps.windows.sdk.modules.window_control_plane.history import WindowManagementHistoryManager
 
     history_file = tmp_path / "test_history.json"
     history_db = tmp_path / "temp_telemetry.db"
@@ -366,7 +366,7 @@ def test_api_apply_and_history(test_client: TestClient):
 
 def test_telemetry_db_sqlite_persistence(tmp_path: Path):
     """Тест прямой записи и выборки из таблицы window_management_history в SQLite telemetry.db."""
-    from apps.windows.modules.window_control_plane.history import WindowManagementHistoryManager
+    from apps.windows.sdk.modules.window_control_plane.history import WindowManagementHistoryManager
 
     db_file = tmp_path / "test_telemetry.db"
     mgr = WindowManagementHistoryManager(db_path=db_file)

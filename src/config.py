@@ -17,7 +17,7 @@
 # Package: src
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 05:32:00
+# Updated: 2026-10-10 08:47:35
 # =============================================================================
 
 """Модуль основной системы (`config`)."""
@@ -105,5 +105,36 @@ def is_app_enabled(app_name: str) -> bool:
         if len(enabled_list) > 0:
             return app_name in enabled_list
     return True
+def is_debug_mode() -> bool:
+    """Проверяет, активен ли режим отладки (DEBUG / DEV).
+
+    Режим отладки считается активным, если:
+    - переменная окружения DEBUG установлена в ('1', 'true', 'yes', 'on', 'dev', 'debug')
+    - переменная окружения MODE установлена в ('DEV', 'DEBUG')
+    - в server_cfg параметр debug == True или mode == 'DEV'/'DEBUG'
+    (Исключается при запуске юнит-тестов под pytest).
+
+    Returns:
+        bool: True, если активен режим DEBUG, иначе False.
+    """
+    if os.getenv('PYTEST_CURRENT_TEST'):
+        return False
+    env_debug = os.getenv('DEBUG', '').strip().lower()
+    if env_debug in ('0', 'false', 'no', 'off', 'prod', 'production'):
+        return False
+    if env_debug in ('1', 'true', 'yes', 'on', 'dev', 'debug'):
+        return True
+    env_mode = os.getenv('MODE', '').strip().upper()
+    if env_mode in ('PROD', 'PRODUCTION'):
+        return False
+    if env_mode in ('DEV', 'DEBUG'):
+        return True
+    if getattr(server_cfg, 'debug', False) is True:
+        return True
+    if str(getattr(server_cfg, 'mode', '')).upper() in ('DEV', 'DEBUG'):
+        return True
+    return False
+
+
 from src.utils.ports import load_ports_config, PORTS_FILE
 ports_cfg = load_ports_config(PORTS_FILE)

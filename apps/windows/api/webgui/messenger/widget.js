@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/messenger
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-10 12:58:00
  * =============================================================================
  */
 
@@ -40,7 +40,7 @@
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      background: var(--nav-active, linear-gradient(135deg, #3b82f6, #1d4ed8));
       box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
       display: flex;
       align-items: center;
@@ -63,12 +63,12 @@
       max-width: calc(100vw - 32px);
       max-height: calc(100vh - 120px);
       border-radius: 20px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
       overflow: hidden;
       z-index: 999998;
       display: none;
-      background: #0f172a;
+      background: var(--surface-1, #0f172a);
     }
     .ab-widget-frame iframe {
       width: 100%;

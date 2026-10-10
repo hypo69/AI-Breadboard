@@ -23,13 +23,13 @@
 
 import pytest
 from unittest.mock import MagicMock, patch
-from apps.windows.core.audits.software_collector import SoftwareCollector
-from apps.windows.core.models import FullAuditReport
-from apps.windows.core.software_audit import SoftwareAuditEngine
+from apps.windows.sdk.core.audits.software_collector import SoftwareCollector
+from apps.windows.sdk.core.models import FullAuditReport
+from apps.windows.sdk.core.software_audit import SoftwareAuditEngine
 
 @pytest.fixture
 def mock_winreg():
-    with patch('apps.windows.core.software_audit.winreg') as mock:
+    with patch('apps.windows.sdk.core.software_audit.winreg') as mock:
         yield mock
 
 def test_software_audit_engine_initialization(mock_winreg):

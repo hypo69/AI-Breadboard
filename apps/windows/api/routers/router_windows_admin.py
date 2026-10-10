@@ -296,7 +296,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     ) -> List[InstalledAppDTO]:
         """Retrieve list of installed software applications with execution history and purpose."""
         try:
-            from apps.windows.core.software_audit import SoftwareAuditEngine
+            from apps.windows.sdk.core.software_audit import SoftwareAuditEngine
             engine = SoftwareAuditEngine()
             apps = engine.get_installed_applications()
             
@@ -338,7 +338,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     async def get_software_audit_report() -> SoftwareAuditReportDTO:
         """Retrieve comprehensive software audit report with usage analytics."""
         try:
-            from apps.windows.core.software_audit import SoftwareAuditEngine
+            from apps.windows.sdk.core.software_audit import SoftwareAuditEngine
             engine = SoftwareAuditEngine()
             report = engine.generate_audit_report()
             

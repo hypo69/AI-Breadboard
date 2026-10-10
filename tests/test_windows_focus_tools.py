@@ -32,7 +32,7 @@ from src.ai.agents.windows_tools import (
     windows_focus_notifications,
     WINDOWS_FOCUS_TOOLS,
 )
-from apps.windows.modules.focus_policy.models import FocusStatus, FocusProfile, SessionSummary, SuppressedNotification
+from apps.windows.sdk.modules.focus_policy.models import FocusStatus, FocusProfile, SessionSummary, SuppressedNotification
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -51,7 +51,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_focus_status_profiles_status():
     """Тест получения текущего статуса фокусировки."""
-    with patch("apps.windows.modules.focus_policy.controller.WindowsFocusController.status") as mock_func:
+    with patch("apps.windows.sdk.modules.focus_policy.controller.WindowsFocusController.status") as mock_func:
         mock_func.return_value = FocusStatus(is_focus_active=False, listener_access_status="Allowed")
         res_str = await call_tool(windows_focus_status_profiles, action="status")
         res = json.loads(res_str)
@@ -63,7 +63,7 @@ async def test_windows_focus_status_profiles_status():
 @pytest.mark.asyncio
 async def test_windows_focus_status_profiles_save():
     """Тест создания профиля фокусировки."""
-    with patch("apps.windows.modules.focus_policy.controller.WindowsFocusController.save_profile") as mock_func:
+    with patch("apps.windows.sdk.modules.focus_policy.controller.WindowsFocusController.save_profile") as mock_func:
         mock_func.return_value = FocusProfile(profile_id="prof-test", name="Тест")
         res_str = await call_tool(
             windows_focus_status_profiles,
@@ -82,14 +82,14 @@ async def test_windows_focus_status_profiles_save():
 @pytest.mark.asyncio
 async def test_windows_focus_session_action_start_stop():
     """Тест запуска и остановки сессии фокусировки."""
-    with patch("apps.windows.modules.focus_policy.controller.WindowsFocusController.start_session") as mock_start:
+    with patch("apps.windows.sdk.modules.focus_policy.controller.WindowsFocusController.start_session") as mock_start:
         mock_start.return_value = "sess-20261008-210000"
         res_str = await call_tool(windows_focus_session_action, action="start", profile_id="prof-test")
         res = json.loads(res_str)
         assert res["status"] == "ok"
         assert res["session_id"] == "sess-20261008-210000"
 
-    with patch("apps.windows.modules.focus_policy.controller.WindowsFocusController.stop_session") as mock_stop:
+    with patch("apps.windows.sdk.modules.focus_policy.controller.WindowsFocusController.stop_session") as mock_stop:
         mock_stop.return_value = SessionSummary(session_id="sess-20261008-210000", profile_id="prof-test", total_suppressed=3)
         res_str = await call_tool(windows_focus_session_action, action="stop")
         res = json.loads(res_str)
@@ -100,7 +100,7 @@ async def test_windows_focus_session_action_start_stop():
 @pytest.mark.asyncio
 async def test_windows_focus_notifications_poll():
     """Тест опроса подавленных уведомлений."""
-    with patch("apps.windows.modules.focus_policy.controller.WindowsFocusController.poll_notifications") as mock_func:
+    with patch("apps.windows.sdk.modules.focus_policy.controller.WindowsFocusController.poll_notifications") as mock_func:
         mock_func.return_value = 5
         res_str = await call_tool(windows_focus_notifications, action="poll")
         res = json.loads(res_str)

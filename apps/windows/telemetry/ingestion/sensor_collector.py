@@ -34,8 +34,8 @@ except ImportError:
 from .telemetry_config import TelemetryConfigManager
 from .sensor_registry import SensorDeduplicator, SensorProvider
 try:
-    from apps.windows.modules.hardware.hardware_monitor import HardwareMonitor
-    from apps.windows.modules.hardware.lhm_service import LhmService
+    from apps.windows.sdk.modules.hardware.hardware_monitor import HardwareMonitor
+    from apps.windows.sdk.modules.hardware.lhm_service import LhmService
     from .internet_speed import InternetSpeedSensor
 except ImportError as e:
     logger.warning(f'Не удалось импортировать зависимости сенсоров: {e}')
@@ -569,7 +569,7 @@ class SensorCollector:
         Returns:
             List[Dict[str, Any]]: Список показаний датчиков температур.
         """
-        from apps.windows.modules.hardware.lhm_service import LhmService
+        from apps.windows.sdk.modules.hardware.lhm_service import LhmService
         lhm = self._lhm_service or LhmService()
         items = lhm.get_flattened_sensors()
         results: List[Dict[str, Any]] = []

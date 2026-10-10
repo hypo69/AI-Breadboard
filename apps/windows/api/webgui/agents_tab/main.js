@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/agents_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-10 12:56:00
  * =============================================================================
  */
 
@@ -243,10 +243,10 @@ function _renderGrid() {
 
   if (items.length === 0) {
     grid.innerHTML = `
-      <div class="col-12 text-center py-5" style="color: #cbd5e1;">
-        <i class="bi bi-robot fs-1 d-block mb-2" style="color: #38bdf8;"></i>
-        <h5 class="text-white">Агенты не найдены</h5>
-        <p class="small" style="color: #94a3b8;">Создайте нового агента с помощью AI или вручную</p>
+      <div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-robot fs-1 d-block mb-2 text-info"></i>
+        <h5 class="text-body">Агенты не найдены</h5>
+        <p class="small text-muted">Создайте нового агента с помощью AI или вручную</p>
       </div>
     `;
     return;
@@ -273,11 +273,11 @@ function _renderGrid() {
             <div class="card-header d-flex justify-content-between align-items-center py-2 px-3">
               <div class="d-flex align-items-center gap-2">
                 <span class="fs-5">${isSystem ? '⚙️' : '🧩'}</span>
-                <strong class="text-white fs-6 fw-bold">${agent.name}</strong>
+                <strong class="text-body fs-6 fw-bold">${agent.name}</strong>
                 ${
                   isSystem
-                    ? '<span class="badge fw-bold" style="font-size: 0.7rem; background-color: #0284c7 !important; color: #ffffff !important;">SYSTEM</span>'
-                    : '<span class="badge fw-bold" style="font-size: 0.7rem; background-color: #d97706 !important; color: #ffffff !important;">CUSTOM</span>'
+                    ? '<span class="badge bg-primary fw-bold" style="font-size: 0.7rem;">SYSTEM</span>'
+                    : '<span class="badge bg-warning text-dark fw-bold" style="font-size: 0.7rem;">CUSTOM</span>'
                 }
               </div>
               <div class="form-check form-switch m-0" title="Включить / Выключить">
@@ -285,25 +285,25 @@ function _renderGrid() {
               </div>
             </div>
             <div class="card-body p-3 d-flex flex-column">
-              <p class="small mb-3 flex-grow-1 agent-desc" style="min-height: 40px; color: #cbd5e1; line-height: 1.45;">${agent.description || 'Описание отсутствует'}</p>
+              <p class="small mb-3 flex-grow-1 agent-desc text-muted" style="min-height: 40px; line-height: 1.45;">${agent.description || 'Описание отсутствует'}</p>
               
               <div class="agent-spec-box mb-3 small">
-                <div class="d-flex justify-content-between align-items-center mb-1 pb-1" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-secondary-subtle">
                   <span class="spec-label">Провайдер &amp; Модель:</span>
                   <span class="badge spec-value-badge text-truncate" style="max-width: 190px;">${providerName}: ${agent.model}</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="spec-label">Температура / Шаги:</span>
-                  <span class="spec-tech-val font-monospace">T: ${agent.temperature} <span style="color: #64748b;">|</span> Max: ${agent.max_steps}</span>
+                  <span class="spec-tech-val font-monospace">T: ${agent.temperature} <span class="text-muted">|</span> Max: ${agent.max_steps}</span>
                 </div>
               </div>
 
               <div class="mb-3">
-                <div class="small fw-semibold mb-2" style="color: #f1f5f9;">Инструменты (${(agent.tools ?? []).length}):</div>
-                <div class="d-flex flex-wrap">${toolsBadges || '<span class="small" style="color: #94a3b8;">Без внешних инструментов</span>'}</div>
+                <div class="small fw-semibold mb-2 text-body">Инструменты (${(agent.tools ?? []).length}):</div>
+                <div class="d-flex flex-wrap">${toolsBadges || '<span class="small text-muted">Без внешних инструментов</span>'}</div>
               </div>
 
-              <div class="mt-auto d-flex justify-content-between gap-2 pt-2" style="border-top: 1px solid #334155;">
+              <div class="mt-auto d-flex justify-content-between gap-2 pt-2 border-top border-secondary-subtle">
                 <button class="btn btn-sm rounded-pill px-3 btn-test-sandbox" data-agent-id="${agent.id}">
                   <i class="bi bi-play-fill"></i> Тест в Sandbox
                 </button>
@@ -400,14 +400,14 @@ function _populateToolsMatrix() {
     .map(
       (tool) => `
       <div class="col-md-6">
-        <div class="p-3 rounded h-100" style="background: #1e293b; border: 1px solid #334155;">
+        <div class="p-3 rounded h-100" style="background: var(--surface-2); border: 1px solid var(--border-color);">
           <div class="form-check form-switch m-0">
             <input class="form-check-input tool-checkbox" type="checkbox" value="${tool.id}" id="tool-chk-${tool.id}">
-            <label class="form-check-label small text-white fw-bold" for="tool-chk-${tool.id}">
+            <label class="form-check-label small text-body fw-bold" for="tool-chk-${tool.id}">
               ${tool.icon} ${tool.name}
             </label>
           </div>
-          <div class="small mt-1" style="color: #cbd5e1; font-size: 0.8rem; line-height: 1.4;">${tool.description}</div>
+          <div class="small mt-1 text-muted" style="font-size: 0.8rem; line-height: 1.4;">${tool.description}</div>
         </div>
       </div>
     `
@@ -712,10 +712,10 @@ async function _handleRunAiGenerate() {
       if (resultBox && previewBox) {
         resultBox.classList.remove('d-none');
         previewBox.innerHTML = `
-          <div><strong style="color: #38bdf8;">Название:</strong> <span class="text-white fw-bold">${res.data.name}</span></div>
-          <div class="mt-1"><strong style="color: #cbd5e1;">Описание:</strong> <span style="color: #f1f5f9;">${res.data.description}</span></div>
-          <div class="mt-1"><strong style="color: #4ade80;">Инструменты:</strong> <span style="color: #f8fafc;">${(res.data.recommended_tools ?? []).join(', ') || 'нет'}</span></div>
-          <div class="mt-2 p-2 rounded" style="background: #0f172a; border: 1px solid #334155; color: #f8fafc; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.45;">${res.data.system_prompt}</div>
+          <div><strong class="text-info">Название:</strong> <span class="text-body fw-bold">${res.data.name}</span></div>
+          <div class="mt-1"><strong class="text-muted">Описание:</strong> <span class="text-body">${res.data.description}</span></div>
+          <div class="mt-1"><strong class="text-success">Инструменты:</strong> <span class="text-body">${(res.data.recommended_tools ?? []).join(', ') || 'нет'}</span></div>
+          <div class="mt-2 p-2 rounded" style="background: var(--surface-1); border: 1px solid var(--border-color); color: var(--text-color); white-space: pre-wrap; font-size: 0.85rem; line-height: 1.45;">${res.data.system_prompt}</div>
         `;
       }
       _showToast('Спецификация агента успешно сгенерирована!', 'success');
@@ -782,7 +782,7 @@ async function _handleRunSandboxTest() {
   const userMsgEl = document.createElement('div');
   userMsgEl.className = 'd-flex justify-content-end mb-3';
   userMsgEl.innerHTML = `
-    <div class="p-2 px-3 rounded shadow-sm text-white small" style="background-color: #2563eb; max-width: 80%; font-weight: 500;">
+    <div class="p-2 px-3 rounded shadow-sm text-white small" style="background-color: var(--nav-active, #2563eb); max-width: 80%; font-weight: 500;">
       <strong>Вы:</strong> ${query}
     </div>
   `;
@@ -795,12 +795,12 @@ async function _handleRunSandboxTest() {
   const botMsgEl = document.createElement('div');
   botMsgEl.className = 'd-flex flex-column mb-3';
   botMsgEl.innerHTML = `
-    <div class="p-3 rounded small" style="background: #0f172a; border: 1px solid #334155; color: #f8fafc;">
-      <div class="d-flex align-items-center gap-2 mb-2" style="color: #fbbf24; font-weight: 600;">
+    <div class="p-3 rounded small" style="background: var(--surface-1); border: 1px solid var(--border-color); color: var(--text-color);">
+      <div class="d-flex align-items-center gap-2 mb-2 text-warning fw-semibold">
         <span class="spinner-border spinner-border-sm"></span>
         <span>Агент выполняет рассуждение и вызовы инструментов...</span>
       </div>
-      <div class="steps-trace small font-monospace" style="color: #cbd5e1;"></div>
+      <div class="steps-trace small font-monospace text-muted"></div>
     </div>
   `;
   msgsList.appendChild(botMsgEl);
@@ -821,29 +821,29 @@ async function _handleRunSandboxTest() {
         else if (s.type === 'finish') icon = '✅';
         else if (s.type === 'error') icon = '❌';
 
-        return `<div class="mb-1">${icon} <span style="color: #38bdf8; font-weight: bold;">[Шаг ${s.step}]</span> <span style="color: #e2e8f0;">${s.content}</span></div>`;
+        return `<div class="mb-1">${icon} <span class="text-info fw-bold">[Шаг ${s.step}]</span> <span class="text-body">${s.content}</span></div>`;
       })
       .join('');
 
     botMsgEl.innerHTML = `
-      <div class="p-3 rounded small" style="background: #0f172a; border: 1px solid #334155; color: #f8fafc;">
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-1" style="border-bottom: 1px solid #334155;">
-          <strong style="color: #38bdf8; font-size: 0.95rem;">🤖 ${agent.name}</strong>
-          <span class="badge" style="background: #334155; color: #f8fafc; font-weight: 600;">${res.duration_ms ?? 0} мс</span>
+      <div class="p-3 rounded small" style="background: var(--surface-1); border: 1px solid var(--border-color); color: var(--text-color);">
+        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary-subtle">
+          <strong class="text-info" style="font-size: 0.95rem;">🤖 ${agent.name}</strong>
+          <span class="badge bg-secondary" style="font-weight: 600;">${res.duration_ms ?? 0} мс</span>
         </div>
         
-        <div class="mb-2" style="white-space: pre-wrap; color: #f8fafc; line-height: 1.5;">${res.response || 'Пустой ответ'}</div>
+        <div class="mb-2 text-body" style="white-space: pre-wrap; line-height: 1.5;">${res.response || 'Пустой ответ'}</div>
         
-        <div class="p-2 rounded mt-2 small font-monospace" style="background: #020617; border: 1px solid #334155; font-size: 0.8rem; line-height: 1.45;">
-          <div class="fw-bold mb-1" style="color: #cbd5e1;">Трассировка выполнения (ReAct Trace):</div>
+        <div class="p-2 rounded mt-2 small font-monospace" style="background: var(--surface-2); border: 1px solid var(--border-color); font-size: 0.8rem; line-height: 1.45;">
+          <div class="fw-bold mb-1 text-muted">Трассировка выполнения (ReAct Trace):</div>
           ${stepsHtml}
         </div>
       </div>
     `;
   } catch (err) {
     botMsgEl.innerHTML = `
-      <div class="p-3 rounded small" style="background: #450a0a; border: 1px solid #dc2626; color: #fecaca;">
-        <strong style="color: #ef4444;">Ошибка выполнения:</strong> ${err.message}
+      <div class="p-3 rounded small bg-danger-subtle border border-danger text-danger">
+        <strong class="text-danger">Ошибка выполнения:</strong> ${err.message}
       </div>
     `;
   } finally {

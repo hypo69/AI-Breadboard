@@ -3,8 +3,8 @@
 Process Name: Windows WebGUI - AI Modal Dialog Template
 =============================================================================
 Description:
-  Шаблон разметки универсального модального окна AI-анализатора и редактора промптов.
-  Использует адаптивные CSS-переменные темы оформления без жестко зашитых фонов.
+  Шаблон разметки универсального модального окна AI-анализатора со встроенным
+  редактором системной инструкции, выбором модели и привязкой к ID панели.
 
 Usage Examples:
   HTML Integration:
@@ -15,7 +15,7 @@ Project: ai-breadboard
 Package: apps.windows.api.webgui.ai_modal_dialog
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 12:43:00
+Updated: 2026-10-10 09:40:00
 =============================================================================
 -->
 
@@ -43,6 +43,62 @@ Updated: 2026-10-08 12:43:00
           <div class="small font-monospace uai-raw-content" id="uai-modal-raw-content" style="white-space: pre-wrap; word-break: break-all;"></div>
         </div>
 
+        <!-- System Instruction & Model Configuration Section -->
+        <div class="card p-3 mb-3 border-secondary-subtle uai-system-card" id="uai-modal-system-card">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-6 text-warning">🤖</span>
+              <h6 class="fw-bold text-warning mb-0">Системная инструкция и конфигурация ИИ</h6>
+            </div>
+            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+              <span class="badge bg-secondary-subtle text-secondary border small" id="uai-modal-panel-badge" title="ID вызывающей панели">Панель: -</span>
+              <span class="badge bg-secondary-subtle text-secondary border small" id="uai-modal-type-badge">Тип: -</span>
+              <span class="badge border border-info text-info small" id="uai-modal-custom-badge" style="display: none;">Кастомная</span>
+            </div>
+          </div>
+
+          <!-- Model & Provider Selection Bar -->
+          <div class="row g-2 mb-2 align-items-center">
+            <div class="col-sm-6">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text text-secondary small py-0">Провайдер</span>
+                <select class="form-select form-select-sm" id="uai-modal-provider-select">
+                  <option value="gemini">Google Gemini</option>
+                  <option value="openai">OpenAI / Compatible</option>
+                  <option value="ollama">Ollama Local</option>
+                  <option value="foundry">Foundry Local</option>
+                  <option value="windows_ai">Windows Copilot+ AI</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text text-secondary small py-0">Модель</span>
+                <input type="text" class="form-control form-control-sm" id="uai-modal-model-input" placeholder="По умолчанию (из config.json)">
+              </div>
+            </div>
+          </div>
+
+          <!-- System Instruction Textarea -->
+          <div class="mb-1">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small text-secondary fw-bold mb-0">Системная инструкция (System Instruction):</label>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn btn-xs btn-outline-info py-0 px-2" id="btn-uai-modal-save-system" title="Сохранить измененную инструкцию для этой сущности">
+                  <i class="bi bi-floppy me-1"></i>Сохранить
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-uai-modal-reset-system" title="Сбросить к системной инструкции по умолчанию">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Сброс
+                </button>
+              </div>
+            </div>
+            <textarea class="form-control form-control-sm font-monospace" id="uai-modal-system-instruction" rows="3" placeholder="Роль эксперта, правила анализа и формат ответа для модели..."></textarea>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <span class="text-secondary small" style="font-size: 0.72rem;" id="uai-modal-system-status">Инструкция передается при вызове модели и анализе</span>
+            </div>
+          </div>
+        </div>
+
         <!-- AI Contextual Diagnostic Card -->
         <div class="card border-info p-3 uai-ai-section" id="uai-modal-ai-section">
           <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
@@ -53,7 +109,7 @@ Updated: 2026-10-08 12:43:00
               </span>
             </div>
             <div class="d-flex align-items-center gap-1.5">
-              <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить промпт для этого типа таблицы">
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить расширенный шаблон промпта">
                 <i class="bi bi-gear-fill me-1"></i>Промпт
               </button>
               <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ" style="display: none;">
@@ -79,7 +135,7 @@ Updated: 2026-10-08 12:43:00
       <div class="modal-header py-2 px-3">
         <div class="d-flex align-items-center gap-2">
           <span class="fs-5 text-warning">⚙️</span>
-          <h5 class="modal-title fw-bold text-warning mb-0">Редактор промпта диагностики</h5>
+          <h5 class="modal-title fw-bold text-warning mb-0">Редактор шаблона промпта</h5>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
       </div>
@@ -88,17 +144,21 @@ Updated: 2026-10-08 12:43:00
           <div class="col-sm-6">
             <label class="form-label small text-secondary fw-bold mb-1">Тип таблицы / сущности</label>
             <select class="form-select form-select-sm" id="uai-prompt-type-select">
-              <option value="software">software (Установленное ПО)</option>
+              <option value="user_account">user_account (Учетные записи и сессии Windows)</option>
+              <option value="security_event">security_event (События безопасности Windows)</option>
               <option value="process">process (Процессы Windows)</option>
               <option value="service">service (Службы Windows)</option>
+              <option value="software">software (Установленное ПО)</option>
               <option value="task">task (Задачи планировщика)</option>
-              <option value="network">network (Сетевой мониторинг)</option>
+              <option value="startup">startup (Автозагрузка)</option>
+              <option value="network">network (Сетевые соединения)</option>
               <option value="registry">registry (Реестр Windows)</option>
-              <option value="user">user (Пользователи и группы)</option>
+              <option value="disk">disk (Диски и тома)</option>
+              <option value="cpu">cpu (Процессор CPU)</option>
+              <option value="gpu">gpu (Видеокарта GPU)</option>
+              <option value="file_event">file_event (Файловые события)</option>
               <option value="website">website (Мониторинг сайтов)</option>
               <option value="rag_doc">rag_doc (RAG База знаний)</option>
-              <option value="disk">disk (Диски и тома)</option>
-              <option value="startup">startup (Автозагрузка)</option>
               <option value="generic">generic (Общий шаблон)</option>
             </select>
           </div>
@@ -109,18 +169,24 @@ Updated: 2026-10-08 12:43:00
         </div>
 
         <div class="mb-3">
-          <label class="form-label small text-secondary fw-bold mb-1">Системная инструкция (System Instruction)</label>
-          <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-system-input" rows="2" placeholder="Роль и поведение модели..."></textarea>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small text-secondary fw-bold mb-0">Системная инструкция (System Instruction)</label>
+            <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.72rem;">Роль и поведение ИИ</span>
+          </div>
+          <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-system-input" rows="4" placeholder="Роль, экспертный контекст и правила поведения модели..."></textarea>
+          <div class="form-text small text-secondary" style="font-size: 0.75rem;">
+            Системная инструкция задаёт контекст роли эксперта, ограничения и формат ответа ИИ для выбранного типа сущности.
+          </div>
         </div>
 
         <div class="mb-2">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <label class="form-label small text-secondary fw-bold mb-0">Шаблон текста промпта (Prompt Template)</label>
             <div class="d-flex gap-1" id="uai-prompt-variables-bar">
-              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{title}')">{title}</button>
-              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{subtitle}')">{subtitle}</button>
-              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{metadata}')">{metadata}</button>
-              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{raw_data}')">{raw_data}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{title}')">{title}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{subtitle}')">{subtitle}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{metadata}')">{metadata}</button>
+              <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AIModalDialog.insertVariable('{raw_data}')">{raw_data}</button>
             </div>
           </div>
           <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-template-input" rows="8" placeholder="Текст промпта с плейсхолдерами..."></textarea>

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/network_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-10 12:50:00
  * =============================================================================
  */
 
@@ -86,7 +86,8 @@
       const anomaliesCount = (data.latest_heuristics?.length || 0) + (data.latest_ai_report?.anomalies?.length || 0);
       if (kpiAnomalies) {
         kpiAnomalies.innerText = `${anomaliesCount} аномалий`;
-        kpiAnomalies.style.color = anomaliesCount > 0 ? '#f87171' : '#4ade80';
+        kpiAnomalies.className = `small ${anomaliesCount > 0 ? 'text-danger' : 'text-success'}`;
+        kpiAnomalies.style.fontSize = '0.68rem';
       }
     } catch (e) {
       console.warn('[NetworkTab] Status check error:', e);
@@ -204,7 +205,7 @@
         
         return `
           <tr>
-            <td class="fw-bold text-white"><i class="bi bi-hdd-network me-1 text-info"></i>${s.name}</td>
+            <td class="fw-bold text-body"><i class="bi bi-hdd-network me-1 text-info"></i>${s.name}</td>
             <td class="text-secondary font-monospace">${s.host}</td>
             <td style="text-align: right;" class="text-info fw-bold font-monospace">${isOnline ? `${s.avg_ms} ms` : '--'}</td>
             <td style="text-align: right;" class="text-muted font-monospace">${isOnline ? `${s.min_ms} ms` : '--'}</td>
@@ -251,11 +252,11 @@
 
           return `
             <tr>
-              <td class="fw-bold text-white"><i class="bi bi-hdd-network me-1 text-info"></i>${a.name}</td>
+              <td class="fw-bold text-body"><i class="bi bi-hdd-network me-1 text-info"></i>${a.name}</td>
               <td class="text-secondary small text-truncate" style="max-width: 220px;" title="${a.description}">${a.description || '--'}</td>
               <td class="text-info">${ipDisplay}</td>
               <td class="text-muted small">${a.mac || '--'}</td>
-              <td><span class="badge bg-dark border border-secondary text-light">${speedDisplay}</span></td>
+              <td><span class="badge bg-body-secondary border text-body">${speedDisplay}</span></td>
               <td><span class="proto-badge ${statusClass}">${a.status || 'Unknown'}</span></td>
               <td style="text-align: right;" class="text-success">${formatBytes(a.bytes_sent)}</td>
               <td style="text-align: right;" class="text-primary">${formatBytes(a.bytes_recv)}</td>
@@ -338,7 +339,7 @@
           <td class="text-secondary font-monospace">${c.remote_address || '-'}</td>
           <td><span class="proto-badge ${statusClass}">${c.status || '-'}</span></td>
           <td class="text-muted font-monospace">${c.pid || '-'}</td>
-          <td class="fw-bold text-white"><i class="bi bi-app me-1 text-muted"></i>${c.process_name || 'Неизвестно'}</td>
+          <td class="fw-semibold text-body"><i class="bi bi-app me-1 text-muted"></i>${c.process_name || 'Неизвестно'}</td>
         </tr>
       `;
     }).join('');
@@ -409,13 +410,13 @@
 
       return `
         <tr class="net-packet-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детального AI-анализа пакета">
-          <td class="text-muted">${p.number || p.packet_number || '--'}</td>
+          <td class="text-muted font-monospace">${p.number || p.packet_number || '--'}</td>
           <td>${p.timestamp ? (typeof p.timestamp === 'number' ? new Date(p.timestamp * 1000).toLocaleTimeString() : p.timestamp) : '--'}</td>
-          <td style="color: #38bdf8;">${p.source || '--'}</td>
-          <td style="color: #a855f7;">${p.destination || '--'}</td>
+          <td class="text-info font-monospace">${p.source || '--'}</td>
+          <td class="text-primary font-monospace">${p.destination || '--'}</td>
           <td><span class="proto-badge ${protoClass}">${proto}</span></td>
-          <td style="text-align: right;">${p.length || 0} B</td>
-          <td class="text-truncate" style="max-width: 320px;">${p.info || '--'}</td>
+          <td style="text-align: right;" class="font-monospace">${p.length || 0} B</td>
+          <td class="text-truncate text-body" style="max-width: 320px;">${p.info || '--'}</td>
         </tr>
       `;
     }).join('');

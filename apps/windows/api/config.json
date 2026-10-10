@@ -26,13 +26,6 @@
       "description": "Настройка и просмотр параметров журналов Windows (/api/v1/log-settings/*)"
     },
     {
-      "module": "src.api.routers.core.router_system",
-      "factory": "init_router",
-      "enabled": true,
-      "inject_models": true,
-      "description": "Системная телеметрия и WebSocket поток (/api/v1/system/*)"
-    },
-    {
       "module": "apps.windows.api.routers.router_tc",
       "factory": "init_router",
       "enabled": true,
@@ -148,67 +141,67 @@
       "description": "Нагрузка сети, Wi-Fi и Bluetooth (/api/v1/panel/network-load)"
     },
     {
-      "module": "apps.windows.modules.storage_manager.router",
+      "module": "apps.windows.sdk.modules.storage_manager.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Менеджер хранилища и бенчмарк DiskSpd (/api/v1/storage/*, /api/storage-manager/*)"
     },
     {
-      "module": "apps.windows.modules.boot_recovery.router",
+      "module": "apps.windows.sdk.modules.boot_recovery.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Загрузка и восстановление (/api/boot-recovery/*)"
     },
     {
-      "module": "apps.windows.modules.servicing_integrity.router",
+      "module": "apps.windows.sdk.modules.servicing_integrity.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Целостность и обслуживание системы (/api/servicing-integrity/*)"
     },
     {
-      "module": "apps.windows.modules.services_manager.router",
+      "module": "apps.windows.sdk.modules.services_manager.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Управление системными службами (/api/services-manager/*)"
     },
     {
-      "module": "apps.windows.modules.task_scheduler.router",
+      "module": "apps.windows.sdk.modules.task_scheduler.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Планировщик заданий (/api/task-scheduler/*)"
     },
     {
-      "module": "apps.windows.modules.process_manager.router",
+      "module": "apps.windows.sdk.modules.process_manager.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Диспетчер процессов (/api/process-manager/*)"
     },
     {
-      "module": "apps.windows.modules.firewall_manager.router",
+      "module": "apps.windows.sdk.modules.firewall_manager.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Брандмауэр Windows (/api/firewall-manager/*)"
     },
     {
-      "module": "apps.windows.modules.security_acl.router",
+      "module": "apps.windows.sdk.modules.security_acl.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Управление правами доступа и ACL (/api/security-acl/*)"
     },
     {
-      "module": "apps.windows.modules.performance_tracing.router",
+      "module": "apps.windows.sdk.modules.performance_tracing.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Трассировка и производительность (/api/performance-tracing/*)"
     },
     {
-      "module": "apps.windows.modules.event_logs.router",
+      "module": "apps.windows.sdk.modules.event_logs.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Журналы событий Windows (/api/event-logs/*)"
     },
     {
-      "module": "apps.windows.modules.software_manager.router",
+      "module": "apps.windows.sdk.modules.software_manager.router",
       "factory": "init_router",
       "enabled": true,
       "description": "Управление установленным ПО (/api/software-manager/*)"
@@ -232,13 +225,13 @@
         "description": "Каталог системных возможностей и инструментов Windows System32 (/api/v1/system32/*)"
     },
     {
-        "module": "apps.windows.modules.taskbar.router",
+        "module": "apps.windows.sdk.modules.taskbar.router",
         "factory": "init_router",
         "enabled": true,
         "description": "Управление панелью задач Windows 10/11 и окнами рабочего стола (/api/v1/taskbar/*)"
     },
     {
-        "module": "apps.windows.modules.window_control_plane.router",
+        "module": "apps.windows.sdk.modules.window_control_plane.router",
         "factory": "init_router",
         "enabled": true,
         "description": "Windows Window Management Control Plane (295 параметров) (/api/v1/window-management/*)"

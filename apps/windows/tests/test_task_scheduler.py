@@ -22,8 +22,8 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 from apps.windows.api.internal_app import create_internal_app
-from apps.windows.modules.task_scheduler.core.manager import TaskSchedulerManager
-from apps.windows.modules.task_scheduler.core.models import (
+from apps.windows.sdk.modules.task_scheduler.core.manager import TaskSchedulerManager
+from apps.windows.sdk.modules.task_scheduler.core.models import (
     ScheduledTaskItem,
     TaskActionRequest,
     TaskSchedulerReport,

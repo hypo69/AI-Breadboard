@@ -53,7 +53,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_identity_explain_current():
     """Тест вызова windows_identity_explain без параметров (текущий контекст)."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.get_current_identity") as mock_func:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.get_current_identity") as mock_func:
         mock_func.return_value = {"username": "test_user", "sid": "S-1-5-21-1234"}
         res_str = await call_tool(windows_identity_explain)
         res = json.loads(res_str)
@@ -65,7 +65,7 @@ async def test_windows_identity_explain_current():
 @pytest.mark.asyncio
 async def test_windows_identity_explain_target():
     """Тест вызова windows_identity_explain с указанием пользователя."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.explain") as mock_func:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.explain") as mock_func:
         mock_func.return_value = {"name": "onela", "sid": "S-1-5-21-5678"}
         res_str = await call_tool(windows_identity_explain, identifier="onela")
         res = json.loads(res_str)
@@ -77,7 +77,7 @@ async def test_windows_identity_explain_target():
 @pytest.mark.asyncio
 async def test_windows_identity_explain_pid():
     """Тест вызова windows_identity_explain_pid."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.explain_pid") as mock_func:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.explain_pid") as mock_func:
         mock_func.return_value = {"pid": 1234, "process": "python.exe", "elevated": True}
         res_str = await call_tool(windows_identity_explain_pid, pid=1234)
         res = json.loads(res_str)
@@ -89,11 +89,11 @@ async def test_windows_identity_explain_pid():
 @pytest.mark.asyncio
 async def test_windows_identity_audit_security():
     """Тест аудита безопасности через windows_identity_audit_security."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.who_is_admin") as mock_admin, \
-         patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.who_can_rdp") as mock_rdp, \
-         patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.who_can_logon_as_service") as mock_srv, \
-         patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.find_orphaned_sids") as mock_sids, \
-         patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.find_orphaned_profiles") as mock_prof:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.who_is_admin") as mock_admin, \
+         patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.who_can_rdp") as mock_rdp, \
+         patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.who_can_logon_as_service") as mock_srv, \
+         patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.find_orphaned_sids") as mock_sids, \
+         patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.find_orphaned_profiles") as mock_prof:
 
         mock_admin.return_value = [{"name": "Administrator"}]
         mock_rdp.return_value = ["Administrator", "onela"]
@@ -114,7 +114,7 @@ async def test_windows_identity_audit_security():
 @pytest.mark.asyncio
 async def test_windows_identity_manage_account():
     """Тест операций управления учетными записями."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.list_users") as mock_users:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.list_users") as mock_users:
         mock_users.return_value = [{"name": "User1"}, {"name": "User2"}]
         res_str = await call_tool(windows_identity_manage_account, action="list_users")
         res = json.loads(res_str)
@@ -125,7 +125,7 @@ async def test_windows_identity_manage_account():
 @pytest.mark.asyncio
 async def test_windows_identity_audit_events():
     """Тест запроса журнала событий безопасности."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.get_audit_events") as mock_events:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.get_audit_events") as mock_events:
         mock_events.return_value = [{"event_id": 4624, "user": "onela"}]
         res_str = await call_tool(windows_identity_audit_events, limit=10)
         res = json.loads(res_str)
@@ -136,7 +136,7 @@ async def test_windows_identity_audit_events():
 @pytest.mark.asyncio
 async def test_windows_identity_graph_build():
     """Тест построения Identity Graph."""
-    with patch("apps.windows.modules.accounts_identity.service.AccountsIdentityService.get_identity_graph") as mock_graph:
+    with patch("apps.windows.sdk.modules.accounts_identity.service.AccountsIdentityService.get_identity_graph") as mock_graph:
         mock_graph.return_value = {"nodes": [], "edges": []}
         res_str = await call_tool(windows_identity_graph_build)
         res = json.loads(res_str)

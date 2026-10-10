@@ -57,7 +57,7 @@ def mock_status_data():
 @pytest.mark.asyncio
 async def test_windows_system_control_audit_status(mock_status_data):
     """Тестирование получения сводного статуса центра управления."""
-    with patch("apps.windows.modules.system_control_center.router._collect_status_sync", return_value=mock_status_data):
+    with patch("apps.windows.sdk.modules.system_control_center.router._collect_status_sync", return_value=mock_status_data):
         res_raw = await call_tool(windows_system_control_audit, action="status")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

@@ -16,7 +16,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:48:10
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Mixin class for image operations in GoogleGenerativeAI."""
@@ -77,11 +77,20 @@ class GoogleGenerativeAIImagesMixin:
                     }
                 }
                 logger.warning(f'GoogleGenerativeAIImagesMixin: Empty response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Пустой ответ describe_image от Gemini ({self.model_name}): {json.dumps(err_empty, ensure_ascii=False)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, self.model_name, attempt, attempts)
                 if not should_retry:
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise ex
                     return False
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise RuntimeError(f'[DEBUG MODE] Не удалось выполнить describe_image для Gemini ({self.model_name}): {self._last_exception}')
         return False
 
     async def upload_file(self, file: str | Path | IOBase, file_name: str='', attempts: int=10) -> bool:
@@ -108,9 +117,18 @@ class GoogleGenerativeAIImagesMixin:
                 if response:
                     logger.info(f'GoogleGenerativeAI: Файл {file_name or str(file)} успешно загружен: {response.name if hasattr(response, "name") else response}')
                     return True
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Не удалось загрузить файл {file_name or str(file)} в Gemini File API')
                 return False
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, self.model_name, attempt, attempts)
                 if not should_retry:
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise ex
                     return False
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise RuntimeError(f'[DEBUG MODE] Исчерпаны попытки загрузки файла {file_name or str(file)}: {self._last_exception}')
         return False

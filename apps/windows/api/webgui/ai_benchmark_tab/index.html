@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/ai_benchmark_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:13:56
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
 
@@ -24,22 +24,22 @@ Updated: 2026-10-01 13:13:56
     padding: 0.5rem 0.75rem;
   }
   .bm-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     padding: 0.6rem 0.85rem;
     height: 100%;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .bm-card:hover {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border-color: var(--nav-active) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
   .bm-card-label {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 600;
     margin-bottom: 0.25rem;
   }
@@ -47,22 +47,22 @@ Updated: 2026-10-01 13:13:56
     font-size: 1.4rem;
     font-weight: 700;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: #38bdf8;
+    color: var(--nav-active);
   }
   .bm-panel {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     margin-bottom: 0.75rem;
     overflow: hidden;
   }
   .bm-panel-header {
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
+    background: var(--surface-2) !important;
+    border-bottom: 1px solid var(--border-color) !important;
     padding: 0.45rem 0.85rem;
     font-weight: 600;
     font-size: 0.85rem;
-    color: #38bdf8;
+    color: var(--nav-active);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -73,22 +73,22 @@ Updated: 2026-10-01 13:13:56
     width: 100%;
   }
   .bm-table th {
-    background: #1e293b;
-    color: #94a3b8;
+    background: var(--surface-2);
+    color: var(--text-muted);
     font-size: 0.72rem;
     text-transform: uppercase;
     padding: 0.45rem 0.6rem;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
   }
   .bm-table td {
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid var(--border-color);
     padding: 0.45rem 0.6rem;
     vertical-align: middle;
   }
 </style>
 
 <div class="bm-container">
-  <!-- <span data-i18n="auto___8d61a6"></span> -->
+  <!-- Benchmark Run Form -->
   <div class="bm-panel mb-3">
     <div class="bm-panel-header">
       <span><i class="bi bi-speedometer2 me-1"></i> <span data-i18n="auto___81054b"></span> AI Inference Benchmark</span>
@@ -98,7 +98,7 @@ Updated: 2026-10-01 13:13:56
       <div class="row g-2 align-items-end">
         <div class="col-md-3 col-sm-6">
           <label class="form-label small text-muted mb-1"><span data-i18n="auto___2d385a"></span></label>
-          <select class="form-select form-select-sm bg-dark text-white border-secondary" id="bm-provider-select">
+          <select class="form-select form-select-sm" id="bm-provider-select">
             <option value="gemini" selected>Google Gemini API</option>
             <option value="ollama">Ollama (Local)</option>
             <option value="foundry">Microsoft Foundry Local</option>
@@ -107,15 +107,15 @@ Updated: 2026-10-01 13:13:56
         </div>
         <div class="col-md-3 col-sm-6">
           <label class="form-label small text-muted mb-1"><span data-i18n="auto___f1f1ee"></span></label>
-          <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-model-input" value="gemini-3.1-flash">
+          <input type="text" class="form-control form-control-sm" id="bm-model-input" value="gemini-3.1-flash">
         </div>
         <div class="col-md-2 col-sm-6">
           <label class="form-label small text-muted mb-1">Max Tokens</label>
-          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-tokens-input" value="150" min="20" max="2000">
+          <input type="number" class="form-control form-control-sm" id="bm-tokens-input" value="150" min="20" max="2000">
         </div>
         <div class="col-md-2 col-sm-6">
           <label class="form-label small text-muted mb-1">Temperature</label>
-          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-temp-input" value="0.7" min="0" max="1" step="0.1">
+          <input type="number" class="form-control form-control-sm" id="bm-temp-input" value="0.7" min="0" max="1" step="0.1">
         </div>
         <div class="col-md-2 col-sm-12">
           <button class="btn btn-sm btn-primary w-100 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="bm-run-btn">
@@ -125,12 +125,12 @@ Updated: 2026-10-01 13:13:56
       </div>
       <div class="mt-2">
         <label class="form-label small text-muted mb-1"><span data-i18n="auto___b3f6a4"></span></label>
-        <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-prompt-input" rows="2"><span data-i18n="auto__100__5d4d7a"></span>.</textarea>
+        <textarea class="form-control form-control-sm" id="bm-prompt-input" rows="2"><span data-i18n="auto__100__5d4d7a"></span>.</textarea>
       </div>
     </div>
   </div>
 
-  <!-- <span data-i18n="auto___cca642"></span> -->
+  <!-- KPI Cards -->
   <div class="row g-2 mb-3">
     <div class="col-md-3 col-6">
       <div class="bm-card">
@@ -153,21 +153,21 @@ Updated: 2026-10-01 13:13:56
     <div class="col-md-3 col-6">
       <div class="bm-card">
         <div class="bm-card-label"><i class="bi bi-chat-left-text text-secondary me-1"></i> <span data-i18n="auto___430610"></span></div>
-        <div class="bm-card-value text-white" id="bm-card-tokens">—</div>
+        <div class="bm-card-value text-body" id="bm-card-tokens">—</div>
       </div>
     </div>
   </div>
 
-  <!-- <span data-i18n="auto___7fbb04"></span> -->
+  <!-- History Panel -->
   <div class="bm-panel">
     <div class="bm-panel-header">
       <span><i class="bi bi-clock-history me-1"></i> <span data-i18n="auto___a58a32"></span></span>
-      <button class="btn btn-xs btn-outline-secondary py-0 px-2 text-white border-secondary" id="bm-refresh-history-btn" style="font-size: 0.75rem;">
+      <button class="btn btn-xs btn-outline-secondary py-0 px-2" id="bm-refresh-history-btn" style="font-size: 0.75rem;">
         <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___c2f668"></span>
       </button>
     </div>
     <div class="table-responsive">
-      <table class="table table-dark table-hover bm-table" id="bm-history-table">
+      <table class="table table-hover bm-table" id="bm-history-table">
         <thead>
           <tr>
             <th><span data-i18n="auto___c80d7e"></span></th>

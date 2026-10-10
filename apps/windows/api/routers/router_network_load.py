@@ -36,7 +36,7 @@ except ImportError:
     psutil = None
 
 from logger import logger
-from apps.windows.modules.hardware.lhm_service import LhmService
+from apps.windows.sdk.modules.hardware.lhm_service import LhmService
 from apps.windows.telemetry import SystemCollector
 from apps.windows.telemetry.models import ProcessNetworkActivity
 

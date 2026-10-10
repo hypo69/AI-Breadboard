@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 12:06:00
+# Updated: 2026-10-10 05:49:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1381,6 +1381,21 @@ def init_database_schema(conn: sqlite3.Connection) -> None:
             created_at REAL NOT NULL
         );
     ''')
+
+    # 69.1. Разрывы и паузы телеметрии при сне (telemetry_gaps)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS telemetry_gaps (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            start_utc TEXT NOT NULL,
+            end_utc TEXT NOT NULL,
+            gap_type TEXT NOT NULL,
+            duration_seconds REAL NOT NULL,
+            confidence TEXT NOT NULL,
+            evidence_json TEXT,
+            created_at REAL NOT NULL
+        );
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetry_gaps_start ON telemetry_gaps(start_utc);')
 
     # 70. Паспорт программы (process_definition)
     cursor.execute('''

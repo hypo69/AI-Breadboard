@@ -37,7 +37,7 @@ class TestGeminiChat:
 
     def test_normalize_model_id(self):
         """Verify model identifier normalization."""
-        assert GeminiChatBase.normalize_model_id('') == 'gemini-3.5-flash-lite'
+        assert GeminiChatBase.normalize_model_id('') == 'gemini-3.1-flash-lite'
         assert GeminiChatBase.normalize_model_id('gemini:gemini-3.7-flash') == 'gemini-3.7-flash'
         assert GeminiChatBase.normalize_model_id('models/gemini-2.5-pro') == 'gemini-2.5-pro'
         assert GeminiChatBase.normalize_model_id('gemini-3.5-flash-lite') == 'gemini-3.5-flash-lite'

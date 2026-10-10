@@ -27,9 +27,18 @@ import sys
 import json
 import logging
 from packaging.version import Version
-from pathlib import Path
-from typing import Dict, Optional, Tuple
-from header import __root__, set_project_root
+try:
+    from pathlib import Path
+    _proj_root = Path(__file__).resolve().parents[1]
+    if str(_proj_root) not in sys.path:
+        sys.path.insert(0, str(_proj_root))
+    import header as _root_header
+    __root__ = getattr(_root_header, "__root__", _proj_root)
+    set_project_root = getattr(_root_header, "set_project_root", lambda *args, **kwargs: _proj_root)
+except Exception:
+    __root__ = Path(__file__).resolve().parents[1]
+    def set_project_root(*args, **kwargs):
+        return __root__
 
 def _load_project_settings() -> Dict[str, str]:
     """

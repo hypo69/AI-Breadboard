@@ -18,7 +18,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """RAG index using Gemini Embedding API and FAISS.
@@ -152,6 +152,10 @@ class GeminiRAG:
                 response = client.models.embed_content(model=_EMBED_MODEL, contents=[types.Content(parts=[types.Part.from_text(text=t)]) for t in texts], config=types.EmbedContentConfig(task_type=task_type))
                 return [e.values for e in response.embeddings]
             except Exception as e:
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    logger.critical(f'[DEBUG MODE] Ошибка получения эмбеддингов Gemini RAG ({current_name}): {e}')
+                    raise e
                 err_str = str(e)
                 if '429' in err_str or 'RESOURCE_EXHAUSTED' in err_str:
                     delay = 5.0 + attempt * 2

@@ -4,8 +4,10 @@ Process Name: Windows Web Interface - App Logs Intelligence Tab
 =============================================================================
 Description:
   Клиентский веб-интерфейс комплексного анализа, аудита, поиска и потокового
-  мониторинга внутренних журналов программы AI-Breadboard strictly из
+  мониторинга внутренних журналов программы AI-Breadboard строго из
   каталога %APPDATA%\AI-Breadboard\logs (log.json, info.log, errors.log, fastapi.log и др.).
+  Включает глубокую интеграцию с AIModalDialog, динамический Timeline график,
+  кластеризацию инцидентов, экспорт (CSV/JSON/Markdown) и живой терминал.
   Полная поддержка темной, светлой (NightView), кирпичной и терминальной тем через CSS-переменные.
 
 Usage Examples:
@@ -21,10 +23,9 @@ Project: ai-breadboard
 Package: windows/api/webgui/app_logs_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 10:40:00
+Updated: 2026-10-10 12:42:00
 =============================================================================
 -->
-
 <style>
   .app-logs-container {
     color: var(--text-color, #18181b);
@@ -34,7 +35,7 @@ Updated: 2026-10-08 10:40:00
     background: var(--surface-1, #f6f3ec);
     border: 1px solid var(--border-color, #cfc6b8);
     border-radius: var(--radius-md, 8px);
-    padding: 0.5rem 0.85rem;
+    padding: 0.55rem 0.85rem;
     margin-bottom: 0.5rem;
     color: var(--text-color, #18181b);
   }
@@ -95,7 +96,7 @@ Updated: 2026-10-08 10:40:00
     color: var(--text-color, #18181b);
   }
   .apl-table tbody tr:hover td {
-    background: var(--nav-hover-bg, rgba(56, 189, 248, 0.06));
+    background: var(--nav-hover-bg, rgba(56, 189, 248, 0.08));
     cursor: pointer;
   }
   .badge-apl-crit { background: #dc2626 !important; color: #fff !important; }
@@ -155,6 +156,23 @@ Updated: 2026-10-08 10:40:00
     color: #fff !important;
     border-color: var(--nav-active, #1d4ed8) !important;
   }
+  .apl-file-badge.has-error {
+    border-color: #ef4444 !important;
+  }
+  .apl-quick-preset-btn {
+    border-radius: 20px;
+    font-size: 0.74rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border-color, #cfc6b8);
+    background: var(--surface-2, #eee9e0);
+    color: var(--text-color, #18181b);
+    transition: all 0.15s ease;
+  }
+  .apl-quick-preset-btn:hover, .apl-quick-preset-btn.active {
+    background: var(--nav-active, #1d4ed8);
+    color: #fff;
+    border-color: var(--nav-active, #1d4ed8);
+  }
   .apl-nav-pills .nav-link {
     color: var(--text-muted, #3f3f46);
     font-size: 0.8rem;
@@ -171,15 +189,17 @@ Updated: 2026-10-08 10:40:00
     background: var(--nav-active, #1d4ed8) !important;
     font-weight: 600;
   }
-  .apl-modal-dialog .modal-content {
-    background: var(--modal-bg, var(--surface-1, #f6f3ec)) !important;
-    color: var(--modal-text, var(--text-color, #18181b)) !important;
-    border: 1px solid var(--modal-border, var(--border-color, #cfc6b8)) !important;
+  .apl-timeline-bar-item {
+    transition: transform 0.1s ease, filter 0.1s ease;
+    cursor: pointer;
+  }
+  .apl-timeline-bar-item:hover {
+    transform: scaleY(1.05);
+    filter: brightness(1.2);
   }
 </style>
 
 <div class="app-logs-container">
-
   <!-- Top Header Bar with Metrics & Actions -->
   <div class="apl-compact-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <!-- Title & Metric Pills -->
@@ -194,22 +214,18 @@ Updated: 2026-10-08 10:40:00
         <span class="text-muted small"><i class="bi bi-file-earmark-code text-info me-1"></i>Файл:</span>
         <span class="fw-bold text-primary font-monospace text-truncate" id="apl-stat-filename" style="max-width: 140px;">log.json</span>
       </div>
-
-      <div class="apl-metric-pill" title="Размер и количество строк">
+      <div class="apl-metric-pill" title="Размер активного файла">
         <span class="text-muted small"><i class="bi bi-hdd me-1"></i>Размер:</span>
         <span class="fw-bold text-info font-monospace" id="apl-stat-size">0 KB</span>
       </div>
-
       <div class="apl-metric-pill" title="Записей загружено в таблицу">
         <span class="text-muted small"><i class="bi bi-list-ol me-1"></i>Записей:</span>
         <span class="fw-bold text-body font-monospace" id="apl-stat-loaded">0</span>
       </div>
-
       <div class="apl-metric-pill" title="Ошибки (ERROR / CRITICAL)">
         <span class="text-muted small"><i class="bi bi-exclamation-octagon-fill text-danger me-1"></i>Ошибки:</span>
         <span class="fw-bold text-danger font-monospace" id="apl-stat-errors">0</span>
       </div>
-
       <div class="apl-metric-pill" title="Предупреждения (WARNING)">
         <span class="text-muted small"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Предупреждения:</span>
         <span class="fw-bold text-warning font-monospace" id="apl-stat-warnings">0</span>
@@ -219,38 +235,55 @@ Updated: 2026-10-08 10:40:00
     <!-- Actions Toolbar -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <div class="form-check form-switch mb-0 d-inline-flex align-items-center" style="font-size: 0.78rem;">
-        <input class="form-check-input me-1" type="checkbox" role="switch" id="apl-live-switch" style="cursor: pointer;">
+        <input class="form-check-input me-1" id="apl-live-switch" role="switch" style="cursor: pointer;" type="checkbox"/>
         <label class="form-check-label text-muted small user-select-none" for="apl-live-switch" title="Авто-обновление каждые 3 секунды">Live Stream</label>
       </div>
-
       <button class="btn btn-sm btn-primary rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-apl-refresh" style="font-size: 0.78rem;">
         <i class="bi bi-arrow-clockwise"></i> <span>Обновить</span>
       </button>
-
       <button class="btn btn-sm btn-outline-warning rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-apl-diagnose" style="font-size: 0.78rem;">
         <i class="bi bi-robot"></i> <span>AI Диагностика</span>
       </button>
 
       <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" style="font-size: 0.78rem;">
-          <i class="bi bi-three-dots-vertical"></i> <span>Действия</span>
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" data-bs-toggle="dropdown" style="font-size: 0.78rem;" type="button">
+          <i class="bi bi-download"></i> <span>Экспорт</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end shadow border border-secondary-subtle" style="font-size: 0.8rem;">
-          <li><a class="dropdown-item" href="#" id="btn-apl-download"><i class="bi bi-download me-2 text-info"></i>Скачать файл лога</a></li>
-          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#" id="btn-apl-export-csv"><i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>Экспорт в CSV</a></li>
+          <li><a class="dropdown-item" href="#" id="btn-apl-export-json"><i class="bi bi-file-earmark-code me-2 text-info"></i>Экспорт в JSON</a></li>
+          <li><a class="dropdown-item" href="#" id="btn-apl-export-md"><i class="bi bi-file-earmark-text me-2 text-warning"></i>Отчет в Markdown (.md)</a></li>
+          <li><hr class="dropdown-divider"/></li>
+          <li><a class="dropdown-item" href="#" id="btn-apl-download-raw"><i class="bi bi-file-arrow-down me-2 text-primary"></i>Скачать сырой файл</a></li>
+          <li><hr class="dropdown-divider"/></li>
           <li><a class="dropdown-item text-danger" href="#" id="btn-apl-clear"><i class="bi bi-trash3 me-2"></i>Очистить лог-файл</a></li>
         </ul>
       </div>
     </div>
   </div>
 
-  <!-- Available Log Files Selector Bar -->
+  <!-- Available Log Files Selector Bar with Error Badges -->
   <div class="apl-panel mb-2 p-2">
     <div class="d-flex align-items-center gap-2 flex-wrap" id="apl-files-bar">
       <span class="text-muted small fw-semibold"><i class="bi bi-folder2-open me-1 text-info"></i>Файлы логов:</span>
       <div class="d-flex align-items-center gap-1.5 flex-wrap" id="apl-files-badges-container">
         <div class="spinner-border spinner-border-sm text-info" role="status"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Quick Filter Presets Bar -->
+  <div class="apl-panel mb-2 p-2">
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="text-muted small fw-semibold me-1"><i class="bi bi-funnel me-1 text-warning"></i>Быстрые пресеты:</span>
+      <button type="button" class="btn apl-quick-preset-btn active" data-preset="all">Все записи</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="errors">🔥 Только ошибки</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="warnings_errors">⚠️ Предупреждения и ошибки</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="windows">🌐 Windows API / TC</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="ai">🤖 AI & LLM</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="fastapi">⚙️ FastAPI & Core</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="hour">⏱️ За 1 час</button>
+      <button type="button" class="btn apl-quick-preset-btn" data-preset="day">📅 За 24 часа</button>
     </div>
   </div>
 
@@ -285,7 +318,6 @@ Updated: 2026-10-08 10:40:00
           </button>
         </li>
       </ul>
-
       <!-- Active File Path Indicator -->
       <div class="small text-muted font-monospace text-truncate d-none d-md-block" id="apl-full-path-label" style="max-width: 400px;">
         %APPDATA%\AI-Breadboard\logs
@@ -294,16 +326,17 @@ Updated: 2026-10-08 10:40:00
 
     <!-- Filter Inputs Grid -->
     <div class="row g-1.5 align-items-center">
-      <div class="col-lg-4 col-md-5">
+      <div class="col-lg-4 col-md-4">
         <div class="input-group input-group-sm">
           <span class="input-group-text apl-input-addon py-0 px-2"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
-          <input type="text" class="form-control form-control-sm apl-search-input py-1" id="apl-search-input" placeholder="Поиск по тексту сообщения, стеку, компоненту..." style="font-size: 0.8rem;">
+          <input class="form-control form-control-sm apl-search-input py-1" id="apl-search-input" placeholder="Поиск по тексту сообщения, стеку, компоненту..." style="font-size: 0.8rem;" type="text"/>
         </div>
       </div>
       <div class="col-lg-2 col-md-2 col-6">
         <select class="form-select form-select-sm apl-select py-1" id="apl-level-select" style="font-size: 0.8rem;">
           <option value="">Все уровни</option>
           <option value="ERRORS">⚠️ Только ошибки (ERROR/CRITICAL)</option>
+          <option value="WARNINGS_ERRORS">⚠️ Ошибки + Предупреждения</option>
           <option value="CRITICAL">Critical</option>
           <option value="ERROR">Error</option>
           <option value="WARNING">Warning</option>
@@ -316,17 +349,26 @@ Updated: 2026-10-08 10:40:00
           <option value="">Все модули/компоненты</option>
         </select>
       </div>
-      <div class="col-lg-2 col-md-1.5 col-6">
-        <select class="form-select form-select-sm apl-select py-1" id="apl-limit-select" style="font-size: 0.8rem;">
-          <option value="100">100 записей</option>
-          <option value="200" selected>200 записей</option>
-          <option value="500">500 записей</option>
-          <option value="1000">1000 записей</option>
+      <div class="col-lg-1.5 col-md-2 col-6">
+        <select class="form-select form-select-sm apl-select py-1" id="apl-time-preset-select" style="font-size: 0.8rem;">
+          <option value="">Всё время</option>
+          <option value="15m">15 минут</option>
+          <option value="1h">1 час</option>
+          <option value="6h">6 часов</option>
+          <option value="24h">24 часа</option>
         </select>
       </div>
-      <div class="col-lg-2 col-md-1.5 col-6 text-end">
+      <div class="col-lg-1.5 col-md-1 col-6">
+        <select class="form-select form-select-sm apl-select py-1" id="apl-limit-select" style="font-size: 0.8rem;">
+          <option value="100">100 шт</option>
+          <option selected="" value="200">200 шт</option>
+          <option value="500">500 шт</option>
+          <option value="1000">1000 шт</option>
+        </select>
+      </div>
+      <div class="col-lg-1 col-md-1 col-12 text-end">
         <button class="btn btn-sm btn-outline-secondary w-100 rounded py-1" id="btn-apl-reset-filters" style="font-size: 0.78rem;">
-          <i class="bi bi-x-circle me-1"></i> Сбросить
+          <i class="bi bi-x-circle me-1"></i> Сброс
         </button>
       </div>
     </div>
@@ -334,7 +376,6 @@ Updated: 2026-10-08 10:40:00
 
   <!-- Main View Container -->
   <div class="apl-panel p-2">
-
     <!-- 1. Table View -->
     <div id="apl-view-table">
       <div class="table-responsive" style="max-height: 560px; overflow-y: auto;">
@@ -345,12 +386,12 @@ Updated: 2026-10-08 10:40:00
               <th style="width: 85px;">Уровень</th>
               <th style="width: 130px;">Компонент</th>
               <th>Сообщение / Данные</th>
-              <th style="width: 70px;" class="text-end">Действия</th>
+              <th class="text-end" style="width: 100px;">Действия</th>
             </tr>
           </thead>
           <tbody id="apl-table-body">
             <tr>
-              <td colspan="5" class="text-center text-muted py-4">
+              <td class="text-center text-muted py-4" colspan="5">
                 <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
                 Загрузка внутренних логов приложения...
               </td>
@@ -361,11 +402,11 @@ Updated: 2026-10-08 10:40:00
     </div>
 
     <!-- 2. Audit & AI Diagnostics View -->
-    <div id="apl-view-audit" class="d-none p-2" style="max-height: 560px; overflow-y: auto;">
+    <div class="d-none p-2" id="apl-view-audit" style="max-height: 560px; overflow-y: auto;">
       <!-- Health Score Card -->
       <div class="row g-2 mb-3">
         <div class="col-md-4">
-          <div class="card apl-card p-3 text-center">
+          <div class="card apl-card p-3 text-center" id="panel-app-logs-health">
             <span class="text-muted small text-uppercase fw-semibold">Индекс стабильности (Health Score)</span>
             <div class="display-6 fw-bold my-1" id="apl-audit-health-score">--%</div>
             <div class="progress" style="height: 6px;">
@@ -374,9 +415,9 @@ Updated: 2026-10-08 10:40:00
           </div>
         </div>
         <div class="col-md-8">
-          <div class="card apl-card p-3 h-100 d-flex flex-column justify-content-center">
-            <span class="text-info fw-bold small mb-1"><i class="bi bi-info-circle me-1"></i>Сводка инцидентов</span>
-            <div class="small text-body" id="apl-audit-summary-text">Нажмите «AI Диагностика» для запуска анализа сбоев и поиска первопричин.</div>
+          <div class="card apl-card p-3 h-100 d-flex flex-column justify-content-center" id="panel-app-logs-summary">
+            <span class="text-info fw-bold small mb-1"><i class="bi bi-info-circle me-1"></i>Сводка инцидентов и первопричин</span>
+            <div class="small text-body" id="apl-audit-summary-text">Нажмите «AI Диагностика» для запуска интеллектуального анализа сбоев.</div>
           </div>
         </div>
       </div>
@@ -391,7 +432,7 @@ Updated: 2026-10-08 10:40:00
 
       <!-- Error Clusters Table -->
       <div>
-        <h6 class="text-info fw-bold small text-uppercase mb-2"><i class="bi bi-collection me-1"></i>Кластеры повторяющихся ошибок</h6>
+        <h6 class="text-info fw-bold small text-uppercase mb-2"><i class="bi bi-collection me-1"></i>Кластеры повторяющихся инцидентов</h6>
         <div class="table-responsive">
           <table class="table apl-table">
             <thead>
@@ -400,11 +441,12 @@ Updated: 2026-10-08 10:40:00
                 <th style="width: 80px;">Уровень</th>
                 <th style="width: 140px;">Посл. фиксация</th>
                 <th>Шаблон инцидента / Пример ошибки</th>
+                <th class="text-end" style="width: 90px;">Действия</th>
               </tr>
             </thead>
             <tbody id="apl-audit-clusters-body">
               <tr>
-                <td colspan="4" class="text-muted small text-center py-3">Кластеры пока не сформированы.</td>
+                <td class="text-muted small text-center py-3" colspan="5">Кластеры пока не сформированы.</td>
               </tr>
             </tbody>
           </table>
@@ -413,16 +455,16 @@ Updated: 2026-10-08 10:40:00
     </div>
 
     <!-- 3. Timeline & Analytics View -->
-    <div id="apl-view-timeline" class="d-none p-3" style="max-height: 560px; overflow-y: auto;">
-      <h6 class="text-info fw-bold small text-uppercase mb-2"><i class="bi bi-graph-up me-1"></i>Распределение логов во времени (Timeline)</h6>
-      <div class="card apl-card p-3 mb-3">
-        <div id="apl-timeline-bars" class="d-flex align-items-end gap-1.5" style="height: 160px; overflow-x: auto; padding-bottom: 20px;">
+    <div class="d-none p-3" id="apl-view-timeline" style="max-height: 560px; overflow-y: auto;">
+      <h6 class="text-info fw-bold small text-uppercase mb-2"><i class="bi bi-graph-up me-1"></i>Распределение логов во времени (Timeline — нажмите на столбец для фильтрации)</h6>
+      <div class="card apl-card p-3 mb-3" id="panel-app-logs-timeline">
+        <div class="d-flex align-items-end gap-1.5" id="apl-timeline-bars" style="height: 160px; overflow-x: auto; padding-bottom: 20px;">
           <!-- Dynamic bars rendered here -->
         </div>
         <div class="d-flex justify-content-between small text-muted mt-2 border-top border-secondary-subtle pt-1">
-          <span><span class="badge bg-danger me-1">■</span>Ошибки</span>
-          <span><span class="badge bg-warning text-dark me-1">■</span>Предупреждения</span>
-          <span><span class="badge bg-primary me-1">■</span>Информационные события</span>
+          <span><span class="badge bg-danger me-1">■</span>Ошибки (Critical/Error)</span>
+          <span><span class="badge bg-warning text-dark me-1">■</span>Предупреждения (Warning)</span>
+          <span><span class="badge bg-primary me-1">■</span>Информационные события (Info/Debug)</span>
         </div>
       </div>
 
@@ -434,13 +476,14 @@ Updated: 2026-10-08 10:40:00
     </div>
 
     <!-- 4. Live Tail Terminal View -->
-    <div id="apl-view-tail" class="d-none p-1">
-      <div class="d-flex justify-content-between align-items-center mb-1 px-1">
+    <div class="d-none p-1" id="apl-view-tail">
+      <div class="d-flex justify-content-between align-items-center mb-1 px-1 flex-wrap gap-2">
         <span class="small text-muted"><i class="bi bi-terminal-fill me-1 text-success"></i>Поток последних строк в реальном времени:</span>
         <div class="d-flex align-items-center gap-2">
+          <input class="form-control form-control-sm apl-search-input py-0 px-2" id="apl-tail-filter" placeholder="Фильтр потока..." style="font-size: 0.75rem; width: 140px;" type="text"/>
           <div class="form-check form-check-inline small text-muted mb-0">
-            <input class="form-check-input" type="checkbox" id="apl-tail-autoscroll" checked>
-            <label class="form-check-label" for="apl-tail-autoscroll">Авто-прокрутка вниз</label>
+            <input checked="" class="form-check-input" id="apl-tail-autoscroll" type="checkbox"/>
+            <label class="form-check-label" for="apl-tail-autoscroll">Авто-прокрутка</label>
           </div>
           <button class="btn btn-xs btn-outline-secondary py-0 px-2 small" id="btn-apl-clear-terminal">Очистить экран</button>
         </div>
@@ -449,52 +492,14 @@ Updated: 2026-10-08 10:40:00
     </div>
 
     <!-- 5. Raw File View -->
-    <div id="apl-view-raw" class="d-none p-1">
-      <pre class="apl-term" id="apl-raw-content" style="max-height: 560px;">Загрузка сырого содержимого файла...</pre>
-    </div>
-
-  </div>
-
-</div>
-
-<!-- Modal: Log Record Inspector & AI Context Analysis -->
-<div class="modal fade apl-modal-dialog" id="apl-entry-modal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content shadow">
-      <div class="modal-header border-bottom border-secondary-subtle py-2">
-        <h6 class="modal-title fw-bold text-info" id="apl-modal-title">Детали лог-записи</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body p-3">
-        <div class="row g-2 mb-2 small font-monospace">
-          <div class="col-sm-6"><strong class="text-muted">Время:</strong> <span id="apl-modal-time"></span></div>
-          <div class="col-sm-6"><strong class="text-muted">Уровень:</strong> <span id="apl-modal-level"></span></div>
-          <div class="col-sm-6"><strong class="text-muted">Компонент:</strong> <span id="apl-modal-component"></span></div>
-          <div class="col-sm-6"><strong class="text-muted">Повторений:</strong> <span id="apl-modal-repeat">1</span></div>
-        </div>
-
-        <div class="card apl-card p-3 mb-2">
-          <h6 class="small text-uppercase text-muted fw-bold mb-1">Сообщение</h6>
-          <div class="small font-monospace" id="apl-modal-message" style="white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;"></div>
-        </div>
-
-        <div class="card apl-card border-danger p-3 mb-2 d-none" id="apl-modal-exc-card">
-          <h6 class="small text-uppercase text-danger fw-bold mb-1">Трассировка исключения (Exception Traceback)</h6>
-          <pre class="small text-danger font-monospace mb-0" id="apl-modal-exc" style="white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow-y: auto;"></pre>
-        </div>
-
-        <!-- Raw JSON block -->
-        <div class="card apl-card p-2 mb-2">
-          <h6 class="small text-uppercase text-muted fw-bold mb-1">Сырая запись (Raw)</h6>
-          <pre class="small text-info font-monospace mb-0" id="apl-modal-raw" style="white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow-y: auto;"></pre>
-        </div>
-      </div>
-      <div class="modal-footer border-top border-secondary-subtle py-1">
-        <button type="button" class="btn btn-sm btn-outline-info" id="btn-apl-modal-copy">
-          <i class="bi bi-clipboard me-1"></i> Копировать
+    <div class="d-none p-1" id="apl-view-raw">
+      <div class="d-flex justify-content-between align-items-center mb-1 px-1">
+        <span class="small text-muted"><i class="bi bi-file-code me-1 text-info"></i>Просмотр файла целиком:</span>
+        <button class="btn btn-xs btn-outline-info py-0 px-2 small" id="btn-apl-copy-raw">
+          <i class="bi bi-clipboard me-1"></i>Копировать всё
         </button>
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
       </div>
+      <pre class="apl-term" id="apl-raw-content" style="max-height: 560px;">Загрузка сырого содержимого файла...</pre>
     </div>
   </div>
 </div>

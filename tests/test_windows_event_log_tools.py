@@ -50,7 +50,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_event_log_query_recent_errors():
     """Тест получения последних ошибок."""
-    with patch("apps.windows.modules.event_logs.core.manager.EventLogsManager.get_recent_errors") as mock_func:
+    with patch("apps.windows.sdk.modules.event_logs.core.manager.EventLogsManager.get_recent_errors") as mock_func:
         mock_func.return_value = [{"event_id": 7036, "level": "Error", "message": "Сбой BITS"}]
         res_str = await call_tool(windows_event_log_query, action="recent_errors")
         res = json.loads(res_str)
@@ -62,7 +62,7 @@ async def test_windows_event_log_query_recent_errors():
 @pytest.mark.asyncio
 async def test_windows_event_log_intelligence_profile():
     """Тест выполнения профайлинга Log Intelligence."""
-    with patch("apps.windows.modules.event_logs.core.manager.EventLogsManager.process_intelligence") as mock_func:
+    with patch("apps.windows.sdk.modules.event_logs.core.manager.EventLogsManager.process_intelligence") as mock_func:
         mock_func.return_value = {"shi": 0.95, "r_dup": 0.1, "channel": "System"}
         res_str = await call_tool(windows_event_log_intelligence, action="profile", channel="System")
         res = json.loads(res_str)
@@ -86,7 +86,7 @@ async def test_windows_event_log_action_dry_run():
 @pytest.mark.asyncio
 async def test_windows_event_log_query_sysmon_and_pending():
     """Тест расширенных запросов sysmon, powershell_scriptblock, wer_bsod и pending_reboots."""
-    with patch("apps.windows.modules.event_logs.core.manager.EventLogsManager.get_events") as mock_events:
+    with patch("apps.windows.sdk.modules.event_logs.core.manager.EventLogsManager.get_events") as mock_events:
         mock_events.return_value = []
         res_sysmon = json.loads(await call_tool(windows_event_log_query, action="sysmon"))
         assert res_sysmon["status"] == "ok"

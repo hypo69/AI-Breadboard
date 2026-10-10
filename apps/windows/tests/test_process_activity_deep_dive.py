@@ -32,7 +32,7 @@ from fastapi.testclient import TestClient
 
 from apps.windows.api.routers.router_process_activity import init_router
 from apps.windows.api.server import create_app
-from apps.windows.core.process_activity_engine import ProcessActivityEngine
+from apps.windows.sdk.core.process_activity_engine import ProcessActivityEngine
 from apps.windows.telemetry.models import (
     ProcessInstanceRecord,
     ProcessSafeOpsRequest,

@@ -31,7 +31,7 @@ from src.ai.agents.windows_tools import (
     windows_servicing_integrity_action,
     WINDOWS_SERVICING_INTEGRITY_TOOLS,
 )
-from apps.windows.modules.servicing_integrity.core.models import (
+from apps.windows.sdk.modules.servicing_integrity.core.models import (
     IntegrityReport,
     WindowsFeature,
 )
@@ -66,7 +66,7 @@ async def test_windows_servicing_integrity_audit_report():
         ],
         timestamp="2026-10-08T22:00:00",
     )
-    with patch("apps.windows.modules.servicing_integrity.core.manager.ServicingIntegrityManager.generate_report", return_value=sample_report):
+    with patch("apps.windows.sdk.modules.servicing_integrity.core.manager.ServicingIntegrityManager.generate_report", return_value=sample_report):
         res_str = await call_tool(windows_servicing_integrity_audit, action="report")
         res = json.loads(res_str)
         assert res["status"] == "ok"
@@ -83,7 +83,7 @@ async def test_windows_servicing_integrity_action_dry_run():
         "action": "scannow",
         "message": "Симуляция sfc scannow прошла успешно.",
     }
-    with patch("apps.windows.modules.servicing_integrity.core.manager.ServicingIntegrityManager.execute_servicing_action", return_value=sample_res):
+    with patch("apps.windows.sdk.modules.servicing_integrity.core.manager.ServicingIntegrityManager.execute_servicing_action", return_value=sample_res):
         res_str = await call_tool(
             windows_servicing_integrity_action,
             tool_name="sfc",

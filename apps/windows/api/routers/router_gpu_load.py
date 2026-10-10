@@ -33,8 +33,8 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from logger import logger
-from apps.windows.modules.hardware.lhm_service import LhmService
-from apps.windows.modules.hardware.gpu_prober import GpuProber
+from apps.windows.sdk.modules.hardware.lhm_service import LhmService
+from apps.windows.sdk.modules.hardware.gpu_prober import GpuProber
 from apps.windows.telemetry.sqlite import TelemetryStorage
 
 _TEMP_CATEGORIES = ("temperature", "temperatures")

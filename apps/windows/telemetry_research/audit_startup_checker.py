@@ -67,28 +67,28 @@ class AuditStartupChecker:
     def _get_integrity_collector(self):
         """Ленивая загрузка IntegrityCollector."""
         if self._integrity_collector is None:
-            from apps.windows.core.audits.integrity_collector import IntegrityCollector
+            from apps.windows.sdk.core.audits.integrity_collector import IntegrityCollector
             self._integrity_collector = IntegrityCollector()
         return self._integrity_collector
     
     def _get_performance_collector(self):
         """Ленивая загрузка PerformanceCollector."""
         if self._performance_collector is None:
-            from apps.windows.core.audits.performance_collector import PerformanceCollector
+            from apps.windows.sdk.core.audits.performance_collector import PerformanceCollector
             self._performance_collector = PerformanceCollector()
         return self._performance_collector
     
     def _get_driver_collector(self):
         """Ленивая загрузка DriverCollector."""
         if self._driver_collector is None:
-            from apps.windows.core.audits.driver_collector import DriverCollector
+            from apps.windows.sdk.core.audits.driver_collector import DriverCollector
             self._driver_collector = DriverCollector()
         return self._driver_collector
     
     def _get_eventlog_collector(self):
         """Ленивая загрузка EventLogCollector."""
         if self._eventlog_collector is None:
-            from apps.windows.core.audits.eventlog_collector import EventLogCollector
+            from apps.windows.sdk.core.audits.eventlog_collector import EventLogCollector
             self._eventlog_collector = EventLogCollector()
         return self._eventlog_collector
     

@@ -18,7 +18,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 08:47:00
 # =============================================================================
 
 """Модуль реализации компонента `GoogleGenerativeAICore` системы AI-Breadboard."""
@@ -32,12 +32,31 @@ from src.ai.orchestration.model_manager import add_unsupported_model as _mgr_add
 from src.config import server_cfg, ai_cfg
 from logger import logger
 from src.ai.gemini.gemini_api_key_state import get_status, load_api_keys, mark_exhausted, next_available_in, update_last_run
-from src.utils.jjson import j_loads
-_config_path: Path = Path(__file__).parent / 'config.json'
-_gemini_config: dict = j_loads(_config_path) if _config_path.exists() else {}
-_DEFAULT_MODEL: str = _gemini_config.get('model', '') if isinstance(_gemini_config, dict) else ''
-_DEFAULT_SAVE_HISTORY: bool = _gemini_config.get('save_history_chat', False) if isinstance(_gemini_config, dict) else False
-_DEFAULT_REALTIME_STREAMING: bool = _gemini_config.get('realtime_streaming', True) if isinstance(_gemini_config, dict) else True
+
+
+def _resolve_default_gemini_model() -> str:
+    """Извлекает модель Gemini по умолчанию из конфигурации ai_cfg.
+
+    Returns:
+        str: Идентификатор модели по умолчанию.
+    """
+    if ai_cfg is not None:
+        providers = getattr(ai_cfg, 'providers', None)
+        if providers:
+            gemini_sec = getattr(providers, 'gemini', None)
+            if gemini_sec:
+                model = getattr(gemini_sec, 'model', None) or getattr(gemini_sec, 'default_model', None)
+                if model:
+                    return str(model)
+        default_model = getattr(ai_cfg, 'default_model', None)
+        if default_model:
+            return str(default_model)
+    return 'gemini-3.1-flash-lite'
+
+
+_DEFAULT_MODEL: str = _resolve_default_gemini_model()
+_DEFAULT_SAVE_HISTORY: bool = False
+_DEFAULT_REALTIME_STREAMING: bool = getattr(ai_cfg, 'realtime_streaming', True) if ai_cfg is not None else True
 
 def load_unsupported_models() -> set[str]:
     """Loading списка неподдерживаемых и устаревших моделей Gemini.
@@ -264,7 +283,7 @@ class GoogleGenerativeAICore:
         """
         active_pool: list[str] = self.get_available_models()
         if not active_pool:
-            active_pool = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+            active_pool = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
         try:
             idx: int = active_pool.index(self.model_name)
         except ValueError:

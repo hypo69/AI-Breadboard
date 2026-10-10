@@ -25,8 +25,8 @@ from __future__ import annotations
 from typing import Any, Optional
 from logger import logger
 from apps.windows.ai.prompt_templates import build_root_cause_prompt, build_system_prompt
-from apps.windows.core.models import InvestigationReport
-from apps.windows.core.root_cause_engine import RootCauseEngine
+from apps.windows.sdk.core.models import InvestigationReport
+from apps.windows.sdk.core.root_cause_engine import RootCauseEngine
 
 class WindowsAIRootCauseAnalyzer:
     """Интеллектуальный анализатор инцидентов."""

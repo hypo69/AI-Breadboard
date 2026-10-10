@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 08:42:00
+# Updated: 2026-10-10 05:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -107,7 +107,7 @@ def run_telemetry_service(
         int: Код завершения.
     """
     import psutil
-    from apps.windows.modules.hardware.gpu_prober import GpuProber
+    from apps.windows.sdk.modules.hardware.gpu_prober import GpuProber
     from .models import CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, GpuMetrics, MemoryMetrics, NetworkInterfaceMetrics, ProcessMetrics, SystemSnapshot
     from .sqlite import TelemetryStorage
     from .telemetry_config import TelemetryConfigManager
@@ -414,7 +414,7 @@ def run_telemetry_service(
             known_pids = {pid: data['name'] for pid, data in current_proc_map.items()}
 
             # Классификация процессов на Apps, Background и Windows
-            from apps.windows.modules.process_manager.core.classifier import (
+            from apps.windows.sdk.modules.process_manager.core.classifier import (
                 ProcessClassifier,
                 WINDOWS_SYSTEM_PROCESS_NAMES,
                 KNOWN_APP_FRIENDLY_NAMES,
@@ -646,14 +646,19 @@ def run_telemetry_service(
                             except Exception as d_err:
                                 logger.debug(f"Ошибка тяжелого сканирования накопителей: {d_err}")
 
-                        # Инкрементальный сбор событий журнала безопасности Windows (Security.evtx)
+                        # Инкрементальный сбор событий журнала безопасности Windows (Security.evtx и Defender)
                         if h_collectors.get('security_events', True):
                             try:
                                 from apps.windows.telemetry.security_collector import WindowsSecurityCollector
                                 sec_coll = WindowsSecurityCollector(storage=storage)
-                                sec_rep = sec_coll.collect_incremental(batch_size=500, max_records=2000, save_raw=False)
+                                # Сбор журнала Security
+                                sec_rep = sec_coll.collect_incremental(channel='Security', batch_size=500, max_records=2000, save_raw=False)
                                 if sec_rep.total_events_ingested > 0:
                                     logger.info(f"🛡️ [SECURITY LOG] Инкрементально собрано {sec_rep.total_events_ingested} событий безопасности (RecordID: {sec_rep.last_record_id})")
+                                # Сбор журнала Microsoft Defender
+                                def_rep = sec_coll.collect_defender_events(batch_size=200, max_records=1000, save_raw=False)
+                                if def_rep.total_events_ingested > 0:
+                                    logger.info(f"🛡️ [DEFENDER LOG] Инкрементально собрано {def_rep.total_events_ingested} событий Defender (RecordID: {def_rep.last_record_id})")
                             except Exception as sec_err:
                                 logger.debug(f"Ошибка сбора событий безопасности: {sec_err}")
 

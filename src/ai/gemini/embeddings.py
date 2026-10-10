@@ -16,7 +16,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:48:20
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Mixin class for embedding generation in GoogleGenerativeAI."""
@@ -68,8 +68,14 @@ class GoogleGenerativeAIEmbeddingsMixin:
                 }
             }
             logger.warning(f'GoogleGenerativeAI: Empty embeddings:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                raise RuntimeError(f'[DEBUG MODE] Пустой ответ embed_content от Gemini ({model_name}): {json.dumps(err_empty, ensure_ascii=False)}')
             return False
         except Exception as ex:
             err_json = format_error_as_json(ex, model=model_name)
             logger.error(f'GoogleGenerativeAI: Error генерации эмбеддинга:\n{err_json}')
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                raise ex
             return False

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты аудита и обслуживания целостности системного образа Windows (SFC, DISM, DISM Features)
-#   (apps.windows.modules.servicing_integrity).
+#   (apps.windows.sdk.modules.servicing_integrity).
 #   Включают:
 #     1. Инспекция целостности системных файлов и компонентов Windows (windows_servicing_integrity_audit)
 #     2. Выполнение процедур сканирования и очистки DISM/SFC по протоколу SafeOps (windows_servicing_integrity_action)
@@ -97,7 +97,7 @@ async def windows_servicing_integrity_audit(
         JSON со статусом целостности SFC/DISM и состоянием компонентов.
     """
     try:
-        from apps.windows.modules.servicing_integrity.core.manager import ServicingIntegrityManager
+        from apps.windows.sdk.modules.servicing_integrity.core.manager import ServicingIntegrityManager
 
         sim = ServicingIntegrityManager()
         loop = asyncio.get_running_loop()
@@ -143,8 +143,8 @@ async def windows_servicing_integrity_action(
         JSON с результатом выполнения операции обслуживания.
     """
     try:
-        from apps.windows.modules.servicing_integrity.core.manager import ServicingIntegrityManager
-        from apps.windows.modules.servicing_integrity.core.models import ServicingActionRequest
+        from apps.windows.sdk.modules.servicing_integrity.core.manager import ServicingIntegrityManager
+        from apps.windows.sdk.modules.servicing_integrity.core.models import ServicingActionRequest
 
         sim = ServicingIntegrityManager()
         req = ServicingActionRequest(

@@ -16,7 +16,7 @@
 # Package: apps.windows.wikillm
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:50:00
+# Updated: 2026-10-10 07:54:00
 # =============================================================================
 
 from __future__ import annotations
@@ -44,6 +44,10 @@ class ArtifactType(str, Enum):
     DRIVER = "driver"
     ETW_EVENT = "etw_event"
     CODE_SYMBOL = "code_symbol"
+    COMMAND = "command"
+    SCRIPT = "script"
+    PLAYBOOK = "playbook"
+    ACTION_CHAIN = "action_chain"
     INCIDENT = "incident"
     SYMPTOM = "symptom"
     SOFTWARE = "software"

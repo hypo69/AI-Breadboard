@@ -18,7 +18,7 @@
 # Package: src.ai.providers.onnx
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:36:00
 # =============================================================================
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List, Optional
 from header import __root__
 from logger import logger
+from src.config import is_debug_mode
 _loaded_onnx_models: Dict[str, Dict[str, Any]] = {}
 
 def _check_onnx_runtime() -> bool:
@@ -173,6 +174,8 @@ class ONNXClient:
             return {'success': True, 'content': content, 'model': model_path}
         except Exception as e:
             logger.error(f'[ONNXClient] ONNX inference error for {model_path}: {e}')
+            if is_debug_mode():
+                raise
             return {'success': False, 'error': str(e)}
 
     def list_loaded(self) -> List[Dict[str, Any]]:

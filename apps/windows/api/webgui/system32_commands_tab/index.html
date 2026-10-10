@@ -19,302 +19,281 @@ Project: ai-breadboard
 Package: windows/api/webgui/system32_commands_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 03:08:00
+Updated: 2026-10-10 10:37:00
 =============================================================================
 -->
-
 <div class="container-fluid p-0 system32-tab-wrapper d-flex flex-column" style="min-height: 100vh;">
-
-  <!-- Header Card & Summary Stats -->
-  <div class="card border-secondary-subtle mb-3 shadow-sm flex-shrink-0">
-    <div class="card-body p-3">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div class="d-flex align-items-center gap-2">
-          <div class="fs-2">🛠️</div>
-          <div>
-            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
-              <span>Каталог штатных средств Windows (System32)</span>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fs-6">Control Plane & AITelemetry</span>
-            </h5>
-            <div class="text-muted small">
+<!-- Header Card & Summary Stats -->
+<div class="card border-secondary-subtle mb-3 shadow-sm flex-shrink-0" data-panel-id="panel-system32-commands-katalog-shtatnykh-sredstv-window" id="panel-system32-commands-katalog-shtatnykh-sredstv-window">
+<div class="card-body p-3">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+<div class="d-flex align-items-center gap-2">
+<div class="fs-2">🛠️</div>
+<div>
+<h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+<span>Каталог штатных средств Windows (System32)</span>
+<span class="badge bg-primary-subtle text-primary border border-primary-subtle small fs-6">Control Plane &amp; AITelemetry</span>
+</h5>
+<div class="text-muted small">
               66 функциональных категорий, Telemetry Tiers, эквиваленты Win32 API / PowerShell / WMI / COM, USN Journal и запуск по свободному тексту.
             </div>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-refresh-system32-catalog" title="Обновить каталог">
-            <i class="bi bi-arrow-clockwise"></i>
-            <span>Обновить</span>
-          </button>
-          <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-open-inventory-modal" data-bs-toggle="modal" data-bs-target="#inventoryModal" title="Проверить наличие на диске">
-            <i class="bi bi-hdd-stack"></i>
-            <span>Инвентарь хоста</span>
-          </button>
-          <button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 shadow-sm fw-semibold" id="btn-open-guide-modal" data-bs-toggle="modal" data-bs-target="#guideModal" title="Руководство и архитектура">
-            <i class="bi bi-book"></i>
-            <span>Руководство</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Metrics Bar -->
-      <div class="row g-2 mt-2 pt-2 border-top border-secondary-subtle" id="system32-summary-bar">
-        <div class="col-6 col-md-2">
-          <div class="p-2 bg-body-tertiary rounded text-center">
-            <div class="text-muted small" style="font-size: 0.72rem;">Всего средств</div>
-            <div class="fw-bold fs-6 text-primary" id="stat-total-tools">...</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="p-2 bg-body-tertiary rounded text-center">
-            <div class="text-muted small" style="font-size: 0.72rem;">Категорий</div>
-            <div class="fw-bold fs-6 text-info" id="stat-total-categories">...</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="p-2 bg-body-tertiary rounded text-center">
-            <div class="text-muted small" style="font-size: 0.72rem;">🟢 OBSERVE (Телеметрия)</div>
-            <div class="fw-bold fs-6 text-success" id="stat-observe-tools">...</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="p-2 bg-body-tertiary rounded text-center">
-            <div class="text-muted small" style="font-size: 0.72rem;">⏱️ ETW Конвейер</div>
-            <div class="fw-bold fs-6 text-warning" id="stat-etw-tools">...</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="p-2 bg-body-tertiary rounded text-center">
-            <div class="text-muted small" style="font-size: 0.72rem;">📜 USN Journal</div>
-            <div class="fw-bold fs-6 text-info" id="stat-usn-tools">...</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="p-2 bg-body-tertiary rounded text-center">
-            <div class="text-muted small" style="font-size: 0.72rem;">🖥️ Оснастки MMC/CPL</div>
-            <div class="fw-bold fs-6 text-secondary" id="stat-gui-tools">...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters & Search Toolbar -->
-  <div class="card border-secondary-subtle mb-3 shadow-sm flex-shrink-0">
-    <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="small fw-semibold text-muted">AITelemetry Tier:</span>
-        <div class="btn-group btn-group-sm" role="group" id="tier-filters">
-          <button type="button" class="btn btn-outline-secondary active" data-tier="all">Все</button>
-          <button type="button" class="btn btn-outline-success" data-tier="OBSERVE">🟢 OBSERVE</button>
-          <button type="button" class="btn btn-outline-warning" data-tier="DIAGNOSE">🟡 DIAGNOSE</button>
-          <button type="button" class="btn btn-outline-info" data-tier="CONTROL">🟠 CONTROL</button>
-          <button type="button" class="btn btn-outline-danger" data-tier="ADMIN">🔴 ADMIN</button>
-          <button type="button" class="btn btn-outline-dark" data-tier="DESTRUCTIVE">🔴🔴 DESTRUCTIVE</button>
-          <button type="button" class="btn btn-outline-primary" data-tier="RECOVERY">🛡️ RECOVERY</button>
-        </div>
-      </div>
-
-      <div class="d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" style="min-width: 260px;">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-body-tertiary"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control" id="tool-search-input" placeholder="Поиск по имени, назначению или тегам...">
-          <button class="btn btn-outline-secondary" type="button" id="btn-clear-search" title="Очистить"><i class="bi bi-x"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tool Cards Grid / Main Catalog Display -->
-  <div class="flex-grow-1 overflow-auto mb-3" style="max-height: calc(100vh - 440px); min-height: 280px;">
-    <div class="row g-2" id="system32-cards-container">
-      <div class="col-12 text-center py-5 text-muted">
-        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-        <span>Загрузка каталога штатных средств Windows...</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom AI Command Execution & Interpretation Panel (Identical in Style to tab-scenarios) -->
-  <div class="card border-primary border-opacity-50 shadow-lg mt-auto flex-shrink-0" >
-    
-    <!-- Quick Prompts / Pills -->
-    <div class="p-2 border-bottom border-secondary-subtle bg-body-secondary bg-opacity-50">
-      <div class="d-flex align-items-center justify-content-between mb-1">
-        <span class="small text-muted fw-semibold" style="font-size: 0.75rem;">⚡ Экспресс-команды свободным текстом:</span>
-        <span class="text-muted small" style="font-size: 0.72rem;">Модель подберет программу и сформирует точный синтаксис</span>
-      </div>
-      <div class="d-flex flex-wrap gap-1" id="system32-quick-prompts">
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Проверь статус TRIM для SSD">
+</div>
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-refresh-system32-catalog" title="Обновить каталог">
+<i class="bi bi-arrow-clockwise"></i>
+<span>Обновить</span>
+</button>
+<button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-target="#inventoryModal" data-bs-toggle="modal" id="btn-open-inventory-modal" title="Проверить наличие на диске">
+<i class="bi bi-hdd-stack"></i>
+<span>Инвентарь хоста</span>
+</button>
+<button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 shadow-sm fw-semibold" data-bs-target="#guideModal" data-bs-toggle="modal" id="btn-open-guide-modal" title="Руководство и архитектура">
+<i class="bi bi-book"></i>
+<span>Руководство</span>
+</button>
+</div>
+</div>
+<!-- Quick Metrics Bar -->
+<div class="row g-2 mt-2 pt-2 border-top border-secondary-subtle" id="system32-summary-bar">
+<div class="col-6 col-md-2">
+<div class="p-2 bg-body-tertiary rounded text-center">
+<div class="text-muted small" style="font-size: 0.72rem;">Всего средств</div>
+<div class="fw-bold fs-6 text-primary" id="stat-total-tools">...</div>
+</div>
+</div>
+<div class="col-6 col-md-2">
+<div class="p-2 bg-body-tertiary rounded text-center">
+<div class="text-muted small" style="font-size: 0.72rem;">Категорий</div>
+<div class="fw-bold fs-6 text-info" id="stat-total-categories">...</div>
+</div>
+</div>
+<div class="col-6 col-md-2">
+<div class="p-2 bg-body-tertiary rounded text-center">
+<div class="text-muted small" style="font-size: 0.72rem;">🟢 OBSERVE (Телеметрия)</div>
+<div class="fw-bold fs-6 text-success" id="stat-observe-tools">...</div>
+</div>
+</div>
+<div class="col-6 col-md-2">
+<div class="p-2 bg-body-tertiary rounded text-center">
+<div class="text-muted small" style="font-size: 0.72rem;">⏱️ ETW Конвейер</div>
+<div class="fw-bold fs-6 text-warning" id="stat-etw-tools">...</div>
+</div>
+</div>
+<div class="col-6 col-md-2">
+<div class="p-2 bg-body-tertiary rounded text-center">
+<div class="text-muted small" style="font-size: 0.72rem;">📜 USN Journal</div>
+<div class="fw-bold fs-6 text-info" id="stat-usn-tools">...</div>
+</div>
+</div>
+<div class="col-6 col-md-2">
+<div class="p-2 bg-body-tertiary rounded text-center">
+<div class="text-muted small" style="font-size: 0.72rem;">🖥️ Оснастки MMC/CPL</div>
+<div class="fw-bold fs-6 text-secondary" id="stat-gui-tools">...</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters & Search Toolbar -->
+<div class="card border-secondary-subtle mb-3 shadow-sm flex-shrink-0" data-panel-id="panel-system32-commands-aitelemetry-tier" id="panel-system32-commands-aitelemetry-tier">
+<div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="small fw-semibold text-muted">AITelemetry Tier:</span>
+<div class="btn-group btn-group-sm" id="tier-filters" role="group">
+<button class="btn btn-outline-secondary active" data-tier="all" type="button">Все</button>
+<button class="btn btn-outline-success" data-tier="OBSERVE" type="button">🟢 OBSERVE</button>
+<button class="btn btn-outline-warning" data-tier="DIAGNOSE" type="button">🟡 DIAGNOSE</button>
+<button class="btn btn-outline-info" data-tier="CONTROL" type="button">🟠 CONTROL</button>
+<button class="btn btn-outline-danger" data-tier="ADMIN" type="button">🔴 ADMIN</button>
+<button class="btn btn-outline-dark" data-tier="DESTRUCTIVE" type="button">🔴🔴 DESTRUCTIVE</button>
+<button class="btn btn-outline-primary" data-tier="RECOVERY" type="button">🛡️ RECOVERY</button>
+</div>
+</div>
+<div class="d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" style="min-width: 260px;">
+<div class="input-group input-group-sm">
+<span class="input-group-text bg-body-tertiary"><i class="bi bi-search"></i></span>
+<input class="form-control" id="tool-search-input" placeholder="Поиск по имени, назначению или тегам..." type="text"/>
+<button class="btn btn-outline-secondary" id="btn-clear-search" title="Очистить" type="button"><i class="bi bi-x"></i></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Tool Cards Grid / Main Catalog Display -->
+<div class="flex-grow-1 overflow-auto mb-3" style="max-height: calc(100vh - 440px); min-height: 280px;">
+<div class="row g-2" id="system32-cards-container">
+<div class="col-12 text-center py-5 text-muted">
+<div class="spinner-border spinner-border-sm text-primary me-2"></div>
+<span>Загрузка каталога штатных средств Windows...</span>
+</div>
+</div>
+</div>
+<!-- Bottom AI Command Execution & Interpretation Panel (Identical in Style to tab-scenarios) -->
+<div class="card border-primary border-opacity-50 shadow-lg mt-auto flex-shrink-0" data-panel-id="panel-system32-commands-ekspress-komandy-svobodnym-tek" id="panel-system32-commands-ekspress-komandy-svobodnym-tek">
+<!-- Quick Prompts / Pills -->
+<div class="p-2 border-bottom border-secondary-subtle bg-body-secondary bg-opacity-50">
+<div class="d-flex align-items-center justify-content-between mb-1">
+<span class="small text-muted fw-semibold" style="font-size: 0.75rem;">⚡ Экспресс-команды свободным текстом:</span>
+<span class="text-muted small" style="font-size: 0.72rem;">Модель подберет программу и сформирует точный синтаксис</span>
+</div>
+<div class="d-flex flex-wrap gap-1" id="system32-quick-prompts">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Проверь статус TRIM для SSD">
           🔍 Проверить статус TRIM для SSD
         </button>
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Очисти локальный кэш сопоставителя DNS">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Очисти локальный кэш сопоставителя DNS">
           🌐 Сбросить кэш DNS (flushdns)
         </button>
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Покажи все активные сетевые порты и PID процессов">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Покажи все активные сетевые порты и PID процессов">
           📊 Активные сетевые порты (netstat)
         </button>
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Проверь статус шифрования BitLocker на дисках">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Проверь статус шифрования BitLocker на дисках">
           🛡️ Статус шифрования BitLocker
         </button>
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Покажи активные сессии ETW трассировки">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Покажи активные сессии ETW трассировки">
           ⏱️ Активные ETW сессии (logman)
         </button>
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Покажи метаданные NTFS USN Journal тома C">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Покажи метаданные NTFS USN Journal тома C">
           📜 NTFS USN Journal
         </button>
-        <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Кто текущий пользователь и какие у него привилегии">
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-cmd-pill" data-prompt="Кто текущий пользователь и какие у него привилегии">
           👤 Кто я и мои привилегии (whoami)
         </button>
-      </div>
-    </div>
-
-    <!-- Live Execution Results Console (Shown on run) -->
-    <div class="p-3 border-bottom border-secondary-subtle bg-dark text-white" id="ai-command-result-box" style="display: none;">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <div class="d-flex align-items-center gap-2">
-          <span class="fs-5" id="res-status-icon">🧠</span>
-          <div>
-            <span class="fw-bold text-info" id="res-tool-name">...</span>
-            <span class="badge bg-secondary ms-2" id="res-tier-badge">OBSERVE</span>
-            <span class="badge bg-danger ms-1" id="res-danger-badge" style="display: none;">HIGH</span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="text-muted small" id="res-duration-badge">0 ms</span>
-          <button class="btn btn-outline-light btn-sm py-0 px-2" id="btn-copy-command-output" title="Скопировать вывод">
-            <i class="bi bi-clipboard me-1"></i>Копировать
+</div>
+</div>
+<!-- Live Execution Results Console (Shown on run) -->
+<div class="p-3 border-bottom border-secondary-subtle bg-dark text-white" id="ai-command-result-box" style="display: none;">
+<div class="d-flex align-items-center justify-content-between mb-2">
+<div class="d-flex align-items-center gap-2">
+<span class="fs-5" id="res-status-icon">🧠</span>
+<div>
+<span class="fw-bold text-info" id="res-tool-name">...</span>
+<span class="badge bg-secondary ms-2" id="res-tier-badge">OBSERVE</span>
+<span class="badge bg-danger ms-1" id="res-danger-badge" style="display: none;">HIGH</span>
+</div>
+</div>
+<div class="d-flex align-items-center gap-2">
+<span class="text-muted small" id="res-duration-badge">0 ms</span>
+<button class="btn btn-outline-light btn-sm py-0 px-2" id="btn-copy-command-output" title="Скопировать вывод">
+<i class="bi bi-clipboard me-1"></i>Копировать
           </button>
-          <button class="btn btn-outline-danger btn-sm py-0 px-1.5" id="btn-close-result-box" title="Закрыть панель">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="mb-2 small text-light bg-secondary bg-opacity-25 p-2 rounded">
-        <div><strong>💡 Сформированная команда:</strong> <code class="text-warning" id="res-cmd-line">...</code></div>
-        <div class="mt-1"><strong>📖 Назначение:</strong> <span id="res-explanation">...</span></div>
-        <div class="mt-1 d-flex gap-3 flex-wrap text-muted" style="font-size: 0.75rem;">
-          <span id="res-ps-equiv"></span>
-          <span id="res-win32-equiv"></span>
-        </div>
-      </div>
-
-      <!-- Output Console -->
-      <pre class="p-2 bg-black rounded text-success small mb-0 font-monospace" style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;" id="res-output-pre">Ожидание выполнения...</pre>
-    </div>
-
-    <!-- Bottom Input Form -->
-    <div class="p-2">
-      <form id="system32-ai-cmd-form" class="d-flex flex-column gap-2">
-        <div class="input-group">
-          <span class="input-group-text bg-primary text-white"><i class="bi bi-terminal-fill"></i></span>
-          <input type="text" class="form-control form-control-lg fs-6" id="system32-cmd-input" placeholder="Введите задачу свободным текстом (например: 'проверь статус trim для ssd', 'покажи порты netstat', 'сбрось кэш dns')..." autocomplete="off">
-          <button class="btn btn-primary d-flex align-items-center gap-2 px-3 fw-semibold" type="submit" id="btn-system32-cmd-send">
-            <span>Подобрать и запустить</span>
-            <i class="bi bi-play-circle-fill"></i>
-          </button>
-        </div>
-
-        <div class="d-flex align-items-center justify-content-between px-1 flex-wrap gap-2">
-          <span class="text-muted small" id="ai-cmd-status-indicator">Готов к приему команд</span>
-          <div class="d-flex align-items-center gap-3">
-            <div class="form-check form-switch m-0 d-flex align-items-center gap-1">
-              <input class="form-check-input mt-0" type="checkbox" role="switch" id="check-cmd-dry-run">
-              <label class="form-check-label text-muted user-select-none small" for="check-cmd-dry-run" title="Только симулировать и показать подобранную команду">
+<button class="btn btn-outline-danger btn-sm py-0 px-1.5" id="btn-close-result-box" title="Закрыть панель">
+<i class="bi bi-x"></i>
+</button>
+</div>
+</div>
+<div class="mb-2 small text-light bg-secondary bg-opacity-25 p-2 rounded">
+<div><strong>💡 Сформированная команда:</strong> <code class="text-warning" id="res-cmd-line">...</code></div>
+<div class="mt-1"><strong>📖 Назначение:</strong> <span id="res-explanation">...</span></div>
+<div class="mt-1 d-flex gap-3 flex-wrap text-muted" style="font-size: 0.75rem;">
+<span id="res-ps-equiv"></span>
+<span id="res-win32-equiv"></span>
+</div>
+</div>
+<!-- Output Console -->
+<pre class="p-2 bg-black rounded text-success small mb-0 font-monospace" id="res-output-pre" style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;">Ожидание выполнения...</pre>
+</div>
+<!-- Bottom Input Form -->
+<div class="p-2">
+<form class="d-flex flex-column gap-2" id="system32-ai-cmd-form">
+<div class="input-group">
+<span class="input-group-text bg-primary text-white"><i class="bi bi-terminal-fill"></i></span>
+<input autocomplete="off" class="form-control form-control-lg fs-6" id="system32-cmd-input" placeholder="Введите задачу свободным текстом (например: 'проверь статус trim для ssd', 'покажи порты netstat', 'сбрось кэш dns')..." type="text"/>
+<button class="btn btn-primary d-flex align-items-center gap-2 px-3 fw-semibold" id="btn-system32-cmd-send" type="submit">
+<span>Подобрать и запустить</span>
+<i class="bi bi-play-circle-fill"></i>
+</button>
+</div>
+<div class="d-flex align-items-center justify-content-between px-1 flex-wrap gap-2">
+<span class="text-muted small" id="ai-cmd-status-indicator">Готов к приему команд</span>
+<div class="d-flex align-items-center gap-3">
+<div class="form-check form-switch m-0 d-flex align-items-center gap-1">
+<input class="form-check-input mt-0" id="check-cmd-dry-run" role="switch" type="checkbox"/>
+<label class="form-check-label text-muted user-select-none small" for="check-cmd-dry-run" title="Только симулировать и показать подобранную команду">
                 Симуляция (Dry-Run)
               </label>
-            </div>
-            <div class="form-check form-switch m-0 d-flex align-items-center gap-1">
-              <input class="form-check-input mt-0" type="checkbox" role="switch" id="check-cmd-confirm-admin" checked>
-              <label class="form-check-label text-muted user-select-none small" for="check-cmd-confirm-admin" title="Защита SafeOps: запрашивать подтверждение для HIGH/CRITICAL">
+</div>
+<div class="form-check form-switch m-0 d-flex align-items-center gap-1">
+<input checked="" class="form-check-input mt-0" id="check-cmd-confirm-admin" role="switch" type="checkbox"/>
+<label class="form-check-label text-muted user-select-none small" for="check-cmd-confirm-admin" title="Защита SafeOps: запрашивать подтверждение для HIGH/CRITICAL">
                 Подтверждать опасные операции
               </label>
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
-
-  </div>
-
-  <!-- Tool Details Modal -->
-  <div class="modal fade" id="toolDetailsModal" tabindex="-1" aria-labelledby="toolDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header py-2 px-3">
-          <h6 class="modal-title fw-bold d-flex align-items-center gap-2" id="toolDetailsModalLabel">
-            <span class="fs-5" id="modal-tool-icon">🛠️</span>
-            <span id="modal-tool-title">Сведения об инструменте</span>
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-        </div>
-        <div class="modal-body p-3" id="modal-tool-body">
-          <!-- Populated dynamically -->
-        </div>
-        <div class="modal-footer py-2 px-3">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
-          <button type="button" class="btn btn-primary btn-sm" id="btn-modal-paste-command">Вставить команду в пульт</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Host Inventory Modal -->
-  <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header py-2 px-3">
-          <h6 class="modal-title fw-bold" id="inventoryModalLabel">📂 Инвентарь файлов %SystemRoot%\System32</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-        </div>
-        <div class="modal-body p-3" id="modal-inventory-body">
-          <div class="text-center py-4 text-muted">
-            <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
-            <div>Сверка с файловой системой хоста...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Architecture & Usage Guide Modal -->
-  <div class="modal fade" id="guideModal" tabindex="-1" aria-labelledby="guideModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header py-2 px-3">
-          <h6 class="modal-title fw-bold" id="guideModalLabel">📖 Руководство по штатным средствам Windows 10/11</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-        </div>
-        <div class="modal-body p-3">
-          <h6>🏛️ 1. Слои Windows Control Plane</h6>
-          <p class="small text-muted">
+</div>
+</div>
+</div>
+</form>
+</div>
+</div>
+<!-- Tool Details Modal -->
+<div aria-hidden="true" aria-labelledby="toolDetailsModalLabel" class="modal fade" id="toolDetailsModal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header py-2 px-3">
+<h6 class="modal-title fw-bold d-flex align-items-center gap-2" id="toolDetailsModalLabel">
+<span class="fs-5" id="modal-tool-icon">🛠️</span>
+<span id="modal-tool-title">Сведения об инструменте</span>
+</h6>
+<button aria-label="Закрыть" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-3" id="modal-tool-body">
+<!-- Populated dynamically -->
+</div>
+<div class="modal-footer py-2 px-3">
+<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal" type="button">Закрыть</button>
+<button class="btn btn-primary btn-sm" id="btn-modal-paste-command" type="button">Вставить команду в пульт</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Host Inventory Modal -->
+<div aria-hidden="true" aria-labelledby="inventoryModalLabel" class="modal fade" id="inventoryModal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header py-2 px-3">
+<h6 class="modal-title fw-bold" id="inventoryModalLabel">📂 Инвентарь файлов %SystemRoot%\System32</h6>
+<button aria-label="Закрыть" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-3" id="modal-inventory-body">
+<div class="text-center py-4 text-muted">
+<div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+<div>Сверка с файловой системой хоста...</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Architecture & Usage Guide Modal -->
+<div aria-hidden="true" aria-labelledby="guideModalLabel" class="modal fade" id="guideModal" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header py-2 px-3">
+<h6 class="modal-title fw-bold" id="guideModalLabel">📖 Руководство по штатным средствам Windows 10/11</h6>
+<button aria-label="Закрыть" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-3">
+<h6>🏛️ 1. Слои Windows Control Plane</h6>
+<p class="small text-muted">
             Каждая операция в Windows может выполняться не только через <code>System32/*.exe</code>, но и через соответствующие эквиваленты:
             PowerShell Cmdlets, WMI/CIM классы, COM интерфейсы, прямые вызовы Win32 API в системных DLL, события ETW и каналы Windows Event Log.
           </p>
-
-          <h6 class="mt-3">🎯 2. Градация AITelemetry Tiers</h6>
-          <ul class="small text-muted">
-            <li><strong>🟢 OBSERVE:</strong> Безопасное считывание телеметрии (<code>systeminfo</code>, <code>tasklist</code>, <code>netstat</code>, <code>fsutil usn</code>, <code>logman query</code>, <code>whoami</code>).</li>
-            <li><strong>🟡 DIAGNOSE:</strong> Трассировка, диагностика задержек, сетевые снифферы (<code>ping</code>, <code>tracert</code>, <code>pathping</code>, <code>pktmon</code>, <code>sxstrace</code>).</li>
-            <li><strong>🟠 CONTROL:</strong> Управление службами, расписанием, некритичными параметрами (<code>sc start/stop</code>, <code>schtasks /run</code>, <code>tzutil</code>).</li>
-            <li><strong>🔴 ADMIN:</strong> Изменение конфигурации системы, брандмауэра, политик безопасности (<code>reg add</code>, <code>sc config</code>, <code>netsh advfirewall</code>, <code>dism</code>).</li>
-            <li><strong>🔴🔴 DESTRUCTIVE:</strong> Деструктивные операции (<code>diskpart clean/format</code>, <code>format.com</code>, <code>bcdedit /delete</code>).</li>
-            <li><strong>🛡️ RECOVERY:</strong> Среда восстановления и ремонт ОС (<code>reagentc</code>, <code>bcdboot</code>, <code>bootrec</code>, <code>wbadmin</code>, <code>sfc</code>).</li>
-          </ul>
-
-          <h6 class="mt-3">⏱️ 3. Сквозной конвейер ETW</h6>
-          <p class="small text-muted">
-            <code>Sensors → ETW / Performance Counters (logman, pktmon, typeperf) → AITelemetry Pipeline → SQLite (telemetry.db)</code>
-          </p>
-
-          <h6 class="mt-3">📜 4. Наблюдение через NTFS USN Journal</h6>
-          <p class="small text-muted">
+<h6 class="mt-3">🎯 2. Градация AITelemetry Tiers</h6>
+<ul class="small text-muted">
+<li><strong>🟢 OBSERVE:</strong> Безопасное считывание телеметрии (<code>systeminfo</code>, <code>tasklist</code>, <code>netstat</code>, <code>fsutil usn</code>, <code>logman query</code>, <code>whoami</code>).</li>
+<li><strong>🟡 DIAGNOSE:</strong> Трассировка, диагностика задержек, сетевые снифферы (<code>ping</code>, <code>tracert</code>, <code>pathping</code>, <code>pktmon</code>, <code>sxstrace</code>).</li>
+<li><strong>🟠 CONTROL:</strong> Управление службами, расписанием, некритичными параметрами (<code>sc start/stop</code>, <code>schtasks /run</code>, <code>tzutil</code>).</li>
+<li><strong>🔴 ADMIN:</strong> Изменение конфигурации системы, брандмауэра, политик безопасности (<code>reg add</code>, <code>sc config</code>, <code>netsh advfirewall</code>, <code>dism</code>).</li>
+<li><strong>🔴🔴 DESTRUCTIVE:</strong> Деструктивные операции (<code>diskpart clean/format</code>, <code>format.com</code>, <code>bcdedit /delete</code>).</li>
+<li><strong>🛡️ RECOVERY:</strong> Среда восстановления и ремонт ОС (<code>reagentc</code>, <code>bcdboot</code>, <code>bootrec</code>, <code>wbadmin</code>, <code>sfc</code>).</li>
+</ul>
+<h6 class="mt-3">⏱️ 3. Сквозной конвейер ETW</h6>
+<p class="small text-muted">
+<code>Sensors → ETW / Performance Counters (logman, pktmon, typeperf) → AITelemetry Pipeline → SQLite (telemetry.db)</code>
+</p>
+<h6 class="mt-3">📜 4. Наблюдение через NTFS USN Journal</h6>
+<p class="small text-muted">
             Команда <code>fsutil usn queryjournal C:</code> позволяет отслеживать изменения файлов в реальном времени без ресурсоемкого сканирования всего диска.
           </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
+</div>
+</div>
+</div>
+</div>
 </div>

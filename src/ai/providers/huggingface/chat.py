@@ -18,7 +18,7 @@
 # Package: src.ai.providers.huggingface
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:36:00
 # =============================================================================
 
 """HuggingFace local model cache and chat client.
@@ -31,6 +31,7 @@ import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List
 from logger import logger
+from src.config import is_debug_mode
 
 def _get_models_dir() -> Path:
     """Get HuggingFace model cache directory.
@@ -220,6 +221,8 @@ class HFClient:
             return {'success': True, 'content': content, 'model': model_id}
         except Exception as e:
             logger.error(f'[HFClient] Error inferencing model {model_id}: {e}')
+            if is_debug_mode():
+                raise
             return {'success': False, 'error': str(e)}
 
     def list_downloaded(self) -> List[Dict[str, Any]]:

@@ -26,7 +26,7 @@ from src.ai.agents.windows_tools.task_scheduler import (
     windows_task_scheduler_audit,
     windows_task_scheduler_action,
 )
-from apps.windows.modules.task_scheduler.core.models import ScheduledTaskItem, TaskSchedulerReport
+from apps.windows.sdk.modules.task_scheduler.core.models import ScheduledTaskItem, TaskSchedulerReport
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -53,7 +53,7 @@ def mock_tasks():
 @pytest.mark.asyncio
 async def test_windows_task_scheduler_audit_list(mock_tasks):
     """Тестирование получения списка задач планировщика."""
-    with patch("apps.windows.modules.task_scheduler.core.manager.TaskSchedulerManager.list_tasks", return_value=mock_tasks):
+    with patch("apps.windows.sdk.modules.task_scheduler.core.manager.TaskSchedulerManager.list_tasks", return_value=mock_tasks):
         res_raw = await call_tool(windows_task_scheduler_audit, action="list")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

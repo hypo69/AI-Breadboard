@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой персонализации и оформления Windows
-#   (apps.windows.modules.personalization).
+#   (apps.windows.sdk.modules.personalization).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Обзор оформления и списка тем Windows (windows_personalization_overview)
 #     2. Применение тем и переключение темного режима/акцентного цвета (windows_personalization_theme_action)
@@ -98,7 +98,7 @@ async def windows_personalization_overview(
         JSON с параметрами оформления или списком доступных тем Windows.
     """
     try:
-        from apps.windows.modules.personalization.manager import get_personalization_manager
+        from apps.windows.sdk.modules.personalization.manager import get_personalization_manager
 
         pm = get_personalization_manager()
         loop = asyncio.get_running_loop()
@@ -140,8 +140,8 @@ async def windows_personalization_theme_action(
         JSON с результатом применения темы оформления.
     """
     try:
-        from apps.windows.modules.personalization.manager import get_personalization_manager
-        from apps.windows.modules.personalization.models import ThemeApplyRequest
+        from apps.windows.sdk.modules.personalization.manager import get_personalization_manager
+        from apps.windows.sdk.modules.personalization.models import ThemeApplyRequest
 
         pm = get_personalization_manager()
         loop = asyncio.get_running_loop()
@@ -191,8 +191,8 @@ async def windows_personalization_cursor_wallpaper(
         JSON с обновившимися параметрами курсора или обоев рабочего стола.
     """
     try:
-        from apps.windows.modules.personalization.manager import get_personalization_manager
-        from apps.windows.modules.personalization.models import (
+        from apps.windows.sdk.modules.personalization.manager import get_personalization_manager
+        from apps.windows.sdk.modules.personalization.models import (
             CursorColorScheme,
             CursorUpdateRequest,
             WallpaperFitMode,

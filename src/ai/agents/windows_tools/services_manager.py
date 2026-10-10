@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого аудита, поиска и управления службами Windows
-#   (apps.windows.modules.services_manager).
+#   (apps.windows.sdk.modules.services_manager).
 #   Включают:
 #     1. Инспекцию списка служб Windows, статусов и фильтрацию (windows_services_list)
 #     2. Управление состоянием служб (запуск, остановка, перезапуск) SafeOps (windows_services_action)
@@ -105,7 +105,7 @@ async def windows_services_list(
         JSON со списком или сводным отчетом по службам Windows.
     """
     try:
-        from apps.windows.modules.services_manager.core.manager import ServicesManager
+        from apps.windows.sdk.modules.services_manager.core.manager import ServicesManager
 
         sm = ServicesManager()
         loop = asyncio.get_running_loop()
@@ -168,8 +168,8 @@ async def windows_services_action(
         JSON с результатом выполнения операции над службой.
     """
     try:
-        from apps.windows.modules.services_manager.core.manager import ServicesManager
-        from apps.windows.modules.services_manager.core.models import ServiceActionRequest
+        from apps.windows.sdk.modules.services_manager.core.manager import ServicesManager
+        from apps.windows.sdk.modules.services_manager.core.models import ServiceActionRequest
 
         sm = ServicesManager()
         req = ServiceActionRequest(

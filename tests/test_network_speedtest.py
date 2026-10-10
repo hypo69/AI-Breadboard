@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.windows.modules.network.speedtest import NetworkSpeedTester
+from apps.windows.sdk.modules.network.speedtest import NetworkSpeedTester
 from apps.windows.telemetry.internet_speed import InternetSpeedSensor, get_internet_speed_sensors
 
 

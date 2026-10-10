@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой Microsoft Defender & AI Security
-#   (apps.windows.modules.defender).
+#   (apps.windows.sdk.modules.defender).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Мониторинг защиты, сканирование и обновление сигнатур (Status & Scan)
 #     2. Аудит ASR правил, эвристика исключений и история угроз (Audit Security)
@@ -98,7 +98,7 @@ async def windows_defender_status_scan(
         JSON со статусом защиты, результатами сканирования или обновления.
     """
     try:
-        from apps.windows.modules.defender.core.defender_service import DefenderService
+        from apps.windows.sdk.modules.defender.core.defender_service import DefenderService
 
         srv = DefenderService()
         loop = asyncio.get_running_loop()
@@ -141,9 +141,9 @@ async def windows_defender_audit_security(
         JSON с результатами аудита подсистем безопасности Defender.
     """
     try:
-        from apps.windows.modules.defender.core.asr_manager import ASRManager
-        from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
-        from apps.windows.modules.defender.core.threat_manager import ThreatManager
+        from apps.windows.sdk.modules.defender.core.asr_manager import ASRManager
+        from apps.windows.sdk.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+        from apps.windows.sdk.modules.defender.core.threat_manager import ThreatManager
 
         loop = asyncio.get_running_loop()
         m = mode.strip().lower()
@@ -178,7 +178,7 @@ async def windows_defender_ai_diagnostics() -> str:
         JSON со сводным индексом защищенности, приоритизированными уязвимостями и списком рекомендаций.
     """
     try:
-        from apps.windows.modules.defender.core.ai_diagnostician import AIDiagnostician
+        from apps.windows.sdk.modules.defender.core.ai_diagnostician import AIDiagnostician
 
         diag = AIDiagnostician()
         loop = asyncio.get_running_loop()

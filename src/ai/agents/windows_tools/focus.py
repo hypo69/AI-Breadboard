@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой управления фокусировкой Windows Focus Policy
-#   (apps.windows.modules.focus_policy).
+#   (apps.windows.sdk.modules.focus_policy).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Инспекция состояния и профилей фокусировки (windows_focus_status_profiles)
 #     2. Запуск и остановка фокус-сессий по протоколу SafeOps (windows_focus_session_action)
@@ -107,8 +107,8 @@ async def windows_focus_status_profiles(
         JSON с состоянием движка, списком или запрошенным профилем.
     """
     try:
-        from apps.windows.modules.focus_policy.controller import WindowsFocusController
-        from apps.windows.modules.focus_policy.models import FocusProfile, FocusSchedule
+        from apps.windows.sdk.modules.focus_policy.controller import WindowsFocusController
+        from apps.windows.sdk.modules.focus_policy.models import FocusProfile, FocusSchedule
 
         ctrl = WindowsFocusController()
         loop = asyncio.get_running_loop()
@@ -167,7 +167,7 @@ async def windows_focus_session_action(
         JSON с идентификатором сессии или итоговой сводкой SessionSummary.
     """
     try:
-        from apps.windows.modules.focus_policy.controller import WindowsFocusController
+        from apps.windows.sdk.modules.focus_policy.controller import WindowsFocusController
 
         ctrl = WindowsFocusController()
         loop = asyncio.get_running_loop()
@@ -218,7 +218,7 @@ async def windows_focus_notifications(
         JSON с количеством подавленных уведомлений, списком из архива или статусом прав WinRT.
     """
     try:
-        from apps.windows.modules.focus_policy.controller import WindowsFocusController
+        from apps.windows.sdk.modules.focus_policy.controller import WindowsFocusController
 
         ctrl = WindowsFocusController()
         loop = asyncio.get_running_loop()

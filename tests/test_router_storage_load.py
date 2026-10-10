@@ -26,7 +26,7 @@ from apps.windows.api.routers.router_storage_load import (
     DiskDriveMetric,
     DiskPartitionMetric,
 )
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo
+from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo
 
 
 def test_build_storage_load_with_physical_and_lhm():

@@ -26,7 +26,7 @@ from src.ai.agents.windows_tools.taskbar import (
     windows_taskbar_audit,
     windows_taskbar_action,
 )
-from apps.windows.modules.taskbar.core.models import TaskbarSummaryReport, TaskbarSettings, WindowItem
+from apps.windows.sdk.modules.taskbar.core.models import TaskbarSummaryReport, TaskbarSettings, WindowItem
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -61,7 +61,7 @@ def mock_summary():
 @pytest.mark.asyncio
 async def test_windows_taskbar_audit_summary(mock_summary):
     """Тестирование получения сводки панели задач."""
-    with patch("apps.windows.modules.taskbar.core.manager.TaskbarController.get_summary", return_value=mock_summary):
+    with patch("apps.windows.sdk.modules.taskbar.core.manager.TaskbarController.get_summary", return_value=mock_summary):
         res_raw = await call_tool(windows_taskbar_audit, action="summary")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

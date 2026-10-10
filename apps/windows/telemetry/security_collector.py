@@ -20,11 +20,11 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:15:00
+# Updated: 2026-10-10 05:40:00
 # =============================================================================
 
 from __future__ import annotations
-"""Коллектор событий журнала безопасности Windows Security Event Log."""
+"""Коллектор событий журнала безопасности Windows Security Event Log и Microsoft Defender."""
 
 import os
 import sys
@@ -80,9 +80,38 @@ DEFAULT_SECURITY_EVENT_IDS: List[int] = [
     1102,  # Очищен Security log
 ]
 
+DEFENDER_CHANNEL: str = 'Microsoft-Windows-Windows Defender/Operational'
+
+DEFAULT_DEFENDER_EVENT_IDS: List[int] = [
+    1000,  # Запуск сканирования
+    1001,  # Завершение сканирования
+    1002,  # Отмена сканирования
+    1005,  # Пауза сканирования
+    1013,  # Очистка истории угроз
+    1116,  # Обнаружение вредоносной программы / угрозы
+    1117,  # Выполнение действия по угрозе (Quarantine/Clean/Block)
+    1118,  # Сбой действия по угрозе
+    1119,  # Критическая ошибка
+    1121,  # Блокировка CFA (Controlled Folder Access)
+    1122,  # Аудит CFA
+    1123,  # Блокировка ASR (Attack Surface Reduction)
+    1124,  # Аудит ASR
+    1127,  # Блокировка Network Protection
+    1128,  # Аудит Network Protection
+    1150,  # Служба защиты работает штатно (Healthy)
+    1151,  # Отчет о работоспособности компонентов
+    2000,  # Обновление сигнатур успешно
+    2001,  # Ошибка обновления сигнатур
+    2010,  # Облачная защита/аналитика
+    5000,  # Включение защиты в реальном времени
+    5001,  # Отключение защиты в реальном времени
+    5004,  # Изменение конфигурации
+    5007,  # Изменение параметров защиты
+]
+
 
 class WindowsSecurityCollector:
-    """Инкрементальный сборщик событий журнала безопасности Windows (Security.evtx)."""
+    """Инкрементальный сборщик событий безопасности Windows (Security.evtx и Defender Operational)."""
 
     def __init__(
         self,
@@ -141,13 +170,23 @@ class WindowsSecurityCollector:
             total_ingested_events=total_ingested,
         )
 
-    def _build_xpath_query(self, event_ids: Optional[List[int]] = None) -> str:
-        """Построить эффективный XPath фильтр для выборки только целевых Event ID.
+    def _build_xpath_query(
+        self,
+        channel: str = 'Security',
+        event_ids: Optional[List[int]] = None,
+    ) -> str:
+        """Построить эффективный XPath фильтр для выборки целевых Event ID.
 
         Предотвращает переполнение предиката Win32 WevtAPI (код 15001) при длинных списках,
         используя диапазонную фильтрацию.
         """
         if event_ids is None:
+            if 'Defender' in channel:
+                return (
+                    '*[System[((EventID >= 1000 and EventID <= 1160) or '
+                    '(EventID >= 2000 and EventID <= 2020) or '
+                    '(EventID >= 5000 and EventID <= 5020))]]'
+                )
             # Стандартный диапазон охватывает все ключевые события аудита безопасности (4624-4776 + 1102)
             return '*[System[(EventID >= 4624 and EventID <= 4776) or EventID=1102]]'
         if not event_ids:
@@ -161,14 +200,16 @@ class WindowsSecurityCollector:
 
     def collect_incremental(
         self,
+        channel: str = 'Security',
         batch_size: int = 500,
         max_records: int = 5000,
         filter_event_ids: Optional[List[int]] = None,
         save_raw: bool = False,
     ) -> SecurityCollectorReport:
-        """Выполнить инкрементальный сбор новых событий из журнала Security.
+        """Выполнить инкрементальный сбор новых событий из указанного журнала (Security или Defender).
 
         Args:
+            channel: Имя канала ('Security' или 'Microsoft-Windows-Windows Defender/Operational').
             batch_size: Размер порции за один вызов EvtNext.
             max_records: Максимальное количество событий для сбора за один вызов.
             filter_event_ids: Список опрашиваемых Event ID или None для дефолтного набора.
@@ -177,22 +218,22 @@ class WindowsSecurityCollector:
         Returns:
             SecurityCollectorReport: Отчет о результатах сбора.
         """
-        report = SecurityCollectorReport(channel='Security')
+        report = SecurityCollectorReport(channel=channel)
 
         # Проверка доступа к журналу
-        access_info = self.wevtapi.check_channel_access('Security')
+        access_info = self.wevtapi.check_channel_access(channel)
         if not access_info.get('accessible', False):
-            err = access_info.get('error') or 'Доступ к Security.evtx запрещен'
+            err = access_info.get('error') or f'Доступ к каналу {channel} запрещен'
             report.errors.append(err)
             logger.warning(f'[SecurityCollector] {err}')
             return report
 
         # Загрузка сохраненной закладки
-        bm_dict = self.storage.get_security_bookmark('Security') if self.storage else None
+        bm_dict = self.storage.get_security_bookmark(channel) if self.storage else None
         bookmark_xml = bm_dict.get('bookmark_xml') if bm_dict else None
         last_saved_record_id = bm_dict.get('last_record_id', 0) if bm_dict else 0
 
-        xpath = self._build_xpath_query(filter_event_ids)
+        xpath = self._build_xpath_query(channel=channel, event_ids=filter_event_ids)
         collected_items: List[SecurityEventItem] = []
         collected_raw: List[SecurityEventRaw] = []
         events_by_id: Dict[int, int] = {}
@@ -204,7 +245,7 @@ class WindowsSecurityCollector:
         if not bookmark_xml:
             tail_limit = min(batch_size, max_records)
             events_raw, init_bm, highest_rec_id = self.wevtapi.read_events_incremental(
-                channel='Security',
+                channel=channel,
                 query_xpath=xpath,
                 bookmark_xml=None,
                 batch_size=tail_limit,
@@ -232,7 +273,7 @@ class WindowsSecurityCollector:
                 self.storage.save_security_events(collected_items, save_raw=save_raw, raw_events=collected_raw)
                 if bookmark_xml:
                     self.storage.save_security_bookmark(
-                        channel='Security',
+                        channel=channel,
                         last_record_id=max_record_id,
                         bookmark_xml=bookmark_xml,
                         last_timestamp=latest_timestamp,
@@ -243,7 +284,7 @@ class WindowsSecurityCollector:
         while total_fetched < max_records and bookmark_xml:
             cur_batch_limit = min(batch_size, max_records - total_fetched)
             events_raw, new_bookmark_xml, highest_rec_id = self.wevtapi.read_events_incremental(
-                channel='Security',
+                channel=channel,
                 query_xpath=xpath,
                 bookmark_xml=bookmark_xml,
                 batch_size=cur_batch_limit,
@@ -277,7 +318,7 @@ class WindowsSecurityCollector:
                 self.storage.save_security_events(batch_items, save_raw=save_raw, raw_events=batch_raw)
                 if new_bookmark_xml:
                     self.storage.save_security_bookmark(
-                        channel='Security',
+                        channel=channel,
                         last_record_id=max_record_id,
                         bookmark_xml=new_bookmark_xml,
                         last_timestamp=latest_timestamp,
@@ -301,16 +342,75 @@ class WindowsSecurityCollector:
         report.events = collected_items[:100]  # Ограничиваем возвращаемый срез в отчете
 
         logger.info(
-            f'[SecurityCollector] Инкрементально собрано {len(collected_items)} событий Security. '
+            f'[SecurityCollector] Инкрементально собрано {len(collected_items)} событий канала {channel}. '
             f'Последний RecordID: {max_record_id}'
         )
         return report
+
+    def collect_defender_events(
+        self,
+        batch_size: int = 200,
+        max_records: int = 2000,
+        filter_event_ids: Optional[List[int]] = None,
+        save_raw: bool = False,
+    ) -> SecurityCollectorReport:
+        """Выполнить инкрементальный сбор новых событий Microsoft Defender (Defender/Operational).
+
+        Args:
+            batch_size: Размер порции за один вызов.
+            max_records: Максимальное число событий за запуск.
+            filter_event_ids: Опциональный список Event ID.
+            save_raw: Сохранять ли сырой XML.
+
+        Returns:
+            SecurityCollectorReport: Отчет с собранными событиями Defender.
+        """
+        return self.collect_incremental(
+            channel=DEFENDER_CHANNEL,
+            batch_size=batch_size,
+            max_records=max_records,
+            filter_event_ids=filter_event_ids,
+            save_raw=save_raw,
+        )
+
+    def collect_all_security_and_defender(
+        self,
+        batch_size: int = 500,
+        max_records: int = 2000,
+        save_raw: bool = False,
+    ) -> Dict[str, SecurityCollectorReport]:
+        """Инкрементально собрать события обоих журналов: Security и Defender.
+
+        Args:
+            batch_size: Размер выборки.
+            max_records: Лимит событий на канал.
+            save_raw: Сохранение сырого XML.
+
+        Returns:
+            Dict[str, SecurityCollectorReport]: Отчеты по каждому каналу.
+        """
+        sec_rep = self.collect_incremental(
+            channel='Security',
+            batch_size=batch_size,
+            max_records=max_records,
+            save_raw=save_raw,
+        )
+        def_rep = self.collect_defender_events(
+            batch_size=batch_size,
+            max_records=max_records,
+            save_raw=save_raw,
+        )
+        return {
+            'Security': sec_rep,
+            DEFENDER_CHANNEL: def_rep,
+        }
 
     def get_live_tail(
         self,
         limit: int = 20,
         event_id: Optional[int] = None,
         search: str = '',
+        channel: str = 'Security',
     ) -> List[SecurityEventItem]:
         """Получить самые свежие события безопасности в реальном времени (live tail).
 
@@ -318,12 +418,13 @@ class WindowsSecurityCollector:
             limit: Количество событий.
             event_id: Опциональный фильтр по Event ID.
             search: Поисковая подстрока.
+            channel: Канал ('Security' или DEFENDER_CHANNEL).
 
         Returns:
             List[SecurityEventItem]: Список нормализованных событий.
         """
         raw_events = self.wevtapi.read_events(
-            channel='Security',
+            channel=channel,
             limit=limit,
             event_id=event_id or 0,
             search=search,
@@ -334,6 +435,35 @@ class WindowsSecurityCollector:
             item, _ = self.normalizer.normalize_event(raw, extract_raw=False)
             items.append(item)
         return items
+
+    def subscribe_defender_stream(
+        self,
+        callback: Callable[[SecurityEventItem], None],
+        filter_event_ids: Optional[List[int]] = None,
+    ) -> Optional[Any]:
+        """Оформить потоковую подписку на входящие события Microsoft Defender.
+
+        Args:
+            callback: Функция обратного вызова при возникновении события.
+            filter_event_ids: Список Event ID для фильтрации.
+
+        Returns:
+            Optional[HANDLE]: Дескриптор подписки или None.
+        """
+        xpath = self._build_xpath_query(channel=DEFENDER_CHANNEL, event_ids=filter_event_ids)
+
+        def _on_event(raw_dict: Dict[str, Any]) -> None:
+            item, raw_item = self.normalizer.normalize_event(raw_dict, extract_raw=True)
+            if self.storage:
+                self.storage.save_security_events([item], save_raw=True, raw_events=[raw_item] if raw_item else None)
+            callback(item)
+
+        return self.wevtapi.subscribe_events(
+            channel=DEFENDER_CHANNEL,
+            query_xpath=xpath,
+            callback=_on_event,
+            start_at_oldest=False,
+        )
 
     def subscribe_stream(
         self,
@@ -486,4 +616,6 @@ class WindowsSecurityCollector:
 __all__ = [
     'WindowsSecurityCollector',
     'DEFAULT_SECURITY_EVENT_IDS',
+    'DEFAULT_DEFENDER_EVENT_IDS',
+    'DEFENDER_CHANNEL',
 ]

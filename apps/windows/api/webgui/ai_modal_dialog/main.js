@@ -4,20 +4,21 @@
  * =============================================================================
  * Description:
  *   Клиентский контроллер и интерфейс универсального всплывающего окна
- *   с ИИ-анализатором записей, WikiLLM-интеграцией и редактором промптов.
- *   Полная поддержка адаптивной темы оформления через CSS-токены.
+ *   с ИИ-анализатором записей, WikiLLM-интеграцией, прямым редактором системной
+ *   инструкции и привязкой к ID панели интерфейса.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/html/ai_modal_dialog/main.js?v=20261008_v3"></script>
+ *     <script src="/html/ai_modal_dialog/main.js?v=20261010_v2"></script>
  *
  *   JS Execution:
  *     window.AIModalDialog.show({
- *       title: 'nginx.exe',
- *       subtitle: 'PID: 1234',
- *       icon: '🌐',
- *       tableType: 'process',
- *       metadata: [{ label: 'Path', value: 'C:\\nginx\\nginx.exe' }]
+ *       title: 'Administrator',
+ *       subtitle: 'SID: S-1-5-21-...',
+ *       icon: '👤',
+ *       panelId: 'panel-winadmin-users',
+ *       tableType: 'user_account',
+ *       metadata: [{ label: 'SID', value: 'S-1-5-21-...' }]
  *     });
  *
  * File: main.js
@@ -25,16 +26,35 @@
  * Package: apps.windows.api.webgui.ai_modal_dialog
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 12:42:00
+ * Updated: 2026-10-10 11:45:00
  * =============================================================================
  */
 
 // Universal AI Modal Dialog Module for AI-Breadboard
-// Enables interactive row inspection, WikiLLM grounding, and AI contextual explanation.
+// Enables interactive row inspection, WikiLLM grounding, in-place system instruction editing, and AI contextual explanation.
 
 (function () {
   const MODAL_ID = 'universal-ai-table-modal';
   const PROMPT_MODAL_ID = 'universal-ai-prompt-editor-modal';
+
+  /**
+   * Нормализует строковый тип таблицы с учетом алиасов.
+   * @param {string} tType Тип таблицы
+   * @returns {string} Нормализованный ключ
+   */
+  function normalizeTableType(tType) {
+    if (!tType) return 'generic';
+    const low = String(tType).toLowerCase().trim();
+    if (low === 'user' || low === 'users' || low === 'account' || low === 'accounts') return 'user_account';
+    if (low === 'event' || low === 'events' || low === 'security') return 'security_event';
+    if (low === 'tasks') return 'task';
+    if (low === 'services') return 'service';
+    if (low === 'processes') return 'process';
+    if (low === 'disks') return 'disk';
+    if (low === 'apps' || low === 'app') return 'software';
+    if (low === 'autorun' || low === 'autoruns') return 'startup';
+    return low;
+  }
 
   /**
    * Гарантирует наличие DOM-элемента модального окна AI-анализатора.
@@ -71,6 +91,60 @@
                 <div class="small font-monospace uai-raw-content" id="uai-modal-raw-content" style="white-space: pre-wrap; word-break: break-all;"></div>
               </div>
 
+              <!-- System Instruction & Model Configuration Section -->
+              <div class="card p-3 mb-3 border-secondary-subtle uai-system-card" id="uai-modal-system-card">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fs-6 text-warning">🤖</span>
+                    <h6 class="fw-bold text-warning mb-0">Системная инструкция и конфигурация ИИ</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                    <span class="badge bg-secondary-subtle text-secondary border small" id="uai-modal-panel-badge" title="ID вызывающей панели">Панель: -</span>
+                    <span class="badge bg-secondary-subtle text-secondary border small" id="uai-modal-type-badge">Тип: -</span>
+                    <span class="badge border border-info text-info small" id="uai-modal-custom-badge" style="display: none;">Кастомная</span>
+                  </div>
+                </div>
+
+                <div class="row g-2 mb-2 align-items-center">
+                  <div class="col-sm-6">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text text-secondary small py-0">Провайдер</span>
+                      <select class="form-select form-select-sm" id="uai-modal-provider-select">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="openai">OpenAI / Compatible</option>
+                        <option value="ollama">Ollama Local</option>
+                        <option value="foundry">Foundry Local</option>
+                        <option value="windows_ai">Windows Copilot+ AI</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text text-secondary small py-0">Модель</span>
+                      <input type="text" class="form-control form-control-sm" id="uai-modal-model-input" placeholder="По умолчанию (из config.json)">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label small text-secondary fw-bold mb-0">Системная инструкция (System Instruction):</label>
+                    <div class="d-flex gap-1">
+                      <button type="button" class="btn btn-xs btn-outline-info py-0 px-2" id="btn-uai-modal-save-system" title="Сохранить измененную инструкцию для этой сущности">
+                        <i class="bi bi-floppy me-1"></i>Сохранить
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-uai-modal-reset-system" title="Сбросить к системной инструкции по умолчанию">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Сброс
+                      </button>
+                    </div>
+                  </div>
+                  <textarea class="form-control form-control-sm font-monospace" id="uai-modal-system-instruction" rows="3" placeholder="Роль эксперта, правила анализа и формат ответа для модели..."></textarea>
+                  <div class="d-flex justify-content-between align-items-center mt-1">
+                    <span class="text-secondary small" style="font-size: 0.72rem;" id="uai-modal-system-status">Инструкция передается при вызове модели и анализе</span>
+                  </div>
+                </div>
+              </div>
+
               <!-- AI Contextual Diagnostic Card -->
               <div class="card border-info p-3 uai-ai-section" id="uai-modal-ai-section">
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
@@ -81,7 +155,7 @@
                     </span>
                   </div>
                   <div class="d-flex align-items-center gap-1.5">
-                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить промпт для этого типа таблицы">
+                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить расширенный шаблон промпта">
                       <i class="bi bi-gear-fill me-1"></i>Промпт
                     </button>
                     <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ" style="display: none;">
@@ -105,6 +179,45 @@
   }
 
   /**
+   * Надежный унифицированный fetch для всех запросов модального окна с таймаутом.
+   * @param {string} url URL запроса
+   * @param {Object} opts Опции fetch
+   * @param {number} timeoutMs Таймаут в миллисекундах
+   * @returns {Promise<any>}
+   */
+  async function safeApiFetch(url, opts = {}, timeoutMs = 10000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const fetchOptions = Object.assign({}, opts, { signal: controller.signal });
+      const res = await window.fetch(url, fetchOptions);
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        let errMsg = `${res.status} ${res.statusText}`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.detail) {
+            errMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+          } else if (errData && errData.message) {
+            errMsg = errData.message;
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+
+      return await res.json();
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        throw new Error(`Превышено время ожидания ответа (${timeoutMs / 1000}с)`);
+      }
+      throw err;
+    }
+  }
+
+  /**
    * Экранирование HTML спецсимволов.
    * @param {string} str Входная строка
    * @returns {string} Экранированная строка
@@ -124,19 +237,27 @@
    * @param {Object} options Объект конфигурации диалога
    */
   function show(options) {
+    const rawType = options?.tableType || 'generic';
+    const normalizedType = normalizeTableType(rawType);
+    const panelId = options?.panelId || 'panel-root';
+
     const opts = Object.assign({
       title: 'Детали записи',
       subtitle: '',
       icon: '🔍',
+      panelId: panelId,
       badges: [],
       metadata: [],
       rawTitle: 'Данные / Путь',
       rawContent: '',
-      tableType: 'generic',
+      tableType: normalizedType,
+      model: '',
+      provider: 'gemini',
+      systemInstruction: '',
       requestData: {},
       autoRun: false,
       actions: []
-    }, options);
+    }, options, { tableType: normalizedType, panelId: panelId });
 
     const modalEl = ensureModalElement();
 
@@ -155,6 +276,22 @@
         return `<span class="${cls}">${escapeHtml(b.text)}</span>`;
       }).join('');
     }
+
+    // Panel & Type Badges in System Section
+    const panelBadge = document.getElementById('uai-modal-panel-badge');
+    const typeBadge = document.getElementById('uai-modal-type-badge');
+    const customBadge = document.getElementById('uai-modal-custom-badge');
+    const providerSelect = document.getElementById('uai-modal-provider-select');
+    const modelInput = document.getElementById('uai-modal-model-input');
+    const systemTextarea = document.getElementById('uai-modal-system-instruction');
+    const systemStatus = document.getElementById('uai-modal-system-status');
+    const saveSystemBtn = document.getElementById('btn-uai-modal-save-system');
+    const resetSystemBtn = document.getElementById('btn-uai-modal-reset-system');
+
+    if (panelBadge) panelBadge.textContent = `Панель: #${opts.panelId}`;
+    if (typeBadge) typeBadge.textContent = `Тип: ${opts.tableType}`;
+    if (providerSelect && opts.provider) providerSelect.value = opts.provider;
+    if (modelInput) modelInput.value = opts.model || '';
 
     // Metadata Grid
     const metaContainer = document.getElementById('uai-modal-metadata-grid');
@@ -193,6 +330,92 @@
       }
     }
 
+    // Загрузка системной инструкции для текущего типа / панели
+    let currentTemplateData = null;
+    async function loadSystemInstruction() {
+      try {
+        const data = await safeApiFetch(`/api/v1/diagnostics/prompts/${encodeURIComponent(opts.tableType)}`, {}, 4000);
+        if (data) {
+          currentTemplateData = data;
+          if (systemTextarea) {
+            systemTextarea.value = opts.systemInstruction || data.system_instruction || '';
+          }
+          if (customBadge) {
+            customBadge.style.display = data.is_customized ? 'inline-block' : 'none';
+          }
+          if (systemStatus) {
+            systemStatus.textContent = data.is_customized
+              ? 'Загружена пользовательская системная инструкция'
+              : `Стандартная системная инструкция: «${data.name || opts.tableType}»`;
+          }
+        }
+      } catch (e) {
+        console.warn('[AIModalDialog] Ошибка загрузки системной инструкции:', e);
+      }
+    }
+
+    loadSystemInstruction();
+
+    // Сохранение системной инструкции прямо из модального окна
+    if (saveSystemBtn) {
+      saveSystemBtn.onclick = async () => {
+        const instruction = systemTextarea ? systemTextarea.value : '';
+        try {
+          const promptTmpl = currentTemplateData?.prompt_template || '{title}\n{subtitle}\n{metadata}\n{raw_data}';
+          const name = currentTemplateData?.name || opts.tableType;
+
+          await safeApiFetch(`/api/v1/diagnostics/prompts/${encodeURIComponent(opts.tableType)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              table_type: opts.tableType,
+              name: name,
+              system_instruction: instruction,
+              prompt_template: promptTmpl
+            })
+          }, 6000);
+
+          if (customBadge) customBadge.style.display = 'inline-block';
+          if (systemStatus) {
+            systemStatus.textContent = 'Системная инструкция успешно сохранена!';
+            systemStatus.className = 'text-success small';
+            setTimeout(() => {
+              if (systemStatus) {
+                systemStatus.textContent = 'Пользовательская инструкция активна';
+                systemStatus.className = 'text-secondary small';
+              }
+            }, 3000);
+          }
+          if (window.showToast) window.showToast('Системная инструкция обновлена', 'success');
+        } catch (err) {
+          alert(`Ошибка сохранения инструкции: ${err.message}`);
+        }
+      };
+    }
+
+    // Сброс системной инструкции к дефолтной
+    if (resetSystemBtn) {
+      resetSystemBtn.onclick = async () => {
+        if (!confirm(`Сбросить системную инструкцию для «${opts.tableType}» к значению по умолчанию?`)) return;
+        try {
+          const data = await safeApiFetch(`/api/v1/diagnostics/prompts/${encodeURIComponent(opts.tableType)}/reset`, {
+            method: 'POST'
+          }, 6000);
+          if (data) {
+            currentTemplateData = data;
+            if (systemTextarea) systemTextarea.value = data.system_instruction || '';
+            if (customBadge) customBadge.style.display = 'none';
+            if (systemStatus) {
+              systemStatus.textContent = 'Инструкция сброшена к системной по умолчанию';
+              systemStatus.className = 'text-info small';
+            }
+          }
+        } catch (err) {
+          alert(`Ошибка сброса инструкции: ${err.message}`);
+        }
+      };
+    }
+
     const refreshBtn = document.getElementById('btn-uai-modal-refresh');
     if (refreshBtn) {
       refreshBtn.style.display = 'none';
@@ -210,7 +433,7 @@
             <i class="bi bi-info-circle me-1"></i>В базе знаний WikiLLM пока нет сохранённого описания для «${escapeHtml(opts.title)}».
           </div>
           <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5" id="btn-uai-modal-run-ai">
-            <i class="bi bi-robot"></i> Запросить AI-анализ
+            <i class="bi bi-robot"></i> Запросить AI-анализ с системной инструкцией
           </button>
         </div>
       `;
@@ -224,32 +447,45 @@
       if (!aiExplanation) return;
 
       const isVerified = Boolean(isFromWikiLLM || data.is_verified || data.source === 'wikillm');
-      const wikillmBadge = isVerified
-        ? `<div class="badge border border-success text-success p-1 px-2 mb-2 d-inline-flex align-items-center gap-1.5"><i class="bi bi-shield-check"></i> Верифицировано в базе знаний WikiLLM (L1 Exact Cache)</div>`
-        : '';
+      const isHeuristic = data.source === 'heuristic';
+      const isGemini = data.source === 'gemini';
+
+      let sourceBadge = '';
+      if (isVerified) {
+        sourceBadge = `<div class="badge border border-success text-success p-1 px-2 mb-2 d-inline-flex align-items-center gap-1.5"><i class="bi bi-shield-check"></i> База знаний WikiLLM (L1 Exact Cache)</div>`;
+      } else if (isGemini) {
+        sourceBadge = `<div class="badge border border-info text-info p-1 px-2 mb-2 d-inline-flex align-items-center gap-1.5"><i class="bi bi-stars"></i> AI Экспертный анализ (Web Grounding)</div>`;
+      } else {
+        sourceBadge = `<div class="badge border border-secondary text-secondary p-1 px-2 mb-2 d-inline-flex align-items-center gap-1.5"><i class="bi bi-cpu"></i> Системный экспертный анализ (Телеметрия)</div>`;
+      }
 
       const actionBlock = isVerified ? `
         <div class="p-2 mt-2 rounded d-flex align-items-center justify-content-between flex-wrap gap-2" id="uai-approval-container">
           <div class="small text-secondary">
-            <i class="bi bi-database-check text-success me-1"></i>Знание загружено из базы WikiLLM.
+            <i class="bi bi-database-check text-success me-1"></i>Справочные данные из локальной базы WikiLLM.
           </div>
-          <button type="button" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1.5" id="btn-uai-improve-ai">
-            <i class="bi bi-stars"></i> Улучшить через ИИ
+          <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5" id="btn-uai-improve-ai">
+            <i class="bi bi-robot"></i> Запустить полный ИИ-анализ записи
           </button>
         </div>
       ` : `
         <div class="p-2 mt-2 rounded d-flex align-items-center justify-content-between flex-wrap gap-2" id="uai-approval-container">
           <div class="small text-secondary">
-            <i class="bi bi-patch-question me-1 text-warning"></i>Ответ сгенерирован моделью ИИ. Одобрить результат для базы знаний?
+            <i class="bi bi-patch-question me-1 text-warning"></i>Результат анализа сформирован. Одобрить для базы знаний WikiLLM?
           </div>
-          <button type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1.5" id="btn-uai-approve-wikillm">
-            <i class="bi bi-hand-thumbs-up"></i> Одобрить и сохранить в WikiLLM
-          </button>
+          <div class="d-flex align-items-center gap-1.5">
+            <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5" id="btn-uai-reanalyze">
+              <i class="bi bi-arrow-clockwise"></i> Повторить
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1.5" id="btn-uai-approve-wikillm">
+              <i class="bi bi-hand-thumbs-up"></i> Одобрить и сохранить в WikiLLM
+            </button>
+          </div>
         </div>
       `;
 
       aiExplanation.innerHTML = `
-        ${wikillmBadge}
+        ${sourceBadge}
         <div class="mb-2"><strong class="text-info"><i class="bi bi-card-text me-1"></i>Назначение:</strong> ${escapeHtml(data.summary)}</div>
         <div class="mb-2"><strong class="text-secondary"><i class="bi bi-building me-1"></i>Разработчик / Категория:</strong> ${escapeHtml(data.developer || 'Неизвестен')} (${escapeHtml(data.category || 'Компонент')})</div>
         <div class="mb-2"><strong class="text-warning"><i class="bi bi-shield-lock me-1"></i>Оценка безопасности:</strong> ${escapeHtml(data.security_verdict)}</div>
@@ -269,6 +505,11 @@
       const improveBtn = document.getElementById('btn-uai-improve-ai');
       if (improveBtn) {
         improveBtn.onclick = () => executeDiagnostics(true);
+      }
+
+      const reanalyzeBtn = document.getElementById('btn-uai-reanalyze');
+      if (reanalyzeBtn) {
+        reanalyzeBtn.onclick = () => executeDiagnostics(true);
       }
 
       const approveBtn = document.getElementById('btn-uai-approve-wikillm');
@@ -299,12 +540,13 @@
       });
 
       try {
-        const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
-        const res = await fetchFn('/api/v1/diagnostics/explain', {
+        const data = await safeApiFetch('/api/v1/diagnostics/explain', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             table_type: opts.tableType,
+            panel_id: opts.panelId,
+            system_instruction: systemTextarea ? systemTextarea.value : '',
             title: opts.title,
             subtitle: opts.subtitle,
             metadata: Object.assign({}, metaDict, opts.requestData || {}),
@@ -312,10 +554,9 @@
             cache_only: true,
             web_search: false
           })
-        });
-        const data = (res && typeof res.json === 'function') ? await res.json() : res;
+        }, 4000);
 
-        if (data && (data.is_verified || data.source === 'wikillm')) {
+        if (data && (data.is_verified || data.source === 'wikillm') && data.summary) {
           renderDiagnosticResult(data, true);
         } else {
           renderPromptCallout();
@@ -327,21 +568,25 @@
 
     checkWikiLLMKnowledge();
 
-    // Привязка кнопки настройки промпта
+    // Привязка кнопки настройки шаблона промпта
     const editPromptBtn = document.getElementById('btn-uai-modal-edit-prompt');
     if (editPromptBtn) {
       editPromptBtn.onclick = () => openPromptEditor(opts.tableType);
     }
 
-    // Выполнение диагностического запроса к AI с веб-поиском
+    // Выполнение диагностического запроса к AI с передачей модели, провайдера и системной инструкции
     async function executeDiagnostics(forceRefresh = false) {
       const aiExplanation = document.getElementById('uai-modal-ai-explanation');
       if (!aiExplanation) return;
 
+      const currentSysInstruction = systemTextarea ? systemTextarea.value.trim() : '';
+      const currentModel = modelInput ? modelInput.value.trim() : '';
+      const currentProvider = providerSelect ? providerSelect.value : 'gemini';
+
       aiExplanation.innerHTML = `
         <div class="d-flex align-items-center gap-2 py-2 text-info">
           <div class="spinner-border spinner-border-sm" role="status"></div>
-          <span>Выполняется ${forceRefresh ? 'углубленный' : 'экспертный'} AI-анализ для «${escapeHtml(opts.title)}» с проверкой в интернете...</span>
+          <span>Выполняется ${forceRefresh ? 'углубленный' : 'экспертный'} AI-анализ для «${escapeHtml(opts.title)}»...</span>
         </div>
       `;
 
@@ -353,12 +598,15 @@
       });
 
       try {
-        const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
-        const res = await fetchFn('/api/v1/diagnostics/explain', {
+        const data = await safeApiFetch('/api/v1/diagnostics/explain', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             table_type: opts.tableType,
+            panel_id: opts.panelId,
+            system_instruction: currentSysInstruction || undefined,
+            model: currentModel || undefined,
+            provider: currentProvider || undefined,
             title: opts.title,
             subtitle: opts.subtitle,
             metadata: Object.assign({}, metaDict, opts.requestData || {}),
@@ -366,8 +614,8 @@
             web_search: true,
             force_refresh: Boolean(forceRefresh)
           })
-        });
-        const data = (res && typeof res.json === 'function') ? await res.json() : res;
+        }, 12000);
+
         renderDiagnosticResult(data, false);
       } catch (err) {
         aiExplanation.innerHTML = `
@@ -392,7 +640,6 @@
       if (approveBtn) approveBtn.disabled = true;
 
       try {
-        const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
         const payload = {
           canonical_key: aiData.canonical_key || undefined,
           table_type: options.tableType || 'generic',
@@ -405,29 +652,25 @@
           recommendation: aiData.recommendation || '',
           action_steps: aiData.action_steps || [],
           possible_causes: [],
-          tags: [options.tableType || 'generic', 'user_approved'],
-          model_name: 'gemini'
+          tags: [options.tableType || 'generic', options.panelId || 'panel_data', 'user_approved'],
+          model_name: (modelInput ? modelInput.value.trim() : '') || 'gemini'
         };
 
-        let res = await fetchFn('/api/windows/wikillm/approve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res && res.status === 404) {
-          res = await fetchFn('/api/v1/diagnostics/approve', {
+        let respData;
+        try {
+          respData = await safeApiFetch('/api/v1/diagnostics/approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-          });
+          }, 6000);
+        } catch (_) {
+          respData = await safeApiFetch('/api/windows/wikillm/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }, 6000);
         }
 
-        if (res && res.ok === false) {
-          throw new Error(`${res.status} ${res.statusText}`);
-        }
-
-        const respData = (res && typeof res.json === 'function') ? await res.json() : res;
         if (respData && respData.success) {
           if (container) {
             container.className = 'p-2 mt-2 rounded uai-verified-box d-flex align-items-center justify-content-between flex-wrap gap-2';
@@ -476,7 +719,7 @@
   }
 
   /**
-   * Открывает диалог редактирования промпта для выбранного типа таблицы.
+   * Открывает диалог редактирования расширенного шаблона промпта для выбранного типа таблицы.
    * @param {string} tableType Тип таблицы / сущности
    */
   async function openPromptEditor(tableType) {
@@ -489,20 +732,53 @@
     const saveBtn = document.getElementById('btn-uai-prompt-save');
     const resetBtn = document.getElementById('btn-uai-prompt-reset');
 
-    if (typeSelect && tableType) {
-      typeSelect.value = tableType;
+    const targetType = normalizeTableType(tableType || 'generic');
+
+    // Динамическая загрузка полного списка шаблонов промптов с бэкенда
+    try {
+      const templatesList = await safeApiFetch('/api/v1/diagnostics/prompts', {}, 4000);
+      if (Array.isArray(templatesList) && templatesList.length > 0 && typeSelect) {
+        typeSelect.innerHTML = templatesList.map(t => {
+          const isCustom = t.is_customized ? ' ✏️' : '';
+          return `<option value="${escapeHtml(t.table_type)}">${escapeHtml(t.table_type)} (${escapeHtml(t.name || t.table_type)})${isCustom}</option>`;
+        }).join('');
+      }
+    } catch (e) {
+      console.warn('[AIModalDialog] Failed to fetch prompts list dynamically:', e);
+    }
+
+    if (typeSelect) {
+      let found = false;
+      for (let i = 0; i < typeSelect.options.length; i++) {
+        if (typeSelect.options[i].value === targetType) {
+          typeSelect.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const opt = document.createElement('option');
+        opt.value = targetType;
+        opt.textContent = `${targetType} (Пользовательский шаблон)`;
+        typeSelect.appendChild(opt);
+        typeSelect.value = targetType;
+      }
     }
 
     async function loadTemplate(tType) {
+      const norm = normalizeTableType(tType);
       if (statusMsg) statusMsg.style.display = 'none';
       try {
-        const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
-        const res = await fetchFn(`/api/v1/diagnostics/prompts/${encodeURIComponent(tType)}`);
-        const data = (res && typeof res.json === 'function') ? await res.json() : res;
+        const data = await safeApiFetch(`/api/v1/diagnostics/prompts/${encodeURIComponent(norm)}`, {}, 4000);
         if (data) {
           if (nameInput) nameInput.value = data.name || '';
           if (systemInput) systemInput.value = data.system_instruction || '';
           if (templateInput) templateInput.value = data.prompt_template || '';
+          if (statusMsg && data.is_customized) {
+            statusMsg.className = 'small mt-2 text-warning';
+            statusMsg.innerHTML = '<i class="bi bi-pencil-square me-1"></i>Загружен пользовательский шаблон (отличается от системного).';
+            statusMsg.style.display = 'block';
+          }
         }
       } catch (e) {
         console.error('Ошибка загрузки шаблона промпта:', e);
@@ -515,10 +791,9 @@
 
     if (saveBtn) {
       saveBtn.onclick = async () => {
-        const currentType = typeSelect ? typeSelect.value : 'generic';
+        const currentType = normalizeTableType(typeSelect ? typeSelect.value : 'generic');
         try {
-          const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
-          await fetchFn(`/api/v1/diagnostics/prompts/${encodeURIComponent(currentType)}`, {
+          await safeApiFetch(`/api/v1/diagnostics/prompts/${encodeURIComponent(currentType)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -527,7 +802,7 @@
               system_instruction: systemInput ? systemInput.value : '',
               prompt_template: templateInput ? templateInput.value : ''
             })
-          });
+          }, 6000);
           if (statusMsg) {
             statusMsg.className = 'small mt-2 text-success';
             statusMsg.innerHTML = '<i class="bi bi-check-circle me-1"></i>Шаблон промпта успешно сохранен!';
@@ -546,14 +821,12 @@
 
     if (resetBtn) {
       resetBtn.onclick = async () => {
-        const currentType = typeSelect ? typeSelect.value : 'generic';
-        if (!confirm(`Сбросить промпт для «${currentType}» к системному значению по умолчанию?`)) return;
+        const currentType = normalizeTableType(typeSelect ? typeSelect.value : 'generic');
+        if (!confirm(`Сбросить шаблон для «${currentType}» к значению по умолчанию?`)) return;
         try {
-          const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
-          const res = await fetchFn(`/api/v1/diagnostics/prompts/${encodeURIComponent(currentType)}/reset`, {
+          const data = await safeApiFetch(`/api/v1/diagnostics/prompts/${encodeURIComponent(currentType)}/reset`, {
             method: 'POST'
-          });
-          const data = (res && typeof res.json === 'function') ? await res.json() : res;
+          }, 6000);
           if (data) {
             if (nameInput) nameInput.value = data.name || '';
             if (systemInput) systemInput.value = data.system_instruction || '';
@@ -561,7 +834,7 @@
           }
           if (statusMsg) {
             statusMsg.className = 'small mt-2 text-info';
-            statusMsg.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i>Шаблон промпта сброшен к системному по умолчанию.';
+            statusMsg.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i>Шаблон сброшен к системному по умолчанию.';
             statusMsg.style.display = 'block';
             setTimeout(() => { if (statusMsg) statusMsg.style.display = 'none'; }, 3000);
           }
@@ -575,7 +848,7 @@
       };
     }
 
-    await loadTemplate(typeSelect ? typeSelect.value : (tableType || 'generic'));
+    await loadTemplate(typeSelect ? typeSelect.value : targetType);
 
     if (window.bootstrap && window.bootstrap.Modal) {
       const bsPromptModal = window.bootstrap.Modal.getOrCreateInstance(promptModalEl);
@@ -597,7 +870,7 @@
             <div class="modal-header py-2 px-3">
               <div class="d-flex align-items-center gap-2">
                 <span class="fs-5 text-warning">⚙️</span>
-                <h5 class="modal-title fw-bold text-warning mb-0">Редактор промпта диагностики</h5>
+                <h5 class="modal-title fw-bold text-warning mb-0">Редактор шаблона промпта</h5>
               </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
@@ -606,17 +879,21 @@
                 <div class="col-sm-6">
                   <label class="form-label small text-secondary fw-bold mb-1">Тип таблицы / сущности</label>
                   <select class="form-select form-select-sm" id="uai-prompt-type-select">
-                    <option value="software">software (Установленное ПО)</option>
+                    <option value="user_account">user_account (Учетные записи и сессии Windows)</option>
+                    <option value="security_event">security_event (События безопасности Windows)</option>
                     <option value="process">process (Процессы Windows)</option>
                     <option value="service">service (Службы Windows)</option>
+                    <option value="software">software (Установленное ПО)</option>
                     <option value="task">task (Задачи планировщика)</option>
-                    <option value="network">network (Сетевой мониторинг)</option>
+                    <option value="startup">startup (Автозагрузка)</option>
+                    <option value="network">network (Сетевые соединения)</option>
                     <option value="registry">registry (Реестр Windows)</option>
-                    <option value="user">user (Пользователи и группы)</option>
+                    <option value="disk">disk (Диски и тома)</option>
+                    <option value="cpu">cpu (Процессор CPU)</option>
+                    <option value="gpu">gpu (Видеокарта GPU)</option>
+                    <option value="file_event">file_event (Файловые события)</option>
                     <option value="website">website (Мониторинг сайтов)</option>
                     <option value="rag_doc">rag_doc (RAG База знаний)</option>
-                    <option value="disk">disk (Диски и тома)</option>
-                    <option value="startup">startup (Автозагрузка)</option>
                     <option value="generic">generic (Общий шаблон)</option>
                   </select>
                 </div>
@@ -627,8 +904,14 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label small text-secondary fw-bold mb-1">Системная инструкция (System Instruction)</label>
-                <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-system-input" rows="2" placeholder="Роль и поведение модели..."></textarea>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label small text-secondary fw-bold mb-0">Системная инструкция (System Instruction)</label>
+                  <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.72rem;">Роль и поведение ИИ</span>
+                </div>
+                <textarea class="form-control form-control-sm font-monospace" id="uai-prompt-system-input" rows="4" placeholder="Роль, экспертный контекст и правила поведения модели..."></textarea>
+                <div class="form-text small text-secondary" style="font-size: 0.75rem;">
+                  Системная инструкция задаёт контекст роли эксперта, ограничения и формат ответа ИИ для выбранного типа сущности.
+                </div>
               </div>
 
               <div class="mb-2">
@@ -683,7 +966,8 @@
     show: show,
     openPromptEditor: openPromptEditor,
     insertVariable: insertVariable,
-    escapeHtml: escapeHtml
+    escapeHtml: escapeHtml,
+    normalizeTableType: normalizeTableType
   };
 
   // Экспорт под новым и обратным именами

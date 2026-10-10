@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты аудита и управления задачами планировщика Windows Task Scheduler
-#   (apps.windows.modules.task_scheduler).
+#   (apps.windows.sdk.modules.task_scheduler).
 #   Включают:
 #     1. Инспекция и аудит запланированных задач (windows_task_scheduler_audit)
 #     2. Выполнение действий над задачами планировщика SafeOps (windows_task_scheduler_action)
@@ -100,7 +100,7 @@ async def windows_task_scheduler_audit(
         JSON с результатами аудита планировщика задач.
     """
     try:
-        from apps.windows.modules.task_scheduler.core.manager import TaskSchedulerManager
+        from apps.windows.sdk.modules.task_scheduler.core.manager import TaskSchedulerManager
 
         mgr = TaskSchedulerManager()
         loop = asyncio.get_running_loop()
@@ -170,8 +170,8 @@ async def windows_task_scheduler_action(
                 "message": f"Симуляция выполнения действия '{action}' для задачи '{task_path}' прошла успешно (оператор: {operator}).",
             }, ensure_ascii=False)
 
-        from apps.windows.modules.task_scheduler.core.manager import TaskSchedulerManager
-        from apps.windows.modules.task_scheduler.core.models import TaskActionRequest
+        from apps.windows.sdk.modules.task_scheduler.core.manager import TaskSchedulerManager
+        from apps.windows.sdk.modules.task_scheduler.core.models import TaskActionRequest
 
         mgr = TaskSchedulerManager()
         loop = asyncio.get_running_loop()

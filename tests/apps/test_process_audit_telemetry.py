@@ -23,7 +23,7 @@
 
 import pytest
 from unittest.mock import MagicMock
-from apps.windows.core.process_audit_manager import ProcessAuditManager, ProcessTreeNode, TelemetrySensorStatus
+from apps.windows.sdk.core.process_audit_manager import ProcessAuditManager, ProcessTreeNode, TelemetrySensorStatus
 from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
 
 @pytest.fixture

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой Windows Event Log & Log Intelligence
-#   (apps.windows.modules.event_logs).
+#   (apps.windows.sdk.modules.event_logs).
 #   Сгруппированы по 3 логическим блокам:
 #     1. Инспекция, фильтрация и выборка каналов логов (Query)
 #     2. Адаптивный аналитический профайлинг и RAG-поиск сбоев (Log Intelligence)
@@ -176,7 +176,7 @@ async def windows_event_log_query(
         JSON с результатами выборки или сводным отчетом.
     """
     try:
-        from apps.windows.modules.event_logs.core.manager import EventLogsManager
+        from apps.windows.sdk.modules.event_logs.core.manager import EventLogsManager
 
         mgr = EventLogsManager()
         loop = asyncio.get_running_loop()
@@ -249,7 +249,7 @@ async def windows_event_log_intelligence(
         JSON с результатами профилирования или гибридного RAG-поиска.
     """
     try:
-        from apps.windows.modules.event_logs.core.manager import EventLogsManager
+        from apps.windows.sdk.modules.event_logs.core.manager import EventLogsManager
 
         mgr = EventLogsManager()
         loop = asyncio.get_running_loop()
@@ -295,7 +295,7 @@ async def windows_event_log_action(
         JSON с результатом выполнения или симуляции операции.
     """
     try:
-        from apps.windows.modules.event_logs.core.models import EventLogActionRequest
+        from apps.windows.sdk.modules.event_logs.core.models import EventLogActionRequest
 
         act = action.strip().lower()
 

@@ -57,7 +57,7 @@ def mock_health():
 @pytest.mark.asyncio
 async def test_windows_checkpoints_audit_health(mock_health):
     """Тестирование сводной оценки готовности контрольных точек."""
-    with patch("apps.windows.modules.system_checkpoints.core.checkpoint_coordinator.CheckpointCoordinator.get_comprehensive_health", return_value=mock_health):
+    with patch("apps.windows.sdk.modules.system_checkpoints.core.checkpoint_coordinator.CheckpointCoordinator.get_comprehensive_health", return_value=mock_health):
         res_raw = await call_tool(windows_checkpoints_audit, action="health")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

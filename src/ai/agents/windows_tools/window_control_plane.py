@@ -5,7 +5,7 @@
 # Description:
 #   Инструменты прямого управления 295 параметрами окон, жесткой фокусировки,
 #   прилипания (Snap Layouts), анимаций и виртуальных рабочих столов Windows
-#   (apps.windows.modules.window_control_plane).
+#   (apps.windows.sdk.modules.window_control_plane).
 #   Включают:
 #     1. Поиск и аудит параметров управления окнами (windows_control_plane_audit)
 #     2. Изменение и настройка параметров окон SafeOps (windows_control_plane_action)
@@ -104,7 +104,7 @@ async def windows_control_plane_audit(
         JSON с результатами аудита параметров подсистемы окон.
     """
     try:
-        from apps.windows.modules.window_control_plane.manager import WindowManagementControlPlane
+        from apps.windows.sdk.modules.window_control_plane.manager import WindowManagementControlPlane
 
         plane = WindowManagementControlPlane()
         loop = asyncio.get_running_loop()
@@ -189,8 +189,8 @@ async def windows_control_plane_action(
                 "message": f"Симуляция изменения параметра '{setting_id}' в значение '{value}' прошла успешно (оператор: {operator}).",
             }, ensure_ascii=False)
 
-        from apps.windows.modules.window_control_plane.manager import WindowManagementControlPlane
-        from apps.windows.modules.window_control_plane.models import SettingApplyRequest
+        from apps.windows.sdk.modules.window_control_plane.manager import WindowManagementControlPlane
+        from apps.windows.sdk.modules.window_control_plane.models import SettingApplyRequest
 
         plane = WindowManagementControlPlane()
         loop = asyncio.get_running_loop()

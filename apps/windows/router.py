@@ -31,13 +31,13 @@ except ImportError:
     logger = logging.getLogger("windows_router")
 from apps.windows.ai.diagnostician import WindowsAIDiagnostician
 from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
-from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
-from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
-from apps.windows.core.root_cause_engine import RootCauseEngine
-from apps.windows.core.safe_executor import SafeExecutor
-from apps.windows.modules.window_control_plane.router import router as window_mgmt_router
-from apps.windows.modules.personalization.router import router as personalization_router
-from apps.windows.modules.accounts_identity.router import router as accounts_identity_router
+from apps.windows.sdk.core.models import ActionType, RemediationAction, RiskLevel
+from apps.windows.sdk.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
+from apps.windows.sdk.core.root_cause_engine import RootCauseEngine
+from apps.windows.sdk.core.safe_executor import SafeExecutor
+from apps.windows.sdk.modules.window_control_plane.router import router as window_mgmt_router
+from apps.windows.sdk.modules.personalization.router import router as personalization_router
+from apps.windows.sdk.modules.accounts_identity.router import router as accounts_identity_router
 
 router = APIRouter(prefix='/api/windows', tags=['windows-diagnostics'])
 router.include_router(window_mgmt_router, prefix='/window-management', tags=['Window Management'])
@@ -106,7 +106,7 @@ async def get_software_audit() -> Dict[str, Any]:
 @router.get('/software')
 async def get_installed_software(category: Optional[str]=None, unused_only: bool=False, limit: int=500) -> List[Dict[str, Any]]:
     """Получение списка установленных программ с историей запусков и назначением."""
-    from apps.windows.core.software_audit import SoftwareAuditEngine
+    from apps.windows.sdk.core.software_audit import SoftwareAuditEngine
     engine = SoftwareAuditEngine()
     apps = engine.get_installed_applications()
     if category:
@@ -119,7 +119,7 @@ async def get_installed_software(category: Optional[str]=None, unused_only: bool
 @router.get('/software/audit')
 async def get_software_audit_summary() -> Dict[str, Any]:
     """Сводный аналитический отчет аудита программного обеспечения."""
-    from apps.windows.core.software_audit import SoftwareAuditEngine
+    from apps.windows.sdk.core.software_audit import SoftwareAuditEngine
     engine = SoftwareAuditEngine()
     report = engine.generate_audit_report()
     return report.to_dict()
@@ -224,7 +224,7 @@ class DefenderToggleFeatureRequest(BaseModel):
 @router.get('/defender/status')
 async def get_defender_detailed_status() -> Dict[str, Any]:
     """Детальный статус Microsoft Defender: защита, версионность и ASR."""
-    from apps.windows.core.defender_manager import DefenderManager
+    from apps.windows.sdk.core.defender_manager import DefenderManager
     mgr = DefenderManager()
     status = mgr.get_detailed_status()
     prefs = mgr.get_preferences()
@@ -233,7 +233,7 @@ async def get_defender_detailed_status() -> Dict[str, Any]:
 @router.get('/defender/threats')
 async def get_defender_threats() -> Dict[str, Any]:
     """История обнаружений и активных угроз Microsoft Defender."""
-    from apps.windows.core.defender_manager import DefenderManager
+    from apps.windows.sdk.core.defender_manager import DefenderManager
     mgr = DefenderManager()
     threats = mgr.get_threat_detections()
     return {'threats': threats, 'count': len(threats)}
@@ -301,7 +301,7 @@ async def get_hardware_sensors_list() -> Dict[str, Any]:
 async def get_storage_smart() -> Dict[str, Any]:
     """Получение детальных S.M.A.R.T. данных и здоровья накопителей через нативный Windows Storage API."""
     try:
-        from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor()
         drives = sensor.get_physical_disks()
         return {'drives': drives}
@@ -312,7 +312,7 @@ async def get_storage_smart() -> Dict[str, Any]:
 @router.get('/hardware/gpu')
 async def get_gpu_telemetry() -> Dict[str, Any]:
     """Получение телеметрии GPU (NVIDIA, AMD, Intel, WMI)."""
-    from apps.windows.modules.hardware.gpu_prober import GpuProber
+    from apps.windows.sdk.modules.hardware.gpu_prober import GpuProber
     prober = GpuProber()
     gpus = prober.probe_all()
     return {'gpus': [g.__dict__ for g in gpus]}
@@ -379,7 +379,7 @@ def _get_stress_engine():
     """Получение или инициализация экземпляра StressBenchmarkEngine."""
     global _stress_engine
     if _stress_engine is None:
-        from apps.windows.modules.hardware.stress_benchmark import StressBenchmarkEngine
+        from apps.windows.sdk.modules.hardware.stress_benchmark import StressBenchmarkEngine
         _stress_engine = StressBenchmarkEngine()
     return _stress_engine
 
@@ -392,7 +392,7 @@ async def get_ai_benchmark_history() -> List[Dict[str, Any]]:
 @router.get('/audit/process-telemetry/status')
 async def get_process_telemetry_status() -> Dict[str, Any]:
     """Проверка доступности и статуса сенсоров телеметрии (Sysmon, Security 4688, CommandLine)."""
-    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    from apps.windows.sdk.core.process_audit_manager import ProcessAuditManager
     manager = ProcessAuditManager()
     status = manager.get_telemetry_status()
     return status.to_dict()
@@ -400,14 +400,14 @@ async def get_process_telemetry_status() -> Dict[str, Any]:
 @router.get('/audit/process-telemetry/history')
 async def get_process_telemetry_history(limit: int=100, process: Optional[str]=None, user: Optional[str]=None) -> List[Dict[str, Any]]:
     """Получение структурированной истории запуска процессов с командной строкой и PID."""
-    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    from apps.windows.sdk.core.process_audit_manager import ProcessAuditManager
     manager = ProcessAuditManager()
     return manager.get_process_execution_history(limit=limit, filter_process=process, filter_user=user)
 
 @router.get('/audit/process-telemetry/tree')
 async def get_process_telemetry_tree(limit: int=100) -> List[Dict[str, Any]]:
     """Построение иерархического дерева выполнения процессов (Parent -> Child)."""
-    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    from apps.windows.sdk.core.process_audit_manager import ProcessAuditManager
     manager = ProcessAuditManager()
     tree = manager.build_process_tree(limit=limit)
     return [node.to_dict() for node in tree]
@@ -415,7 +415,7 @@ async def get_process_telemetry_tree(limit: int=100) -> List[Dict[str, Any]]:
 @router.get('/audit/process-telemetry/file-activity')
 async def get_process_telemetry_file_activity(limit: int=50) -> List[Dict[str, Any]]:
     """Получение файловых операций (создание/удаление) с привязкой к процессам."""
-    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    from apps.windows.sdk.core.process_audit_manager import ProcessAuditManager
     manager = ProcessAuditManager()
     return manager.get_file_activity_with_processes(limit=limit)
 
@@ -541,15 +541,15 @@ async def get_security_correlation(
 
 def init_router(app: Optional[Any]=None, state: Optional[Any]=None) -> APIRouter:
     """Инициализация FastAPI роутера."""
-    from apps.windows.core.software_transparency import init_software_transparency_router
+    from apps.windows.sdk.core.software_transparency import init_software_transparency_router
     from apps.windows.api.router_capabilities import init_router as init_capabilities_router
     from apps.windows.wikillm.router import init_router as init_wikillm_router
-    from apps.windows.modules.programms_history_deep_researh.router import router as prog_history_router
+    from apps.windows.sdk.modules.programms_history_deep_researh.router import router as prog_history_router
     router.include_router(init_capabilities_router())
     router.include_router(init_wikillm_router())
     router.include_router(prog_history_router)
     try:
-        from apps.windows.modules.storage_manager.router import init_router as init_storage_router
+        from apps.windows.sdk.modules.storage_manager.router import init_router as init_storage_router
         router.include_router(init_storage_router())
     except Exception as exc:
         logger.debug(f'Storage manager router not registered: {exc}')

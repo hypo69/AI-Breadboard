@@ -20,67 +20,66 @@ Project: ai-breadboard
 Package: windows/api/webgui/power_lifecycle_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 04:25:00
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
-
 <style>
   .power-lifecycle-container {
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
   }
   .pwr-card {
-    background: var(--surface-1, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md, 8px);
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
   }
   .pwr-table {
     width: 100%;
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
     border-collapse: separate;
     border-spacing: 0;
   }
   .pwr-table thead th {
-    background: var(--surface-2, #0f172a);
-    color: var(--text-muted, #94a3b8);
+    background: var(--surface-2);
+    color: var(--text-muted);
     font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    border-bottom: 1.5px solid var(--border-color, #334155);
+    border-bottom: 1.5px solid var(--border-color);
     padding: 0.55rem 0.75rem;
     white-space: nowrap;
   }
   .pwr-table td {
-    border-bottom: 1px solid var(--border-subtle, rgba(51, 65, 85, 0.25));
+    border-bottom: 1px solid var(--border-color);
     padding: 0.55rem 0.75rem;
     vertical-align: middle;
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
   }
   .pwr-table tbody tr:hover td {
     background-color: var(--nav-hover-bg, rgba(56, 189, 248, 0.04));
   }
   .pwr-search-input {
-    background: var(--surface-1, #1e293b);
-    border: 1px solid var(--border-color, #334155);
-    color: var(--text-color, #f8fafc);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
   }
   .pwr-search-input:focus {
-    background: var(--surface-1, #1e293b);
-    border-color: var(--nav-active, #38bdf8);
-    color: var(--text-color, #f8fafc);
+    background: var(--surface-1);
+    border-color: var(--nav-active);
+    color: var(--text-color);
     box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.15);
   }
   .pwr-input-addon {
-    background: var(--surface-2, #0f172a);
-    border: 1px solid var(--border-color, #334155);
-    color: var(--text-muted, #94a3b8);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
   }
   .pwr-nav-pills {
-    border-bottom: 1px solid var(--border-color, #334155);
+    border-bottom: 1px solid var(--border-color);
   }
   .pwr-nav-pills .nav-link {
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
     font-size: 0.84rem;
     font-weight: 500;
     border-radius: var(--radius-sm, 6px);
@@ -88,290 +87,275 @@ Updated: 2026-10-08 04:25:00
     transition: all 0.15s ease;
   }
   .pwr-nav-pills .nav-link:hover {
-    color: var(--nav-active, #38bdf8);
-    background: var(--nav-hover-bg, rgba(255, 255, 255, 0.05));
+    color: var(--nav-active);
+    background: var(--nav-hover-bg, rgba(0, 0, 0, 0.05));
   }
   .pwr-nav-pills .nav-link.active {
     color: #fff;
-    background: var(--nav-active, #0284c7);
+    background: var(--nav-active);
     font-weight: 600;
   }
   .pwr-detail-card {
-    background: var(--surface-2, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm, 6px);
   }
   .pwr-xml-pre {
-    background: var(--surface-2, #0f172a);
-    color: var(--text-color, #f8fafc);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-2);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
   }
   .pwr-proc-badge {
-    background: var(--surface-2, #0f172a);
-    color: var(--nav-active, #38bdf8);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-2);
+    color: var(--nav-active);
+    border: 1px solid var(--border-color);
   }
 </style>
-
 <div class="container-fluid py-2 px-3 power-lifecycle-container">
-
-  <!-- Верхняя панель метрик и сводки -->
-  <div class="row g-2 mb-3">
-    <!-- Карточка 1: Текущий Аптайм и Старт ОС -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card pwr-card h-100 shadow-sm p-3 position-relative">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="text-muted small text-uppercase fw-semibold">Текущий аптайм ⚡</div>
-          <span class="badge bg-success font-monospace" id="pwr-uptime-badge">ACTIVE</span>
-        </div>
-        <div class="fs-4 fw-bold mt-1 text-info font-monospace" id="pwr-current-uptime">--:--:--</div>
-        <div class="small text-muted mt-1 text-truncate" id="pwr-current-boot" style="font-size: 0.75rem;">Загрузка: --</div>
-        <div class="mt-2 text-end">
-          <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.7rem;">Kernel-General 12</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Карточка 2: Всего сессий питания -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card pwr-card h-100 shadow-sm p-3">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="text-muted small text-uppercase fw-semibold">Сессии питания 🔋</div>
-          <span class="badge bg-primary font-monospace" id="pwr-total-sessions-badge">0 Сессий</span>
-        </div>
-        <div class="fs-4 fw-bold mt-1 text-warning font-monospace" id="pwr-total-sessions">--</div>
-        <div class="small text-muted mt-1" id="pwr-sessions-desc">Реконструкция Boot → Shutdown</div>
-        <div class="mt-2">
-          <button class="btn btn-xs btn-outline-warning w-100 py-1" id="pwr-rebuild-btn" style="font-size: 0.78rem;">
-            <i class="bi bi-arrow-repeat me-1"></i><span>Пересканировать Event Log</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Карточка 3: Штатные перезагрузки и выключения -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card pwr-card h-100 shadow-sm p-3">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="text-muted small text-uppercase fw-semibold">Штатные завершения ✅</div>
-          <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace" id="pwr-clean-ratio">-- %</span>
-        </div>
-        <div class="fs-4 fw-bold mt-1 text-success font-monospace" id="pwr-clean-count">--</div>
-        <div class="small text-muted mt-1 text-truncate" id="pwr-last-initiator" style="font-size: 0.75rem;">Инициатор: --</div>
-        <div class="mt-2 text-end">
-          <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.7rem;">User32 1074 / EventLog 6006</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Карточка 4: Внезапные сбои и BSOD -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card pwr-card h-100 shadow-sm p-3">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="text-muted small text-uppercase fw-semibold">Сбои / Потери питания ⚠️</div>
-          <span class="badge bg-danger font-monospace" id="pwr-unexpected-badge">0 Сбоев</span>
-        </div>
-        <div class="fs-4 fw-bold mt-1 text-danger font-monospace" id="pwr-unexpected-count">--</div>
-        <div class="small text-muted mt-1 d-flex justify-content-between" style="font-size: 0.75rem;">
-          <span id="pwr-bsod-count">BSOD (1001): 0</span>
-          <span>Kernel-Power 41</span>
-        </div>
-        <div class="mt-2">
-          <button class="btn btn-xs btn-outline-primary w-100 py-1" id="pwr-refresh-btn" style="font-size: 0.78rem;">
-            <i class="bi bi-arrow-clockwise me-1"></i><span>Обновить данные</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Навигация по подразделам: Сессии vs События -->
-  <ul class="nav nav-pills mb-3 pwr-nav-pills pb-2" id="pwrNavTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active py-1 px-3" id="pwr-sessions-subtab-btn" data-bs-toggle="pill" data-bs-target="#pwr-subtab-sessions" type="button" role="tab">
-        <i class="bi bi-clock-history me-1.5 text-warning"></i>
-        <span>Сессии питания (Power Sessions)</span>
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link py-1 px-3" id="pwr-events-subtab-btn" data-bs-toggle="pill" data-bs-target="#pwr-subtab-events" type="button" role="tab">
-        <i class="bi bi-list-columns-reverse me-1.5 text-info"></i>
-        <span>Журнал ключевых событий (Event Log)</span>
-      </button>
-    </li>
-  </ul>
-
-  <div class="tab-content" id="pwrTabContent">
-    
-    <!-- Вкладка 1: Сессии питания (Power Sessions) -->
-    <div class="tab-pane fade show active" id="pwr-subtab-sessions" role="tabpanel">
-      <!-- Панель фильтров и поиска -->
-      <div class="card pwr-card mb-3 p-2">
-        <div class="row g-2 align-items-center">
-          <div class="col-12 col-md-4">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text pwr-input-addon"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control form-control-sm pwr-search-input" id="pwr-sessions-search" placeholder="Поиск по пользователю, процессу, причине...">
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <select class="form-select form-select-sm pwr-search-input" id="pwr-filter-type">
-              <option value="">Все типы завершения</option>
-              <option value="Active">🟢 Активная сессия (Active)</option>
-              <option value="Restart">↻ Перезагрузка (Restart)</option>
-              <option value="Shutdown">⏻ Выключение (Shutdown)</option>
-              <option value="Unexpected">⚠️ Внезапное завершение (Unexpected)</option>
-              <option value="BSOD">🚨 Синий экран (BSOD / BugCheck)</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-2">
-            <div class="form-check form-switch small mt-1">
-              <input class="form-check-input" type="checkbox" id="pwr-filter-unexpected-only">
-              <label class="form-check-label text-warning fw-semibold" for="pwr-filter-unexpected-only">Только сбои</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-3 text-end">
-            <span class="small text-muted" id="pwr-sessions-counter">Найдено: 0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Таблица / Список сессий питания -->
-      <div class="card pwr-card shadow-sm">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 pwr-table" style="font-size: 0.85rem;">
-            <thead>
-              <tr>
-                <th style="width: 140px;">Сессия</th>
-                <th style="width: 160px;">Время старта (Boot)</th>
-                <th style="width: 160px;">Завершение</th>
-                <th style="width: 130px;">Аптайм</th>
-                <th style="width: 130px;">Статус</th>
-                <th>Инициатор и процесс</th>
-                <th>Причина / Код</th>
-                <th style="width: 80px;" class="text-center">Детали</th>
-              </tr>
-            </thead>
-            <tbody id="pwr-sessions-tbody">
-              <tr>
-                <td colspan="8" class="text-center py-4 text-muted">
-                  <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+<!-- Верхняя панель метрик и сводки -->
+<div class="row g-2 mb-3">
+<!-- Карточка 1: Текущий Аптайм и Старт ОС -->
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card pwr-card h-100 shadow-sm p-3 position-relative" data-panel-id="panel-power-lifecycle-1" id="panel-power-lifecycle-1">
+<div class="d-flex justify-content-between align-items-start">
+<div class="text-muted small text-uppercase fw-semibold">Текущий аптайм ⚡</div>
+<span class="badge bg-success font-monospace" id="pwr-uptime-badge">ACTIVE</span>
+</div>
+<div class="fs-4 fw-bold mt-1 text-info font-monospace" id="pwr-current-uptime">--:--:--</div>
+<div class="small text-muted mt-1 text-truncate" id="pwr-current-boot" style="font-size: 0.75rem;">Загрузка: --</div>
+<div class="mt-2 text-end">
+<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.7rem;">Kernel-General 12</span>
+</div>
+</div>
+</div>
+<!-- Карточка 2: Всего сессий питания -->
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card pwr-card h-100 shadow-sm p-3" data-panel-id="panel-power-lifecycle-2" id="panel-power-lifecycle-2">
+<div class="d-flex justify-content-between align-items-start">
+<div class="text-muted small text-uppercase fw-semibold">Сессии питания 🔋</div>
+<span class="badge bg-primary font-monospace" id="pwr-total-sessions-badge">0 Сессий</span>
+</div>
+<div class="fs-4 fw-bold mt-1 text-warning font-monospace" id="pwr-total-sessions">--</div>
+<div class="small text-muted mt-1" id="pwr-sessions-desc">Реконструкция Boot → Shutdown</div>
+<div class="mt-2">
+<button class="btn btn-xs btn-outline-warning w-100 py-1" id="pwr-rebuild-btn" style="font-size: 0.78rem;">
+<i class="bi bi-arrow-repeat me-1"></i><span>Пересканировать Event Log</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Карточка 3: Штатные перезагрузки и выключения -->
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card pwr-card h-100 shadow-sm p-3" data-panel-id="panel-power-lifecycle-3" id="panel-power-lifecycle-3">
+<div class="d-flex justify-content-between align-items-start">
+<div class="text-muted small text-uppercase fw-semibold">Штатные завершения ✅</div>
+<span class="badge bg-success-subtle text-success border border-success-subtle font-monospace" id="pwr-clean-ratio">-- %</span>
+</div>
+<div class="fs-4 fw-bold mt-1 text-success font-monospace" id="pwr-clean-count">--</div>
+<div class="small text-muted mt-1 text-truncate" id="pwr-last-initiator" style="font-size: 0.75rem;">Инициатор: --</div>
+<div class="mt-2 text-end">
+<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.7rem;">User32 1074 / EventLog 6006</span>
+</div>
+</div>
+</div>
+<!-- Карточка 4: Внезапные сбои и BSOD -->
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card pwr-card h-100 shadow-sm p-3" data-panel-id="panel-power-lifecycle-4" id="panel-power-lifecycle-4">
+<div class="d-flex justify-content-between align-items-start">
+<div class="text-muted small text-uppercase fw-semibold">Сбои / Потери питания ⚠️</div>
+<span class="badge bg-danger font-monospace" id="pwr-unexpected-badge">0 Сбоев</span>
+</div>
+<div class="fs-4 fw-bold mt-1 text-danger font-monospace" id="pwr-unexpected-count">--</div>
+<div class="small text-muted mt-1 d-flex justify-content-between" style="font-size: 0.75rem;">
+<span id="pwr-bsod-count">BSOD (1001): 0</span>
+<span>Kernel-Power 41</span>
+</div>
+<div class="mt-2">
+<button class="btn btn-xs btn-outline-primary w-100 py-1" id="pwr-refresh-btn" style="font-size: 0.78rem;">
+<i class="bi bi-arrow-clockwise me-1"></i><span>Обновить данные</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Навигация по подразделам: Сессии vs События -->
+<ul class="nav nav-pills mb-3 pwr-nav-pills pb-2" id="pwrNavTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button class="nav-link active py-1 px-3" data-bs-target="#pwr-subtab-sessions" data-bs-toggle="pill" id="pwr-sessions-subtab-btn" role="tab" type="button">
+<i class="bi bi-clock-history me-1.5 text-warning"></i>
+<span>Сессии питания (Power Sessions)</span>
+</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link py-1 px-3" data-bs-target="#pwr-subtab-events" data-bs-toggle="pill" id="pwr-events-subtab-btn" role="tab" type="button">
+<i class="bi bi-list-columns-reverse me-1.5 text-info"></i>
+<span>Журнал ключевых событий (Event Log)</span>
+</button>
+</li>
+</ul>
+<div class="tab-content" id="pwrTabContent">
+<!-- Вкладка 1: Сессии питания (Power Sessions) -->
+<div class="tab-pane fade show active" id="pwr-subtab-sessions" role="tabpanel">
+<!-- Панель фильтров и поиска -->
+<div class="card pwr-card mb-3 p-2" data-panel-id="panel-power-lifecycle-5" id="panel-power-lifecycle-5">
+<div class="row g-2 align-items-center">
+<div class="col-12 col-md-4">
+<div class="input-group input-group-sm">
+<span class="input-group-text pwr-input-addon"><i class="bi bi-search"></i></span>
+<input class="form-control form-control-sm pwr-search-input" id="pwr-sessions-search" placeholder="Поиск по пользователю, процессу, причине..." type="text"/>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<select class="form-select form-select-sm pwr-search-input" id="pwr-filter-type">
+<option value="">Все типы завершения</option>
+<option value="Active">🟢 Активная сессия (Active)</option>
+<option value="Restart">↻ Перезагрузка (Restart)</option>
+<option value="Shutdown">⏻ Выключение (Shutdown)</option>
+<option value="Unexpected">⚠️ Внезапное завершение (Unexpected)</option>
+<option value="BSOD">🚨 Синий экран (BSOD / BugCheck)</option>
+</select>
+</div>
+<div class="col-6 col-md-2">
+<div class="form-check form-switch small mt-1">
+<input class="form-check-input" id="pwr-filter-unexpected-only" type="checkbox"/>
+<label class="form-check-label text-warning fw-semibold" for="pwr-filter-unexpected-only">Только сбои</label>
+</div>
+</div>
+<div class="col-12 col-md-3 text-end">
+<span class="small text-muted" id="pwr-sessions-counter">Найдено: 0</span>
+</div>
+</div>
+</div>
+<!-- Таблица / Список сессий питания -->
+<div class="card pwr-card shadow-sm" data-panel-id="panel-power-lifecycle-6" id="panel-power-lifecycle-6">
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0 pwr-table" style="font-size: 0.85rem;">
+<thead>
+<tr>
+<th style="width: 140px;">Сессия</th>
+<th style="width: 160px;">Время старта (Boot)</th>
+<th style="width: 160px;">Завершение</th>
+<th style="width: 130px;">Аптайм</th>
+<th style="width: 130px;">Статус</th>
+<th>Инициатор и процесс</th>
+<th>Причина / Код</th>
+<th class="text-center" style="width: 80px;">Детали</th>
+</tr>
+</thead>
+<tbody id="pwr-sessions-tbody">
+<tr>
+<td class="text-center py-4 text-muted" colspan="8">
+<div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
                   Загрузка истории сессий питания...
                 </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Вкладка 2: Журнал ключевых событий (Event Log) -->
-    <div class="tab-pane fade" id="pwr-subtab-events" role="tabpanel">
-      <!-- Фильтры событий -->
-      <div class="card pwr-card mb-3 p-2">
-        <div class="row g-2 align-items-center">
-          <div class="col-12 col-md-4">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text pwr-input-addon"><i class="bi bi-funnel"></i></span>
-              <select class="form-select form-select-sm pwr-search-input" id="pwr-event-id-filter">
-                <option value="">Все Event ID жизненного цикла</option>
-                <option value="1074">1074 — User32 (Инициатор shutdown/restart)</option>
-                <option value="41">41 — Kernel-Power (Внезапная перезагрузка)</option>
-                <option value="6008">6008 — EventLog (Неожиданное выключение)</option>
-                <option value="12">12 — Kernel-General (Запуск ядра / Boot)</option>
-                <option value="13">13 — Kernel-General (Завершение работы ОС)</option>
-                <option value="6005">6005 — EventLog (Служба EventLog запущена)</option>
-                <option value="6006">6006 — EventLog (EventLog штатно остановлен)</option>
-                <option value="6009">6009 — EventLog (Версия ядра при загрузке)</option>
-                <option value="1001">1001 — WER (Аварийный сбой BSOD / BugCheck)</option>
-                <option value="19">19 — WindowsUpdate (Установка обновлений)</option>
-                <option value="42">42 — Kernel-Power (Переход в сон)</option>
-                <option value="107">107 — Kernel-Power (Пробуждение из сна)</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-12 col-md-5">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text pwr-input-addon"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control form-control-sm pwr-search-input" id="pwr-events-search" placeholder="Поиск в событиях...">
-            </div>
-          </div>
-          <div class="col-12 col-md-3 text-end">
-            <span class="small text-muted" id="pwr-events-counter">Событий: 0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Таблица сырых событий -->
-      <div class="card pwr-card shadow-sm">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 pwr-table" style="font-size: 0.85rem;">
-            <thead>
-              <tr>
-                <th style="width: 160px;">Время</th>
-                <th style="width: 90px;">Event ID</th>
-                <th style="width: 140px;">Провайдер</th>
-                <th style="width: 130px;">Тип</th>
-                <th style="width: 180px;">Инициатор / Процесс</th>
-                <th>Описание / Причина</th>
-                <th style="width: 80px;" class="text-center">XML</th>
-              </tr>
-            </thead>
-            <tbody id="pwr-events-tbody">
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">
-                  <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Вкладка 2: Журнал ключевых событий (Event Log) -->
+<div class="tab-pane fade" id="pwr-subtab-events" role="tabpanel">
+<!-- Фильтры событий -->
+<div class="card pwr-card mb-3 p-2" data-panel-id="panel-power-lifecycle-7" id="panel-power-lifecycle-7">
+<div class="row g-2 align-items-center">
+<div class="col-12 col-md-4">
+<div class="input-group input-group-sm">
+<span class="input-group-text pwr-input-addon"><i class="bi bi-funnel"></i></span>
+<select class="form-select form-select-sm pwr-search-input" id="pwr-event-id-filter">
+<option value="">Все Event ID жизненного цикла</option>
+<option value="1074">1074 — User32 (Инициатор shutdown/restart)</option>
+<option value="41">41 — Kernel-Power (Внезапная перезагрузка)</option>
+<option value="6008">6008 — EventLog (Неожиданное выключение)</option>
+<option value="12">12 — Kernel-General (Запуск ядра / Boot)</option>
+<option value="13">13 — Kernel-General (Завершение работы ОС)</option>
+<option value="6005">6005 — EventLog (Служба EventLog запущена)</option>
+<option value="6006">6006 — EventLog (EventLog штатно остановлен)</option>
+<option value="6009">6009 — EventLog (Версия ядра при загрузке)</option>
+<option value="1001">1001 — WER (Аварийный сбой BSOD / BugCheck)</option>
+<option value="19">19 — WindowsUpdate (Установка обновлений)</option>
+<option value="42">42 — Kernel-Power (Переход в сон)</option>
+<option value="107">107 — Kernel-Power (Пробуждение из сна)</option>
+</select>
+</div>
+</div>
+<div class="col-12 col-md-5">
+<div class="input-group input-group-sm">
+<span class="input-group-text pwr-input-addon"><i class="bi bi-search"></i></span>
+<input class="form-control form-control-sm pwr-search-input" id="pwr-events-search" placeholder="Поиск в событиях..." type="text"/>
+</div>
+</div>
+<div class="col-12 col-md-3 text-end">
+<span class="small text-muted" id="pwr-events-counter">Событий: 0</span>
+</div>
+</div>
+</div>
+<!-- Таблица сырых событий -->
+<div class="card pwr-card shadow-sm" data-panel-id="panel-power-lifecycle-8" id="panel-power-lifecycle-8">
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0 pwr-table" style="font-size: 0.85rem;">
+<thead>
+<tr>
+<th style="width: 160px;">Время</th>
+<th style="width: 90px;">Event ID</th>
+<th style="width: 140px;">Провайдер</th>
+<th style="width: 130px;">Тип</th>
+<th style="width: 180px;">Инициатор / Процесс</th>
+<th>Описание / Причина</th>
+<th class="text-center" style="width: 80px;">XML</th>
+</tr>
+</thead>
+<tbody id="pwr-events-tbody">
+<tr>
+<td class="text-center py-4 text-muted" colspan="7">
+<div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
                   Загрузка журнала событий...
                 </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Модальное окно деталей сессии питания -->
-  <div class="modal fade" id="pwrSessionDetailModal" tabindex="-1" aria-labelledby="pwrSessionDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content shadow">
-        <div class="modal-header border-bottom">
-          <h5 class="modal-title d-flex align-items-center gap-2" id="pwrSessionDetailModalLabel">
-            <i class="bi bi-info-circle-fill text-warning"></i>
-            <span id="pwr-modal-title">Детали сессии питания</span>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-3" id="pwr-modal-body">
-          <!-- Populated by main.js -->
-        </div>
-        <div class="modal-footer border-top">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модальное окно просмотра сырого XML события -->
-  <div class="modal fade" id="pwrXmlDetailModal" tabindex="-1" aria-labelledby="pwrXmlDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content shadow">
-        <div class="modal-header border-bottom">
-          <h5 class="modal-title d-flex align-items-center gap-2" id="pwrXmlDetailModalLabel">
-            <i class="bi bi-filetype-xml text-info"></i>
-            <span>Исходный XML события Windows</span>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-3">
-          <pre class="pwr-xml-pre p-3 rounded font-monospace mb-0" id="pwr-xml-content" style="font-size: 0.78rem; max-height: 500px; overflow-y: auto;"></pre>
-        </div>
-        <div class="modal-footer border-top">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Модальное окно деталей сессии питания -->
+<div aria-hidden="true" aria-labelledby="pwrSessionDetailModalLabel" class="modal fade" id="pwrSessionDetailModal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content shadow">
+<div class="modal-header border-bottom">
+<h5 class="modal-title d-flex align-items-center gap-2" id="pwrSessionDetailModalLabel">
+<i class="bi bi-info-circle-fill text-warning"></i>
+<span id="pwr-modal-title">Детали сессии питания</span>
+</h5>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-3" id="pwr-modal-body">
+<!-- Populated by main.js -->
+</div>
+<div class="modal-footer border-top">
+<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal" type="button">Закрыть</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Модальное окно просмотра сырого XML события -->
+<div aria-hidden="true" aria-labelledby="pwrXmlDetailModalLabel" class="modal fade" id="pwrXmlDetailModal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content shadow">
+<div class="modal-header border-bottom">
+<h5 class="modal-title d-flex align-items-center gap-2" id="pwrXmlDetailModalLabel">
+<i class="bi bi-filetype-xml text-info"></i>
+<span>Исходный XML события Windows</span>
+</h5>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-3">
+<pre class="pwr-xml-pre p-3 rounded font-monospace mb-0" id="pwr-xml-content" style="font-size: 0.78rem; max-height: 500px; overflow-y: auto;"></pre>
+</div>
+<div class="modal-footer border-top">
+<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal" type="button">Закрыть</button>
+</div>
+</div>
+</div>
+</div>
 </div>

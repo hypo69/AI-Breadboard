@@ -18,13 +18,14 @@
 # Package: src.ai.providers.windows_ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:36:00
 # =============================================================================
 
 """Provider adapter for Windows AI APIs and local system models."""
 
 from typing import Any, AsyncIterator, Dict, List, Optional, Set
 from logger import logger
+from src.config import is_debug_mode
 from src.ai.providers.base import BaseChatProvider
 from .probe import probe_windows_ai_components, is_windows_os
 
@@ -89,6 +90,8 @@ class WindowsAIChatBase(BaseChatProvider):
         if not self.is_available():
             msg = '[WindowsAIProvider] Windows AI Components are not installed on this system. Please ensure Copilot+ AI packages or Windows App SDK are enabled in Windows Settings.'
             logger.warning(msg)
+            if is_debug_mode():
+                raise RuntimeError(msg)
             return msg
         return f'[WindowsAI:{self.model_id}] Response for query: {q}'
 

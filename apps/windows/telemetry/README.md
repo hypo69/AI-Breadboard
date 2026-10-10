@@ -20,7 +20,7 @@
 ## Использование в коде
 
 ```python
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 
 sensor = WindowsStorageSensor()
 disks = sensor.get_physical_disks()
@@ -33,7 +33,7 @@ for disk in disks:
 
 ## CLI
 ```powershell
-python -m apps.windows.modules.storage_manager.core.windows_storage_sensor --output storage_snapshot.json
+python -m apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor --output storage_snapshot.json
 ```
 
 ## Установка как Windows Service (`Install-TelemetryExe.ps1`)

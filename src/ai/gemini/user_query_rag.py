@@ -17,7 +17,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 from __future__ import annotations
@@ -130,6 +130,9 @@ def index_user_query(user_id, api_key: str, query: str, response: str, rag_name:
         return True
     except Exception as ex:
         logger.error(f'Ошибка индексации запроса пользователя {user_id}', ex, False)
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise ex
         return False
 
 def search_user_context(user_id, api_key: str, query: str, top_k: int=3, threshold: float=0.4, rag_name: Optional[str]=None) -> list:
@@ -153,6 +156,9 @@ def search_user_context(user_id, api_key: str, query: str, top_k: int=3, thresho
         return rag.search(query, top_k=top_k, threshold=threshold)
     except Exception as ex:
         logger.error(f'Ошибка поиска в RAG {user_id} (rag_name={rag_name})', ex, False)
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise ex
         return []
 
 def get_user_rag_stats(user_id, api_key: str) -> dict:

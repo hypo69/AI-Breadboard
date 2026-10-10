@@ -11,437 +11,423 @@ Project: ai-breadboard
 Package: windows/api/webgui/accounts_identity_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 01:48:00
+Updated: 2026-10-10 10:37:00
 =============================================================================
 -->
-
 <div class="container-fluid p-3" id="accounts-identity-root">
-  <!-- Заголовок и текущий контекст токена -->
-  <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
-    <div>
-      <h4 class="mb-0 fw-bold d-flex align-items-center gap-2">
-        <i class="bi bi-people-fill text-primary"></i>
-        <span>Управление пользователями и Windows Identity</span>
-      </h4>
-      <div class="small text-muted" id="ai-current-token-badge">
+<!-- Заголовок и текущий контекст токена -->
+<div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+<div>
+<h4 class="mb-0 fw-bold d-flex align-items-center gap-2">
+<i class="bi bi-people-fill text-primary"></i>
+<span>Управление пользователями и Windows Identity</span>
+</h4>
+<div class="small text-muted" id="ai-current-token-badge">
         Загрузка контекста безопасности...
       </div>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" id="btn-refresh-identity" title="Обновить данные">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить</span>
-      </button>
-      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm" id="btn-open-create-user-modal">
-        <i class="bi bi-person-plus-fill"></i>
-        <span>Создать пользователя</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Карточки ключевых метрик -->
-  <div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
-        <div class="card-body p-2 d-flex align-items-center gap-3">
-          <div class="rounded-circle p-2 bg-primary bg-opacity-10 text-primary fs-4">
-            <i class="bi bi-person-badge"></i>
-          </div>
-          <div>
-            <div class="text-muted small">Всего пользователей</div>
-            <h5 class="fw-bold mb-0" id="stat-total-users">-</h5>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
-        <div class="card-body p-2 d-flex align-items-center gap-3">
-          <div class="rounded-circle p-2 bg-danger bg-opacity-10 text-danger fs-4">
-            <i class="bi bi-shield-lock-fill"></i>
-          </div>
-          <div>
-            <div class="text-muted small">Администраторы</div>
-            <h5 class="fw-bold mb-0" id="stat-total-admins">-</h5>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
-        <div class="card-body p-2 d-flex align-items-center gap-3">
-          <div class="rounded-circle p-2 bg-success bg-opacity-10 text-success fs-4">
-            <i class="bi bi-display"></i>
-          </div>
-          <div>
-            <div class="text-muted small">Активных сессий</div>
-            <h5 class="fw-bold mb-0" id="stat-active-sessions">-</h5>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
-        <div class="card-body p-2 d-flex align-items-center gap-3">
-          <div class="rounded-circle p-2 bg-warning bg-opacity-10 text-warning fs-4">
-            <i class="bi bi-shield-exclamation"></i>
-          </div>
-          <div>
-            <div class="text-muted small">События аудита (24ч)</div>
-            <h5 class="fw-bold mb-0" id="stat-security-events">-</h5>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Навигация по подразделам вкладки -->
-  <ul class="nav nav-pills mb-3 gap-1" id="identity-subtabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active btn-sm" id="subtab-users-btn" data-bs-toggle="pill" data-bs-target="#subtab-users" type="button" role="tab">
-        <i class="bi bi-people me-1"></i> Пользователи SAM
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link btn-sm" id="subtab-groups-btn" data-bs-toggle="pill" data-bs-target="#subtab-groups" type="button" role="tab">
-        <i class="bi bi-diagram-3 me-1"></i> Группы и вложенность
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link btn-sm" id="subtab-events-btn" data-bs-toggle="pill" data-bs-target="#subtab-events" type="button" role="tab">
-        <i class="bi bi-shield-shaded me-1"></i> Журнал безопасности
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link btn-sm" id="subtab-security-btn" data-bs-toggle="pill" data-bs-target="#subtab-security" type="button" role="tab">
-        <i class="bi bi-shield-check me-1"></i> Аудит безопасности и LSA
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link btn-sm" id="subtab-pid-btn" data-bs-toggle="pill" data-bs-target="#subtab-pid" type="button" role="tab">
-        <i class="bi bi-cpu me-1"></i> Инспектор процесса (PID)
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link btn-sm" id="subtab-catalog-btn" data-bs-toggle="pill" data-bs-target="#subtab-catalog" type="button" role="tab">
-        <i class="bi bi-journal-code me-1"></i> Каталог операций (~180)
-      </button>
-    </li>
-  </ul>
-
-  <!-- Содержимое подразделов -->
-  <div class="tab-content" id="identity-subtabs-content">
-    
-    <!-- 1. Подраздел: Пользователи -->
-    <div class="tab-pane fade show active" id="subtab-users" role="tabpanel">
-      <div class="card shadow-sm border-secondary-subtle">
-        <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 flex-wrap gap-2">
-          <div class="fw-semibold small">Локальные учетные записи Windows</div>
-          <div class="d-flex align-items-center gap-2">
-            <div class="input-group input-group-sm" style="width: 220px;">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control" id="filter-users-input" placeholder="Поиск пользователя...">
-            </div>
-          </div>
-        </div>
-        <div class="card-body p-0 table-responsive">
-          <table class="table table-hover align-middle mb-0" id="users-table">
-            <thead class="table-light small">
-              <tr>
-                <th>Имя пользователя</th>
-                <th>Полное имя</th>
-                <th>SID</th>
-                <th>Статус</th>
-                <th>Пароль</th>
-                <th>Истекает</th>
-                <th>Последний вход</th>
-                <th class="text-end">Действия</th>
-              </tr>
-            </thead>
-            <tbody id="users-table-body" class="small">
-              <tr>
-                <td colspan="8" class="text-center py-3 text-muted">Загрузка пользователей...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. Подраздел: Группы -->
-    <div class="tab-pane fade" id="subtab-groups" role="tabpanel">
-      <div class="card shadow-sm border-secondary-subtle">
-        <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2">
-          <div class="fw-semibold small">Группы безопасности и граф членства</div>
-        </div>
-        <div class="card-body p-0 table-responsive">
-          <table class="table table-hover align-middle mb-0" id="groups-table">
-            <thead class="table-light small">
-              <tr>
-                <th>Имя группы</th>
-                <th>SID</th>
-                <th>Описание</th>
-                <th>Тип</th>
-                <th>Участники</th>
-                <th class="text-end">Действия</th>
-              </tr>
-            </thead>
-            <tbody id="groups-table-body" class="small">
-              <tr>
-                <td colspan="6" class="text-center py-3 text-muted">Загрузка групп...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Подраздел: Журнал безопасности (Security Events Log) -->
-    <div class="tab-pane fade" id="subtab-events" role="tabpanel">
-      <div class="card shadow-sm border-secondary-subtle">
-        <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold small"><i class="bi bi-shield-shaded text-primary me-1"></i> Журнал событий безопасности Windows</span>
-            <span class="badge bg-secondary" id="events-count-badge">0 записей</span>
-          </div>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <div class="btn-group btn-group-sm" role="group" id="events-quick-filters">
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 event-filter-btn active" data-filter="all">Все</button>
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="logon">Входы (4624/4625)</button>
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="accounts">Аккаунты (4720/4726)</button>
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="password">Пароли (4724)</button>
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="lockout">Блокировки (4740)</button>
-            </div>
-            <div class="input-group input-group-sm" style="width: 200px;">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control" id="filter-events-input" placeholder="Поиск в журнале...">
-            </div>
-            <button class="btn btn-sm btn-outline-primary py-0 px-2" id="btn-refresh-events" title="Обновить журнал">
-              <i class="bi bi-arrow-clockwise"></i>
-            </button>
-          </div>
-        </div>
-        <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
-          <table class="table table-hover table-sm align-middle mb-0" id="events-table">
-            <thead class="table-light small sticky-top">
-              <tr>
-                <th style="width: 140px;">Время</th>
-                <th style="width: 90px;">Event ID</th>
-                <th style="width: 170px;">Событие</th>
-                <th style="width: 160px;">Целевой аккаунт</th>
-                <th style="width: 150px;">Инициатор</th>
-                <th>Описание / Сообщение</th>
-                <th style="width: 90px;" class="text-end">Инфо</th>
-              </tr>
-            </thead>
-            <tbody id="events-table-body" class="small">
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">Загрузка журнала событий безопасности...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. Подраздел: Аудит безопасности и LSA -->
-    <div class="tab-pane fade" id="subtab-security" role="tabpanel">
-      <div class="row g-3">
-        <div class="col-md-7">
-          <div class="card shadow-sm border-secondary-subtle mb-3">
-            <div class="card-header bg-body-tertiary fw-semibold small d-flex align-items-center justify-content-between">
-              <span>Быстрый аудит привилегий и доступа</span>
-            </div>
-            <div class="card-body p-3">
-              <div class="d-flex flex-wrap gap-2 mb-3">
-                <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btn-check-who-is-admin">
-                  <i class="bi bi-shield-lock"></i>
-                  <span>Who is Admin?</span>
-                </button>
-                <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" id="btn-check-service-logon">
-                  <i class="bi bi-gear"></i>
-                  <span>Logon as Service</span>
-                </button>
-                <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1" id="btn-check-rdp">
-                  <i class="bi bi-display"></i>
-                  <span>Remote Desktop (RDP)</span>
-                </button>
-                <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="btn-check-orphaned">
-                  <i class="bi bi-exclamation-triangle"></i>
-                  <span>Orphaned SIDs / Profiles</span>
-                </button>
-              </div>
-              <div class="border rounded p-2 bg-body-tertiary small" id="security-audit-results" style="min-height: 180px; max-height: 360px; overflow-y: auto;">
-                <div class="text-muted text-center py-4">Выберите проверку выше для запуска анализа безопасности.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-5">
-          <div class="card shadow-sm border-secondary-subtle">
-            <div class="card-header bg-body-tertiary fw-semibold small">
-              <i class="bi bi-key-fill me-1 text-primary"></i> Политика паролей SAM
-            </div>
-            <div class="card-body p-3 small" id="password-policy-container">
-              <div class="text-muted">Загрузка политики паролей...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. Подраздел: Инспектор процесса (PID) -->
-    <div class="tab-pane fade" id="subtab-pid" role="tabpanel">
-      <div class="card shadow-sm border-secondary-subtle">
-        <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2">
-          <div class="fw-semibold small">Исследование контекста безопасности процесса (Token & Account Dossier)</div>
-        </div>
-        <div class="card-body p-3">
-          <div class="row g-2 align-items-center mb-3">
-            <div class="col-auto">
-              <label for="input-explain-pid" class="col-form-label small fw-semibold">PID процесса:</label>
-            </div>
-            <div class="col-auto" style="width: 150px;">
-              <input type="number" id="input-explain-pid" class="form-control form-control-sm" placeholder="например 1234">
-            </div>
-            <div class="col-auto">
-              <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btn-explain-pid">
-                <i class="bi bi-search"></i>
-                <span>Исследовать PID</span>
-              </button>
-            </div>
-          </div>
-          <div id="pid-dossier-output" class="p-3 bg-body-tertiary rounded border font-monospace small" style="white-space: pre-wrap; display: none;">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 6. Подраздел: Каталог операций (~180) -->
-    <div class="tab-pane fade" id="subtab-catalog" role="tabpanel">
-      <div class="card shadow-sm border-secondary-subtle">
-        <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 flex-wrap gap-2">
-          <div class="fw-semibold small">Реестр операций OS-level каталога Accounts & Identity</div>
-          <div class="d-flex align-items-center gap-2">
-            <input type="text" class="form-control form-control-sm" id="filter-catalog-input" placeholder="Поиск в каталоге..." style="width: 200px;">
-          </div>
-        </div>
-        <div class="card-body p-0 table-responsive" style="max-height: 500px; overflow-y: auto;">
-          <table class="table table-hover table-sm align-middle mb-0">
-            <thead class="table-light small sticky-top">
-              <tr>
-                <th>#</th>
-                <th>Операция</th>
-                <th>Подсистема</th>
-                <th>Механизм</th>
-                <th>API / CLI</th>
-                <th>Риск</th>
-              </tr>
-            </thead>
-            <tbody id="catalog-table-body" class="small">
-              <tr>
-                <td colspan="6" class="text-center py-3 text-muted">Загрузка каталога...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </div>
 </div>
-
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" id="btn-refresh-identity" title="Обновить данные">
+<i class="bi bi-arrow-clockwise"></i>
+<span>Обновить</span>
+</button>
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm" id="btn-open-create-user-modal">
+<i class="bi bi-person-plus-fill"></i>
+<span>Создать пользователя</span>
+</button>
+</div>
+</div>
+<!-- Карточки ключевых метрик -->
+<div class="row g-3 mb-3">
+<div class="col-6 col-md-3">
+<div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary" data-panel-id="panel-accounts-identity" id="panel-accounts-identity">
+<div class="card-body p-2 d-flex align-items-center gap-3">
+<div class="rounded-circle p-2 bg-primary bg-opacity-10 text-primary fs-4">
+<i class="bi bi-person-badge"></i>
+</div>
+<div>
+<div class="text-muted small">Всего пользователей</div>
+<h5 class="fw-bold mb-0" id="stat-total-users">-</h5>
+</div>
+</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary" data-panel-id="panel-accounts-identity" id="panel-accounts-identity">
+<div class="card-body p-2 d-flex align-items-center gap-3">
+<div class="rounded-circle p-2 bg-danger bg-opacity-10 text-danger fs-4">
+<i class="bi bi-shield-lock-fill"></i>
+</div>
+<div>
+<div class="text-muted small">Администраторы</div>
+<h5 class="fw-bold mb-0" id="stat-total-admins">-</h5>
+</div>
+</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary" data-panel-id="panel-accounts-identity" id="panel-accounts-identity">
+<div class="card-body p-2 d-flex align-items-center gap-3">
+<div class="rounded-circle p-2 bg-success bg-opacity-10 text-success fs-4">
+<i class="bi bi-display"></i>
+</div>
+<div>
+<div class="text-muted small">Активных сессий</div>
+<h5 class="fw-bold mb-0" id="stat-active-sessions">-</h5>
+</div>
+</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary" data-panel-id="panel-accounts-identity" id="panel-accounts-identity">
+<div class="card-body p-2 d-flex align-items-center gap-3">
+<div class="rounded-circle p-2 bg-warning bg-opacity-10 text-warning fs-4">
+<i class="bi bi-shield-exclamation"></i>
+</div>
+<div>
+<div class="text-muted small">События аудита (24ч)</div>
+<h5 class="fw-bold mb-0" id="stat-security-events">-</h5>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Навигация по подразделам вкладки -->
+<ul class="nav nav-pills mb-3 gap-1" id="identity-subtabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button class="nav-link active btn-sm" data-bs-target="#subtab-users" data-bs-toggle="pill" id="subtab-users-btn" role="tab" type="button">
+<i class="bi bi-people me-1"></i> Пользователи SAM
+      </button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link btn-sm" data-bs-target="#subtab-groups" data-bs-toggle="pill" id="subtab-groups-btn" role="tab" type="button">
+<i class="bi bi-diagram-3 me-1"></i> Группы и вложенность
+      </button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link btn-sm" data-bs-target="#subtab-events" data-bs-toggle="pill" id="subtab-events-btn" role="tab" type="button">
+<i class="bi bi-shield-shaded me-1"></i> Журнал безопасности
+      </button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link btn-sm" data-bs-target="#subtab-security" data-bs-toggle="pill" id="subtab-security-btn" role="tab" type="button">
+<i class="bi bi-shield-check me-1"></i> Аудит безопасности и LSA
+      </button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link btn-sm" data-bs-target="#subtab-pid" data-bs-toggle="pill" id="subtab-pid-btn" role="tab" type="button">
+<i class="bi bi-cpu me-1"></i> Инспектор процесса (PID)
+      </button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link btn-sm" data-bs-target="#subtab-catalog" data-bs-toggle="pill" id="subtab-catalog-btn" role="tab" type="button">
+<i class="bi bi-journal-code me-1"></i> Каталог операций (~180)
+      </button>
+</li>
+</ul>
+<!-- Содержимое подразделов -->
+<div class="tab-content" id="identity-subtabs-content">
+<!-- 1. Подраздел: Пользователи -->
+<div class="tab-pane fade show active" id="subtab-users" role="tabpanel">
+<div class="card shadow-sm border-secondary-subtle" data-panel-id="panel-accounts-identity-1" id="panel-accounts-identity-1">
+<div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 flex-wrap gap-2">
+<div class="fw-semibold small">Локальные учетные записи Windows</div>
+<div class="d-flex align-items-center gap-2">
+<div class="input-group input-group-sm" style="width: 220px;">
+<span class="input-group-text"><i class="bi bi-search"></i></span>
+<input class="form-control" id="filter-users-input" placeholder="Поиск пользователя..." type="text"/>
+</div>
+</div>
+</div>
+<div class="card-body p-0 table-responsive">
+<table class="table table-hover align-middle mb-0" id="users-table">
+<thead class="table-light small">
+<tr>
+<th>Имя пользователя</th>
+<th>Полное имя</th>
+<th>SID</th>
+<th>Статус</th>
+<th>Пароль</th>
+<th>Истекает</th>
+<th>Последний вход</th>
+<th class="text-end">Действия</th>
+</tr>
+</thead>
+<tbody class="small" id="users-table-body">
+<tr>
+<td class="text-center py-3 text-muted" colspan="8">Загрузка пользователей...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- 2. Подраздел: Группы -->
+<div class="tab-pane fade" id="subtab-groups" role="tabpanel">
+<div class="card shadow-sm border-secondary-subtle" data-panel-id="panel-accounts-identity-2" id="panel-accounts-identity-2">
+<div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2">
+<div class="fw-semibold small">Группы безопасности и граф членства</div>
+</div>
+<div class="card-body p-0 table-responsive">
+<table class="table table-hover align-middle mb-0" id="groups-table">
+<thead class="table-light small">
+<tr>
+<th>Имя группы</th>
+<th>SID</th>
+<th>Описание</th>
+<th>Тип</th>
+<th>Участники</th>
+<th class="text-end">Действия</th>
+</tr>
+</thead>
+<tbody class="small" id="groups-table-body">
+<tr>
+<td class="text-center py-3 text-muted" colspan="6">Загрузка групп...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- 3. Подраздел: Журнал безопасности (Security Events Log) -->
+<div class="tab-pane fade" id="subtab-events" role="tabpanel">
+<div class="card shadow-sm border-secondary-subtle" data-panel-id="panel-accounts-identity-zhurnal-sobytiy-bezopasnosti-wi" id="panel-accounts-identity-zhurnal-sobytiy-bezopasnosti-wi">
+<div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<span class="fw-semibold small"><i class="bi bi-shield-shaded text-primary me-1"></i> Журнал событий безопасности Windows</span>
+<span class="badge bg-secondary" id="events-count-badge">0 записей</span>
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<div class="btn-group btn-group-sm" id="events-quick-filters" role="group">
+<button class="btn btn-outline-secondary py-0 px-2 event-filter-btn active" data-filter="all" type="button">Все</button>
+<button class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="logon" type="button">Входы (4624/4625)</button>
+<button class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="accounts" type="button">Аккаунты (4720/4726)</button>
+<button class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="password" type="button">Пароли (4724)</button>
+<button class="btn btn-outline-secondary py-0 px-2 event-filter-btn" data-filter="lockout" type="button">Блокировки (4740)</button>
+</div>
+<div class="input-group input-group-sm" style="width: 200px;">
+<span class="input-group-text"><i class="bi bi-search"></i></span>
+<input class="form-control" id="filter-events-input" placeholder="Поиск в журнале..." type="text"/>
+</div>
+<button class="btn btn-sm btn-outline-primary py-0 px-2" id="btn-refresh-events" title="Обновить журнал">
+<i class="bi bi-arrow-clockwise"></i>
+</button>
+</div>
+</div>
+<div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
+<table class="table table-hover table-sm align-middle mb-0" id="events-table">
+<thead class="table-light small sticky-top">
+<tr>
+<th style="width: 140px;">Время</th>
+<th style="width: 90px;">Event ID</th>
+<th style="width: 170px;">Событие</th>
+<th style="width: 160px;">Целевой аккаунт</th>
+<th style="width: 150px;">Инициатор</th>
+<th>Описание / Сообщение</th>
+<th class="text-end" style="width: 90px;">Инфо</th>
+</tr>
+</thead>
+<tbody class="small" id="events-table-body">
+<tr>
+<td class="text-center py-4 text-muted" colspan="7">Загрузка журнала событий безопасности...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- 4. Подраздел: Аудит безопасности и LSA -->
+<div class="tab-pane fade" id="subtab-security" role="tabpanel">
+<div class="row g-3">
+<div class="col-md-7">
+<div class="card shadow-sm border-secondary-subtle mb-3" data-panel-id="panel-accounts-identity-3" id="panel-accounts-identity-3">
+<div class="card-header bg-body-tertiary fw-semibold small d-flex align-items-center justify-content-between">
+<span>Быстрый аудит привилегий и доступа</span>
+</div>
+<div class="card-body p-3">
+<div class="d-flex flex-wrap gap-2 mb-3">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btn-check-who-is-admin">
+<i class="bi bi-shield-lock"></i>
+<span>Who is Admin?</span>
+</button>
+<button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" id="btn-check-service-logon">
+<i class="bi bi-gear"></i>
+<span>Logon as Service</span>
+</button>
+<button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1" id="btn-check-rdp">
+<i class="bi bi-display"></i>
+<span>Remote Desktop (RDP)</span>
+</button>
+<button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="btn-check-orphaned">
+<i class="bi bi-exclamation-triangle"></i>
+<span>Orphaned SIDs / Profiles</span>
+</button>
+</div>
+<div class="border rounded p-2 bg-body-tertiary small" id="security-audit-results" style="min-height: 180px; max-height: 360px; overflow-y: auto;">
+<div class="text-muted text-center py-4">Выберите проверку выше для запуска анализа безопасности.</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-md-5">
+<div class="card shadow-sm border-secondary-subtle" data-panel-id="panel-accounts-identity-4" id="panel-accounts-identity-4">
+<div class="card-header bg-body-tertiary fw-semibold small">
+<i class="bi bi-key-fill me-1 text-primary"></i> Политика паролей SAM
+            </div>
+<div class="card-body p-3 small" id="password-policy-container">
+<div class="text-muted">Загрузка политики паролей...</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Подраздел: Инспектор процесса (PID) -->
+<div class="tab-pane fade" id="subtab-pid" role="tabpanel">
+<div class="card shadow-sm border-secondary-subtle" data-panel-id="panel-accounts-identity-5" id="panel-accounts-identity-5">
+<div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2">
+<div class="fw-semibold small">Исследование контекста безопасности процесса (Token &amp; Account Dossier)</div>
+</div>
+<div class="card-body p-3">
+<div class="row g-2 align-items-center mb-3">
+<div class="col-auto">
+<label class="col-form-label small fw-semibold" for="input-explain-pid">PID процесса:</label>
+</div>
+<div class="col-auto" style="width: 150px;">
+<input class="form-control form-control-sm" id="input-explain-pid" placeholder="например 1234" type="number"/>
+</div>
+<div class="col-auto">
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btn-explain-pid">
+<i class="bi bi-search"></i>
+<span>Исследовать PID</span>
+</button>
+</div>
+</div>
+<div class="p-3 bg-body-tertiary rounded border font-monospace small" id="pid-dossier-output" style="white-space: pre-wrap; display: none;">
+</div>
+</div>
+</div>
+</div>
+<!-- 6. Подраздел: Каталог операций (~180) -->
+<div class="tab-pane fade" id="subtab-catalog" role="tabpanel">
+<div class="card shadow-sm border-secondary-subtle" data-panel-id="panel-accounts-identity-6" id="panel-accounts-identity-6">
+<div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 flex-wrap gap-2">
+<div class="fw-semibold small">Реестр операций OS-level каталога Accounts &amp; Identity</div>
+<div class="d-flex align-items-center gap-2">
+<input class="form-control form-control-sm" id="filter-catalog-input" placeholder="Поиск в каталоге..." style="width: 200px;" type="text"/>
+</div>
+</div>
+<div class="card-body p-0 table-responsive" style="max-height: 500px; overflow-y: auto;">
+<table class="table table-hover table-sm align-middle mb-0">
+<thead class="table-light small sticky-top">
+<tr>
+<th>#</th>
+<th>Операция</th>
+<th>Подсистема</th>
+<th>Механизм</th>
+<th>API / CLI</th>
+<th>Риск</th>
+</tr>
+</thead>
+<tbody class="small" id="catalog-table-body">
+<tr>
+<td class="text-center py-3 text-muted" colspan="6">Загрузка каталога...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- Модальное окно: Создание пользователя -->
-<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title d-flex align-items-center gap-2 fs-6 fw-bold">
-          <i class="bi bi-person-plus text-primary"></i>
-          <span>Создать локального пользователя</span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body small">
-        <form id="create-user-form">
-          <div class="mb-2">
-            <label class="form-label fw-semibold">Имя пользователя (Логин)*</label>
-            <input type="text" class="form-control form-control-sm" id="create-user-name" required placeholder="например: ivan">
-          </div>
-          <div class="mb-2">
-            <label class="form-label fw-semibold">Пароль (опционально)</label>
-            <input type="password" class="form-control form-control-sm" id="create-user-pwd" placeholder="Оставьте пустым без пароля">
-          </div>
-          <div class="mb-2">
-            <label class="form-label fw-semibold">Полное имя (Full Name)</label>
-            <input type="text" class="form-control form-control-sm" id="create-user-fullname" placeholder="например: Иван Иванов">
-          </div>
-          <div class="mb-2">
-            <label class="form-label fw-semibold">Описание (Description)</label>
-            <input type="text" class="form-control form-control-sm" id="create-user-desc" placeholder="Назначение учетной записи">
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Отмена</button>
-        <button type="button" class="btn btn-sm btn-primary" id="btn-submit-create-user">Создать</button>
-      </div>
-    </div>
-  </div>
+<div aria-hidden="true" class="modal fade" id="createUserModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content shadow">
+<div class="modal-header">
+<h5 class="modal-title d-flex align-items-center gap-2 fs-6 fw-bold">
+<i class="bi bi-person-plus text-primary"></i>
+<span>Создать локального пользователя</span>
+</h5>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body small">
+<form id="create-user-form">
+<div class="mb-2">
+<label class="form-label fw-semibold">Имя пользователя (Логин)*</label>
+<input class="form-control form-control-sm" id="create-user-name" placeholder="например: ivan" required="" type="text"/>
+</div>
+<div class="mb-2">
+<label class="form-label fw-semibold">Пароль (опционально)</label>
+<input class="form-control form-control-sm" id="create-user-pwd" placeholder="Оставьте пустым без пароля" type="password"/>
+</div>
+<div class="mb-2">
+<label class="form-label fw-semibold">Полное имя (Full Name)</label>
+<input class="form-control form-control-sm" id="create-user-fullname" placeholder="например: Иван Иванов" type="text"/>
+</div>
+<div class="mb-2">
+<label class="form-label fw-semibold">Описание (Description)</label>
+<input class="form-control form-control-sm" id="create-user-desc" placeholder="Назначение учетной записи" type="text"/>
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" type="button">Отмена</button>
+<button class="btn btn-sm btn-primary" id="btn-submit-create-user" type="button">Создать</button>
+</div>
+</div>
+</div>
+</div>
 <!-- Модальное окно: Досье Principal и Журнал событий пользователя -->
-<div class="modal fade" id="principalDossierModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header">
-        <h5 class="modal-title d-flex align-items-center gap-2 fs-6 fw-bold">
-          <i class="bi bi-file-earmark-person text-primary"></i>
-          <span id="dossier-modal-title">Досье субъекта безопасности</span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <ul class="nav nav-tabs mb-3" id="dossierModalTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active small py-1" id="dossier-tree-tab" data-bs-toggle="tab" data-bs-target="#dossier-tree-pane" type="button" role="tab">
-              <i class="bi bi-diagram-2 me-1"></i> Дерево Principal
+<div aria-hidden="true" class="modal fade" id="principalDossierModal" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal-content shadow">
+<div class="modal-header">
+<h5 class="modal-title d-flex align-items-center gap-2 fs-6 fw-bold">
+<i class="bi bi-file-earmark-person text-primary"></i>
+<span id="dossier-modal-title">Досье субъекта безопасности</span>
+</h5>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body">
+<ul class="nav nav-tabs mb-3" id="dossierModalTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button class="nav-link active small py-1" data-bs-target="#dossier-tree-pane" data-bs-toggle="tab" id="dossier-tree-tab" role="tab" type="button">
+<i class="bi bi-diagram-2 me-1"></i> Дерево Principal
             </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link small py-1" id="dossier-events-tab" data-bs-toggle="tab" data-bs-target="#dossier-events-pane" type="button" role="tab">
-              <i class="bi bi-shield-exclamation me-1"></i> События безопасности (<span id="dossier-events-count">0</span>)
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link small py-1" data-bs-target="#dossier-events-pane" data-bs-toggle="tab" id="dossier-events-tab" role="tab" type="button">
+<i class="bi bi-shield-exclamation me-1"></i> События безопасности (<span id="dossier-events-count">0</span>)
             </button>
-          </li>
-        </ul>
-        <div class="tab-content" id="dossierModalContent">
-          <div class="tab-pane fade show active" id="dossier-tree-pane" role="tabpanel">
-            <pre id="dossier-tree-view" class="p-3 bg-body-tertiary rounded border font-monospace small" style="white-space: pre-wrap; margin-bottom: 0;"></pre>
-          </div>
-          <div class="tab-pane fade" id="dossier-events-pane" role="tabpanel">
-            <div class="table-responsive">
-              <table class="table table-hover table-sm align-middle mb-0">
-                <thead class="table-light small">
-                  <tr>
-                    <th>Время</th>
-                    <th>Event ID</th>
-                    <th>Событие</th>
-                    <th>Инициатор / Аккаунт</th>
-                    <th>Описание</th>
-                  </tr>
-                </thead>
-                <tbody id="dossier-user-events-tbody" class="small font-monospace">
-                  <tr><td colspan="5" class="text-center py-3 text-muted">События отсутствуют</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-      </div>
-    </div>
-  </div>
+</li>
+</ul>
+<div class="tab-content" id="dossierModalContent">
+<div class="tab-pane fade show active" id="dossier-tree-pane" role="tabpanel">
+<pre class="p-3 bg-body-tertiary rounded border font-monospace small" id="dossier-tree-view" style="white-space: pre-wrap; margin-bottom: 0;"></pre>
+</div>
+<div class="tab-pane fade" id="dossier-events-pane" role="tabpanel">
+<div class="table-responsive">
+<table class="table table-hover table-sm align-middle mb-0">
+<thead class="table-light small">
+<tr>
+<th>Время</th>
+<th>Event ID</th>
+<th>Событие</th>
+<th>Инициатор / Аккаунт</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody class="small font-monospace" id="dossier-user-events-tbody">
+<tr><td class="text-center py-3 text-muted" colspan="5">События отсутствуют</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" type="button">Закрыть</button>
+</div>
+</div>
+</div>
 </div>

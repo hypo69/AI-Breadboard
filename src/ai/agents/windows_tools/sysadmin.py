@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты системного администрирования Windows: глубокий аудит пользователей,
-#   профилей, прав, событий файлов и политик безопасности (apps.windows.modules.sysadmin).
+#   профилей, прав, событий файлов и политик безопасности (apps.windows.sdk.modules.sysadmin).
 #   Включают:
 #     1. Инспекция пользователей, досье и аудита доступа (windows_sysadmin_audit)
 #     2. Системные действия и управление политиками SafeOps (windows_sysadmin_action)
@@ -172,8 +172,8 @@ async def windows_sysadmin_audit(
         JSON с результатами системного аудита.
     """
     try:
-        from apps.windows.modules.sysadmin.src.user_collector import WindowsUserCollector
-        from apps.windows.modules.sysadmin.src.file_auditor import WindowsFileAuditor
+        from apps.windows.sdk.modules.sysadmin.src.user_collector import WindowsUserCollector
+        from apps.windows.sdk.modules.sysadmin.src.file_auditor import WindowsFileAuditor
 
         collector = WindowsUserCollector()
         file_auditor = WindowsFileAuditor()
@@ -269,7 +269,7 @@ async def windows_sysadmin_action(
                 "message": f"Симуляция административного действия '{action}' для '{target}' прошла успешно (оператор: {operator}).",
             }, ensure_ascii=False)
 
-        from apps.windows.modules.sysadmin.src.file_auditor import WindowsFileAuditor
+        from apps.windows.sdk.modules.sysadmin.src.file_auditor import WindowsFileAuditor
         file_auditor = WindowsFileAuditor()
         loop = asyncio.get_running_loop()
 

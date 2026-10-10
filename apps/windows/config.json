@@ -2,14 +2,14 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "app": {
         "name": "AI Breadboard Windows (TC)",
-        "description": "\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u043e\u043d\u043d\u044b\u0439 \u043f\u0440\u043e\u0444\u0438\u043b\u044c \u043f\u043e\u0434\u0441\u0438\u0441\u0442\u0435\u043c\u044b Windows System API \u0438 \u0445\u0430\u0431\u0430 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0439 TC (tc.ps1)"
+        "description": "Конфигурационный профиль подсистемы Windows System API и хаба приложений TC (tc.ps1)"
     },
     "server": {
         "host": "127.0.0.1",
         "port": 8001,
         "protocol": "http",
         "title": "AI-Breadboard Windows Internal API",
-        "description": "\u0421\u0435\u0440\u0432\u0438\u0441 TC/Windows: \u0442\u0435\u043b\u0435\u043c\u0435\u0442\u0440\u0438\u044f, \u0434\u0430\u0448\u0431\u043e\u0440\u0434\u044b, \u0434\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430.",
+        "description": "Сервис TC/Windows: телеметрия, дашборды, диагностика.",
         "workers": 1,
         "reload": false,
         "use_ssl": false,
@@ -37,7 +37,8 @@
                     "gemini-2.5-flash-preview-tts",
                     "gemini-3.1-flash",
                     "gemini-old"
-                ]
+                ],
+                "model": "gemini-3.1-flash-lite"
             },
             "gemini_cli": {
                 "enabled": true,
@@ -86,20 +87,10 @@
             }
         }
     },
-    "web_search": {
-        "engine": "playwright",
-        "gemini_model": "gemini-3.5-flash-lite",
-        "gemini_cli_model": "gemini-3.1-flash-lite",
-        "agy_model": "agy-flash",
-        "fallback_on_rag_not_found": true
-    },
     "ai": {
-        "providers": {
-            "gemini": {
-                "unsupported_models": [
-                    "gemini-3.1-flash"
-                ]
-            }
+        "provider": "gemini",
+        "gemini": {
+            "model": "gemini-3.1-flash-lite"
         }
     }
 }

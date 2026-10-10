@@ -17,310 +17,279 @@ Project: ai-breadboard
 Package: windows/api/webgui/disk_speed_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 08:16:00
+Updated: 2026-10-10 10:37:00
 =============================================================================
 -->
-
 <div class="container-fluid py-2 px-3 text-white" id="disk-speed-container">
-  
-  <!-- Header / Breadcrumbs & Status -->
-  <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <span class="fs-4 text-warning fw-bold d-flex align-items-center gap-2">
-        <i class="bi bi-speedometer2 text-danger"></i>
-        <span>Бенчмарк дисков (DiskSpd / CDM)</span>
+<!-- Header / Breadcrumbs & Status -->
+<div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<span class="fs-4 text-warning fw-bold d-flex align-items-center gap-2">
+<i class="bi bi-speedometer2 text-danger"></i>
+<span>Бенчмарк дисков (DiskSpd / CDM)</span>
+</span>
+<span class="badge bg-dark border border-secondary text-info px-2 py-1" id="bench-engine-badge">
+<i class="bi bi-cpu"></i> Microsoft DiskSpd
       </span>
-      <span class="badge bg-dark border border-secondary text-info px-2 py-1" id="bench-engine-badge">
-        <i class="bi bi-cpu"></i> Microsoft DiskSpd
-      </span>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="bench-refresh-targets-btn" title="Обновить список накопителей">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить диски</span>
-      </button>
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5" id="bench-copy-md-btn" title="Скопировать результаты в Markdown">
-        <i class="bi bi-clipboard"></i>
-        <span>Копировать MD</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Safe Mode Notice Banner -->
-  <div class="alert alert-dark border-secondary d-flex align-items-center justify-content-between py-2 px-3 mb-3 small">
-    <div class="d-flex align-items-center gap-2">
-      <i class="bi bi-shield-check text-success fs-5"></i>
-      <span>
-        <strong>Безопасный режим:</strong> Тестирование выполняется на временном файле 
+</div>
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="bench-refresh-targets-btn" title="Обновить список накопителей">
+<i class="bi bi-arrow-clockwise"></i>
+<span>Обновить диски</span>
+</button>
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5" id="bench-copy-md-btn" title="Скопировать результаты в Markdown">
+<i class="bi bi-clipboard"></i>
+<span>Копировать MD</span>
+</button>
+</div>
+</div>
+<!-- Safe Mode Notice Banner -->
+<div class="alert alert-dark border-secondary d-flex align-items-center justify-content-between py-2 px-3 mb-3 small">
+<div class="d-flex align-items-center gap-2">
+<i class="bi bi-shield-check text-success fs-5"></i>
+<span>
+<strong>Безопасный режим:</strong> Тестирование выполняется на временном файле 
         <code class="text-info" id="bench-safe-filepath">C:\AI-Breadboard\data\benchmark\diskspd-test.dat</code>. 
         После завершения теста файл автоматически удаляется. Прямая запись в физические сектора исключена.
       </span>
-    </div>
-    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">SafeOps Active</span>
-  </div>
-
-  <!-- Main Benchmark Dashboard: Controls & CDM Table -->
-  <div class="row g-3 mb-3">
-    
-    <!-- Left Panel: Controls & CrystalDiskMark Style Buttons -->
-    <div class="col-12 col-xl-4">
-      <div class="card bg-dark border-secondary shadow-sm h-100 p-3">
-        <h6 class="text-primary fw-bold mb-3 d-flex align-items-center gap-2">
-          <i class="bi bi-sliders"></i> Параметры тестирования
+</div>
+<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">SafeOps Active</span>
+</div>
+<!-- Main Benchmark Dashboard: Controls & CDM Table -->
+<div class="row g-3 mb-3">
+<!-- Left Panel: Controls & CrystalDiskMark Style Buttons -->
+<div class="col-12 col-xl-4">
+<div class="card bg-dark border-secondary shadow-sm h-100 p-3" data-panel-id="panel-disk-speed-parametry-testirovaniya" id="panel-disk-speed-parametry-testirovaniya">
+<h6 class="text-primary fw-bold mb-3 d-flex align-items-center gap-2">
+<i class="bi bi-sliders"></i> Параметры тестирования
         </h6>
-
-        <!-- Drive Selector -->
-        <div class="mb-3">
-          <label class="form-label small text-muted fw-semibold" for="bench-drive-select">
-            <i class="bi bi-hdd"></i> Целевой накопитель:
+<!-- Drive Selector -->
+<div class="mb-3">
+<label class="form-label small text-muted fw-semibold" for="bench-drive-select">
+<i class="bi bi-hdd"></i> Целевой накопитель:
           </label>
-          <select class="form-select form-select-sm bg-dark text-white border-secondary" id="bench-drive-select">
-            <option value="C:">C: [Системный] — загрузка...</option>
-          </select>
-          <div class="d-flex justify-content-between text-muted small mt-1" style="font-size: 0.75rem;">
-            <span id="bench-drive-fs">ФС: NTFS</span>
-            <span id="bench-drive-free">Свободно: -- ГБ</span>
-          </div>
-        </div>
-
-        <!-- File Size & Duration -->
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="form-label small text-muted fw-semibold" for="bench-size-select">
-              <i class="bi bi-file-earmark-binary"></i> Размер файла:
+<select class="form-select form-select-sm bg-dark text-white border-secondary" id="bench-drive-select">
+<option value="C:">C: [Системный] — загрузка...</option>
+</select>
+<div class="d-flex justify-content-between text-muted small mt-1" style="font-size: 0.75rem;">
+<span id="bench-drive-fs">ФС: NTFS</span>
+<span id="bench-drive-free">Свободно: -- ГБ</span>
+</div>
+</div>
+<!-- File Size & Duration -->
+<div class="row g-2 mb-3">
+<div class="col-6">
+<label class="form-label small text-muted fw-semibold" for="bench-size-select">
+<i class="bi bi-file-earmark-binary"></i> Размер файла:
             </label>
-            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="bench-size-select">
-              <option value="64">64 MiB (Быстро)</option>
-              <option value="128">128 MiB</option>
-              <option value="256" selected>256 MiB (Стандарт)</option>
-              <option value="512">512 MiB</option>
-              <option value="1024">1 GiB</option>
-              <option value="2048">2 GiB</option>
-            </select>
-          </div>
-          <div class="col-6">
-            <label class="form-label small text-muted fw-semibold" for="bench-duration-select">
-              <i class="bi bi-stopwatch"></i> Время прогона:
+<select class="form-select form-select-sm bg-dark text-white border-secondary" id="bench-size-select">
+<option value="64">64 MiB (Быстро)</option>
+<option value="128">128 MiB</option>
+<option selected="" value="256">256 MiB (Стандарт)</option>
+<option value="512">512 MiB</option>
+<option value="1024">1 GiB</option>
+<option value="2048">2 GiB</option>
+</select>
+</div>
+<div class="col-6">
+<label class="form-label small text-muted fw-semibold" for="bench-duration-select">
+<i class="bi bi-stopwatch"></i> Время прогона:
             </label>
-            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="bench-duration-select">
-              <option value="2">2 сек (Экспресс)</option>
-              <option value="3" selected>3 сек (Оптимально)</option>
-              <option value="5">5 сек (Точно)</option>
-              <option value="10">10 сек (Crystal)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Test Mode: Both / Read / Write -->
-        <div class="mb-3">
-          <label class="form-label small text-muted fw-semibold">
-            <i class="bi bi-arrow-left-right"></i> Режим нагрузки:
+<select class="form-select form-select-sm bg-dark text-white border-secondary" id="bench-duration-select">
+<option value="2">2 сек (Экспресс)</option>
+<option selected="" value="3">3 сек (Оптимально)</option>
+<option value="5">5 сек (Точно)</option>
+<option value="10">10 сек (Crystal)</option>
+</select>
+</div>
+</div>
+<!-- Test Mode: Both / Read / Write -->
+<div class="mb-3">
+<label class="form-label small text-muted fw-semibold">
+<i class="bi bi-arrow-left-right"></i> Режим нагрузки:
           </label>
-          <div class="btn-group w-100" role="group">
-            <input type="radio" class="btn-check" name="bench-type-radio" id="bench-type-both" value="both" checked>
-            <label class="btn btn-sm btn-outline-primary" for="bench-type-both">Чтение + Запись</label>
-
-            <input type="radio" class="btn-check" name="bench-type-radio" id="bench-type-read" value="read">
-            <label class="btn btn-sm btn-outline-info" for="bench-type-read">Только Read</label>
-
-            <input type="radio" class="btn-check" name="bench-type-radio" id="bench-type-write" value="write">
-            <label class="btn btn-sm btn-outline-warning" for="bench-type-write">Только Write</label>
-          </div>
-        </div>
-
-        <!-- CDM Action Buttons Grid -->
-        <div class="mt-auto pt-2 border-top border-secondary">
-          <div class="d-grid gap-2 mb-2">
-            <button class="btn btn-success fw-bold py-2 shadow d-flex align-items-center justify-content-center gap-2" id="bench-run-all-btn">
-              <i class="bi bi-play-circle-fill fs-5"></i>
-              <span>ЗАПУСТИТЬ ВСЕ ТЕСТЫ (ALL)</span>
-            </button>
-            <button class="btn btn-danger btn-sm d-none d-flex align-items-center justify-content-center gap-2" id="bench-cancel-btn">
-              <i class="bi bi-stop-circle"></i>
-              <span>Прервать тестирование</span>
-            </button>
-          </div>
-
-          <div class="row g-1 text-center small">
-            <div class="col-6">
-              <button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-seq1m-q8" title="Тест SEQ1M Q8T1">
+<div class="btn-group w-100" role="group">
+<input checked="" class="btn-check" id="bench-type-both" name="bench-type-radio" type="radio" value="both"/>
+<label class="btn btn-sm btn-outline-primary" for="bench-type-both">Чтение + Запись</label>
+<input class="btn-check" id="bench-type-read" name="bench-type-radio" type="radio" value="read"/>
+<label class="btn btn-sm btn-outline-info" for="bench-type-read">Только Read</label>
+<input class="btn-check" id="bench-type-write" name="bench-type-radio" type="radio" value="write"/>
+<label class="btn btn-sm btn-outline-warning" for="bench-type-write">Только Write</label>
+</div>
+</div>
+<!-- CDM Action Buttons Grid -->
+<div class="mt-auto pt-2 border-top border-secondary">
+<div class="d-grid gap-2 mb-2">
+<button class="btn btn-success fw-bold py-2 shadow d-flex align-items-center justify-content-center gap-2" id="bench-run-all-btn">
+<i class="bi bi-play-circle-fill fs-5"></i>
+<span>ЗАПУСТИТЬ ВСЕ ТЕСТЫ (ALL)</span>
+</button>
+<button class="btn btn-danger btn-sm d-none d-flex align-items-center justify-content-center gap-2" id="bench-cancel-btn">
+<i class="bi bi-stop-circle"></i>
+<span>Прервать тестирование</span>
+</button>
+</div>
+<div class="row g-1 text-center small">
+<div class="col-6">
+<button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-seq1m-q8" title="Тест SEQ1M Q8T1">
                 SEQ1M Q8
               </button>
-            </div>
-            <div class="col-6">
-              <button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-seq1m-q1" title="Тест SEQ1M Q1T1">
+</div>
+<div class="col-6">
+<button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-seq1m-q1" title="Тест SEQ1M Q1T1">
                 SEQ1M Q1
               </button>
-            </div>
-            <div class="col-6">
-              <button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-rnd4k-q32" title="Тест RND4K Q32T16">
+</div>
+<div class="col-6">
+<button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-rnd4k-q32" title="Тест RND4K Q32T16">
                 RND4K Q32
               </button>
-            </div>
-            <div class="col-6">
-              <button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-rnd4k-q1" title="Тест RND4K Q1T1">
+</div>
+<div class="col-6">
+<button class="btn btn-sm btn-outline-secondary w-100 py-1" id="bench-run-rnd4k-q1" title="Тест RND4K Q1T1">
                 RND4K Q1
               </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Right Panel: CrystalDiskMark Scoreboard Table -->
-    <div class="col-12 col-xl-8">
-      <div class="card bg-dark border-secondary shadow-sm h-100">
-        
-        <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
-          <span class="fw-bold d-flex align-items-center gap-2">
-            <i class="bi bi-table text-info"></i>
-            <span>Результаты CrystalDiskMark</span>
-          </span>
-          <span class="badge bg-secondary font-monospace" id="bench-status-badge">Готов к тесту</span>
-        </div>
-
-        <div class="card-body p-3 d-flex flex-column justify-content-between">
-          
-          <!-- Live Progress Bar -->
-          <div class="mb-3 d-none" id="bench-progress-wrapper">
-            <div class="d-flex justify-content-between small text-muted mb-1">
-              <span id="bench-progress-msg">Инициализация DiskSpd...</span>
-              <span id="bench-progress-pct" class="fw-bold text-info">0%</span>
-            </div>
-            <div class="progress bg-black" style="height: 10px;">
-              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="bench-progress-bar" style="width: 0%;"></div>
-            </div>
-          </div>
-
-          <!-- The Table -->
-          <div class="table-responsive mb-3">
-            <table class="table table-dark table-bordered align-middle text-center mb-0" id="bench-cdm-table" style="font-family: Consolas, monospace;">
-              <thead>
-                <tr class="text-secondary bg-black" style="font-size: 0.85rem;">
-                  <th class="text-start py-2" style="width: 25%;">Тест / Профиль</th>
-                  <th class="text-end text-info py-2" style="width: 20%;"><i class="bi bi-download"></i> Read (MB/s)</th>
-                  <th class="text-end text-warning py-2" style="width: 20%;"><i class="bi bi-upload"></i> Write (MB/s)</th>
-                  <th class="text-end text-success py-2" style="width: 18%;">IOPS (R/W)</th>
-                  <th class="text-end text-muted py-2" style="width: 17%;">Латентность (µs)</th>
-                </tr>
-              </thead>
-              <tbody style="font-size: 1.05rem; font-weight: bold;">
-                
-                <!-- SEQ1M Q8T1 -->
-                <tr id="row-seq1m_q8t1">
-                  <td class="text-start">
-                    <div class="text-white">SEQ1M <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Q8T1</span></div>
-                    <div class="text-muted fw-normal" style="font-size: 0.7rem;">1 MiB, Очередь 8, Поток 1</div>
-                  </td>
-                  <td class="text-end text-info fs-5" id="val-seq1m_q8t1-read">0.00</td>
-                  <td class="text-end text-warning fs-5" id="val-seq1m_q8t1-write">0.00</td>
-                  <td class="text-end text-success small fw-normal" id="val-seq1m_q8t1-iops">-- / --</td>
-                  <td class="text-end text-muted small fw-normal" id="val-seq1m_q8t1-lat">-- µs</td>
-                </tr>
-
-                <!-- SEQ1M Q1T1 -->
-                <tr id="row-seq1m_q1t1">
-                  <td class="text-start">
-                    <div class="text-white">SEQ1M <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Q1T1</span></div>
-                    <div class="text-muted fw-normal" style="font-size: 0.7rem;">1 MiB, Очередь 1, Поток 1</div>
-                  </td>
-                  <td class="text-end text-info fs-5" id="val-seq1m_q1t1-read">0.00</td>
-                  <td class="text-end text-warning fs-5" id="val-seq1m_q1t1-write">0.00</td>
-                  <td class="text-end text-success small fw-normal" id="val-seq1m_q1t1-iops">-- / --</td>
-                  <td class="text-end text-muted small fw-normal" id="val-seq1m_q1t1-lat">-- µs</td>
-                </tr>
-
-                <!-- RND4K Q32T16 -->
-                <tr id="row-rnd4k_q32t16">
-                  <td class="text-start">
-                    <div class="text-white">RND4K <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Q32T16</span></div>
-                    <div class="text-muted fw-normal" style="font-size: 0.7rem;">4 KiB, Очередь 32, Поток 1</div>
-                  </td>
-                  <td class="text-end text-info fs-5" id="val-rnd4k_q32t16-read">0.00</td>
-                  <td class="text-end text-warning fs-5" id="val-rnd4k_q32t16-write">0.00</td>
-                  <td class="text-end text-success small fw-normal" id="val-rnd4k_q32t16-iops">-- / --</td>
-                  <td class="text-end text-muted small fw-normal" id="val-rnd4k_q32t16-lat">-- µs</td>
-                </tr>
-
-                <!-- RND4K Q1T1 -->
-                <tr id="row-rnd4k_q1t1">
-                  <td class="text-start">
-                    <div class="text-white">RND4K <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Q1T1</span></div>
-                    <div class="text-muted fw-normal" style="font-size: 0.7rem;">4 KiB, Очередь 1, Поток 1</div>
-                  </td>
-                  <td class="text-end text-info fs-5" id="val-rnd4k_q1t1-read">0.00</td>
-                  <td class="text-end text-warning fs-5" id="val-rnd4k_q1t1-write">0.00</td>
-                  <td class="text-end text-success small fw-normal" id="val-rnd4k_q1t1-iops">-- / --</td>
-                  <td class="text-end text-muted small fw-normal" id="val-rnd4k_q1t1-lat">-- µs</td>
-                </tr>
-
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Bottom Summary Footer -->
-          <div class="d-flex align-items-center justify-content-between p-2 bg-black rounded border border-secondary text-muted small">
-            <div>
-              <span>Тестируемый диск: <strong class="text-white" id="bench-summary-disk">C:</strong></span>
-              <span class="ms-3">Размер: <strong class="text-white" id="bench-summary-size">256 MB</strong></span>
-            </div>
-            <div>
-              <span>Время замера: <strong class="text-white" id="bench-summary-time">--</strong></span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Charts & History Section -->
-  <div class="row g-3">
-    
-    <!-- Chart: Throughput (MB/s) -->
-    <div class="col-12 col-lg-6">
-      <div class="card bg-dark border-secondary shadow-sm p-3 h-100">
-        <h6 class="text-primary fw-bold mb-2 d-flex align-items-center gap-2">
-          <i class="bi bi-bar-chart-fill"></i> Пропускная способность (MB/s)
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: CrystalDiskMark Scoreboard Table -->
+<div class="col-12 col-xl-8">
+<div class="card bg-dark border-secondary shadow-sm h-100" data-panel-id="panel-disk-speed-rezultaty-crystaldiskmark" id="panel-disk-speed-rezultaty-crystaldiskmark">
+<div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+<span class="fw-bold d-flex align-items-center gap-2">
+<i class="bi bi-table text-info"></i>
+<span>Результаты CrystalDiskMark</span>
+</span>
+<span class="badge bg-secondary font-monospace" id="bench-status-badge">Готов к тесту</span>
+</div>
+<div class="card-body p-3 d-flex flex-column justify-content-between">
+<!-- Live Progress Bar -->
+<div class="mb-3 d-none" id="bench-progress-wrapper">
+<div class="d-flex justify-content-between small text-muted mb-1">
+<span id="bench-progress-msg">Инициализация DiskSpd...</span>
+<span class="fw-bold text-info" id="bench-progress-pct">0%</span>
+</div>
+<div class="progress bg-black" style="height: 10px;">
+<div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="bench-progress-bar" style="width: 0%;"></div>
+</div>
+</div>
+<!-- The Table -->
+<div class="table-responsive mb-3">
+<table class="table table-dark table-bordered align-middle text-center mb-0" id="bench-cdm-table" style="font-family: Consolas, monospace;">
+<thead>
+<tr class="text-secondary bg-black" style="font-size: 0.85rem;">
+<th class="text-start py-2" style="width: 25%;">Тест / Профиль</th>
+<th class="text-end text-info py-2" style="width: 20%;"><i class="bi bi-download"></i> Read (MB/s)</th>
+<th class="text-end text-warning py-2" style="width: 20%;"><i class="bi bi-upload"></i> Write (MB/s)</th>
+<th class="text-end text-success py-2" style="width: 18%;">IOPS (R/W)</th>
+<th class="text-end text-muted py-2" style="width: 17%;">Латентность (µs)</th>
+</tr>
+</thead>
+<tbody style="font-size: 1.05rem; font-weight: bold;">
+<!-- SEQ1M Q8T1 -->
+<tr id="row-seq1m_q8t1">
+<td class="text-start">
+<div class="text-white">SEQ1M <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Q8T1</span></div>
+<div class="text-muted fw-normal" style="font-size: 0.7rem;">1 MiB, Очередь 8, Поток 1</div>
+</td>
+<td class="text-end text-info fs-5" id="val-seq1m_q8t1-read">0.00</td>
+<td class="text-end text-warning fs-5" id="val-seq1m_q8t1-write">0.00</td>
+<td class="text-end text-success small fw-normal" id="val-seq1m_q8t1-iops">-- / --</td>
+<td class="text-end text-muted small fw-normal" id="val-seq1m_q8t1-lat">-- µs</td>
+</tr>
+<!-- SEQ1M Q1T1 -->
+<tr id="row-seq1m_q1t1">
+<td class="text-start">
+<div class="text-white">SEQ1M <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Q1T1</span></div>
+<div class="text-muted fw-normal" style="font-size: 0.7rem;">1 MiB, Очередь 1, Поток 1</div>
+</td>
+<td class="text-end text-info fs-5" id="val-seq1m_q1t1-read">0.00</td>
+<td class="text-end text-warning fs-5" id="val-seq1m_q1t1-write">0.00</td>
+<td class="text-end text-success small fw-normal" id="val-seq1m_q1t1-iops">-- / --</td>
+<td class="text-end text-muted small fw-normal" id="val-seq1m_q1t1-lat">-- µs</td>
+</tr>
+<!-- RND4K Q32T16 -->
+<tr id="row-rnd4k_q32t16">
+<td class="text-start">
+<div class="text-white">RND4K <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Q32T16</span></div>
+<div class="text-muted fw-normal" style="font-size: 0.7rem;">4 KiB, Очередь 32, Поток 1</div>
+</td>
+<td class="text-end text-info fs-5" id="val-rnd4k_q32t16-read">0.00</td>
+<td class="text-end text-warning fs-5" id="val-rnd4k_q32t16-write">0.00</td>
+<td class="text-end text-success small fw-normal" id="val-rnd4k_q32t16-iops">-- / --</td>
+<td class="text-end text-muted small fw-normal" id="val-rnd4k_q32t16-lat">-- µs</td>
+</tr>
+<!-- RND4K Q1T1 -->
+<tr id="row-rnd4k_q1t1">
+<td class="text-start">
+<div class="text-white">RND4K <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Q1T1</span></div>
+<div class="text-muted fw-normal" style="font-size: 0.7rem;">4 KiB, Очередь 1, Поток 1</div>
+</td>
+<td class="text-end text-info fs-5" id="val-rnd4k_q1t1-read">0.00</td>
+<td class="text-end text-warning fs-5" id="val-rnd4k_q1t1-write">0.00</td>
+<td class="text-end text-success small fw-normal" id="val-rnd4k_q1t1-iops">-- / --</td>
+<td class="text-end text-muted small fw-normal" id="val-rnd4k_q1t1-lat">-- µs</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Bottom Summary Footer -->
+<div class="d-flex align-items-center justify-content-between p-2 bg-black rounded border border-secondary text-muted small">
+<div>
+<span>Тестируемый диск: <strong class="text-white" id="bench-summary-disk">C:</strong></span>
+<span class="ms-3">Размер: <strong class="text-white" id="bench-summary-size">256 MB</strong></span>
+</div>
+<div>
+<span>Время замера: <strong class="text-white" id="bench-summary-time">--</strong></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Charts & History Section -->
+<div class="row g-3">
+<!-- Chart: Throughput (MB/s) -->
+<div class="col-12 col-lg-6">
+<div class="card bg-dark border-secondary shadow-sm p-3 h-100" data-panel-id="panel-disk-speed-propusknaya-sposobnost-mbs" id="panel-disk-speed-propusknaya-sposobnost-mbs">
+<h6 class="text-primary fw-bold mb-2 d-flex align-items-center gap-2">
+<i class="bi bi-bar-chart-fill"></i> Пропускная способность (MB/s)
         </h6>
-        <div style="height: 220px; position: relative;">
-          <canvas id="bench-mb-chart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- History Table -->
-    <div class="col-12 col-lg-6">
-      <div class="card bg-dark border-secondary shadow-sm p-3 h-100">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h6 class="text-primary fw-bold mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-clock-history"></i> История замеров
+<div style="height: 220px; position: relative;">
+<canvas id="bench-mb-chart"></canvas>
+</div>
+</div>
+</div>
+<!-- History Table -->
+<div class="col-12 col-lg-6">
+<div class="card bg-dark border-secondary shadow-sm p-3 h-100" data-panel-id="panel-disk-speed-istoriya-zamerov" id="panel-disk-speed-istoriya-zamerov">
+<div class="d-flex align-items-center justify-content-between mb-2">
+<h6 class="text-primary fw-bold mb-0 d-flex align-items-center gap-2">
+<i class="bi bi-clock-history"></i> История замеров
           </h6>
-          <span class="badge bg-secondary" id="bench-history-count">0 записей</span>
-        </div>
-        <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
-          <table class="table table-dark table-sm table-hover align-middle mb-0 small" id="bench-history-table">
-            <thead>
-              <tr class="text-secondary">
-                <th>Дата / Время</th>
-                <th>Диск</th>
-                <th>SEQ Read / Write</th>
-                <th>RND 4K IOPS</th>
-                <th class="text-end">Действие</th>
-              </tr>
-            </thead>
-            <tbody id="bench-history-tbody">
-              <tr>
-                <td colspan="5" class="text-center text-muted py-3">История пуста. Запустите тест.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
+<span class="badge bg-secondary" id="bench-history-count">0 записей</span>
+</div>
+<div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+<table class="table table-dark table-sm table-hover align-middle mb-0 small" id="bench-history-table">
+<thead>
+<tr class="text-secondary">
+<th>Дата / Время</th>
+<th>Диск</th>
+<th>SEQ Read / Write</th>
+<th>RND 4K IOPS</th>
+<th class="text-end">Действие</th>
+</tr>
+</thead>
+<tbody id="bench-history-tbody">
+<tr>
+<td class="text-center text-muted py-3" colspan="5">История пуста. Запустите тест.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 </div>

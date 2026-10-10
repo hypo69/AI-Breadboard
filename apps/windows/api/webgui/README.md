@@ -1,4 +1,4 @@
-# Web Interface — AI Breadboard
+# Web Interface — AI Copmuter Analizer
 
 The `webinterface/` directory contains the frontend user interfaces and administrative dashboards for the AI Breadboard ecosystem, supporting multi-provider AI chat, media streaming, system management, RAG search, and agent orchestration.
 

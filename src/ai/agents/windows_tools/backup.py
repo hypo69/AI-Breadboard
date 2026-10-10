@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой Windows Backup, Libraries
-#   & File History (apps.windows.modules.backup_manager).
+#   & File History (apps.windows.sdk.modules.backup_manager).
 #   Сгруппированы по 5 логическим блокам:
 #     1. Диагностика и отчёт здоровья бэкапов (Health Check)
 #     2. Управление службой и поиском в Истории файлов (File History & RAG)
@@ -88,7 +88,7 @@ async def windows_backup_health_check() -> str:
         JSON с уровнем здоровья (health_score), состоянием службы fhsvc, дисков и списком рекомендаций.
     """
     try:
-        from apps.windows.modules.backup_manager.core.health_checker import BackupHealthChecker
+        from apps.windows.sdk.modules.backup_manager.core.health_checker import BackupHealthChecker
 
         checker = BackupHealthChecker()
         loop = asyncio.get_running_loop()
@@ -125,9 +125,9 @@ async def windows_backup_file_history(
         JSON с результатом выполнения операции Истории файлов.
     """
     try:
-        from apps.windows.modules.backup_manager.core.file_history_manager import FileHistoryManager
-        from apps.windows.modules.backup_manager.core.file_history_rag import get_file_history_rag
-        from apps.windows.modules.backup_manager.core.storage_auditor import BackupStorageAuditor
+        from apps.windows.sdk.modules.backup_manager.core.file_history_manager import FileHistoryManager
+        from apps.windows.sdk.modules.backup_manager.core.file_history_rag import get_file_history_rag
+        from apps.windows.sdk.modules.backup_manager.core.storage_auditor import BackupStorageAuditor
 
         mgr = FileHistoryManager()
         loop = asyncio.get_running_loop()
@@ -170,7 +170,7 @@ async def windows_backup_vss_snapshots() -> str:
         JSON со списком моментальных снимков томов (ShadowCopy ID, дата создания, имя тома).
     """
     try:
-        from apps.windows.modules.backup_manager.core.vss_manager import VssManager
+        from apps.windows.sdk.modules.backup_manager.core.vss_manager import VssManager
 
         vss = VssManager()
         loop = asyncio.get_running_loop()
@@ -205,7 +205,7 @@ async def windows_backup_user_folders(
         JSON со сводкой объемов или статусом релокации директории.
     """
     try:
-        from apps.windows.modules.backup_manager.core.user_folders_manager import UserFoldersManager
+        from apps.windows.sdk.modules.backup_manager.core.user_folders_manager import UserFoldersManager
 
         ufm = UserFoldersManager()
         loop = asyncio.get_running_loop()
@@ -252,7 +252,7 @@ async def windows_backup_version_control(
         JSON с деталями версий или результатом восстановления.
     """
     try:
-        from apps.windows.modules.backup_manager.core.version_provider import WindowsVersionProvider
+        from apps.windows.sdk.modules.backup_manager.core.version_provider import WindowsVersionProvider
 
         provider = WindowsVersionProvider()
         loop = asyncio.get_running_loop()

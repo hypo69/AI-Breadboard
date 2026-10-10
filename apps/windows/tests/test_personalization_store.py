@@ -26,10 +26,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from apps.windows.modules.personalization.manager import PersonalizationManager
-from apps.windows.modules.personalization.models import ThemeApplyRequest
-from apps.windows.modules.personalization.store import PersonalizationStore
-from apps.windows.modules.window_control_plane.history import WindowManagementHistoryManager
+from apps.windows.sdk.modules.personalization.manager import PersonalizationManager
+from apps.windows.sdk.modules.personalization.models import ThemeApplyRequest
+from apps.windows.sdk.modules.personalization.store import PersonalizationStore
+from apps.windows.sdk.modules.window_control_plane.history import WindowManagementHistoryManager
 
 
 @pytest.fixture
@@ -84,7 +84,7 @@ def test_get_state_shape(manager: PersonalizationManager) -> None:
 
 
 def test_rest_state_history_theme(manager: PersonalizationManager) -> None:
-    from apps.windows.modules.personalization import router as r_mod
+    from apps.windows.sdk.modules.personalization import router as r_mod
 
     r_mod._pm = manager
     app = FastAPI()

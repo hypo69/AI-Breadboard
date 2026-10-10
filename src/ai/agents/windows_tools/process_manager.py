@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты инспекции, категоризации и управления процессами Windows
-#   (apps.windows.modules.process_manager).
+#   (apps.windows.sdk.modules.process_manager).
 #   Включают в себя:
 #     1. Обзор процессов, топ по CPU/памяти и категоризацию (windows_process_list)
 #     2. Завершение процесса/дерева процессов с поддержкой SafeOps/dry_run (windows_process_action)
@@ -102,7 +102,7 @@ async def windows_process_list(
         JSON со списком или сводкой процессов Windows.
     """
     try:
-        from apps.windows.modules.process_manager.core.manager import ProcessManager
+        from apps.windows.sdk.modules.process_manager.core.manager import ProcessManager
 
         pm = ProcessManager()
         loop = asyncio.get_running_loop()
@@ -165,8 +165,8 @@ async def windows_process_action(
         JSON с результатом операции завершения процесса.
     """
     try:
-        from apps.windows.modules.process_manager.core.manager import ProcessManager
-        from apps.windows.modules.process_manager.core.models import ProcessKillRequest
+        from apps.windows.sdk.modules.process_manager.core.manager import ProcessManager
+        from apps.windows.sdk.modules.process_manager.core.models import ProcessKillRequest
 
         pm = ProcessManager()
         req = ProcessKillRequest(

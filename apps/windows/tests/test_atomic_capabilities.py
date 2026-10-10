@@ -26,8 +26,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from apps.windows.core.atomic_capabilities import get_atomic_registry, WindowsAtomicCapabilitiesRegistry
-from apps.windows.core.atomic_models import (
+from apps.windows.sdk.core.atomic_capabilities import get_atomic_registry, WindowsAtomicCapabilitiesRegistry
+from apps.windows.sdk.core.atomic_models import (
     AtomicOperationExecutionRequest,
     CapabilityCategory,
     PrivilegeLevel,

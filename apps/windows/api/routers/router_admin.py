@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:47:30
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field
 from header import __root__
 from src.config import ai_cfg
 from logger import logger
-from src.api.routers.core.router_auth import require_admin_user
+from apps.windows.api.auth import require_admin_user
 
 router = APIRouter(prefix='/api/admin', tags=['admin'])
 
@@ -360,7 +360,7 @@ def _get_app_plugins(request: Request) -> Dict[str, Any]:
 def _get_request_user(request: Request) -> Optional[Dict[str, Any]]:
     """Retrieve user dictionary if authenticated."""
     try:
-        from src.api.routers.core.router_auth import verify_jwt_token
+        from apps.windows.api.auth import verify_jwt_token
         from src.user_manager import user_manager
         token: str = request.cookies.get('auth_token', '')
         if not token:

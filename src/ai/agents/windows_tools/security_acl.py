@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты управления правами доступа (ACL), шифрованием BitLocker/EFS
-#   и уровнем безопасности UAC (apps.windows.modules.security_acl).
+#   и уровнем безопасности UAC (apps.windows.sdk.modules.security_acl).
 #   Включают:
 #     1. Аудит BitLocker, UAC и получение прав доступа ACL файлов/папок (windows_security_acl_audit)
 #     2. Модификация прав доступа ACL по протоколу SafeOps/dry_run (windows_security_acl_action)
@@ -100,7 +100,7 @@ async def windows_security_acl_audit(
         JSON со статусом BitLocker, UAC или списком записей ACL.
     """
     try:
-        from apps.windows.modules.security_acl.core.manager import SecurityAclManager
+        from apps.windows.sdk.modules.security_acl.core.manager import SecurityAclManager
 
         sam = SecurityAclManager()
         loop = asyncio.get_running_loop()
@@ -154,8 +154,8 @@ async def windows_security_acl_action(
         JSON с результатом выполнения операции модификации ACL.
     """
     try:
-        from apps.windows.modules.security_acl.core.manager import SecurityAclManager
-        from apps.windows.modules.security_acl.core.models import AclModifyRequest
+        from apps.windows.sdk.modules.security_acl.core.manager import SecurityAclManager
+        from apps.windows.sdk.modules.security_acl.core.models import AclModifyRequest
 
         sam = SecurityAclManager()
         req = AclModifyRequest(

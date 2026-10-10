@@ -31,7 +31,7 @@ from src.ai.agents.windows_tools import (
     windows_security_acl_action,
     WINDOWS_SECURITY_ACL_TOOLS,
 )
-from apps.windows.modules.security_acl.core.models import (
+from apps.windows.sdk.modules.security_acl.core.models import (
     AclEntry,
     BitLockerVolumeStatus,
     SecurityAclReport,
@@ -68,7 +68,7 @@ async def test_windows_security_acl_audit_report():
         uac_level="AlwaysNotify",
         timestamp="2026-10-08T22:00:00",
     )
-    with patch("apps.windows.modules.security_acl.core.manager.SecurityAclManager.generate_report", return_value=sample_report):
+    with patch("apps.windows.sdk.modules.security_acl.core.manager.SecurityAclManager.generate_report", return_value=sample_report):
         res_str = await call_tool(windows_security_acl_audit, action="report")
         res = json.loads(res_str)
         assert res["status"] == "ok"
@@ -86,7 +86,7 @@ async def test_windows_security_acl_action_dry_run():
         "action": "grant",
         "message": "Симуляция изменения ACL выполнена успешно.",
     }
-    with patch("apps.windows.modules.security_acl.core.manager.SecurityAclManager.execute_acl_modification", return_value=sample_res):
+    with patch("apps.windows.sdk.modules.security_acl.core.manager.SecurityAclManager.execute_acl_modification", return_value=sample_res):
         res_str = await call_tool(
             windows_security_acl_action,
             target_path="C:\\TestDir",

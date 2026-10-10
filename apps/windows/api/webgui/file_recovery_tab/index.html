@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/file_recovery_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
 
@@ -29,22 +29,23 @@ Updated: 2026-10-01 13:04:40
     margin: 0 auto;
   }
   .recovery-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 10px;
     padding: 1.25rem;
-    color: #f8fafc;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
   }
   .recovery-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border: 1px solid #334155;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 0.85rem 1.25rem;
+    color: var(--text-color);
   }
   .recovery-stat-box {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0.75rem 1rem;
   }
@@ -52,12 +53,12 @@ Updated: 2026-10-01 13:04:40
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
   }
   .recovery-stat-val {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-color);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
   .recovery-feature-item {
@@ -66,13 +67,13 @@ Updated: 2026-10-01 13:04:40
     gap: 0.5rem;
     margin-bottom: 0.5rem;
     font-size: 0.85rem;
-    color: #cbd5e1;
+    color: var(--text-color);
   }
 </style>
 
 <div class="recovery-container">
   <!-- Верхняя информационная панель -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 recovery-header text-white">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 recovery-header">
     <div class="d-flex align-items-center gap-2.5">
       <span class="fs-4">🗂️</span>
       <div>
@@ -81,7 +82,7 @@ Updated: 2026-10-01 13:04:40
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-dark border border-secondary text-info px-2.5 py-1.5" id="recovery-status-badge">
+      <span class="badge rounded-pill bg-body-secondary border border-secondary text-body px-2.5 py-1.5" id="recovery-status-badge">
         Проверка утилиты...
       </span>
       <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-recovery-refresh" type="button">
@@ -99,7 +100,7 @@ Updated: 2026-10-01 13:04:40
             <i class="bi bi-arrow-counterclockwise"></i> Восстановление данных с накопителей
           </h6>
 
-          <p class="text-light small mb-3">
+          <p class="text-body small mb-3">
             <strong>R-Studio Technician</strong> — мощный комплекс для восстановления удалённых, повреждённых и отформатированных файлов с локальных и сетевых дисков, RAID-массивов, флеш-накопителей и виртуальных дисков.
           </p>
 
@@ -172,7 +173,7 @@ Updated: 2026-10-01 13:04:40
           </div>
         </div>
 
-        <div class="p-2 rounded bg-dark border border-secondary text-secondary small">
+        <div class="p-2 rounded bg-body-secondary border border-secondary text-secondary small">
           <i class="bi bi-shield-check text-success me-1"></i> Приложение запускается с повышенными привилегиями Windows для доступа к секторам физических дисков.
         </div>
       </div>

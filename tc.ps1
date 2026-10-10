@@ -1,4 +1,4 @@
-﻿<#
+<#
 =============================================================================
 Process Name: AI-Breadboard Automation - Tc
 =============================================================================
@@ -21,7 +21,7 @@ Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 05:30:00
+Updated: 2026-10-10 12:02:00
 =============================================================================
 
 .SYNOPSIS
@@ -50,9 +50,6 @@ Updated: 2026-10-08 05:30:00
 .PARAMETER DisableRealtimeTelemetry
     Принудительно оставить стандартный режим телеметрии (сброс каждые 30с, лимит 100МБ).
 
-.PARAMETER GodMode
-    Открыть специальную панель Windows God Mode (All Tasks / все настройки системы) или перевести на неё фокус.
-
 .EXAMPLE
     .\tc.ps1
     Запуск Windows API сервера с телеметрией реального времени.
@@ -60,10 +57,6 @@ Updated: 2026-10-08 05:30:00
 .EXAMPLE
     .\tc.ps1 -Region "ru-ru"
     Запуск с автоматическим формированием ссылки с локалью BCP 47 (ru-RU).
-
-.EXAMPLE
-    .\tc.ps1 -GodMode
-    Запуск Windows API сервера и открытие/фокусировка папки God Mode.
 
 .EXAMPLE
     .\tc.ps1 -DisableRealtimeTelemetry
@@ -82,9 +75,7 @@ param (
 
     [switch]$RealtimeTelemetry = $true,
 
-    [switch]$DisableRealtimeTelemetry,
-
-    [switch]$GodMode
+    [switch]$DisableRealtimeTelemetry
 )
 
 $ErrorActionPreference = 'Continue'
@@ -138,40 +129,6 @@ if ($LanguageRegion) {
     }
     $regionQuery = "?region=${normalizedTag}"
     Write-Host "  [🌐 BCP 47 Locale]: $normalizedTag" -ForegroundColor Cyan
-}
-
-if ($GodMode) {
-    $godModeGuid = "ED7BA470-8E54-465E-825C-99712043E01C"
-    $focused = $false
-    try {
-        $shell = New-Object -ComObject Shell.Application
-        foreach ($w in $shell.Windows()) {
-            $url = "$($w.LocationURL)"
-            $name = "$($w.LocationName)"
-            if ($url -like "*$godModeGuid*" -or $name -like "*$godModeGuid*") {
-                $hwnd = $w.HWND
-                if ($hwnd) {
-                    $sig = '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow); [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd); [DllImport("user32.dll")] public static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);'
-                    $type = Add-Type -MemberDefinition $sig -Name "Win32Focus_$((Get-Random))" -Namespace "TC" -PassThru -ErrorAction SilentlyContinue
-                    $type::ShowWindow([IntPtr]$hwnd, 9)
-                    $type::SetForegroundWindow([IntPtr]$hwnd)
-                    $type::SwitchToThisWindow([IntPtr]$hwnd, $true)
-                    $focused = $true
-                    break
-                }
-            }
-        }
-    } catch {}
-
-    if (-not $focused) {
-        $godModeFolder = Join-Path $scriptDir "bin\.{ED7BA470-8E54-465E-825C-99712043E01C}"
-        if (Test-Path $godModeFolder) {
-            Start-Process explorer.exe $godModeFolder
-        } else {
-            Start-Process explorer.exe "shell:::{ED7BA470-8E54-465E-825C-99712043E01C}"
-        }
-    }
-    Write-Host "  [⚡ God Mode (All Tasks): активирован / переведён фокус]" -ForegroundColor Yellow
 }
 
 # Освобождаем порт если он занят

@@ -12,13 +12,13 @@ Usage Examples:
     Tab Frame Integration:
       <iframe src="/windows/api/webgui/hardware_monitor_tab/index.html" class="w-100 h-100 border-0"></iframe>
 
- * File: index.html
- * Project: ai-breadboard
- * Package: windows/api/webgui/hardware_monitor_tab
- * Author: hypo69
- * Copyright: © 2026 hypo69
- * Updated: 2026-10-06 00:20:00
- * =============================================================================
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/hardware_monitor_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-10 12:54:00
+=============================================================================
 -->
 
 <!-- Hardware & Sensors Monitor Tab -->
@@ -27,8 +27,8 @@ Usage Examples:
     padding: 0.5rem 0.75rem;
   }
   .hw-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     padding: 0.45rem 0.75rem;
     display: flex;
@@ -39,14 +39,14 @@ Usage Examples:
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .hw-card:hover {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border-color: var(--nav-active) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
   .hw-card-label {
     font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 600;
     display: flex;
     justify-content: space-between;
@@ -58,30 +58,31 @@ Usage Examples:
     font-weight: 700;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     line-height: 1.15;
+    color: var(--text-color);
   }
   .hw-card-sub {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--text-muted);
     line-height: 1.1;
   }
 
   .hw-panel {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     margin-bottom: 0.75rem;
     display: flex;
     flex-direction: column;
   }
   .hw-panel-header {
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
+    background: var(--surface-2) !important;
+    border-bottom: 1px solid var(--border-color) !important;
     padding: 0.45rem 0.85rem;
     font-weight: 600;
     font-size: 0.82rem;
-    color: #38bdf8;
+    color: var(--nav-active);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -106,16 +107,16 @@ Usage Examples:
     z-index: 2;
   }
   .hw-table th {
-    background: #1e293b;
-    color: #94a3b8;
+    background: var(--surface-2);
+    color: var(--text-muted);
     font-weight: 600;
     font-size: 0.72rem;
     text-transform: uppercase;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
     padding: 0.45rem 0.6rem;
   }
   .hw-table td {
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid var(--border-color);
     padding: 0.45rem 0.6rem;
     vertical-align: middle;
   }
@@ -125,7 +126,7 @@ Usage Examples:
   <!-- Header Bar -->
   <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
     <div>
-      <h6 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+      <h6 class="mb-0 fw-bold text-body d-flex align-items-center gap-2">
         <span>⚡</span> Монитор оборудования и сенсоров Windows
       </h6>
       <div class="small text-muted" style="font-size: 0.72rem;">
@@ -205,10 +206,10 @@ Usage Examples:
             <i class="bi bi-hdd-network text-info"></i>
             <span>Диски и накопители</span>
           </span>
-          <span class="badge bg-dark border border-secondary text-muted" id="hw-disks-count">0 дисков</span>
+          <span class="badge bg-body-secondary text-body" id="hw-disks-count">0 дисков</span>
         </div>
         <div class="table-responsive hw-scrollable">
-          <table class="table table-dark table-hover hw-table">
+          <table class="table table-hover hw-table">
             <thead>
               <tr>
                 <th>Диск</th>
@@ -249,10 +250,10 @@ Usage Examples:
             <i class="bi bi-thermometer-half text-danger"></i>
             <span>Аппаратные сенсоры (Температура, Вентиляторы, Вольтаж)</span>
           </span>
-          <span class="badge bg-dark border border-secondary text-muted" id="hw-sensors-total">0 сенсоров</span>
+          <span class="badge bg-body-secondary text-body" id="hw-sensors-total">0 сенсоров</span>
         </div>
         <div class="table-responsive hw-scrollable">
-          <table class="table table-dark table-hover hw-table">
+          <table class="table table-hover hw-table">
             <thead>
               <tr>
                 <th>Датчик / Компонент</th>
@@ -289,7 +290,7 @@ Usage Examples:
   <!-- Внешние утилиты диагностики оборудования                              -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="mt-3 mb-2">
-    <h6 class="fw-bold text-white d-flex align-items-center gap-2 mb-1">
+    <h6 class="fw-bold text-body d-flex align-items-center gap-2 mb-1">
       <span>🔧</span> Внешние утилиты диагностики
     </h6>
     <div class="small text-muted" style="font-size: 0.72rem;">

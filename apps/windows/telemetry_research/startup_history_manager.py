@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from logger import logger
-from apps.windows.modules.startup.core.models import (
+from apps.windows.sdk.modules.startup.core.models import (
     AuditReport,
     StartupArchiveEntry,
     StartupChangeItem,

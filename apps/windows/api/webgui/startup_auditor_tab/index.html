@@ -18,10 +18,9 @@ Project: ai-breadboard
 Package: windows/api/webgui/startup_auditor_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-06 14:05:00
+Updated: 2026-10-10 10:37:00
 =============================================================================
 -->
-
 <!-- Startup Auditor Tab Content -->
 <style>
   .sa-container {
@@ -226,310 +225,294 @@ Updated: 2026-10-06 14:05:00
     color: var(--text-color);
   }
 </style>
-
 <div class="sa-container" id="startup-auditor-container">
-  
-  <!-- Header Alert Banner (Compact Strip) -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 sa-header-banner" style="background: var(--surface-1); border: 1px solid var(--border-color); color: var(--text-color);">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <span class="fs-5">🚀</span>
-      <span class="fw-bold small" style="font-size: 0.92rem; color: var(--text-color);">Аудит автозапуска Windows</span>
-      <span class="badge border fw-normal" style="font-size: 0.7rem; background: var(--surface-2); border-color: var(--border-color) !important; color: var(--nav-active);">Startup Auditor</span>
-      <span class="badge border fw-normal d-none d-sm-inline-flex align-items-center gap-1" style="font-size: 0.7rem; background: var(--surface-2); border-color: var(--border-color) !important; color: var(--text-muted);" id="sa-telemetry-status-pill" title="Статус снимка автозапуска в базе телеметрии">
-        <i class="bi bi-database-check text-success"></i> <span id="sa-telemetry-last-snap">Телеметрия: синхронизировано</span>
-      </span>
-      <span class="text-muted small d-none d-lg-inline" style="font-size: 0.76rem;">| Run/RunOnce, папки автозагрузки, IFEO и службы</span>
-    </div>
-    <div class="d-flex align-items-center gap-1.5 flex-wrap">
-      <button class="btn btn-xs btn-primary rounded-pill px-3 py-1 d-flex align-items-center gap-1.5 fw-semibold shadow-sm" style="font-size: 0.76rem;" id="sa-btn-refresh-telemetry" title="Асинхронно перезапустить сбор автозапуска и зафиксировать отличия в телеметрии">
-        <i class="bi bi-arrow-repeat" id="sa-refresh-spinner"></i> <span>Обновить</span>
+<!-- Header Alert Banner (Compact Strip) -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 sa-header-banner" style="background: var(--surface-1); border: 1px solid var(--border-color); color: var(--text-color);">
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="fs-5">🚀</span>
+<span class="fw-bold small" style="font-size: 0.92rem; color: var(--text-color);">Аудит автозапуска Windows</span>
+<span class="badge border fw-normal" style="font-size: 0.7rem; background: var(--surface-2); border-color: var(--border-color) !important; color: var(--nav-active);">Startup Auditor</span>
+<span class="badge border fw-normal d-none d-sm-inline-flex align-items-center gap-1" id="sa-telemetry-status-pill" style="font-size: 0.7rem; background: var(--surface-2); border-color: var(--border-color) !important; color: var(--text-muted);" title="Статус снимка автозапуска в базе телеметрии">
+<i class="bi bi-database-check text-success"></i> <span id="sa-telemetry-last-snap">Телеметрия: синхронизировано</span>
+</span>
+<span class="text-muted small d-none d-lg-inline" style="font-size: 0.76rem;">| Run/RunOnce, папки автозагрузки, IFEO и службы</span>
+</div>
+<div class="d-flex align-items-center gap-1.5 flex-wrap">
+<button class="btn btn-xs btn-primary rounded-pill px-3 py-1 d-flex align-items-center gap-1.5 fw-semibold shadow-sm" id="sa-btn-refresh-telemetry" style="font-size: 0.76rem;" title="Асинхронно перезапустить сбор автозапуска и зафиксировать отличия в телеметрии">
+<i class="bi bi-arrow-repeat" id="sa-refresh-spinner"></i> <span>Обновить</span>
+</button>
+<button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" id="sa-btn-view-changes" style="font-size: 0.75rem;" title="Просмотр зафиксированных изменений между снимками телеметрии">
+<i class="bi bi-clock-history"></i> <span>Изменения</span>
+<span class="badge bg-warning text-dark px-1.5 py-0.5 rounded-pill d-none" id="sa-changes-badge" style="font-size: 0.65rem;">0</span>
+</button>
+<button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1" id="sa-btn-export-json" style="font-size: 0.75rem;" title="Экспорт в JSON">
+<i class="bi bi-file-earmark-code me-1"></i> JSON
       </button>
-      <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;" id="sa-btn-view-changes" title="Просмотр зафиксированных изменений между снимками телеметрии">
-        <i class="bi bi-clock-history"></i> <span>Изменения</span>
-        <span class="badge bg-warning text-dark px-1.5 py-0.5 rounded-pill d-none" id="sa-changes-badge" style="font-size: 0.65rem;">0</span>
+<button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1" id="sa-btn-export-csv" style="font-size: 0.75rem;" title="Экспорт в CSV">
+<i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV
       </button>
-      <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="sa-btn-export-json" title="Экспорт в JSON">
-        <i class="bi bi-file-earmark-code me-1"></i> JSON
-      </button>
-      <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="sa-btn-export-csv" title="Экспорт в CSV">
-        <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV
-      </button>
-    </div>
-  </div>
-
-  <!-- Top Metric & Health Score Cards (Compact Density Grid) -->
-  <div class="row g-2 mb-2">
-    <!-- Health Score Card -->
-    <div class="col-6 col-md-3">
-      <div class="sa-card">
-        <div class="sa-card-label">
-          <span>Индекс чистоты</span>
-          <i class="bi bi-shield-check text-success"></i>
-        </div>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <div class="d-flex align-items-baseline gap-1">
-            <div class="sa-card-value text-success" id="sa-health-score">--</div>
-            <span class="text-muted small" style="font-size: 0.75rem;">/ 100</span>
-          </div>
-          <div class="sa-card-sub text-end" id="sa-health-status">Оценка безопасности</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Active & Total Items -->
-    <div class="col-6 col-md-3">
-      <div class="sa-card">
-        <div class="sa-card-label">
-          <span>Элементы автозапуска</span>
-          <i class="bi bi-play-circle text-info"></i>
-        </div>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <div class="d-flex align-items-baseline gap-1">
-            <div class="sa-card-value text-info" id="sa-active-count">--</div>
-            <span class="text-muted small" style="font-size: 0.75rem;">из <span id="sa-total-count" class="fw-bold" style="color: var(--text-color);">--</span></span>
-          </div>
-          <div class="sa-card-sub text-end">Откл: <span id="sa-disabled-count" class="text-danger fw-bold">--</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Broken Entries Card -->
-    <div class="col-6 col-md-3">
-      <div class="sa-card">
-        <div class="sa-card-label">
-          <span>Битые ссылки</span>
-          <i class="bi bi-exclamation-triangle text-warning"></i>
-        </div>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <div class="d-flex align-items-baseline gap-1">
-            <div class="sa-card-value text-warning" id="sa-broken-count">--</div>
-            <span class="text-muted small" style="font-size: 0.75rem;">записей</span>
-          </div>
-          <div class="sa-card-sub text-end">Файлы не найдены</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Threats & Critical Alerts -->
-    <div class="col-6 col-md-3">
-      <div class="sa-card">
-        <div class="sa-card-label">
-          <span>Угрозы и аномалии</span>
-          <i class="bi bi-shield-slash text-danger"></i>
-        </div>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <div class="d-flex align-items-baseline gap-1">
-            <div class="sa-card-value text-danger" id="sa-threats-count">--</div>
-            <span class="text-muted small" style="font-size: 0.75rem;">предупреждений</span>
-          </div>
-          <div class="sa-card-sub text-end">IFEO и скрипты</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recommendations Alert Banner (Compact Sleek Strip) -->
-  <div class="py-1.5 px-3 mb-2 rounded-2 d-flex align-items-center justify-content-between" id="sa-recommendations-box" style="background: var(--surface-1); border: 1px solid var(--border-color); border-left: 3px solid #eab308; font-size: 0.78rem;">
-    <div class="d-flex align-items-center gap-2">
-      <span class="text-warning">💡</span>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="fw-semibold" style="color: var(--text-color);" id="sa-rec-title">Рекомендации:</span>
-        <span class="text-muted" id="sa-rec-desc">Загрузка рекомендаций по оптимизации...</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search & Filter Controls (Compact Toolbar) -->
-  <div class="card p-2 mb-2 sa-panel">
-    <div class="row g-2 align-items-center">
-      <!-- Search Input -->
-      <div class="col-12 col-md-4">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text sa-input text-muted py-1" style="border-right: none;"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control form-control-sm sa-input" id="sa-search-input" placeholder="Поиск по имени, команде или пути...">
-        </div>
-      </div>
-
-      <!-- Risk Filter -->
-      <div class="col-6 col-md-3">
-        <select class="form-select form-select-sm sa-input" id="sa-filter-risk">
-          <option value="">Все уровни риска</option>
-          <option value="critical">🚨 Critical (Критические)</option>
-          <option value="suspicious">⚠️ Suspicious (Подозрительные)</option>
-          <option value="warning">⚡ Warning (Предупреждения)</option>
-          <option value="notice">ℹ️ Notice (Инфо)</option>
-          <option value="clean">✅ Clean (Безопасные)</option>
-        </select>
-      </div>
-
-      <!-- Location Filter -->
-      <div class="col-6 col-md-3">
-        <select class="form-select form-select-sm sa-input" id="sa-filter-location">
-          <option value="">Все точки автозапуска</option>
-          <option value="registry_run">Реестр: Run</option>
-          <option value="registry_runonce">Реестр: RunOnce</option>
-          <option value="startup_folder_user">Папка автозагрузки (User)</option>
-          <option value="startup_folder_common">Папка автозагрузки (Common)</option>
-          <option value="winlogon">Winlogon</option>
-          <option value="ifeo">IFEO Перехваты</option>
-          <option value="scheduled_task">Планировщик задач</option>
-          <option value="windows_service">Службы Windows</option>
-        </select>
-      </div>
-
-      <!-- State Filter -->
-      <div class="col-12 col-md-2">
-        <select class="form-select form-select-sm sa-input" id="sa-filter-state">
-          <option value="">Все статусы</option>
-          <option value="enabled">Только включенные</option>
-          <option value="disabled">Только отключенные</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Entries Data Table Panel -->
-  <div class="sa-panel">
-    <div class="sa-panel-header">
-      <span><i class="bi bi-table me-1"></i> Список зарегистрированных элементов автозапуска</span>
-      <span class="small text-muted" id="sa-table-count">Загрузка...</span>
-    </div>
-    <div class="table-responsive" style="max-height: calc(100vh - 245px); overflow-y: auto;">
-      <table class="sa-table" id="sa-entries-table">
-        <thead>
-          <tr>
-            <th style="width: 80px;" class="text-center">Статус</th>
-            <th style="width: 230px;">Имя / Программа</th>
-            <th style="width: 170px;">Точка автозапуска</th>
-            <th style="width: 140px;">Категория</th>
-            <th style="width: 110px;" class="text-center">Риск</th>
-            <th>Исполняемый путь / Аргументы</th>
-            <th style="width: 110px;" class="text-center">Влияние</th>
-            <th style="width: 80px;" class="text-center">Действие</th>
-          </tr>
-        </thead>
-        <tbody id="sa-table-body">
-          <tr>
-            <td colspan="8" class="text-center py-4 text-muted">
-              <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+</div>
+</div>
+<!-- Top Metric & Health Score Cards (Compact Density Grid) -->
+<div class="row g-2 mb-2">
+<!-- Health Score Card -->
+<div class="col-6 col-md-3">
+<div class="sa-card">
+<div class="sa-card-label">
+<span>Индекс чистоты</span>
+<i class="bi bi-shield-check text-success"></i>
+</div>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<div class="d-flex align-items-baseline gap-1">
+<div class="sa-card-value text-success" id="sa-health-score">--</div>
+<span class="text-muted small" style="font-size: 0.75rem;">/ 100</span>
+</div>
+<div class="sa-card-sub text-end" id="sa-health-status">Оценка безопасности</div>
+</div>
+</div>
+</div>
+<!-- Active & Total Items -->
+<div class="col-6 col-md-3">
+<div class="sa-card">
+<div class="sa-card-label">
+<span>Элементы автозапуска</span>
+<i class="bi bi-play-circle text-info"></i>
+</div>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<div class="d-flex align-items-baseline gap-1">
+<div class="sa-card-value text-info" id="sa-active-count">--</div>
+<span class="text-muted small" style="font-size: 0.75rem;">из <span class="fw-bold" id="sa-total-count" style="color: var(--text-color);">--</span></span>
+</div>
+<div class="sa-card-sub text-end">Откл: <span class="text-danger fw-bold" id="sa-disabled-count">--</span></div>
+</div>
+</div>
+</div>
+<!-- Broken Entries Card -->
+<div class="col-6 col-md-3">
+<div class="sa-card">
+<div class="sa-card-label">
+<span>Битые ссылки</span>
+<i class="bi bi-exclamation-triangle text-warning"></i>
+</div>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<div class="d-flex align-items-baseline gap-1">
+<div class="sa-card-value text-warning" id="sa-broken-count">--</div>
+<span class="text-muted small" style="font-size: 0.75rem;">записей</span>
+</div>
+<div class="sa-card-sub text-end">Файлы не найдены</div>
+</div>
+</div>
+</div>
+<!-- Threats & Critical Alerts -->
+<div class="col-6 col-md-3">
+<div class="sa-card">
+<div class="sa-card-label">
+<span>Угрозы и аномалии</span>
+<i class="bi bi-shield-slash text-danger"></i>
+</div>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<div class="d-flex align-items-baseline gap-1">
+<div class="sa-card-value text-danger" id="sa-threats-count">--</div>
+<span class="text-muted small" style="font-size: 0.75rem;">предупреждений</span>
+</div>
+<div class="sa-card-sub text-end">IFEO и скрипты</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommendations Alert Banner (Compact Sleek Strip) -->
+<div class="py-1.5 px-3 mb-2 rounded-2 d-flex align-items-center justify-content-between" id="sa-recommendations-box" style="background: var(--surface-1); border: 1px solid var(--border-color); border-left: 3px solid #eab308; font-size: 0.78rem;">
+<div class="d-flex align-items-center gap-2">
+<span class="text-warning">💡</span>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="fw-semibold" id="sa-rec-title" style="color: var(--text-color);">Рекомендации:</span>
+<span class="text-muted" id="sa-rec-desc">Загрузка рекомендаций по оптимизации...</span>
+</div>
+</div>
+</div>
+<!-- Search & Filter Controls (Compact Toolbar) -->
+<div class="card p-2 mb-2 sa-panel" data-panel-id="panel-startup-auditor-1" id="panel-startup-auditor-1">
+<div class="row g-2 align-items-center">
+<!-- Search Input -->
+<div class="col-12 col-md-4">
+<div class="input-group input-group-sm">
+<span class="input-group-text sa-input text-muted py-1" style="border-right: none;"><i class="bi bi-search"></i></span>
+<input class="form-control form-control-sm sa-input" id="sa-search-input" placeholder="Поиск по имени, команде или пути..." type="text"/>
+</div>
+</div>
+<!-- Risk Filter -->
+<div class="col-6 col-md-3">
+<select class="form-select form-select-sm sa-input" id="sa-filter-risk">
+<option value="">Все уровни риска</option>
+<option value="critical">🚨 Critical (Критические)</option>
+<option value="suspicious">⚠️ Suspicious (Подозрительные)</option>
+<option value="warning">⚡ Warning (Предупреждения)</option>
+<option value="notice">ℹ️ Notice (Инфо)</option>
+<option value="clean">✅ Clean (Безопасные)</option>
+</select>
+</div>
+<!-- Location Filter -->
+<div class="col-6 col-md-3">
+<select class="form-select form-select-sm sa-input" id="sa-filter-location">
+<option value="">Все точки автозапуска</option>
+<option value="registry_run">Реестр: Run</option>
+<option value="registry_runonce">Реестр: RunOnce</option>
+<option value="startup_folder_user">Папка автозагрузки (User)</option>
+<option value="startup_folder_common">Папка автозагрузки (Common)</option>
+<option value="winlogon">Winlogon</option>
+<option value="ifeo">IFEO Перехваты</option>
+<option value="scheduled_task">Планировщик задач</option>
+<option value="windows_service">Службы Windows</option>
+</select>
+</div>
+<!-- State Filter -->
+<div class="col-12 col-md-2">
+<select class="form-select form-select-sm sa-input" id="sa-filter-state">
+<option value="">Все статусы</option>
+<option value="enabled">Только включенные</option>
+<option value="disabled">Только отключенные</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Entries Data Table Panel -->
+<div class="sa-panel">
+<div class="sa-panel-header">
+<span><i class="bi bi-table me-1"></i> Список зарегистрированных элементов автозапуска</span>
+<span class="small text-muted" id="sa-table-count">Загрузка...</span>
+</div>
+<div class="table-responsive" style="max-height: calc(100vh - 245px); overflow-y: auto;">
+<table class="sa-table" id="sa-entries-table">
+<thead>
+<tr>
+<th class="text-center" style="width: 80px;">Статус</th>
+<th style="width: 230px;">Имя / Программа</th>
+<th style="width: 170px;">Точка автозапуска</th>
+<th style="width: 140px;">Категория</th>
+<th class="text-center" style="width: 110px;">Риск</th>
+<th>Исполняемый путь / Аргументы</th>
+<th class="text-center" style="width: 110px;">Влияние</th>
+<th class="text-center" style="width: 80px;">Действие</th>
+</tr>
+</thead>
+<tbody id="sa-table-body">
+<tr>
+<td class="text-center py-4 text-muted" colspan="8">
+<div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
               Выполняется сканирование точек автозапуска Windows...
             </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Program Details & AI Context Modal -->
-  <div class="modal fade" id="sa-entry-detail-modal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content shadow-lg">
-        <div class="modal-header py-2 px-3">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fs-5 text-primary">🔍</span>
-            <h5 class="modal-title fw-bold text-primary mb-0" id="sa-modal-title">Детали программы</h5>
-            <span id="sa-modal-status-badge"></span>
-            <span id="sa-modal-risk-badge"></span>
-          </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body py-3 px-3">
-          <!-- Metadata Grid -->
-          <div class="row g-2 mb-3 small">
-            <div class="col-sm-6"><strong class="text-muted">Имя / Программа:</strong> <span id="sa-modal-name" class="fw-semibold"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Издатель:</strong> <span id="sa-modal-publisher"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Точка автозапуска:</strong> <span id="sa-modal-location-type" class="sa-badge sa-badge-loc"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Категория:</strong> <span id="sa-modal-category" class="sa-badge sa-badge-cat"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Влияние на запуск:</strong> <span id="sa-modal-boot-impact"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Цифровая подпись:</strong> <span id="sa-modal-is-signed"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Статус файла:</strong> <span id="sa-modal-file-exists"></span></div>
-            <div class="col-sm-6"><strong class="text-muted">Размер файла:</strong> <span id="sa-modal-file-size"></span></div>
-            <div class="col-sm-12"><strong class="text-muted">Расположение / Ключ:</strong> <span id="sa-modal-location-path" class="font-monospace text-muted small" style="word-break: break-all;"></span></div>
-          </div>
-
-          <!-- Command & Path Section -->
-          <div class="card p-3 mb-3" style="background: var(--surface-2); border: 1px solid var(--border-color);">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <h6 class="small text-uppercase text-muted fw-bold mb-0">Команда и исполняемый файл</h6>
-            </div>
-            <div class="small font-monospace mb-2 text-primary" id="sa-modal-executable-path" style="word-break: break-all;"></div>
-            <div class="small font-monospace text-muted" id="sa-modal-command" style="white-space: pre-wrap; word-break: break-all;"></div>
-          </div>
-
-          <!-- AI Diagnostic & Explanation Section -->
-          <div class="card p-3" id="sa-modal-ai-section" style="background: var(--surface-1); border: 1px solid var(--border-color);">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="fw-bold text-primary mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
-              <button class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill" id="btn-sa-modal-diagnose">
-                <i class="bi bi-magic me-1"></i>Анализ контекста
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Program Details & AI Context Modal -->
+<div aria-hidden="true" class="modal fade" id="sa-entry-detail-modal" tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content shadow-lg">
+<div class="modal-header py-2 px-3">
+<div class="d-flex align-items-center gap-2">
+<span class="fs-5 text-primary">🔍</span>
+<h5 class="modal-title fw-bold text-primary mb-0" id="sa-modal-title">Детали программы</h5>
+<span id="sa-modal-status-badge"></span>
+<span id="sa-modal-risk-badge"></span>
+</div>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body py-3 px-3">
+<!-- Metadata Grid -->
+<div class="row g-2 mb-3 small">
+<div class="col-sm-6"><strong class="text-muted">Имя / Программа:</strong> <span class="fw-semibold" id="sa-modal-name"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Издатель:</strong> <span id="sa-modal-publisher"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Точка автозапуска:</strong> <span class="sa-badge sa-badge-loc" id="sa-modal-location-type"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Категория:</strong> <span class="sa-badge sa-badge-cat" id="sa-modal-category"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Влияние на запуск:</strong> <span id="sa-modal-boot-impact"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Цифровая подпись:</strong> <span id="sa-modal-is-signed"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Статус файла:</strong> <span id="sa-modal-file-exists"></span></div>
+<div class="col-sm-6"><strong class="text-muted">Размер файла:</strong> <span id="sa-modal-file-size"></span></div>
+<div class="col-sm-12"><strong class="text-muted">Расположение / Ключ:</strong> <span class="font-monospace text-muted small" id="sa-modal-location-path" style="word-break: break-all;"></span></div>
+</div>
+<!-- Command & Path Section -->
+<div class="card p-3 mb-3" data-panel-id="panel-startup-auditor-komanda-i-ispolnyaemyy-fayl" id="panel-startup-auditor-komanda-i-ispolnyaemyy-fayl" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+<div class="d-flex justify-content-between align-items-center mb-1">
+<h6 class="small text-uppercase text-muted fw-bold mb-0">Команда и исполняемый файл</h6>
+</div>
+<div class="small font-monospace mb-2 text-primary" id="sa-modal-executable-path" style="word-break: break-all;"></div>
+<div class="small font-monospace text-muted" id="sa-modal-command" style="white-space: pre-wrap; word-break: break-all;"></div>
+</div>
+<!-- AI Diagnostic & Explanation Section -->
+<div class="card p-3" data-panel-id="panel-startup-auditor-ai-contextual-explanation" id="sa-modal-ai-section" style="background: var(--surface-1); border: 1px solid var(--border-color);">
+<div class="d-flex justify-content-between align-items-center mb-2">
+<h6 class="fw-bold text-primary mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
+<button class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill" id="btn-sa-modal-diagnose">
+<i class="bi bi-magic me-1"></i>Анализ контекста
               </button>
-            </div>
-            <div class="small text-muted" id="sa-modal-ai-explanation">
+</div>
+<div class="small text-muted" id="sa-modal-ai-explanation">
               Нажмите «Анализ контекста», чтобы получить экспертное объяснение назначения программы от языковой модели, оценку рисков и рекомендации по оптимизации.
             </div>
-          </div>
-        </div>
-        <div class="modal-footer py-2 px-3 d-flex justify-content-between">
-          <div>
-            <button type="button" class="btn btn-sm btn-outline-warning me-1" id="btn-sa-modal-toggle">
-              <i class="bi bi-toggle2-on me-1"></i>Переключить автозапуск
+</div>
+</div>
+<div class="modal-footer py-2 px-3 d-flex justify-content-between">
+<div>
+<button class="btn btn-sm btn-outline-warning me-1" id="btn-sa-modal-toggle" type="button">
+<i class="bi bi-toggle2-on me-1"></i>Переключить автозапуск
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-sa-modal-copy">
-              <i class="bi bi-clipboard me-1"></i>Копировать путь
+<button class="btn btn-sm btn-outline-secondary" id="btn-sa-modal-copy" type="button">
+<i class="bi bi-clipboard me-1"></i>Копировать путь
             </button>
-          </div>
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Telemetry Diff / Changes History Modal -->
-  <div class="modal fade" id="sa-changes-modal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content shadow-lg">
-        <div class="modal-header py-2 px-3">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fs-5 text-warning">⏱️</span>
-            <h5 class="modal-title fw-bold text-warning mb-0">История изменений автозапуска (Телеметрия)</h5>
-            <span class="badge border bg-surface-2 text-muted fw-normal" id="sa-changes-modal-count">0 записей</span>
-          </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body py-3 px-3">
-          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-            <div class="small text-muted">
+</div>
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" type="button">Закрыть</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Diff / Changes History Modal -->
+<div aria-hidden="true" class="modal fade" id="sa-changes-modal" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content shadow-lg">
+<div class="modal-header py-2 px-3">
+<div class="d-flex align-items-center gap-2">
+<span class="fs-5 text-warning">⏱️</span>
+<h5 class="modal-title fw-bold text-warning mb-0">История изменений автозапуска (Телеметрия)</h5>
+<span class="badge border bg-surface-2 text-muted fw-normal" id="sa-changes-modal-count">0 записей</span>
+</div>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body py-3 px-3">
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+<div class="small text-muted">
               Каждый запуск телеметрии и ручное обновление («Обновить») фиксирует снимок автозапуска в SQLite и вычисляет дифференциальные изменения.
             </div>
-            <button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1" id="sa-btn-refresh-changes-modal">
-              <i class="bi bi-arrow-clockwise me-1"></i>Обновить историю
+<button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1" id="sa-btn-refresh-changes-modal">
+<i class="bi bi-arrow-clockwise me-1"></i>Обновить историю
             </button>
-          </div>
-          <div class="table-responsive" style="max-height: 55vh;">
-            <table class="sa-table" id="sa-changes-table">
-              <thead>
-                <tr>
-                  <th style="width: 140px;">Время фиксации</th>
-                  <th style="width: 125px;" class="text-center">Тип изменения</th>
-                  <th style="width: 190px;">Программа</th>
-                  <th style="width: 150px;">Точка автозапуска</th>
-                  <th>Детали изменения</th>
-                </tr>
-              </thead>
-              <tbody id="sa-changes-table-body">
-                <tr>
-                  <td colspan="5" class="text-center py-4 text-muted">
+</div>
+<div class="table-responsive" style="max-height: 55vh;">
+<table class="sa-table" id="sa-changes-table">
+<thead>
+<tr>
+<th style="width: 140px;">Время фиксации</th>
+<th class="text-center" style="width: 125px;">Тип изменения</th>
+<th style="width: 190px;">Программа</th>
+<th style="width: 150px;">Точка автозапуска</th>
+<th>Детали изменения</th>
+</tr>
+</thead>
+<tbody id="sa-changes-table-body">
+<tr>
+<td class="text-center py-4 text-muted" colspan="5">
                     Загрузка истории изменений...
                   </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="modal-footer py-2 px-3">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-        </div>
-      </div>
-    </div>
-  </div>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="modal-footer py-2 px-3">
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" type="button">Закрыть</button>
+</div>
+</div>
+</div>
+</div>
 </div>

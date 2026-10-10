@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
-from apps.windows.modules.startup.core.models import StartupArchiveEntry, StartupChangeItem
+from apps.windows.sdk.modules.startup.core.models import StartupArchiveEntry, StartupChangeItem
 
 
 

@@ -1,41 +1,55 @@
 ---
 name: system-control
-description: Windows System Control Center, maintenance and setup
+description: Windows System Control Center, maintenance, post-install setup and SafeOps parameter management
 description_i18n:
-  en: Windows System Control Center, maintenance and setup
-  ru: Центр управления системой Windows, обслуживание и настройка
+  en: Windows System Control Center, maintenance, post-install setup and SafeOps parameter management
+  ru: Центр управления системой Windows: регламентное обслуживание, SafeOps параметры и точки восстановления
 ---
 
-# Навык: System Control
+# ⚙️ Навык: Windows System Control Center (Maintenance & SafeOps)
 
 ## 🎯 Назначение
-Навык `system-control` обеспечивает взаимодействие с центром управления системой (`apps/system_control_center`) и модулем `SafeSystemParamManager`. Предназначен для выполнения задач по настройке после установки, создания контрольных точек восстановления (Windows Restore Points), безопасного изменения системных параметров с автоматическим созданием точек восстановления перед модификацией чувствительных настроек, обслуживания (DISM/SFC) и управления безопасностью.
+Навык `system-control` обеспечивает управление регламентным обслуживанием операционной системы Windows через модуль `apps/windows/sdk/modules/system_control_center`, подсистемы `servicing_integrity`, `boot_recovery`, `startup` и менеджер `SafeSystemParamManager` (`apps/windows/sdk/core/system_param_manager.py`).
+
+---
+
+## 🏗️ Архитектура подсистем обслуживания (`apps/windows/sdk`)
+
+- **`system_control_center`** (`apps/windows/sdk/modules/system_control_center`):
+  - Унифицированный диспетчер регламентных операций, проверка готовности хоста.
+- **`servicing_integrity`** (`apps/windows/sdk/modules/servicing_integrity`):
+  - Проверка и восстановление целостности системных файлов (`sfc /scannow`, `DISM /Online /Cleanup-Image /RestoreHealth`).
+  - Анализ логов CBS (`%windir%\Logs\CBS\CBS.log`).
+- **`system_param_manager`** (`apps/windows/sdk/core/system_param_manager.py`):
+  - SafeOps протокол изменения системных параметров реестра и политик (телеметрия, автообновления, гибернация, сетевые параметры).
+  - Автоматическое создание снимков состояния и точек восстановления перед чувствительными правками (`is_sensitive=True`).
+- **`system_restore`** (`apps/windows/sdk/core/system_restore.py`):
+  - Создание, удаление, листинг и откат к контрольным точкам Windows System Restore.
+- **`boot_recovery`** (`apps/windows/sdk/modules/boot_recovery`):
+  - Аудит конфигурации BCD (`bcdedit`), статуса WinRE, безопасного режима.
+- **`startup`** (`apps/windows/sdk/modules/startup`):
+  - Комплексный аудит всех веток автозагрузки (реестр `Run`/`RunOnce`, папки автозапуска, запланированные задачи).
+
+---
 
 ## 🚀 Протокол безопасного изменения параметров (SafeOps Protocol)
-1. **Анализ чувствительности**: Перед изменением любого системного параметра агент определяет уровень риска (`SAFE`, `CAUTION`, `CRITICAL`) и признак `is_sensitive`.
-2. **Предварительный просмотр (Dry-Run)**: Запрос симуляции (`preview_change` или `py manage_tools.py sys-param preview <id> <val>`) для оценки последствий.
-3. **Обязательная точка восстановления**: При модификации любого чувствительного параметра (`is_sensitive=True` или риск `CAUTION`/`CRITICAL`) система в обязательном порядке автоматически создает новую точку восстановления Windows (`Checkpoint-Computer` / WMI `SystemRestore`) и сохраняет снимок состояния до применения изменений.
-4. **Применение и валидация**: Применение нового значения через API или CLI и проверка успешности записи.
-5. **Откат (Rollback)**: При сбое или по запросу пользователя выполняется откат к сохраненному в журнале значению или вызов восстановления системы.
 
-## 🛠️ Основные команды и API
-- `py manage_tools.py sys-param list` — Просмотр каталога параметров с флагами чувствительности и рисками.
-- `py manage_tools.py sys-param preview <param_id> <value>` — Симуляция изменения параметра (Dry-Run).
-- `py manage_tools.py sys-param set <param_id> <value>` — Безопасное изменение параметра с автоматической точкой восстановления.
-- `py manage_tools.py sys-param restore-points` — Список существующих точек восстановления Windows.
-- `py manage_tools.py sys-param create-rp "<description>"` — Ручное создание точки восстановления.
-- `py manage_tools.py sys-param history` — Журнал изменений параметров и привязанных точек восстановления.
-- `py manage_tools.py sys-param rollback <change_id>` — Откат выполненного изменения.
+1. **Анализ чувствительности**: Определение уровня риска (`SAFE`, `CAUTION`, `CRITICAL`) и флага `is_sensitive`.
+2. **Предварительный просмотр (Dry-Run)**: Симуляция применения параметров без записи.
+3. **Обязательная точка восстановления**: Автоматическое создание точки восстановления Windows перед модификацией.
+4. **Применение и валидация**: Применение нового значения через SDK и верификация реестра.
+5. **Откат (Rollback)**: При возникновении аномалий — мгновенный откат из журнала истории изменений.
 
-## 🌐 API эндпоинты
-- `GET /api/system-control/params`
-- `POST /api/system-control/params/preview`
-- `POST /api/system-control/params/apply`
-- `GET /api/system-control/params/history`
-- `POST /api/system-control/params/rollback`
-- `GET /api/system-control/restore-points`
-- `POST /api/system-control/restore-points`
+---
 
-## ⚠️ Важное замечание
-Все операции с критическими параметрами системы Windows требуют повышенных привилегий (Run as Administrator).
+## 🐍 Примеры вызова через SDK
 
+```python
+from apps.windows.sdk import windows_sdk
+
+# Создание точки восстановления
+rp = windows_sdk.core.restore_manager.create_restore_point("Pre-Maintenance Point")
+
+# Проверка и восстановление компонентов Windows
+summary = windows_sdk.get_health_summary()
+```

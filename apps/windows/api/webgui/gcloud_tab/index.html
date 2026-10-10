@@ -17,18 +17,17 @@ Project: ai-breadboard
 Package: windows/api/webgui/gcloud_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 03:08:00
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
-
 <!-- Google Cloud Monitor Application Tab -->
 <style>
   .gcloud-container {
     padding: 0.5rem 0.75rem;
   }
   .gcloud-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     padding: 0.45rem 0.75rem;
     display: flex;
@@ -41,36 +40,37 @@ Updated: 2026-10-08 03:08:00
     font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
     line-height: 1.1;
   }
   .gcloud-value {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--text-color);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     line-height: 1.15;
   }
   .gcloud-panel {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
     overflow: hidden;
   }
   .gcloud-panel-header {
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
+    background: var(--surface-2) !important;
+    border-bottom: 1px solid var(--border-color) !important;
     padding: 0.45rem 0.85rem;
     font-weight: 600;
     font-size: 0.82rem;
-    color: #38bdf8;
+    color: var(--nav-active);
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
   .gcloud-log-terminal {
-    background: #020617;
-    color: #cbd5e1;
+    background: var(--surface-2);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.78rem;
     line-height: 1.45;
@@ -80,98 +80,94 @@ Updated: 2026-10-08 03:08:00
     overflow-y: auto;
   }
 </style>
-
 <div class="gcloud-container">
-  <!-- Header Alert & Status (Compact Strip) -->
-  <div class="card shadow-sm border-secondary-subtle py-1.5 px-3 mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <span class="fs-5">☁️</span>
-      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Google Cloud Monitor</span>
-      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Observability</span>
-      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Cloud Logging, метрики Cloud Monitoring & IAM</span>
-    </div>
-    <div class="d-flex align-items-center gap-1.5 flex-wrap">
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="gcloud-status-badge">
+<!-- Header Alert & Status (Compact Strip) -->
+<div class="card shadow-sm border-secondary-subtle py-1.5 px-3 mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2" data-panel-id="panel-gcloud-google-cloud-monitor" id="panel-gcloud-google-cloud-monitor">
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="fs-5">☁️</span>
+<span class="fw-bold text-body small" style="font-size: 0.92rem;">Google Cloud Monitor</span>
+<span class="badge bg-body-secondary border border-secondary text-body fw-normal" style="font-size: 0.7rem;">Observability</span>
+<span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Cloud Logging, метрики Cloud Monitoring &amp; IAM</span>
+</div>
+<div class="d-flex align-items-center gap-1.5 flex-wrap">
+<span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" id="gcloud-status-badge" style="font-size: 0.72rem;">
         ● GCP Подключен
       </span>
-      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-gcloud-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+<button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" id="btn-gcloud-refresh" style="font-size: 0.75rem;">
+<i class="bi bi-arrow-clockwise me-1"></i> Обновить
       </button>
-      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-gcloud-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки
+<button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" id="btn-gcloud-config" style="font-size: 0.75rem;">
+<i class="bi bi-gear-fill me-1"></i> Настройки
       </button>
-    </div>
-  </div>
-
-  <!-- Top Metrics Bar (Compact Density Grid) -->
-  <div class="row g-2 mb-2">
-    <div class="col-6 col-md-3">
-      <div class="gcloud-card">
-        <span class="gcloud-label">Проект GCP</span>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <span class="gcloud-value text-info text-truncate" id="gcloud-project-id">-</span>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="gcloud-card">
-        <span class="gcloud-label">Тип авторизации</span>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <span class="gcloud-value text-light" style="font-size: 1.05rem;" id="gcloud-auth-type">-</span>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="gcloud-card">
-        <span class="gcloud-label">Служебный аккаунт</span>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <span class="gcloud-value text-secondary text-truncate" style="font-size: 0.85rem;" id="gcloud-client-email">-</span>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="gcloud-card">
-        <span class="gcloud-label">Здоровье инфраструктуры</span>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <span class="gcloud-value text-success" id="gcloud-health-score">100/100</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content Panels Grid -->
-  <div class="row g-3">
-    <!-- Cloud Logging Terminal Panel -->
-    <div class="col-lg-7">
-      <div class="gcloud-panel h-100">
-        <div class="gcloud-panel-header">
-          <span>📜 Cloud Logging (Последние события)</span>
-          <span class="badge bg-secondary" id="gcloud-logs-count-badge">0 строк</span>
-        </div>
-        <div class="p-2">
-          <div class="gcloud-log-terminal" id="gcloud-log-terminal-output">
+</div>
+</div>
+<!-- Top Metrics Bar (Compact Density Grid) -->
+<div class="row g-2 mb-2">
+<div class="col-6 col-md-3">
+<div class="gcloud-card">
+<span class="gcloud-label">Проект GCP</span>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<span class="gcloud-value text-info text-truncate" id="gcloud-project-id">-</span>
+</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="gcloud-card">
+<span class="gcloud-label">Тип авторизации</span>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<span class="gcloud-value text-body" id="gcloud-auth-type" style="font-size: 1.05rem;">-</span>
+</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="gcloud-card">
+<span class="gcloud-label">Служебный аккаунт</span>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<span class="gcloud-value text-secondary text-truncate" id="gcloud-client-email" style="font-size: 0.85rem;">-</span>
+</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="gcloud-card">
+<span class="gcloud-label">Здоровье инфраструктуры</span>
+<div class="d-flex align-items-baseline justify-content-between mt-1">
+<span class="gcloud-value text-success" id="gcloud-health-score">100/100</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Panels Grid -->
+<div class="row g-3">
+<!-- Cloud Logging Terminal Panel -->
+<div class="col-lg-7">
+<div class="gcloud-panel h-100">
+<div class="gcloud-panel-header">
+<span>📜 Cloud Logging (Последние события)</span>
+<span class="badge bg-secondary" id="gcloud-logs-count-badge">0 строк</span>
+</div>
+<div class="p-2">
+<div class="gcloud-log-terminal" id="gcloud-log-terminal-output">
             Загрузка журналов Cloud Logging...
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- AI Diagnostics & Recommendations Panel -->
-    <div class="col-lg-5">
-      <div class="gcloud-panel h-100">
-        <div class="gcloud-panel-header">
-          <span>🤖 AI-Диагностика и рекомендации</span>
-          <span class="badge bg-info text-dark">Gemini Diagnostics</span>
-        </div>
-        <div class="p-3">
-          <h6 class="fw-bold text-info mb-1" id="gcloud-diag-summary-title">Анализ телеметрии...</h6>
-          <p class="small text-light mb-3" id="gcloud-diag-summary-desc">Загрузка диагностического заключения...</p>
-          <div class="fw-semibold text-secondary small text-uppercase mb-2">Рекомендованные действия:</div>
-          <ul class="list-group list-group-flush small" id="gcloud-recommendations-list">
-            <li class="list-group-item bg-transparent text-light border-secondary py-1 px-0">• Ожидание данных телеметрии...</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+</div>
+<!-- AI Diagnostics & Recommendations Panel -->
+<div class="col-lg-5">
+<div class="gcloud-panel h-100">
+<div class="gcloud-panel-header">
+<span>🤖 AI-Диагностика и рекомендации</span>
+<span class="badge bg-info text-dark">Gemini Diagnostics</span>
+</div>
+<div class="p-3">
+<h6 class="fw-bold text-info mb-1" id="gcloud-diag-summary-title">Анализ телеметрии...</h6>
+<p class="small text-body mb-3" id="gcloud-diag-summary-desc">Загрузка диагностического заключения...</p>
+<div class="fw-semibold text-secondary small text-uppercase mb-2">Рекомендованные действия:</div>
+<ul class="list-group list-group-flush small" id="gcloud-recommendations-list">
+<li class="list-group-item bg-transparent text-body border-secondary py-1 px-0">• Ожидание данных телеметрии...</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
 </div>

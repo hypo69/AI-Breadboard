@@ -20,7 +20,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
-from apps.windows.modules.personalization.models import (
+from apps.windows.sdk.modules.personalization.models import (
     WindowsThemeInfo,
     ThemeApplyRequest,
     CursorSettings,
@@ -35,10 +35,10 @@ from apps.windows.modules.personalization.models import (
     AISpotlightImageInfo,
     PersonalizationOverviewResponse,
 )
-from apps.windows.modules.personalization.manager import PersonalizationManager
-from apps.windows.modules.personalization.ai_spotlight import AISpotlightEngine
-from apps.windows.modules.personalization.router import router as personalization_router
-from apps.windows.modules.window_control_plane.history import WindowManagementHistoryManager
+from apps.windows.sdk.modules.personalization.manager import PersonalizationManager
+from apps.windows.sdk.modules.personalization.ai_spotlight import AISpotlightEngine
+from apps.windows.sdk.modules.personalization.router import router as personalization_router
+from apps.windows.sdk.modules.window_control_plane.history import WindowManagementHistoryManager
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def temp_pers_mgr(temp_history_mgr: WindowManagementHistoryManager) -> Personali
 @pytest.fixture
 def client(temp_pers_mgr: PersonalizationManager) -> TestClient:
     """Фикстура тестового клиента FastAPI с инъекцией менеджера."""
-    from apps.windows.modules.personalization import router as r_mod
+    from apps.windows.sdk.modules.personalization import router as r_mod
 
     r_mod._pm = temp_pers_mgr
     app = FastAPI()

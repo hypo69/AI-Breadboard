@@ -218,7 +218,7 @@ class GroupedTelemetryBuilder:
         try:
             backup_info: Dict[str, Any] = {"system_protection": "Enabled", "restore_points_count": 0, "latest_restore_point": "None"}
             try:
-                from apps.windows.core.system_restore import WindowsSystemRestoreManager
+                from apps.windows.sdk.core.system_restore import WindowsSystemRestoreManager
                 restore_mgr = WindowsSystemRestoreManager(timeout_seconds=3)
                 prot = restore_mgr.check_protection_status()
                 backup_info["system_protection"] = "Enabled" if prot.get("system_protection_enabled") else "Disabled"

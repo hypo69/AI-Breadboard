@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой Accounts & Identity Windows
-#   (apps.windows.modules.accounts_identity).
+#   (apps.windows.sdk.modules.accounts_identity).
 #   Сгруппированы по 5 логическим блокам:
 #     1. Досье безопасности субъекта и процессов (Explain)
 #     2. Аудит привилегированного доступа и аномалий (Audit Security)
@@ -94,7 +94,7 @@ async def windows_identity_explain(
         JSON со статусом и полным досье безопасности (токен, группы, LSA-права, MIL).
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         loop = asyncio.get_running_loop()
@@ -123,7 +123,7 @@ async def windows_identity_explain_pid(
         JSON с разбором безопасности процесса (аккаунт, группы, привилегии, Integrity Level, UAC Elevation).
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         loop = asyncio.get_running_loop()
@@ -157,7 +157,7 @@ async def windows_identity_audit_security(
         JSON со сводкой результатов аудита безопасности.
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         loop = asyncio.get_running_loop()
@@ -211,7 +211,7 @@ async def windows_identity_manage_account(
         JSON с результатом выполнения операции.
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         loop = asyncio.get_running_loop()
@@ -290,7 +290,7 @@ async def windows_identity_audit_events(
         JSON со списком отфильтрованных событий безопасности.
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         loop = asyncio.get_running_loop()
@@ -318,7 +318,7 @@ async def windows_identity_graph_build() -> str:
         JSON со всеми узлами (nodes) и ребрами (edges) графа безопасности Windows.
     """
     try:
-        from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
+        from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
 
         service = get_accounts_identity_service()
         loop = asyncio.get_running_loop()

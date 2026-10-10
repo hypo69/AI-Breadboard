@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:10:00
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -34,7 +34,6 @@ from logger import logger
 
 # Пути к директориям меню
 _LOCAL_CONFIG_MENUES = Path(__file__).resolve().parents[1] / 'webgui' / 'config_menues'
-_SRC_CONFIG_MENUES = __root__ / 'src' / 'api' / 'webgui' / 'config_menues'
 
 
 def _get_config_path(target: Optional[str] = None) -> Path:
@@ -52,16 +51,7 @@ def _get_config_path(target: Optional[str] = None) -> Path:
     elif target and target.lower() not in ('tc', 'apps', 'test_computer'):
         file_name = f"{target.lower()}_menu_config.json"
 
-    # 1. Проверяем локальный каталог webgui приложения Windows
     local_path = _LOCAL_CONFIG_MENUES / file_name
-    if local_path.exists():
-        return local_path
-
-    # 2. Проверяем глобальный каталог в src/api/webgui
-    src_path = _SRC_CONFIG_MENUES / file_name
-    if src_path.exists():
-        return src_path
-
     return local_path
 
 
@@ -125,11 +115,6 @@ def init_router() -> APIRouter:
         try:
             config_path.parent.mkdir(parents=True, exist_ok=True)
             config_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-
-            # Также синхронизируем в src/api/webgui если путь отличается
-            src_path = _SRC_CONFIG_MENUES / config_path.name
-            if src_path != config_path and _SRC_CONFIG_MENUES.exists():
-                src_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
 
             logger.info(f"[router_menu] Конфигурация меню успешно сохранена в {config_path.name}")
             return {"status": "ok", "message": f"Конфигурация меню успешно сохранена в {config_path.name}"}

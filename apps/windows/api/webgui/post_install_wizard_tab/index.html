@@ -14,95 +14,94 @@ Project: ai-breadboard
 Package: windows/api/webgui/post_install_wizard_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 03:08:00
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
-
 <style>
   .piw-container {
     padding: 0.75rem 1rem;
   }
   .piw-header {
-    background: var(--surface-2, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md, 8px);
     padding: 0.75rem 1.25rem;
+    color: var(--text-color);
   }
   .piw-card {
-    background: #0f172a;
-    border: 1px solid #334155;
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
   }
   .piw-step-item {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 0.75rem 1rem;
+    color: var(--text-color);
     transition: all 0.2s ease;
   }
   .piw-step-item:hover {
-    border-color: #38bdf8;
-    background: rgba(56, 189, 248, 0.05);
+    border-color: var(--nav-active);
+    background: var(--nav-hover-bg, rgba(56, 189, 248, 0.05));
   }
 </style>
-
 <div class="piw-container theme-sysctl">
-  <!-- Top Header Bar -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 piw-header text-white">
-    <div>
-      <div class="d-flex align-items-center gap-2">
-        <h5 class="mb-0 fw-bold">
+<!-- Top Header Bar -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 piw-header">
+<div>
+<div class="d-flex align-items-center gap-2">
+<h5 class="mb-0 fw-bold">
           ⚡ Windows Post-Install Wizard
         </h5>
-        <span class="badge rounded-pill bg-warning text-dark px-2 py-1" style="font-size: 0.75rem;">Setup & Hardening</span>
-      </div>
-      <p class="mb-0 small text-light mt-1" >
+<span class="badge rounded-pill bg-warning text-dark px-2 py-1" style="font-size: 0.75rem;">Setup &amp; Hardening</span>
+</div>
+<p class="mb-0 small text-body-secondary mt-1">
         Пошаговая настройка базовой конфигурации Windows, профили оптимизации, отключение телеметрии и настройка параметров безопасности.
       </p>
-    </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <span class="badge rounded-pill px-3 py-2" id="piw-elevation-badge">
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="badge rounded-pill px-3 py-2" id="piw-elevation-badge">
         🔍 Checking privileges...
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-piw-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+<button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-piw-refresh">
+<i class="bi bi-arrow-clockwise me-1"></i> Обновить
       </button>
-    </div>
-  </div>
-
-  <!-- Main Wizard Card -->
-  <div class="card piw-card">
-    <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
-      <div>
-        <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-magic me-1"></i> Чек-лист первичной настройки Windows</h6>
-        <span class="small text-muted">Выберите профиль оптимизации или отметьте необходимые шаги для последовательного применения.</span>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="piw-profile-select" style="min-width: 260px;">
-          <option value="post_install">Windows Post-Install Baseline</option>
-          <option value="secure_hardening">Security Hardening Profile</option>
-          <option value="developer_setup">Developer Workstation Profile</option>
-        </select>
-        <button class="btn btn-sm btn-primary px-3 rounded-pill" id="btn-piw-apply-profile">
-          <i class="bi bi-play-fill me-1"></i> Применить профиль
+</div>
+</div>
+<!-- Main Wizard Card -->
+<div class="card piw-card" data-panel-id="panel-post-install-wizard-chek-list-pervichnoy-nastroyki-w" id="panel-post-install-wizard-chek-list-pervichnoy-nastroyki-w">
+<div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+<div>
+<h6 class="mb-0 fw-bold text-warning"><i class="bi bi-magic me-1"></i> Чек-лист первичной настройки Windows</h6>
+<span class="small text-muted">Выберите профиль оптимизации или отметьте необходимые шаги для последовательного применения.</span>
+</div>
+<div class="d-flex align-items-center gap-2">
+<select class="form-select form-select-sm" id="piw-profile-select" style="min-width: 260px;">
+<option value="post_install">Windows Post-Install Baseline</option>
+<option value="secure_hardening">Security Hardening Profile</option>
+<option value="developer_setup">Developer Workstation Profile</option>
+</select>
+<button class="btn btn-sm btn-primary px-3 rounded-pill" id="btn-piw-apply-profile">
+<i class="bi bi-play-fill me-1"></i> Применить профиль
         </button>
-      </div>
-    </div>
-    <div class="card-body p-3">
-      <!-- Steps Container -->
-      <div id="piw-wizard-steps-container" class="d-flex flex-column gap-2">
-        <div class="text-center text-muted py-4">
-          <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+</div>
+</div>
+<div class="card-body p-3">
+<!-- Steps Container -->
+<div class="d-flex flex-column gap-2" id="piw-wizard-steps-container">
+<div class="text-center text-muted py-4">
+<div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
           Загрузка шагов профиля...
         </div>
-      </div>
-    </div>
-    <div class="card-footer border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <span class="small text-muted" id="piw-status-summary">Готово к выполнению</span>
-      <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-piw-select-all">Выбрать все</button>
-        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-piw-deselect-all">Снять выбор</button>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+<div class="card-footer border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+<span class="small text-muted" id="piw-status-summary">Готово к выполнению</span>
+<div class="d-flex gap-2">
+<button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-piw-select-all">Выбрать все</button>
+<button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-piw-deselect-all">Снять выбор</button>
+</div>
+</div>
+</div>
 </div>

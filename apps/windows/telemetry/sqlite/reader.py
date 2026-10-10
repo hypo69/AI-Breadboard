@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry.sqlite
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 13:31:00
+# Updated: 2026-10-10 05:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1819,6 +1819,7 @@ class TelemetryReader:
         user: Optional[str] = None,
         process_name: Optional[str] = None,
         pid: Optional[int] = None,
+        channel: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
         since_epoch: Optional[float] = None,
@@ -1826,10 +1827,11 @@ class TelemetryReader:
         """Выборка нормализованных событий журнала безопасности Windows с фильтрами.
 
         Args:
-            event_id: Фильтр по Event ID (например, 4688, 4624).
+            event_id: Фильтр по Event ID (например, 4688, 4624, 1116).
             user: Фильтр по имени субъекта или целевого пользователя (подстрока).
             process_name: Фильтр по имени процесса.
             pid: Фильтр по идентификатору процесса PID.
+            channel: Фильтр по имени журнала (Security или Defender).
             limit: Максимальное количество возвращаемых записей.
             offset: Смещение выборки.
             since_epoch: Нижняя граница времени epoch.
@@ -1839,6 +1841,10 @@ class TelemetryReader:
         """
         conditions: List[str] = []
         params: List[Any] = []
+
+        if channel:
+            conditions.append('channel = ?')
+            params.append(str(channel))
 
         if event_id is not None:
             conditions.append('event_id = ?')

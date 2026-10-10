@@ -28,7 +28,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from logger import logger
-from apps.windows.modules.hardware.lhm_service import LhmService
+from apps.windows.sdk.modules.hardware.lhm_service import LhmService
 from apps.windows.telemetry.sqlite import TelemetryStorage
 
 _SQL_LATEST_SENSORS = """

@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:01:00
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -40,7 +40,8 @@ from apps.windows.telemetry.sqlite import TelemetryStorage
 from apps.windows.telemetry.sampling_controller import SamplingController
 from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
 from apps.windows.telemetry.models import SamplingMode
-from src.api.routers.core.router_auth import require_admin_user
+from apps.windows.api.auth import require_admin_user
+from apps.windows.api.config_helper import save_ai_config, resolve_active_config_path
 
 _collector: Optional[SystemCollector] = None
 _diagnostician: Optional[SystemAIDiagnostician] = None
@@ -328,7 +329,7 @@ def _normalize_tc_model_and_provider(target_model: str = "", target_provider: st
 
 
 def _save_tc_config_ai(provider: str, model_name: str) -> bool:
-    """Сохраняет активный AI-провайдер и модель в конфигурационный файл tc.json.
+    """Сохраняет активный AI-провайдер и модель в конфигурационный файл apps/windows/config.json.
 
     Args:
         provider: Имя провайдера (GEMINI_CLI, GEMINI, AGY, OLLAMA и др.).
@@ -338,34 +339,7 @@ def _save_tc_config_ai(provider: str, model_name: str) -> bool:
         bool: True если сохранение прошло успешно.
     """
     cfg_path = _find_tc_config_path()
-    if not cfg_path:
-        return False
-
-    try:
-        data: Dict[str, Any] = {}
-        if cfg_path.exists():
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-        if "ai" not in data or not isinstance(data["ai"], dict):
-            data["ai"] = {}
-
-        prov_key = provider.lower()
-        data["ai"]["provider"] = prov_key
-
-        if prov_key not in data["ai"] or not isinstance(data["ai"][prov_key], dict):
-            data["ai"][prov_key] = {}
-        data["ai"][prov_key]["model"] = model_name
-
-        cfg_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(cfg_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-
-        logger.info(f"[router_tc] Конфигурация TC успешно обновлена: {cfg_path} -> provider={prov_key}, model={model_name}")
-        return True
-    except Exception as e:
-        logger.error(f"[router_tc] Ошибка сохранения конфигурации TC в {cfg_path}: {e}", exc_info=True)
-        return False
+    return save_ai_config(provider=provider, model_name=model_name, config_path=cfg_path)
 
 
 async def _extract_tc_user_auth(fastapi_req: Request) -> Tuple[str, str, str, dict]:
@@ -376,7 +350,7 @@ async def _extract_tc_user_auth(fastapi_req: Request) -> Tuple[str, str, str, di
     settings: Dict[str, Any] = {}
 
     try:
-        from src.api.routers.core.router_auth import get_current_user_optional
+        from apps.windows.api.auth import get_current_user_optional
         user_data = get_current_user_optional(fastapi_req) if fastapi_req is not None else None
 
         from src.user_manager import user_manager

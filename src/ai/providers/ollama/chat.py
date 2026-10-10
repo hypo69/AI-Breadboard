@@ -18,7 +18,7 @@
 # Package: src.ai.providers.ollama
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Базовый class для чат-интерфейса с Ollama моделями."""
@@ -106,8 +106,14 @@ class OllamaChatBase:
                         from src.ai.orchestration.model_error_hub import record_model_error
                         record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                         add_unsupported_model('ollama', self.model_id, reason=self._last_error)
+                        from src.config import is_debug_mode
+                        if is_debug_mode():
+                            raise RuntimeError(f'[DEBUG MODE] Ollama Model 404 ({self.model_id}): {self._last_error}')
                         return ''
                     logger.warning(f'[{self.model_id}] Error in generate_text: {self._last_error}')
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise RuntimeError(f'[DEBUG MODE] Ollama Model Error ({self.model_id}) on attempt {attempt}: {self._last_error}')
                     from src.ai.orchestration.model_error_hub import record_model_error
                     wait_time = 2 ** min(attempt, 5)
                     if attempt >= attempts:
@@ -119,6 +125,10 @@ class OllamaChatBase:
                 self._error_count += 1
                 logger.error(f'[{self.model_id}] chat exception: {ex}')
                 self._last_error = str(ex)
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    logger.critical(f'[DEBUG MODE] Исключение в Ollama ({self.model_id}): {ex}')
+                    raise ex
                 from src.ai.orchestration.model_error_hub import record_model_error
                 if '404' in self._last_error or 'not found' in self._last_error.lower():
                     from src.ai.model_manager import add_unsupported_model
@@ -131,6 +141,9 @@ class OllamaChatBase:
                     return ''
                 record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, attempt=attempt, max_attempts=attempts, action_taken='retry', retry_delay_seconds=float(wait_time))
                 time.sleep(2 ** min(attempt, 5))
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise RuntimeError(f'[DEBUG MODE] Превышено количество попыток для Ollama ({self.model_id})')
         return ''
 
     async def chat_stream(self, q: str, history: Optional[List[Dict]]=[], save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, system_instruction: Optional[str]='', attempts: int=15, model_name: Optional[str]='', generation_config: dict={}, **kwargs):

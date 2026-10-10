@@ -18,7 +18,7 @@
 # Package: src.ai.providers.gemini_cli
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 from __future__ import annotations
@@ -240,6 +240,9 @@ class GeminiCliChatBase(BaseChatProvider):
                 yield chunk
         except Exception as ex:
             logger.error(f'[GeminiCliChat] Ошибка потокового выполнения: {ex}')
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                raise ex
             yield f'\n[Gemini CLI Error: {str(ex)}]'
         finally:
             if save_history and full_response:
@@ -264,6 +267,9 @@ class GeminiCliChatBase(BaseChatProvider):
                 if 'model not found' in err_low or 'not supported' in err_low:
                     add_unsupported_model('gemini_cli', self._model_id, reason=resp.stderr[:120])
                 record_model_error(provider='gemini_cli', model_name=self._model_id, error=resp.stderr.strip() or 'CLI execution failed', status_code=resp.return_code if resp.return_code else None, action_taken='failed')
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Gemini CLI Error (model={self._model_id}, code={resp.return_code}): {resp.stderr.strip()}')
                 if not resp.text.strip():
                     return f'[Gemini CLI Error]: {resp.stderr.strip()}'
             return resp.text
@@ -271,14 +277,23 @@ class GeminiCliChatBase(BaseChatProvider):
             logger.error(f"[GeminiCliChat] Исполняемый файл '{self.executable_path}' не найден: {ex}")
             from src.ai.orchestration.model_error_hub import record_model_error
             record_model_error(provider='gemini_cli', model_name=self._model_id, error=str(ex), action_taken='failed')
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                raise ex
             return f"[Gemini CLI Error]: Executable '{self.executable_path}' not found in system PATH."
         except TimeoutError as ex:
             logger.error(f'[GeminiCliChat] Таймаут выполнения: {ex}')
             from src.ai.orchestration.model_error_hub import record_model_error
             record_model_error(provider='gemini_cli', model_name=self._model_id, error=str(ex), action_taken='failed')
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                raise ex
             return f'[Gemini CLI Error]: Request timed out.'
         except Exception as ex:
             logger.error(f'[GeminiCliChat] Непредвиденная ошибка запуска CLI: {ex}')
             from src.ai.orchestration.model_error_hub import record_model_error
             record_model_error(provider='gemini_cli', model_name=self._model_id, error=str(ex), action_taken='failed')
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                raise ex
             return f'[Gemini CLI Error]: {str(ex)}'

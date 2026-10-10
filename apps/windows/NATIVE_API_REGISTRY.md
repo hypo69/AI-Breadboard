@@ -214,7 +214,7 @@ Storage & Volume Management
 |---|---|---|---|---|---|
 | `GetDiskFreeSpaceExW` | `kernel32.dll` | Быстрый опрос свободного/общего места | Обычные | `Get-PSDrive` | `ctypes.windll.kernel32.GetDiskFreeSpaceExW` |
 | `GetVolumeInformationW` | `kernel32.dll` | Проверка типа ФС (NTFS/ReFS/FAT32) и флагов | Обычные | `Get-Volume` | `ctypes.windll.kernel32.GetVolumeInformationW` |
-| `Win32_ShadowStorage` | WMI / CIM | Контроль выделенного объема теневых копий | Admin | `Get-CimInstance Win32_ShadowStorage` | `apps.windows.core.system_restore.WindowsSystemRestoreManager` |
+| `Win32_ShadowStorage` | WMI / CIM | Контроль выделенного объема теневых копий | Admin | `Get-CimInstance Win32_ShadowStorage` | `apps.windows.sdk.core.system_restore.WindowsSystemRestoreManager` |
 
 ---
 
@@ -317,7 +317,7 @@ System Protection & VSS
 
 | Компонент | Уровень | Назначение | Права | Python реализация |
 |---|---|---|---|---|
-| `WindowsSystemRestoreManager` | WMI + PowerShell + Immutable Snapshots | Проверка защиты, управление точками отката и теневым хранилищем | Admin | `apps.windows.core.system_restore.WindowsSystemRestoreManager` |
+| `WindowsSystemRestoreManager` | WMI + PowerShell + Immutable Snapshots | Проверка защиты, управление точками отката и теневым хранилищем | Admin | `apps.windows.sdk.core.system_restore.WindowsSystemRestoreManager` |
 
 ---
 

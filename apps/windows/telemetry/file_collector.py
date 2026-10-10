@@ -35,7 +35,7 @@ except ImportError:
 def _get_directory_watcher_classes():
     """Ленивый импорт DirectoryWatcher для избежания циклических зависимостей."""
     try:
-        from apps.windows.modules.sysadmin.src.directory_watcher import DirectoryWatcher, LiveFileEvent
+        from apps.windows.sdk.modules.sysadmin.src.directory_watcher import DirectoryWatcher, LiveFileEvent
         return DirectoryWatcher, LiveFileEvent
     except ImportError:
         try:

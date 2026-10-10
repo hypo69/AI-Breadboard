@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Breadboard Logger -   Init  
+# Process Name: AI-Breadboard Logger - Init
 # =============================================================================
 # Description:
-#   Скрипт/модуль системы AI-Breadboard (`__init__`).
-#
-# Usage Examples:
-#
+#   Инициализация пакета централизованного логирования logger.
 #
 # File: __init__.py
 # Project: ai-breadboard
 # Package: logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:29:02
+# Updated: 2026-10-10 12:10:00
 # =============================================================================
 
-"""Скрипт/модуль системы AI-Breadboard (`__init__`)."""
+"""Пакет централизованного логирования AI-Breadboard."""
 
-from .logger import Logger, logger, JsonFormatter
+from .logger import (
+    Logger,
+    logger,
+    JsonFormatter,
+    get_uvicorn_log_config,
+    get_subsystem_logger,
+)

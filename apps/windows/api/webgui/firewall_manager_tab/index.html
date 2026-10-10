@@ -17,84 +17,81 @@ Project: ai-breadboard
 Package: windows/api/webgui/firewall_manager_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-10 10:37:00
 =============================================================================
 -->
-
 <!-- Windows Firewall Manager Tab -->
 <div class="container-fluid py-2 px-3">
-  <!-- Top Stat Cards -->
-  <div class="row g-2 mb-3">
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Доменный профиль 🏢</div>
-        <div class="fs-4 fw-bold mt-1 text-success" id="fw-domain-status">--</div>
-        <div class="small text-muted mt-1" id="fw-domain-sub">Domain Profile</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Частный профиль 🏠</div>
-        <div class="fs-4 fw-bold mt-1 text-success" id="fw-private-status">--</div>
-        <div class="small text-muted mt-1" id="fw-private-sub">Private Profile</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Публичный профиль 🌐</div>
-        <div class="fs-4 fw-bold mt-1 text-success" id="fw-public-status">--</div>
-        <div class="small text-muted mt-1" id="fw-public-sub">Public Profile</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
-        <div class="text-muted small text-uppercase fw-semibold">Активные правила 🛡️</div>
-        <div class="fs-4 fw-bold mt-1 text-info" id="fw-rules-count">--</div>
-        <div class="small text-muted mt-1" id="fw-rules-sub">netsh advfirewall</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Action Bar -->
-  <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="fw-refresh-btn">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить правила</span>
-      </button>
-      <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1.5" id="fw-reset-defaults-btn">
-        <i class="bi bi-arrow-counterclockwise"></i>
-        <span>Сброс по умолчанию (Reset)</span>
-      </button>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="fw-search-input" placeholder="Поиск правила или порта..." style="width: 260px;">
-    </div>
-  </div>
-
-  <!-- Firewall Rules Table -->
-  <div class="card bg-dark text-white border-secondary shadow-sm">
-    <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
-      <span class="fw-semibold"><i class="bi bi-shield-shaded text-primary me-2"></i>Правила Брандмауэра Windows</span>
-      <span class="badge bg-secondary" id="fw-table-badge">0 правил</span>
-    </div>
-    <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
-      <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="fw-table">
-        <thead class="sticky-top bg-dark">
-          <tr class="text-secondary">
-            <th>Имя правила</th>
-            <th>Направление</th>
-            <th>Действие</th>
-            <th>Протокол / Порт</th>
-            <th>Профиль</th>
-            <th>Состояние</th>
-            <th class="text-end">Управление</th>
-          </tr>
-        </thead>
-        <tbody id="fw-tbody">
-          <tr><td colspan="7" class="text-center text-muted py-4">Опрос правил брандмауэра...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<!-- Top Stat Cards -->
+<div class="row g-2 mb-3">
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-firewall-manager-1" id="panel-firewall-manager-1">
+<div class="text-muted small text-uppercase fw-semibold">Доменный профиль 🏢</div>
+<div class="fs-4 fw-bold mt-1 text-success" id="fw-domain-status">--</div>
+<div class="small text-muted mt-1" id="fw-domain-sub">Domain Profile</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-firewall-manager-2" id="panel-firewall-manager-2">
+<div class="text-muted small text-uppercase fw-semibold">Частный профиль 🏠</div>
+<div class="fs-4 fw-bold mt-1 text-success" id="fw-private-status">--</div>
+<div class="small text-muted mt-1" id="fw-private-sub">Private Profile</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-firewall-manager-3" id="panel-firewall-manager-3">
+<div class="text-muted small text-uppercase fw-semibold">Публичный профиль 🌐</div>
+<div class="fs-4 fw-bold mt-1 text-success" id="fw-public-status">--</div>
+<div class="small text-muted mt-1" id="fw-public-sub">Public Profile</div>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3" data-panel-id="panel-firewall-manager-4" id="panel-firewall-manager-4">
+<div class="text-muted small text-uppercase fw-semibold">Активные правила 🛡️</div>
+<div class="fs-4 fw-bold mt-1 text-info" id="fw-rules-count">--</div>
+<div class="small text-muted mt-1" id="fw-rules-sub">netsh advfirewall</div>
+</div>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="fw-refresh-btn">
+<i class="bi bi-arrow-clockwise"></i>
+<span>Обновить правила</span>
+</button>
+<button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1.5" id="fw-reset-defaults-btn">
+<i class="bi bi-arrow-counterclockwise"></i>
+<span>Сброс по умолчанию (Reset)</span>
+</button>
+</div>
+<div class="d-flex align-items-center gap-2">
+<input class="form-control form-control-sm bg-dark text-white border-secondary" id="fw-search-input" placeholder="Поиск правила или порта..." style="width: 260px;" type="text"/>
+</div>
+</div>
+<!-- Firewall Rules Table -->
+<div class="card bg-dark text-white border-secondary shadow-sm" data-panel-id="panel-firewall-manager-pravila-brandmauera-windows" id="panel-firewall-manager-pravila-brandmauera-windows">
+<div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+<span class="fw-semibold"><i class="bi bi-shield-shaded text-primary me-2"></i>Правила Брандмауэра Windows</span>
+<span class="badge bg-secondary" id="fw-table-badge">0 правил</span>
+</div>
+<div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
+<table class="table table-dark table-hover table-striped align-middle mb-0 small" id="fw-table">
+<thead class="sticky-top bg-dark">
+<tr class="text-secondary">
+<th>Имя правила</th>
+<th>Направление</th>
+<th>Действие</th>
+<th>Протокол / Порт</th>
+<th>Профиль</th>
+<th>Состояние</th>
+<th class="text-end">Управление</th>
+</tr>
+</thead>
+<tbody id="fw-tbody">
+<tr><td class="text-center text-muted py-4" colspan="7">Опрос правил брандмауэра...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>

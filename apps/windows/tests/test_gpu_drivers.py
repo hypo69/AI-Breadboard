@@ -3,7 +3,7 @@
 # Process Name: AI-Breadboard Apps Windows Tests - Test Gpu Drivers
 # =============================================================================
 # Description:
-#   Тесты для встроенного модуля управления драйверами apps.windows.drivers.
+#   Тесты для встроенного модуля управления драйверами apps.windows.sdk.drivers.
 #
 # Usage Examples:
 #   Python API:
@@ -19,11 +19,11 @@
 # Updated: 2026-10-01 13:28:28
 # =============================================================================
 
-"""Тесты для встроенного модуля управления драйверами apps.windows.drivers."""
+"""Тесты для встроенного модуля управления драйверами apps.windows.sdk.drivers."""
 
 import pytest
 from pathlib import Path
-from apps.windows.drivers import GpuHardwareDetector, NvidiaCatalogManager, AmdCatalogManager, DriverDownloader, VendorType, DriverBranch
+from apps.windows.sdk.drivers import GpuHardwareDetector, NvidiaCatalogManager, AmdCatalogManager, DriverDownloader, VendorType, DriverBranch
 
 def test_hardware_detector_version_formatting():
     """Проверить форматирование сырых версий WMI для NVIDIA и AMD."""

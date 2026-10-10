@@ -76,7 +76,7 @@ _SYSTEM_PROMPT = """Ты — экспертный аналитик операц�
 class GeminiKnowledgeResolver(BaseResolver):
     """Резолвер синтеза знаний через Google Gemini с возвратом валидированного JSON."""
 
-    def __init__(self, chat_model: Optional[Any] = None, model_id: str = "gemini-3.5-flash-lite") -> None:
+    def __init__(self, chat_model: Optional[Any] = None, model_id: str = "") -> None:
         """Инициализирует GeminiKnowledgeResolver.
 
         Args:

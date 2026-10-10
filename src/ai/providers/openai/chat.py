@@ -18,7 +18,7 @@
 # Package: src.ai.providers.openai
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:36:00
 # =============================================================================
 
 """Универсальный чат-клиент для любого OpenAI-совместимого эндпоинта."""
@@ -31,6 +31,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional
 import aiohttp
 from header import __root__
 from logger import logger
+from src.config import is_debug_mode
 from src.utils.jjson import j_loads
 _GLOBAL_CONFIG_PATH = __root__ / 'config.json'
 _KNOWN_PROVIDERS: Dict[str, Dict[str, str]] = {'openai': {'base_url': 'https://api.openai.com/v1', 'env_key': 'OPENAI_API_KEY'}, 'deepseek': {'base_url': 'https://api.deepseek.com/v1', 'env_key': 'DEEPSEEK_API_KEY'}, 'groq': {'base_url': 'https://api.groq.com/openai/v1', 'env_key': 'GROQ_API_KEY'}, 'openrouter': {'base_url': 'https://openrouter.ai/api/v1', 'env_key': 'OPENROUTER_API_KEY'}, 'lmstudio': {'base_url': 'http://localhost:1234/v1', 'env_key': 'LMSTUDIO_API_KEY'}, 'local': {'base_url': 'http://localhost:1234/v1', 'env_key': ''}}
@@ -119,6 +120,8 @@ class OpenAICompatChat:
                             err_text = await resp.text()
                             logger.warning(f'[OpenAICompat] Попытка {attempt}/{attempts} Error HTTP {resp.status} от {url}: {err_text[:120]}')
                             last_error = f'HTTP {resp.status}: {err_text}'
+                            if is_debug_mode():
+                                raise RuntimeError(f'[OpenAICompat] Ошибка HTTP {resp.status} от {url}: {err_text}')
                             if resp.status in (401, 403, 404):
                                 break
                             if attempt < attempts:
@@ -128,10 +131,14 @@ class OpenAICompatChat:
                         choices = data.get('choices', [])
                         if choices:
                             return choices[0].get('message', {}).get('content', '')
+                        if is_debug_mode():
+                            raise RuntimeError(f'[OpenAICompat] Пустой ответ от модели {self.model_id}: {data}')
                         return ''
             except Exception as e:
                 last_error = str(e)
                 logger.warning(f'[OpenAICompat] Попытка {attempt}/{attempts} exception для {url}: {e}')
+                if is_debug_mode():
+                    raise
                 if attempt < attempts:
                     await asyncio.sleep(min(2 ** attempt, 8))
         logger.error(f'[OpenAICompat] Все {attempts} попыток завершились неудачей для {self.model_id}: {last_error}')
@@ -176,6 +183,8 @@ class OpenAICompatChat:
                             err_text = await resp.text()
                             logger.warning(f'[OpenAICompat] chat attempt {attempt}/{attempts} HTTP {resp.status}: {err_text[:120]}')
                             last_error = f'HTTP {resp.status}: {err_text}'
+                            if is_debug_mode():
+                                raise RuntimeError(f'[OpenAICompat] chat error HTTP {resp.status} от {url}: {err_text}')
                             if resp.status in (401, 403, 404):
                                 break
                             if attempt < attempts:
@@ -184,6 +193,8 @@ class OpenAICompatChat:
                         data = await resp.json()
                         choices = data.get('choices', [])
                         ans = choices[0].get('message', {}).get('content', '') if choices else ''
+                        if not ans and is_debug_mode():
+                            raise RuntimeError(f'[OpenAICompat] Пустой ответ от модели {self.model_id}: {data}')
                         if save_history and ans:
                             self._history.append({'role': 'user', 'content': q})
                             self._history.append({'role': 'assistant', 'content': ans})
@@ -191,6 +202,8 @@ class OpenAICompatChat:
             except Exception as e:
                 last_error = str(e)
                 logger.warning(f'[OpenAICompat] chat attempt {attempt}/{attempts} error: {e}')
+                if is_debug_mode():
+                    raise
                 if attempt < attempts:
                     await asyncio.sleep(min(2 ** attempt, 8))
         logger.error(f'[OpenAICompat] chat failed for {self.model_id}: {last_error}')
@@ -237,6 +250,8 @@ class OpenAICompatChat:
                     if resp.status != 200:
                         err_text = await resp.text()
                         logger.error(f'[OpenAICompat] Стрим HTTP {resp.status} от {url}: {err_text}')
+                        if is_debug_mode():
+                            raise RuntimeError(f'[OpenAICompat] Стрим HTTP {resp.status} от {url}: {err_text}')
                         yield f'Error HTTP {resp.status}'
                         return
                     async for raw_line in resp.content:
@@ -256,4 +271,6 @@ class OpenAICompatChat:
                             continue
         except Exception as e:
             logger.error(f'[OpenAICompat] Error в потоке генерации: {e}')
+            if is_debug_mode():
+                raise
             yield f'[Stream error: {e}]'

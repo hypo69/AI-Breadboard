@@ -3,20 +3,23 @@
  * Process Name: Windows App Logs Tab - Main Controller Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки анализа внутренних логов программы
- *   AI-Breadboard strictly из %APPDATA%\AI-Breadboard\logs.
+ *   Клиентский контроллер продвинутого анализатора внутренних логов программы
+ *   AI-Breadboard строго из %APPDATA%\AI-Breadboard\logs.
+ *   Включает глубокую интеграцию с AIModalDialog (WikiLLM L1 Cache + AI Root Cause),
+ *   интерактивный Timeline-график, быстрые пресеты фильтрации, экспорт (CSV/JSON/MD)
+ *   и высокопроизводительный Live Tail Terminal.
  *   Полная адаптивность к светлой, кирпичной, темной и терминальной темам.
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script type="module" src="/html/app_logs_tab/main.js?v=20261008_v2"></script>
+ *     <script type="module" src="/html/app_logs_tab/main.js?v=20261010_v3"></script>
  *
  * File: main.js
  * Project: ai-breadboard
  * Package: windows/api/webgui/app_logs_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 10:40:00
+ * Updated: 2026-10-10 12:45:00
  * =============================================================================
  */
 
@@ -27,16 +30,18 @@ let state = {
   liveTimer: null,
   records: [],
   files: [],
+  overview: null,
   stats: null,
   selectedEntry: null,
+  activePreset: 'all',
 };
 
 /**
- * Инициализация вкладки
+ * Инициализация вкладки анализатора логов
  */
 export async function initAppLogsTab() {
   bindEvents();
-  await loadFilesList();
+  await loadOverviewAndFiles();
   await refreshCurrentView();
 }
 
@@ -57,12 +62,23 @@ function bindEvents() {
     });
   });
 
+  // Быстрые пресеты фильтрации
+  document.querySelectorAll('.apl-quick-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.apl-quick-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activePreset = btn.dataset.preset;
+      applyQuickPreset(state.activePreset);
+    });
+  });
+
   // Кнопка обновления
   const btnRefresh = document.getElementById('btn-apl-refresh');
   if (btnRefresh) {
     btnRefresh.addEventListener('click', async () => {
+      await loadOverviewAndFiles();
       await refreshCurrentView();
-      if (window.toast) window.toast.info('Обновлено', 'Данные логов успешно обновлены');
+      if (window.toast) window.toast.info('Обновлено', 'Данные журналов успешно обновлены');
     });
   }
 
@@ -70,7 +86,6 @@ function bindEvents() {
   const btnDiagnose = document.getElementById('btn-apl-diagnose');
   if (btnDiagnose) {
     btnDiagnose.addEventListener('click', async () => {
-      // Переключаем вкладку в режим аудита и запускаем диагностику
       const auditBtn = document.querySelector('#apl-mode-tabs [data-mode="audit"]');
       if (auditBtn) auditBtn.click();
       await runAiDiagnostics();
@@ -112,6 +127,11 @@ function bindEvents() {
     compSelect.addEventListener('change', () => refreshCurrentView());
   }
 
+  const timePresetSelect = document.getElementById('apl-time-preset-select');
+  if (timePresetSelect) {
+    timePresetSelect.addEventListener('change', () => refreshCurrentView());
+  }
+
   const limitSelect = document.getElementById('apl-limit-select');
   if (limitSelect) {
     limitSelect.addEventListener('change', () => refreshCurrentView());
@@ -121,18 +141,41 @@ function bindEvents() {
   const btnReset = document.getElementById('btn-apl-reset-filters');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
-      if (searchInput) searchInput.value = '';
-      if (levelSelect) levelSelect.value = '';
-      if (compSelect) compSelect.value = '';
-      if (limitSelect) limitSelect.value = '200';
-      refreshCurrentView();
+      resetAllFilters();
     });
   }
 
-  // Скачивание файла
-  const btnDownload = document.getElementById('btn-apl-download');
-  if (btnDownload) {
-    btnDownload.addEventListener('click', (e) => {
+  // Экспорт CSV
+  const btnExportCsv = document.getElementById('btn-apl-export-csv');
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerExport('csv');
+    });
+  }
+
+  // Экспорт JSON
+  const btnExportJson = document.getElementById('btn-apl-export-json');
+  if (btnExportJson) {
+    btnExportJson.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerExport('json');
+    });
+  }
+
+  // Экспорт Markdown
+  const btnExportMd = document.getElementById('btn-apl-export-md');
+  if (btnExportMd) {
+    btnExportMd.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerExport('markdown');
+    });
+  }
+
+  // Скачивание сырого файла
+  const btnDownloadRaw = document.getElementById('btn-apl-download-raw');
+  if (btnDownloadRaw) {
+    btnDownloadRaw.addEventListener('click', (e) => {
       e.preventDefault();
       window.open(`/api/v1/app_logs/download?file_name=${encodeURIComponent(state.currentFile)}`, '_blank');
     });
@@ -155,7 +198,7 @@ function bindEvents() {
         const data = await res.json();
         if (res.ok && data.success) {
           if (window.toast) window.toast.success('Очищено', data.message);
-          await loadFilesList();
+          await loadOverviewAndFiles();
           await refreshCurrentView();
         } else {
           if (window.toast) window.toast.error('Ошибка', data.detail || 'Не удалось очистить файл');
@@ -175,17 +218,90 @@ function bindEvents() {
     });
   }
 
-  // Кнопка копирования в модальном окне
-  const btnModalCopy = document.getElementById('btn-apl-modal-copy');
-  if (btnModalCopy) {
-    btnModalCopy.addEventListener('click', () => {
-      if (!state.selectedEntry) return;
-      const textToCopy = JSON.stringify(state.selectedEntry, null, 2);
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        if (window.toast) window.toast.success('Скопировано', 'Лог-запись скопирована в буфер обмена');
+  // Поиск внутри терминала
+  const tailFilterInput = document.getElementById('apl-tail-filter');
+  if (tailFilterInput) {
+    tailFilterInput.addEventListener('input', () => {
+      loadTailTerminal();
+    });
+  }
+
+  // Копирование сырого содержимого
+  const btnCopyRaw = document.getElementById('btn-apl-copy-raw');
+  if (btnCopyRaw) {
+    btnCopyRaw.addEventListener('click', () => {
+      const content = document.getElementById('apl-raw-content')?.textContent || '';
+      navigator.clipboard.writeText(content).then(() => {
+        if (window.toast) window.toast.success('Скопировано', 'Содержимое файла скопировано');
       });
     });
   }
+}
+
+/**
+ * Применение быстрых пресетов фильтрации
+ */
+function applyQuickPreset(preset) {
+  const levelSelect = document.getElementById('apl-level-select');
+  const compSelect = document.getElementById('apl-component-select');
+  const timeSelect = document.getElementById('apl-time-preset-select');
+  const searchInput = document.getElementById('apl-search-input');
+
+  if (preset === 'all') {
+    if (levelSelect) levelSelect.value = '';
+    if (compSelect) compSelect.value = '';
+    if (timeSelect) timeSelect.value = '';
+    if (searchInput) searchInput.value = '';
+  } else if (preset === 'errors') {
+    if (levelSelect) levelSelect.value = 'ERRORS';
+  } else if (preset === 'warnings_errors') {
+    if (levelSelect) levelSelect.value = 'WARNINGS_ERRORS';
+  } else if (preset === 'windows') {
+    if (searchInput) searchInput.value = 'Windows';
+  } else if (preset === 'ai') {
+    if (searchInput) searchInput.value = 'AI';
+  } else if (preset === 'fastapi') {
+    if (searchInput) searchInput.value = 'FastAPI';
+  } else if (preset === 'hour') {
+    if (timeSelect) timeSelect.value = '1h';
+  } else if (preset === 'day') {
+    if (timeSelect) timeSelect.value = '24h';
+  }
+
+  refreshCurrentView();
+}
+
+/**
+ * Сброс всех фильтров
+ */
+function resetAllFilters() {
+  const searchInput = document.getElementById('apl-search-input');
+  const levelSelect = document.getElementById('apl-level-select');
+  const compSelect = document.getElementById('apl-component-select');
+  const timeSelect = document.getElementById('apl-time-preset-select');
+  const limitSelect = document.getElementById('apl-limit-select');
+
+  if (searchInput) searchInput.value = '';
+  if (levelSelect) levelSelect.value = '';
+  if (compSelect) compSelect.value = '';
+  if (timeSelect) timeSelect.value = '';
+  if (limitSelect) limitSelect.value = '200';
+
+  document.querySelectorAll('.apl-quick-preset-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.preset === 'all');
+  });
+
+  refreshCurrentView();
+}
+
+/**
+ * Запуск экспорта данных
+ */
+function triggerExport(format) {
+  const search = document.getElementById('apl-search-input')?.value || '';
+  const level = document.getElementById('apl-level-select')?.value || '';
+  const url = `/api/v1/app_logs/export?file_name=${encodeURIComponent(state.currentFile)}&export_format=${format}&search=${encodeURIComponent(search)}&level=${encodeURIComponent(level)}`;
+  window.open(url, '_blank');
 }
 
 /**
@@ -221,29 +337,36 @@ function switchViewMode(mode) {
 }
 
 /**
- * Загрузка списка файлов логов
+ * Загрузка сводки и списка файлов логов
  */
-async function loadFilesList() {
+async function loadOverviewAndFiles() {
   try {
-    const res = await fetch('/api/v1/app_logs/files');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    state.files = data.files || [];
+    const [ovRes, filesRes] = await Promise.all([
+      fetch('/api/v1/app_logs/overview').catch(() => null),
+      fetch('/api/v1/app_logs/files').catch(() => null),
+    ]);
 
-    const pathLabel = document.getElementById('apl-full-path-label');
-    if (pathLabel && data.logs_dir) {
-      pathLabel.textContent = data.logs_dir;
-      pathLabel.title = data.logs_dir;
+    if (ovRes && ovRes.ok) {
+      state.overview = await ovRes.json();
+    }
+    if (filesRes && filesRes.ok) {
+      const data = await filesRes.json();
+      state.files = data.files || [];
+      const pathLabel = document.getElementById('apl-full-path-label');
+      if (pathLabel && data.logs_dir) {
+        pathLabel.textContent = data.logs_dir;
+        pathLabel.title = data.logs_dir;
+      }
     }
 
     renderFilesBadges();
   } catch (err) {
-    console.error('[AppLogs] Ошибка загрузки списка файлов:', err);
+    console.error('[AppLogs] Ошибка загрузки файлов и сводки:', err);
   }
 }
 
 /**
- * Отрисовка бейджей файлов
+ * Отрисовка бейджей файлов журналов со статусными индикаторами
  */
 function renderFilesBadges() {
   const container = document.getElementById('apl-files-badges-container');
@@ -251,19 +374,32 @@ function renderFilesBadges() {
 
   container.innerHTML = '';
   if (state.files.length === 0) {
-    container.innerHTML = '<span class="text-muted small">Файлы логов не обнаружены.</span>';
+    container.innerHTML = '<span class="text-muted small">Файлы журналов не обнаружены.</span>';
     return;
+  }
+
+  // Карта ошибок по файлам из overview
+  const errorMap = {};
+  if (state.overview && state.overview.files) {
+    state.overview.files.forEach(f => {
+      errorMap[f.name] = f.recent_errors || 0;
+    });
   }
 
   state.files.forEach(f => {
     const btn = document.createElement('button');
     btn.type = 'button';
     const isActive = f.name === state.currentFile;
-    btn.className = `btn btn-sm rounded-pill px-2.5 py-0.5 small apl-file-badge ${isActive ? 'active' : ''}`;
+    const errorsCount = errorMap[f.name] || 0;
+    const hasError = errorsCount > 0;
+
+    btn.className = `btn btn-sm rounded-pill px-2.5 py-0.5 small apl-file-badge ${isActive ? 'active' : ''} ${hasError ? 'has-error' : ''}`;
     btn.style.fontSize = '0.76rem';
 
     const icon = f.is_json ? 'bi-filetype-json text-info' : 'bi-file-text text-warning';
-    btn.innerHTML = `<i class="bi ${icon} me-1"></i><strong>${f.name}</strong> <span class="badge apl-card border border-secondary-subtle ms-1">${f.size_formatted}</span>`;
+    const errIndicator = hasError ? `<span class="badge bg-danger ms-1" style="font-size:0.65rem;" title="Ошибок: ${errorsCount}">${errorsCount}</span>` : '';
+
+    btn.innerHTML = `<i class="bi ${icon} me-1"></i><strong>${f.name}</strong> <span class="badge apl-card border border-secondary-subtle ms-1">${f.size_formatted}</span>${errIndicator}`;
 
     btn.addEventListener('click', async () => {
       state.currentFile = f.name;
@@ -282,9 +418,9 @@ async function refreshCurrentView() {
   const search = document.getElementById('apl-search-input')?.value || '';
   const level = document.getElementById('apl-level-select')?.value || '';
   const component = document.getElementById('apl-component-select')?.value || '';
+  const timePreset = document.getElementById('apl-time-preset-select')?.value || '';
   const limit = document.getElementById('apl-limit-select')?.value || '200';
 
-  // Обновляем заголовок файла
   const fnStat = document.getElementById('apl-stat-filename');
   if (fnStat) fnStat.textContent = state.currentFile;
 
@@ -295,6 +431,7 @@ async function refreshCurrentView() {
       search: search,
       level: level,
       component: component,
+      time_preset: timePreset,
     });
 
     const res = await fetch(`/api/v1/app_logs/records?${queryParams.toString()}`);
@@ -304,12 +441,9 @@ async function refreshCurrentView() {
     state.records = data.records || [];
     state.stats = data.stats || null;
 
-    // Обновляем метрики в шапке
     updateHeaderStats(data);
-    // Обновляем селектор компонентов
     updateComponentsDropdown(data.stats?.components || []);
 
-    // Рендерим активный вид
     if (state.currentMode === 'table') {
       renderRecordsTable(state.records);
     } else if (state.currentMode === 'timeline') {
@@ -323,7 +457,7 @@ async function refreshCurrentView() {
     console.error('[AppLogs] Ошибка обновления логов:', err);
     const tbody = document.getElementById('apl-table-body');
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Ошибка загрузки: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Ошибка загрузки: ${escapeHtml(err.message)}</td></tr>`;
     }
   }
 }
@@ -373,21 +507,18 @@ function updateComponentsDropdown(components) {
 }
 
 /**
- * Отрисовка таблицы записей
+ * Отрисовка строк таблицы записей
  */
 function renderRecordsTable(records) {
   const tbody = document.getElementById('apl-table-body');
   if (!tbody) return;
 
   if (!records || records.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Нет записей, удовлетворяющих условиям фильтра.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Нет записей, удовлетворяющих условиям фильтрации.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = '';
-  records.forEach(entry => {
-    const tr = document.createElement('tr');
-
+  tbody.innerHTML = records.map(entry => {
     let badgeClass = 'badge-apl-inf';
     const lvl = (entry.level || '').toUpperCase();
     if (lvl === 'CRITICAL' || lvl === 'FATAL') badgeClass = 'badge-apl-crit';
@@ -399,58 +530,104 @@ function renderRecordsTable(records) {
     const hasExc = !!entry.exc_info;
     const excBadge = hasExc ? `<span class="badge bg-danger ms-1" title="Содержит Stacktrace"><i class="bi bi-bug"></i> Trace</span>` : '';
 
-    tr.innerHTML = `
-      <td class="font-monospace small text-muted text-nowrap">${escapeHtml(entry.timestamp || '--:--:--')}</td>
-      <td><span class="badge ${badgeClass} small">${escapeHtml(entry.level || 'INFO')}</span>${repeatBadge}</td>
-      <td><span class="badge apl-comp-badge font-monospace text-truncate" style="max-width: 120px;" title="${escapeHtml(entry.component)}">${escapeHtml(entry.component)}</span></td>
-      <td class="font-monospace small text-break text-body">${escapeHtml(entry.message || '')}${excBadge}</td>
-      <td class="text-end">
-        <button class="btn btn-xs btn-outline-info rounded px-1.5 py-0.5 btn-entry-view" title="Посмотреть детали">
-          <i class="bi bi-eye"></i>
-        </button>
-      </td>
+    return `
+      <tr class="interactive-log-row" data-id="${entry.id}">
+        <td class="font-monospace small text-muted text-nowrap">${escapeHtml(entry.timestamp || '--:--:--')}</td>
+        <td><span class="badge ${badgeClass} small">${escapeHtml(entry.level || 'INFO')}</span>${repeatBadge}</td>
+        <td><span class="badge apl-comp-badge font-monospace text-truncate" style="max-width: 120px;" title="${escapeHtml(entry.component)}">${escapeHtml(entry.component)}</span></td>
+        <td class="font-monospace small text-break text-body">${escapeHtml(entry.message || '')}${excBadge}</td>
+        <td class="text-end no-modal-trigger">
+          <button type="button" class="btn btn-xs btn-outline-info rounded px-1.5 py-0.5 btn-entry-ai" data-id="${entry.id}" title="AI Анализ в модальном окне">
+            <i class="bi bi-robot"></i> AI
+          </button>
+        </td>
+      </tr>
     `;
+  }).join('');
 
-    // Клик по строке открывает детали
-    tr.addEventListener('click', () => {
-      state.selectedEntry = entry;
-      openEntryModal(entry);
+  // Привязка обработчиков клика по строкам для вызова AIModalDialog
+  tbody.querySelectorAll('.interactive-log-row').forEach(row => {
+    row.addEventListener('click', (event) => {
+      const entryId = row.getAttribute('data-id');
+      const entry = records.find(x => String(x.id) === String(entryId));
+      if (!entry) return;
+
+      openItemAiModal(entry);
     });
+  });
 
-    tbody.appendChild(tr);
+  // Кнопка AI Анализа в строке
+  tbody.querySelectorAll('.btn-entry-ai').forEach(btn => {
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const entryId = btn.getAttribute('data-id');
+      const entry = records.find(x => String(x.id) === String(entryId));
+      if (!entry) return;
+
+      openItemAiModal(entry);
+    });
   });
 }
 
 /**
- * Открытие модального окна деталей записи
+ * Открытие универсального модального окна AIModalDialog для анализа записи
  */
-function openEntryModal(entry) {
-  document.getElementById('apl-modal-time').textContent = entry.timestamp || 'N/A';
-  document.getElementById('apl-modal-level').textContent = entry.level || 'INFO';
-  document.getElementById('apl-modal-component').textContent = entry.component || 'N/A';
-  document.getElementById('apl-modal-repeat').textContent = entry.repeat_count || 1;
-  document.getElementById('apl-modal-message').textContent = entry.message || '';
-  document.getElementById('apl-modal-raw').textContent = entry.raw || JSON.stringify(entry);
+function openItemAiModal(entry) {
+  state.selectedEntry = entry;
+  const modal = window.AIModalDialog || window.AITableModal;
 
-  const excCard = document.getElementById('apl-modal-exc-card');
-  const excPre = document.getElementById('apl-modal-exc');
-  if (entry.exc_info) {
-    excCard.classList.remove('d-none');
-    excPre.textContent = typeof entry.exc_info === 'string' ? entry.exc_info : JSON.stringify(entry.exc_info, null, 2);
+  let badgeClass = 'badge bg-info';
+  const lvl = (entry.level || '').toUpperCase();
+  if (lvl === 'CRITICAL' || lvl === 'FATAL' || lvl === 'ERROR') badgeClass = 'badge bg-danger';
+  else if (lvl === 'WARNING' || lvl === 'WARN') badgeClass = 'badge bg-warning text-dark';
+  else if (lvl === 'DEBUG') badgeClass = 'badge bg-secondary';
+
+  const icon = (lvl === 'CRITICAL' || lvl === 'ERROR') ? '🚨' : ((lvl === 'WARNING' || lvl === 'WARN') ? '⚠️' : '📑');
+
+  if (modal && typeof modal.show === 'function') {
+    modal.show({
+      title: `[${entry.level}] ${entry.component || 'Log Entry'}`,
+      subtitle: `Время: ${entry.timestamp || 'N/A'} | Файл: ${state.currentFile} | Повторов: ${entry.repeat_count || 1}`,
+      icon: icon,
+      tableType: 'process',
+      badges: [
+        { text: entry.level || 'INFO', class: badgeClass },
+        { text: entry.component || 'System', class: 'badge apl-comp-badge' },
+        { text: `${entry.repeat_count || 1}x`, class: 'badge border text-secondary' }
+      ],
+      metadata: [
+        { label: 'Временная метка', value: entry.timestamp || 'N/A' },
+        { label: 'Компонент / Модуль', value: entry.component || 'N/A' },
+        { label: 'Уровень события', value: entry.level || 'INFO' },
+        { label: 'Файл журнала', value: state.currentFile },
+        { label: 'Повторений инцидента', value: `${entry.repeat_count || 1}` },
+        { label: 'Сообщение лога', value: entry.message || '', fullWidth: true, isCode: true },
+      ],
+      rawTitle: 'Стек вызовов (Traceback) / Сырая запись',
+      rawContent: entry.exc_info ? (typeof entry.exc_info === 'string' ? entry.exc_info : JSON.stringify(entry.exc_info, null, 2)) : entry.raw || entry.message,
+      autoRun: false,
+      actions: [
+        {
+          label: 'Копировать запись',
+          icon: 'bi-clipboard',
+          class: 'btn-outline-info',
+          onClick: () => {
+            navigator.clipboard.writeText(JSON.stringify(entry, null, 2)).then(() => {
+              if (window.toast) window.toast.success('Скопировано', 'Лог-запись скопирована в буфер обмена');
+            });
+          }
+        }
+      ]
+    });
   } else {
-    excCard.classList.add('d-none');
-    excPre.textContent = '';
-  }
-
-  const modalEl = document.getElementById('apl-entry-modal');
-  if (modalEl && window.bootstrap) {
-    const modal = new window.bootstrap.Modal(modalEl);
-    modal.show();
+    // Fallback: alert
+    console.log('[AppLogs] Запись лога:', entry);
+    alert(`[${entry.level}] ${entry.component}\n\n${entry.message}`);
   }
 }
 
 /**
- * Выполнение AI Диагностики
+ * Выполнение глубокой AI Диагностики и кластеризации сбоев
  */
 async function runAiDiagnostics() {
   const summaryEl = document.getElementById('apl-audit-summary-text');
@@ -459,7 +636,7 @@ async function runAiDiagnostics() {
   const recsContainer = document.getElementById('apl-audit-recommendations-list');
   const clustersBody = document.getElementById('apl-audit-clusters-body');
 
-  if (summaryEl) summaryEl.innerHTML = '<div class="spinner-border spinner-border-sm text-info me-2"></div>Анализ логов и поиск первопричин сбоев...';
+  if (summaryEl) summaryEl.innerHTML = '<div class="spinner-border spinner-border-sm text-info me-2"></div>Глубокий анализ логов, поиск первопричин и кластеризация сбоев...';
 
   try {
     const res = await fetch('/api/v1/app_logs/diagnose', {
@@ -467,7 +644,7 @@ async function runAiDiagnostics() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         file_name: state.currentFile,
-        limit: 100,
+        limit: 150,
         focus_errors_only: true,
       })
     });
@@ -486,7 +663,7 @@ async function runAiDiagnostics() {
     // Отрисовка рекомендаций
     if (recsContainer) {
       if (!data.recommendations || data.recommendations.length === 0) {
-        recsContainer.innerHTML = '<div class="alert alert-success small mb-0"><i class="bi bi-check-circle me-1"></i>Активных проблем и предупреждений не обнаружено.</div>';
+        recsContainer.innerHTML = '<div class="alert alert-success small mb-0"><i class="bi bi-check-circle me-1"></i>Активных сбоев и критических предупреждений не зафиксировано.</div>';
       } else {
         recsContainer.innerHTML = data.recommendations.map(r => `
           <div class="card apl-card border-${r.severity === 'high' ? 'danger' : 'warning'} p-2.5 mb-2 shadow-sm">
@@ -495,7 +672,7 @@ async function runAiDiagnostics() {
               <span class="badge bg-${r.severity === 'high' ? 'danger' : 'warning'} small">${r.severity.toUpperCase()}</span>
             </div>
             <div class="small text-body mb-1">${escapeHtml(r.description)}</div>
-            <div class="small text-info"><i class="bi bi-arrow-right-circle me-1"></i><strong>Действие:</strong> ${escapeHtml(r.action)}</div>
+            <div class="small text-info"><i class="bi bi-arrow-right-circle me-1"></i><strong>Рекомендуемое действие:</strong> ${escapeHtml(r.action)}</div>
           </div>
         `).join('');
       }
@@ -504,10 +681,10 @@ async function runAiDiagnostics() {
     // Отрисовка кластеров
     if (clustersBody) {
       if (!data.clusters || data.clusters.length === 0) {
-        clustersBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Ошибок и повторяющихся инцидентов не зафиксировано.</td></tr>';
+        clustersBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Ошибок и повторяющихся инцидентов не зафиксировано.</td></tr>';
       } else {
-        clustersBody.innerHTML = data.clusters.map(c => `
-          <tr>
+        clustersBody.innerHTML = data.clusters.map((c, idx) => `
+          <tr class="interactive-cluster-row" data-cluster-idx="${idx}">
             <td><span class="badge bg-danger fw-bold">${c.count}x</span></td>
             <td><span class="badge apl-card border border-danger text-danger">${escapeHtml(c.level)}</span></td>
             <td class="font-monospace small text-muted text-nowrap">${escapeHtml(c.last_seen || '--')}</td>
@@ -515,19 +692,45 @@ async function runAiDiagnostics() {
               <div class="fw-bold text-warning">${escapeHtml(c.pattern)}</div>
               <div class="text-muted small mt-0.5">${escapeHtml(c.sample_message)}</div>
             </td>
+            <td class="text-end">
+              <button type="button" class="btn btn-xs btn-outline-warning rounded px-1.5 py-0.5 btn-cluster-inspect" data-cluster-idx="${idx}" title="AI инспекция кластера">
+                <i class="bi bi-robot"></i> Инспекция
+              </button>
+            </td>
           </tr>
         `).join('');
+
+        // Обработчик инспекции кластера
+        clustersBody.querySelectorAll('.btn-cluster-inspect').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-cluster-idx'), 10);
+            const cluster = data.clusters[idx];
+            if (!cluster) return;
+
+            openItemAiModal({
+              id: `cluster-${idx}`,
+              level: cluster.level,
+              component: 'Error Cluster',
+              timestamp: cluster.last_seen,
+              repeat_count: cluster.count,
+              message: cluster.sample_message,
+              exc_info: cluster.exc_info,
+              raw: cluster.sample_message
+            });
+          });
+        });
       }
     }
 
   } catch (err) {
     console.error('[AppLogs] Ошибка AI диагностики:', err);
-    if (summaryEl) summaryEl.innerHTML = `<span class="text-danger">Ошибка диагностики: ${err.message}</span>`;
+    if (summaryEl) summaryEl.innerHTML = `<span class="text-danger">Ошибка диагностики: ${escapeHtml(err.message)}</span>`;
   }
 }
 
 /**
- * Отрисовка графика временной шкалы (Timeline)
+ * Отрисовка интерактивного графика временной шкалы (Timeline)
  */
 function renderTimelineChart() {
   const barsContainer = document.getElementById('apl-timeline-bars');
@@ -541,30 +744,67 @@ function renderTimelineChart() {
     } else {
       const maxTotal = Math.max(...timeline.map(t => t.total), 1);
       barsContainer.innerHTML = timeline.map(t => {
-        const heightPct = Math.max(8, (t.total / maxTotal) * 100);
+        const heightPct = Math.max(10, (t.total / maxTotal) * 100);
         const timeLabel = t.time.slice(11, 16);
 
+        const hasErr = t.errors > 0;
+        const hasWarn = t.warnings > 0;
+        let barBg = 'linear-gradient(to top, var(--nav-active, #0284c7) 0%, var(--nav-active, #38bdf8) 100%)';
+        if (hasErr) {
+          barBg = 'linear-gradient(to top, #ef4444 0%, #dc2626 100%)';
+        } else if (hasWarn) {
+          barBg = 'linear-gradient(to top, #f59e0b 0%, #d97706 100%)';
+        }
+
         return `
-          <div class="d-flex flex-column align-items-center" style="flex: 1; min-width: 28px; height: 100%; justify-content: flex-end;" title="${t.time}: Всего: ${t.total}, Ошибок: ${t.errors}">
+          <div class="d-flex flex-column align-items-center apl-timeline-bar-item" data-time="${t.time}" style="flex: 1; min-width: 32px; height: 100%; justify-content: flex-end;" title="${t.time}: Всего событий: ${t.total}, Ошибок: ${t.errors}, Предупреждений: ${t.warnings}">
             <span class="small font-monospace text-muted" style="font-size: 0.65rem;">${t.total}</span>
-            <div class="w-100 rounded-top" style="height: ${heightPct}%; background: linear-gradient(to top, var(--nav-active, #0284c7) 0%, ${t.errors > 0 ? '#ef4444' : 'var(--nav-active, #38bdf8)'} 100%); position: relative;">
+            <div class="w-100 rounded-top" style="height: ${heightPct}%; background: ${barBg}; position: relative;">
             </div>
             <span class="small font-monospace text-muted text-truncate" style="font-size: 0.65rem; margin-top: 4px;">${timeLabel}</span>
           </div>
         `;
       }).join('');
+
+      // Клик по столбцу фильтрует таблицу по этому временному слоту
+      barsContainer.querySelectorAll('.apl-timeline-bar-item').forEach(bar => {
+        bar.addEventListener('click', () => {
+          const tVal = bar.getAttribute('data-time');
+          const searchInput = document.getElementById('apl-search-input');
+          if (searchInput && tVal) {
+            searchInput.value = tVal.slice(0, 13);
+            const tableTab = document.querySelector('#apl-mode-tabs [data-mode="table"]');
+            if (tableTab) tableTab.click();
+            refreshCurrentView();
+          }
+        });
+      });
     }
   }
 
   if (compContainer && state.stats.components) {
     compContainer.innerHTML = state.stats.components.map(c => `
       <div class="col-md-3 col-sm-6">
-        <div class="card apl-card p-2 d-flex flex-row justify-content-between align-items-center shadow-sm">
-          <span class="font-monospace small text-info text-truncate" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
+        <div class="card apl-card p-2 d-flex flex-row justify-content-between align-items-center shadow-sm" style="cursor: pointer;" title="Фильтровать по модулю: ${escapeHtml(c.name)}">
+          <span class="font-monospace small text-info text-truncate" style="max-width: 130px;">${escapeHtml(c.name)}</span>
           <span class="badge bg-primary rounded-pill font-monospace">${c.count}</span>
         </div>
       </div>
     `).join('');
+
+    // Клик по компоненту фильтрует по нему
+    compContainer.querySelectorAll('.card').forEach((card, idx) => {
+      card.addEventListener('click', () => {
+        const cName = state.stats.components[idx]?.name;
+        const compSelect = document.getElementById('apl-component-select');
+        if (compSelect && cName) {
+          compSelect.value = cName;
+          const tableTab = document.querySelector('#apl-mode-tabs [data-mode="table"]');
+          if (tableTab) tableTab.click();
+          refreshCurrentView();
+        }
+      });
+    });
   }
 }
 
@@ -575,19 +815,26 @@ async function loadTailTerminal() {
   const term = document.getElementById('apl-tail-terminal');
   if (!term) return;
 
+  const filterText = (document.getElementById('apl-tail-filter')?.value || '').toLowerCase();
+
   try {
-    const res = await fetch(`/api/v1/app_logs/tail?file_name=${encodeURIComponent(state.currentFile)}&lines=120`);
+    const res = await fetch(`/api/v1/app_logs/tail?file_name=${encodeURIComponent(state.currentFile)}&lines=150`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    term.textContent = (data.lines || []).join('\n') || '[Файл логов пуст]';
+    let lines = data.lines || [];
+    if (filterText) {
+      lines = lines.filter(l => l.toLowerCase().includes(filterText));
+    }
+
+    term.textContent = lines.join('\n') || '[Файл логов пуст или нет совпадений по фильтру]';
 
     const autoscroll = document.getElementById('apl-tail-autoscroll')?.checked;
     if (autoscroll) {
       term.scrollTop = term.scrollHeight;
     }
   } catch (err) {
-    term.textContent = `[Ошибка чтения tail: ${err.message}]`;
+    term.textContent = `[Ошибка чтения tail: ${escapeHtml(err.message)}]`;
   }
 }
 
@@ -605,7 +852,7 @@ async function loadRawContent() {
     const data = await res.json();
     pre.textContent = (data.lines || []).join('\n') || '[Файл логов пуст]';
   } catch (err) {
-    pre.textContent = `[Ошибка чтения: ${err.message}]`;
+    pre.textContent = `[Ошибка чтения: ${escapeHtml(err.message)}]`;
   }
 }
 

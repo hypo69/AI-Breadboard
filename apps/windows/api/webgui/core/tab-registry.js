@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/core
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 13:58:00
+ * Updated: 2026-10-10 08:24:00
  * =============================================================================
  */
 
@@ -41,7 +41,7 @@ export const TAB_DEFINITIONS = [
   { id: 'system_log_viewer', label: 'Логи системы', i18nKey: 'auto___6e28ee', icon: '📋', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
   { id: 'software_audit', label: 'Аудит ПО', i18nKey: 'auto___128e2e', icon: '📦', tab: 'software-audit', tabId: 'tab-software-audit', html: '/html/software_audit_tab/index.html', js: '/html/software_audit_tab/main.js' },
   { id: 'registry_viewer', label: 'Registry Viewer', icon: '🗝️', tab: 'registry-viewer', tabId: 'tab-registry-viewer', html: '/html/registry_viewer_tab/index.html', js: '/html/registry_viewer_tab/main.js' },
-  { id: 'windows_defender', label: 'Defender Security', icon: 'bi-shield-lock', tab: 'defender', tabId: 'tab-defender', html: '/html/defender_tab/index.html?v=20261006_v2', js: '/html/defender_tab/main.js?v=20261006_v2' },
+  { id: 'windows_defender', label: 'Defender Security', icon: 'bi-shield-lock', tab: 'defender', tabId: 'tab-defender', html: '/html/defender_tab/index.html?v=20261010_v2', js: '/html/defender_tab/main.js?v=20261010_v2' },
   { id: 'windows_startup_auditor', label: 'Автозагрузка', i18nKey: 'auto___007983', icon: '🚀', tab: 'startup-auditor', tabId: 'tab-startup-auditor', html: '/html/startup_auditor_tab/index.html', js: '/html/startup_auditor_tab/main.js' },
   { id: 'windows_backup_manager', label: 'Windows Backup', icon: '💾', tab: 'windows-backup', tabId: 'tab-windows-backup', html: '/html/windows_backup_tab/index.html?v=20261004_v1', js: '/html/windows_backup_tab/main.js?v=20261004_v1' },
   { id: 'hardware_monitor', label: 'Мониторинг оборудования', i18nKey: 'auto___8a1c35', icon: 'bi-cpu', tab: 'hardware-monitor', tabId: 'tab-hardware-monitor', html: '/html/hardware_monitor_tab/index.html', js: '/html/hardware_monitor_tab/main.js' },
@@ -67,7 +67,7 @@ export const TAB_DEFINITIONS = [
   { id: 'peripherals', label: 'Периферия', i18nKey: 'auto___b62c2e', icon: '🔌', tab: 'peripherals', tabId: 'tab-peripherals', html: '/html/peripherals_tab/index.html?v=20260924_v1', js: '/html/peripherals_tab/main.js?v=20260924_v1' },
   { id: 'rag', label: 'RAG База знаний', i18nKey: 'auto_rag__829445', icon: '🧠', tab: 'rag', tabId: 'tab-rag', html: '/html/rag_tab/index.html', js: '/html/rag_tab/main.js' },
   { id: 'pixelrag', label: 'PixelRAG', icon: '🖼️', tab: 'pixelrag', tabId: 'tab-pixelrag', html: '/html/pixelrag_tab/index.html', js: '/html/pixelrag_tab/main.js' },
-  { id: 'models', label: 'Модели', i18nKey: 'auto___44bfc5', icon: '🤖', tab: 'models', tabId: 'tab-models', html: '/html/models_tab/index.html', js: '/html/models_tab/main.js' },
+  { id: 'models', label: 'Модели', i18nKey: 'auto___44bfc5', icon: '🤖', tab: 'models', tabId: 'tab-models', html: '/html/models_tab/index.html?v=20261010_v1', js: '/html/models_tab/main.js?v=20261010_v1' },
   { id: 'agents', label: 'Агенты', i18nKey: 'auto___af1850', icon: '🧩', tab: 'agents', tabId: 'tab-agents', html: '/html/agents_tab/index.html', js: '/html/agents_tab/main.js' },
   { id: 'skills', label: 'Навыки', i18nKey: 'auto___56221b', icon: '⚡', tab: 'skills', tabId: 'tab-skills', html: '/html/skills_tab/index.html', js: '/html/skills_tab/main.js' },
   { id: 'ai_benchmark', label: 'AI Benchmark', icon: '⏱️', tab: 'ai-benchmark', tabId: 'tab-ai-benchmark', html: '/html/ai_benchmark_tab/index.html?v=20260926_v1', js: '/html/ai_benchmark_tab/main.js?v=20260926_v1' }

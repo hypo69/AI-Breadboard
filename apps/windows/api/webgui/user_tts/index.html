@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/user_tts
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-10 12:58:00
 =============================================================================
 -->
 
@@ -34,12 +34,12 @@ Updated: 2026-10-01 13:04:40
   <style>
     /* Custom styles for TTS page */
     :root {
-      --tts-nav-bg: #161b22;
+      --tts-nav-bg: var(--surface-2);
     }
 
     body {
-      background: #0d1117;
-      color: #c9d1d9;
+      background: var(--bg-color, #fbfbfb);
+      color: var(--text-color, #18181b);
       min-height: 100vh;
     }
 
@@ -50,43 +50,43 @@ Updated: 2026-10-01 13:04:40
     }
 
     .tts-card {
-      background: #161b22;
-      border: 1px solid #30363d;
+      background: var(--surface-1);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 2rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
     h1 {
-      color: #c9d1d9;
+      color: var(--text-color);
       font-weight: 600;
       margin-bottom: 0.5rem;
     }
 
     .subtitle {
-      color: #8b949e;
+      color: var(--text-muted);
       font-size: 0.95rem;
       margin-bottom: 2rem;
     }
 
     .form-label {
-      color: #8b949e;
+      color: var(--text-muted);
       font-weight: 500;
       margin-bottom: 0.5rem;
     }
 
     .form-control, .form-select {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
+      background: var(--surface-2);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
       border-radius: 8px;
       padding: 0.75rem 1rem;
     }
 
     .form-control:focus, .form-select:focus {
-      background: #0d1117;
-      border-color: #58a6ff;
-      color: #c9d1d9;
+      background: var(--surface-2);
+      border-color: var(--nav-active);
+      color: var(--text-color);
       box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
     }
 
@@ -97,7 +97,7 @@ Updated: 2026-10-01 13:04:40
     }
 
     .btn-tts {
-      background: #1f6feb;
+      background: var(--nav-active, #1f6feb);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -152,7 +152,7 @@ Updated: 2026-10-01 13:04:40
     .audio-player-container {
       margin-top: 2rem;
       padding-top: 2rem;
-      border-top: 1px solid #30363d;
+      border-top: 1px solid var(--border-color);
       display: none;
     }
 
@@ -166,7 +166,7 @@ Updated: 2026-10-01 13:04:40
       align-items: center;
       gap: 0.5rem;
       font-size: 0.9rem;
-      color: #8b949e;
+      color: var(--text-muted);
       margin-top: 1rem;
     }
 
@@ -180,7 +180,7 @@ Updated: 2026-10-01 13:04:40
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      color: #8b949e;
+      color: var(--text-muted);
       text-decoration: none;
       font-size: 0.95rem;
       margin-top: 2rem;
@@ -188,17 +188,7 @@ Updated: 2026-10-01 13:04:40
     }
 
     .back-link:hover {
-      color: #58a6ff;
-    }
-
-    /* Dark theme audio player controls */
-    audio::-webkit-media-controls-panel {
-      background-color: rgba(13, 17, 23, 0.9);
-    }
-
-    audio::-webkit-media-controls-current-time-display,
-    audio::-webkit-media-controls-time-remaining-display {
-      color: #c9d1d9;
+      color: var(--nav-active);
     }
   </style>
 </head>

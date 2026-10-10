@@ -369,7 +369,7 @@ class SystemCollector:
         """
         gpus: List[GpuMetrics] = []
         try:
-            from apps.windows.modules.hardware.gpu_prober import GpuProber, determine_gpu_compute_backends
+            from apps.windows.sdk.modules.hardware.gpu_prober import GpuProber, determine_gpu_compute_backends
             prober = GpuProber()
             gpu_list = prober.probe_all()
             for g in gpu_list:
@@ -435,7 +435,7 @@ class SystemCollector:
         """
         npus: List[NpuMetrics] = []
         try:
-            from apps.windows.modules.hardware.gpu_prober import GpuProber
+            from apps.windows.sdk.modules.hardware.gpu_prober import GpuProber
             prober = GpuProber()
             npu_list = prober.probe_npus()
             for n in npu_list:
@@ -633,7 +633,7 @@ class SystemCollector:
         token_info_map = {info.pid: info for info in token_collector.collect()}
 
         # Классификация оконных процессов
-        from apps.windows.modules.process_manager.core.classifier import (
+        from apps.windows.sdk.modules.process_manager.core.classifier import (
             ProcessClassifier,
             WINDOWS_SYSTEM_PROCESS_NAMES,
             KNOWN_APP_FRIENDLY_NAMES,
@@ -853,7 +853,7 @@ class SystemCollector:
         disks: List[PhysicalDiskHealth] = []
         if os.name == 'nt':
             try:
-                from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+                from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
                 sensor = WindowsStorageSensor(ttl_sec=43200.0)
                 phys_disks = sensor.get_physical_disks(force_refresh=force, sync=True)
                 for d in phys_disks:
@@ -2103,7 +2103,7 @@ class SystemCollector:
         Returns:
             AuditReport: Complete startup audit report with risk ratings.
         """
-        from apps.windows.modules.startup.core.auditor import StartupAuditor
+        from apps.windows.sdk.modules.startup.core.auditor import StartupAuditor
         return StartupAuditor().run_audit()
 
     def archive_startup_state(self, auto_diff: bool = True) -> StartupArchiveEntry:

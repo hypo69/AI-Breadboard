@@ -35,8 +35,8 @@ except ImportError:
     psutil = None
 
 from logger import logger
-from apps.windows.modules.hardware.lhm_service import LhmService
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+from apps.windows.sdk.modules.hardware.lhm_service import LhmService
+from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 
 
 

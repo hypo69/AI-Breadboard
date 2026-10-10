@@ -14,7 +14,7 @@
 # Package: src.utils.convertors
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 10:52:30
 # =============================================================================
 
 """Convert SimpleNamespace objects to various formats: dict, JSON, CSV, XML, XLS."""
@@ -27,7 +27,7 @@ from typing import List, Dict
 from src.utils.convertors import xml2dict
 from src.utils.csv import save_csv_file
 from src.utils.xls import save_xls_file
-from logger.logger import logger
+from logger import logger
 
 from types import SimpleNamespace
 from typing import Any, Dict

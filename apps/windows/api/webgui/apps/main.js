@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/apps
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 04:24:00
+ * Updated: 2026-10-10 09:48:00
  * =============================================================================
  */
 
@@ -29,12 +29,15 @@ import { initModelTester, sendModelPing } from './modules/model-tester.js';
 import { APP_TAB_DEFS } from './modules/tabs-config.js';
 import { applyTranslations } from '../js/i18n.js';
 import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.js';
+import { loadPanelData, initPanels } from '../js/panel-loader.js';
 
 // Глобальный экспорт
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
 window.sendModelPing = sendModelPing;
 window.initModelTester = initModelTester;
+window.loadPanelData = loadPanelData;
+window.initPanels = initPanels;
 
 // Карта: tabId → пути (из tabs-config, не генерируем)
 const TAB_PATHS = Object.fromEntries(
@@ -57,6 +60,10 @@ async function lazyLoad(tabId) {
     await loadTab(name, `${cleanHtml}?v=${v}`, cleanJs ? `${cleanJs}?v=${v}` : '');
     loadedTabs.add(normId);
     applyTranslations();
+    const pane = document.getElementById(normId);
+    if (pane) {
+      initPanels(pane);
+    }
   } catch (err) {
     console.error(`[apps/main.js] Ошибка загрузки вкладки ${normId}:`, err);
     loadedTabs.delete(normId);

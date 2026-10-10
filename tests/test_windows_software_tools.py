@@ -31,7 +31,7 @@ from src.ai.agents.windows_tools import (
     windows_software_action,
     WINDOWS_SOFTWARE_MANAGER_TOOLS,
 )
-from apps.windows.modules.software_manager.core.models import (
+from apps.windows.sdk.modules.software_manager.core.models import (
     InstalledPackage,
     SoftwareReport,
 )
@@ -62,7 +62,7 @@ async def test_windows_software_list_report():
         ],
         timestamp="2026-10-08T22:00:00",
     )
-    with patch("apps.windows.modules.software_manager.core.manager.SoftwarePackagesManager.generate_report", return_value=sample_report):
+    with patch("apps.windows.sdk.modules.software_manager.core.manager.SoftwarePackagesManager.generate_report", return_value=sample_report):
         res_str = await call_tool(windows_software_list, action="report")
         res = json.loads(res_str)
         assert res["status"] == "ok"
@@ -80,7 +80,7 @@ async def test_windows_software_action_dry_run():
         "action": "upgrade",
         "message": "Симуляция upgrade для пакета 'Git.Git' выполнена успешно.",
     }
-    with patch("apps.windows.modules.software_manager.core.manager.SoftwarePackagesManager.execute_package_action", return_value=sample_res):
+    with patch("apps.windows.sdk.modules.software_manager.core.manager.SoftwarePackagesManager.execute_package_action", return_value=sample_res):
         res_str = await call_tool(
             windows_software_action,
             package_id="Git.Git",

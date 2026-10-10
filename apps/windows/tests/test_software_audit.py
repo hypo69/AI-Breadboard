@@ -27,8 +27,8 @@ import codecs
 import struct
 import unittest
 from datetime import datetime, timezone
-from apps.windows.core.data_model import AppCategory, AppExecutionInfo, InstalledAppInfo, SoftwareAuditReport, SoftwareRowViewModel
-from apps.windows.core.software_audit import SoftwareAuditEngine, SoftwareCategorizer, UserAssistParser, _decode_rot13, _filetime_to_datetime
+from apps.windows.sdk.core.data_model import AppCategory, AppExecutionInfo, InstalledAppInfo, SoftwareAuditReport, SoftwareRowViewModel
+from apps.windows.sdk.core.software_audit import SoftwareAuditEngine, SoftwareCategorizer, UserAssistParser, _decode_rot13, _filetime_to_datetime
 
 class TestSoftwareAuditUtils(unittest.TestCase):
     """Тестирование вспомогательных функций аудита."""

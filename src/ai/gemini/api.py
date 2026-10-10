@@ -16,7 +16,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:47:00
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Модуль реализации компонента `GoogleGenerativeAI` системы AI-Breadboard."""
@@ -76,6 +76,9 @@ class GoogleGenerativeAI(
         self._key_errors = {}
         if self._all_keys_exhausted:
             if not self._switch_api_key():
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Все API ключи Gemini исчерпаны: {self._last_exception or self._key_errors}')
                 return self._get_exhausted_error_msg()
             self._all_keys_exhausted = False
         self._log_request_details(method='ask', model=self.model_name, q=q, generation_config=generation_config)
@@ -100,11 +103,20 @@ class GoogleGenerativeAI(
                     }
                 }
                 logger.warning(f'GoogleGenerativeAI: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Получен пустой ответ от модели Gemini ({self.model_name}): {json.dumps(err_empty, ensure_ascii=False)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, self.model_name, attempt, attempts)
                 if not should_retry:
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise ex
                     return f'Model error: {self._last_exception or str(ex)}'
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise RuntimeError(f'[DEBUG MODE] Превышено количество попыток ({attempts}) для Gemini ({self.model_name}): {self._last_exception}')
         return self._get_exhausted_error_msg()
 
     async def chat(self, q: str, history: list[dict]=(), flag: str='save_chat', system_instruction: str='', attempts: int=15, model_name: str='', **kwargs) -> str:
@@ -131,6 +143,9 @@ class GoogleGenerativeAI(
         self._key_errors = {}
         if self._all_keys_exhausted:
             if not self._switch_api_key():
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Все API ключи Gemini исчерпаны: {self._last_exception or self._key_errors}')
                 return self._get_exhausted_error_msg()
             self._all_keys_exhausted = False
         instruction: str = system_instruction or self.system_instruction or ''
@@ -158,6 +173,9 @@ class GoogleGenerativeAI(
                         }
                     }
                     logger.warning(f'GoogleGenerativeAI: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise RuntimeError(f'[DEBUG MODE] Получен пустой ответ в chat от модели Gemini ({active_model}): {json.dumps(err_empty, ensure_ascii=False)}')
                     await asyncio.sleep(2 ** min(attempt, 4))
                     continue
                 if history:
@@ -199,12 +217,21 @@ class GoogleGenerativeAI(
                     }
                 }
                 logger.error(f'GoogleGenerativeAI: Empty model response:\n{json.dumps(err_empty, ensure_ascii=False, indent=2)}')
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Получен пустой ответ в chat от модели Gemini ({active_model}): {json.dumps(err_empty, ensure_ascii=False)}')
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, active_model, attempt, attempts)
                 if not should_retry:
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise ex
                     return f'Chat error: {self._last_exception or str(ex)}'
                 active_model = model_name or self.model_name
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise RuntimeError(f'[DEBUG MODE] Превышено количество попыток ({attempts}) для Gemini chat ({active_model}): {self._last_exception}')
         return self._get_exhausted_error_msg()
 
     async def chat_stream(self, q: str, history: list[dict]=(), flag: str='save_chat', system_instruction: str='', attempts: int=15, model_name: str='', generation_config: dict={}, **kwargs) -> AsyncGenerator[str, None]:
@@ -227,6 +254,9 @@ class GoogleGenerativeAI(
         self._key_errors = {}
         if self._all_keys_exhausted:
             if not self._switch_api_key():
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Все API ключи Gemini исчерпаны: {self._last_exception or self._key_errors}')
                 yield self._get_exhausted_error_msg()
                 return
             self._all_keys_exhausted = False
@@ -338,6 +368,9 @@ class GoogleGenerativeAI(
             except Exception as ex:
                 should_retry: bool = await self._handle_api_error(ex, active_model, attempt, attempts)
                 if not should_retry:
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise ex
                     yield f'Streaming error: {self._last_exception or str(ex)}'
                     return
                 active_model = model_name or self.model_name
@@ -373,6 +406,9 @@ class GoogleGenerativeAI(
                 if should_retry:
                     active_model = model_name or self.model_name
                     continue
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise ex
                 return f'Model error: {self._last_exception or str(ex)}'
             candidate = response.candidates[0] if response and response.candidates else False
             if not candidate:
@@ -422,6 +458,9 @@ class GoogleGenerativeAI(
                 if should_retry:
                     active_model = self.model_name
                     continue
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise ex
                 yield {'status': f'Error generate_content: {str(ex)}'}
                 return
             candidate = response.candidates[0] if response and response.candidates else False
@@ -441,6 +480,9 @@ class GoogleGenerativeAI(
                         self._log_response_details(method='ask_with_tools_stream', model=active_model, response_text=''.join(streamed_chunks))
                 except Exception as ex:
                     logger.error(f'GoogleGenerativeAI: Error streaming ask_with_tools_stream: {ex}')
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise ex
                     if text_parts:
                         final_text = ''.join(text_parts)
                         self._log_response_details(method='ask_with_tools_stream', model=active_model, response_text=final_text)

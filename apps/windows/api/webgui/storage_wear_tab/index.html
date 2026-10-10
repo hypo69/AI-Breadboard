@@ -17,30 +17,31 @@ Usage Examples:
  * Package: windows/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-08 03:08:00
+ * Updated: 2026-10-10 12:57:00
  * =============================================================================
 -->
-
 <style>
   .wear-tab-wrapper {
     padding: 0.75rem;
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
   }
   .diag-panel {
-    background: var(--surface-2, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
   }
   .diag-panel-header {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--surface-2);
     padding: 8px 14px;
-    border-bottom: 1px solid var(--border-color, #334155);
+    border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 0.85rem;
+    color: var(--nav-active);
   }
   .about-sys-progress-track {
-    background: #0f172a;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     height: 8px;
     overflow: hidden;
@@ -58,105 +59,101 @@ Usage Examples:
   }
   .about-sys-spec-table td {
     padding: 8px 12px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+    border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
   }
   .about-sys-spec-key {
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
     width: 200px;
     font-size: 0.82rem;
     font-weight: 500;
   }
   .about-sys-spec-val {
-    color: var(--text-color, #f8fafc);
+    color: var(--text-color);
     font-weight: 500;
     font-size: 0.82rem;
   }
 </style>
-
 <div class="wear-tab-wrapper">
-  <!-- Top Header & Status -->
-  <div class="card shadow-sm border-secondary-subtle mb-3">
-    <div class="card-body p-3">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div class="d-flex align-items-center gap-2">
-          <div class="fs-4">💽</div>
-          <div>
-            <h5 class="mb-0 fw-bold">4. Износ накопителей и батареи (Storage & Battery Health)</h5>
-            <small class="text-muted">Мониторинг ресурса SSD/NVMe, файловых систем, SMART и деградации аккумулятора</small>
-          </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <select class="form-select form-select-sm poll-freq-select" id="diag-wear-poll-freq" data-poll-id="storage_wear" title="Частота опроса: Износ накопителей">
-            <option value="start">Только при старте</option>
-            <option value="manual" selected>По запросу</option>
-            <option value="3">Каждые 3 сек</option>
-            <option value="5">Каждые 5 сек</option>
-            <option value="10">Каждые 10 сек</option>
-            <option value="30">Каждые 30 сек</option>
-            <option value="60">Каждые 60 сек</option>
-            <option value="120">Каждые 120 сек</option>
-          </select>
-          <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-wear-refresh">
-            <i class="bi bi-arrow-clockwise"></i> Обновить
+<!-- Top Header & Status -->
+<div class="card shadow-sm border-secondary-subtle mb-3" data-panel-id="panel-storage-wear-4-iznos-nakopiteley-i-batarei" id="panel-storage-wear-4-iznos-nakopiteley-i-batarei">
+<div class="card-body p-3">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+<div class="d-flex align-items-center gap-2">
+<div class="fs-4">💽</div>
+<div>
+<h5 class="mb-0 fw-bold">4. Износ накопителей и батареи (Storage &amp; Battery Health)</h5>
+<small class="text-muted">Мониторинг ресурса SSD/NVMe, файловых систем, SMART и деградации аккумулятора</small>
+</div>
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<select class="form-select form-select-sm poll-freq-select" data-poll-id="storage_wear" id="diag-wear-poll-freq" title="Частота опроса: Износ накопителей">
+<option value="start">Только при старте</option>
+<option selected="" value="manual">По запросу</option>
+<option value="3">Каждые 3 сек</option>
+<option value="5">Каждые 5 сек</option>
+<option value="10">Каждые 10 сек</option>
+<option value="30">Каждые 30 сек</option>
+<option value="60">Каждые 60 сек</option>
+<option value="120">Каждые 120 сек</option>
+</select>
+<button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-wear-refresh">
+<i class="bi bi-arrow-clockwise"></i> Обновить
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-2 mb-3">
-    <!-- Disks Health & Wear Panel -->
-    <div class="col-12 col-xl-8 col-lg-8">
-      <div class="diag-panel h-100">
-        <div class="diag-panel-header d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-hdd-fill text-primary"></i>
-            <span class="text-white">Здоровье накопителей SSD/NVMe и износ (Wear & SMART)</span>
-          </div>
-          <span class="badge bg-secondary" id="diag-wear-disks-count">0 дисков</span>
-        </div>
-        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
-          <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
-            <thead>
-              <tr class="text-secondary border-secondary">
-                <th>Физический накопитель</th>
-                <th>Тип / Шина</th>
-                <th>Разделы</th>
-                <th style="text-align: right;">Объем</th>
-                <th style="text-align: right;">Свободно</th>
-                <th>Наработка / Старт</th>
-                <th style="text-align: right;">Ввод / Вывод (I/O)</th>
-                <th style="width: 130px;">Здоровье / Износ</th>
-                <th>Статус</th>
-              </tr>
-            </thead>
-            <tbody id="diag-wear-disks-tbody">
-              <tr><td colspan="9" class="text-center py-4 text-muted">Опрос контроллеров накопителей...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Battery Deep Telemetry -->
-    <div class="col-12 col-xl-4 col-lg-4">
-      <div class="diag-panel h-100">
-        <div class="diag-panel-header d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-battery-charging text-warning"></i>
-            <span class="text-white">Деградация и состояние батареи (Battery Degradation)</span>
-          </div>
-          <span class="badge bg-dark border border-secondary text-info" id="diag-battery-source-badge">AC Mains</span>
-        </div>
-        <div class="p-3" id="diag-battery-details-container">
-          <div class="text-center py-4 text-muted small">
-            <i class="bi bi-plug-fill fs-4 text-info d-block mb-1"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="row g-2 mb-3">
+<!-- Disks Health & Wear Panel -->
+<div class="col-12 col-xl-8 col-lg-8">
+<div class="diag-panel h-100" data-panel-id="panel-storage-wear-1" id="panel-storage-wear-1">
+<div class="diag-panel-header d-flex justify-content-between align-items-center">
+<div class="d-flex align-items-center gap-2">
+<i class="bi bi-hdd-fill text-primary"></i>
+<span class="text-body">Здоровье накопителей SSD/NVMe и износ (Wear &amp; SMART)</span>
+</div>
+<span class="badge bg-secondary" id="diag-wear-disks-count">0 дисков</span>
+</div>
+<div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+<table class="table table-hover table-sm mb-0" style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+<thead>
+<tr>
+<th>Физический накопитель</th>
+<th>Тип / Шина</th>
+<th>Разделы</th>
+<th style="text-align: right;">Объем</th>
+<th style="text-align: right;">Свободно</th>
+<th>Наработка / Старт</th>
+<th style="text-align: right;">Ввод / Вывод (I/O)</th>
+<th style="width: 130px;">Здоровье / Износ</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody id="diag-wear-disks-tbody">
+<tr><td class="text-center py-4 text-muted" colspan="9">Опрос контроллеров накопителей...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Battery Deep Telemetry -->
+<div class="col-12 col-xl-4 col-lg-4">
+<div class="diag-panel h-100" data-panel-id="panel-storage-wear-2" id="panel-storage-wear-2">
+<div class="diag-panel-header d-flex justify-content-between align-items-center">
+<div class="d-flex align-items-center gap-2">
+<i class="bi bi-battery-charging text-warning"></i>
+<span class="text-body">Деградация и состояние батареи (Battery Degradation)</span>
+</div>
+<span class="badge bg-body-secondary border border-secondary text-body" id="diag-battery-source-badge">AC Mains</span>
+</div>
+<div class="p-3" id="diag-battery-details-container">
+<div class="text-center py-4 text-muted small">
+<i class="bi bi-plug-fill fs-4 text-info d-block mb-1"></i>
             Стационарный компьютер — питание напрямую от электросети
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+</div>
+</div>
 </div>

@@ -18,7 +18,7 @@
 # Package: src.ai.orchestration
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 08:41:00
+# Updated: 2026-10-10 06:47:00
 # =============================================================================
 
 """Transparent routing wrapper across all configured AI providers."""
@@ -26,6 +26,7 @@
 import inspect
 import sys
 from typing import Any, AsyncIterator, Dict, List, Optional
+from src.config import is_debug_mode
 
 # Унифицированный паттерн гарантированного импорта логгера
 try:
@@ -79,8 +80,7 @@ class UnifiedChatModel:
         from src.config import ai_cfg
         providers = getattr(ai_cfg, 'providers', {}) if ai_cfg else {}
         
-        # Инициализируем gemini_model первым делом
-        self.gemini_model = GoogleGenerativeAI(system_instruction=system_instruction, sleep_on_exhausted=False)
+        self.gemini_model: Any = False
         self.foundry_model: Any = False
         self.ollama_model: Any = False
         self.gemini_cli_model: Any = False
@@ -91,6 +91,8 @@ class UnifiedChatModel:
         default_model = ''
         
         if provider_upper == 'GEMINI':
+            from src.ai.gemini import GoogleGenerativeAI
+            self.gemini_model = GoogleGenerativeAI(system_instruction=system_instruction, sleep_on_exhausted=False)
             default_model = f'gemini:{model}'
             self._provider = 'GEMINI'
             self.gemini_model.model_name = model
@@ -113,7 +115,7 @@ class UnifiedChatModel:
             default_model = f'ollama:{model}'
             self._provider = 'OLLAMA'
             from src.ai.providers.ollama import OllamaChatBase
-            ollama_base_url = providers.get('ollama', {}).get('base_url', 'http://localhost:11434')
+            ollama_base_url = providers.get('ollama', {}).get('base_url', 'http://localhost:11434') if isinstance(providers, dict) else 'http://localhost:11434'
             self.ollama_model = OllamaChatBase(model_id=model, system_prompt=system_instruction, api_url=ollama_base_url)
         else:
             raise ValueError(f'[UnifiedChatModel] Неизвестный провайдер: {provider}')
@@ -284,6 +286,8 @@ class UnifiedChatModel:
         try:
             res = await model_instance.chat(**call_kwargs)
             logger.info(f"[UnifiedChatModel] chat success: response={(repr(res[:100]) if res else 'None')}...")
+            if is_debug_mode() and res and any(res.startswith(p) for p in ('Model error:', 'Error:', 'Chat error:')):
+                raise RuntimeError(f'[UnifiedChatModel] Ошибка в ответе модели {active_name}: {res}')
             return res
         except Exception as ex:
             logger.error(f'[UnifiedChatModel] chat error with model={active_name}', ex)
@@ -297,6 +301,8 @@ class UnifiedChatModel:
         try:
             res = await model_instance.ask(**call_kwargs)
             logger.info(f"[UnifiedChatModel] ask success: response={(repr(res[:100]) if res else 'None')}...")
+            if is_debug_mode() and res and any(res.startswith(p) for p in ('Model error:', 'Error:', 'Chat error:')):
+                raise RuntimeError(f'[UnifiedChatModel] Ошибка в ответе модели {active_name}: {res}')
             return res
         except Exception as ex:
             logger.error(f'[UnifiedChatModel] ask error with model={active_name}', ex)

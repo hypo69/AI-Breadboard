@@ -18,7 +18,7 @@
 # Package: src.ai.providers.agy
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 08:41:00
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Antigravity SDK chat connection and request routing adapter.
@@ -242,6 +242,10 @@ class AgyChatBase:
             return self._clean_output(text)
         except Exception as e:
             await self.close()
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                logger.critical(f'[DEBUG MODE] Ошибка Antigravity SDK ask ({self.model_id}): {e}')
+                raise e
             err_str = str(e)
             if '503' in err_str or 'UNAVAILABLE' in err_str:
                 from src.ai.orchestration.model_error_hub import record_model_error
@@ -308,6 +312,10 @@ class AgyChatBase:
                 yield token
         except Exception as e:
             await self.close()
+            from src.config import is_debug_mode
+            if is_debug_mode():
+                logger.critical(f'[DEBUG MODE] Ошибка Antigravity SDK chat_stream ({self.model_id}): {e}')
+                raise e
             err_str = str(e)
             if '503' in err_str or 'UNAVAILABLE' in err_str:
                 from src.ai.orchestration.model_error_hub import record_model_error

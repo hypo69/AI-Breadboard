@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/file_history_ai_search_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:13:56
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
 
@@ -26,54 +26,55 @@ Updated: 2026-10-01 13:13:56
     margin: 0 auto;
   }
   .fh-card {
-    background: var(--bs-body-bg, #1e293b);
-    border: 1px solid var(--bs-border-color, #334155);
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.25rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   }
   .fh-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border: 1px solid #334155;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1rem 1.5rem;
-    color: #f8fafc;
+    color: var(--text-color);
   }
   .fh-stat-card {
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid var(--bs-border-color, #334155);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 0.85rem 1.1rem;
     transition: transform 0.15s ease, border-color 0.15s ease;
   }
   .fh-stat-card:hover {
     transform: translateY(-2px);
-    border-color: #3b82f6;
+    border-color: var(--nav-active);
   }
   .fh-stat-val {
     font-size: 1.4rem;
     font-weight: 700;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--text-color);
   }
   .fh-search-box {
-    background: var(--bs-dark, #0f172a);
-    border: 1px solid #3b82f6;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 0.75rem 1.25rem;
   }
   .fh-result-card {
-    border-left: 4px solid #3b82f6;
-    background: var(--bs-body-bg, #1e293b);
-    border-top: 1px solid var(--bs-border-color, #334155);
-    border-right: 1px solid var(--bs-border-color, #334155);
-    border-bottom: 1px solid var(--bs-border-color, #334155);
+    border-left: 4px solid var(--nav-active);
+    background: var(--surface-1);
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 0.75rem;
     transition: background-color 0.15s ease;
   }
   .fh-result-card:hover {
-    background: rgba(59, 130, 246, 0.05);
+    background: var(--surface-2);
   }
   .fh-score-badge {
     font-size: 0.82rem;
@@ -81,12 +82,13 @@ Updated: 2026-10-01 13:13:56
     font-family: monospace;
   }
   .fh-snippet-box {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 0.6rem 0.85rem;
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.85rem;
-    color: var(--bs-body-color, #cbd5e1);
+    color: var(--text-color);
     white-space: pre-wrap;
     word-break: break-all;
     max-height: 120px;
@@ -95,7 +97,7 @@ Updated: 2026-10-01 13:13:56
 </style>
 
 <div class="fh-container">
-  <!-- <span data-i18n="auto___0105ee"></span> -->
+  <!-- Хедер -->
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 fh-header">
     <div class="d-flex align-items-center gap-3">
       <div class="bg-primary bg-opacity-25 p-2.5 rounded-3 text-primary border border-primary border-opacity-25">
@@ -110,7 +112,7 @@ Updated: 2026-10-01 13:13:56
       </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-      <button class="btn btn-sm btn-outline-light rounded-pill px-3" id="btn-fh-refresh-status" type="button">
+      <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-fh-refresh-status" type="button">
         <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___6cc5dc"></span>
       </button>
       <button class="btn btn-sm btn-success rounded-pill px-3" id="btn-fh-reindex" type="button">
@@ -119,7 +121,7 @@ Updated: 2026-10-01 13:13:56
     </div>
   </div>
 
-  <!-- <span data-i18n="auto___1983d2"></span> -->
+  <!-- Метрики -->
   <div class="row g-3 mb-3">
     <div class="col-12 col-sm-6 col-md-3">
       <div class="fh-stat-card">
@@ -170,7 +172,7 @@ Updated: 2026-10-01 13:13:56
     </div>
   </div>
 
-  <!-- <span data-i18n="auto___8dc75e"></span> -->
+  <!-- Поиск -->
   <div class="fh-card mb-4">
     <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
       <i class="bi bi-search text-primary"></i>
@@ -208,7 +210,7 @@ Updated: 2026-10-01 13:13:56
       </div>
     </div>
 
-    <!-- <span data-i18n="auto___4be2be"></span> -->
+    <!-- Спиннер -->
     <div class="text-center py-4 d-none" id="fh-search-spinner">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden"><span data-i18n="auto__rag__662d74"></span>...</span>
@@ -216,7 +218,7 @@ Updated: 2026-10-01 13:13:56
       <div class="small text-muted mt-2"><span data-i18n="auto___93b6bf"></span> FAISS...</div>
     </div>
 
-    <!-- <span data-i18n="auto___637b2c"></span> -->
+    <!-- Результаты поиска -->
     <div id="fh-search-results-container">
       <div class="text-center text-muted py-4 border rounded-3 bg-body-tertiary bg-opacity-50">
         <i class="bi bi-search fs-2 d-block mb-1 text-secondary opacity-50"></i>
@@ -225,7 +227,7 @@ Updated: 2026-10-01 13:13:56
     </div>
   </div>
 
-  <!-- <span data-i18n="auto___f2f2be"></span>) -->
+  <!-- Таблица -->
   <div class="fh-card">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
       <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
@@ -239,7 +241,7 @@ Updated: 2026-10-01 13:13:56
 
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0" id="fh-items-table">
-        <thead class="table-light">
+        <thead>
           <tr>
             <th scope="col" style="width: 40px;">#</th>
             <th scope="col"><span data-i18n="auto___94b8df"></span></th>

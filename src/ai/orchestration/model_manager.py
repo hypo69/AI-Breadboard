@@ -17,7 +17,7 @@
 # Package: src.ai.orchestration
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 05:31:00
+# Updated: 2026-10-10 10:46:20
 # =============================================================================
 
 """Normalize model identifier for consistent comparison."""
@@ -51,10 +51,10 @@ def _get_active_config_path() -> Path:
 
 
 _GLOBAL_CONFIG_PATH: Path = __root__ / 'config.json'
-_GEMINI_CONFIG_PATH: Path = __root__ / 'src' / 'ai' / 'gemini' / 'config.json'
+_GEMINI_UNSUPPORTED_PATH: Path = __root__ / 'src' / 'ai' / 'gemini' / 'unsopported_gemini_models.json'
 _CACHED_MODELS: Dict[str, List[str]] = {}
-_DEFAULT_GEMINI_FALLBACK: List[str] = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
-_GEMINI_PRIORITY_ORDER: List[str] = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+_DEFAULT_GEMINI_FALLBACK: List[str] = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+_GEMINI_PRIORITY_ORDER: List[str] = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
 _DEFAULT_GEMINI_CLI_FALLBACK: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-3.5-flash-lite', 'gemini-pro-latest']
 _GEMINI_CLI_PRIORITY_ORDER: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-3.5-flash-lite', 'gemini-pro-latest']
 
@@ -85,13 +85,15 @@ def load_unsupported_models(provider: str='gemini') -> Set[str]:
     prov: str = provider.lower().strip()
     unsupported: Set[str] = set()
     if prov in ('gemini', 'gemini_cli', 'agy'):
-        gemini_cfg = j_loads(_GEMINI_CONFIG_PATH)
-        if isinstance(gemini_cfg, dict):
-            raw_list = gemini_cfg.get('unsupported_models', [])
-            if isinstance(raw_list, list):
-                for item in raw_list:
-                    if isinstance(item, str) and item.strip():
-                        unsupported.add(_normalize_model_name(item))
+        try:
+            from src.ai.gemini.rules import load_unsupported_rules_and_models
+            rules, explicit_models = load_unsupported_rules_and_models()
+            unsupported.update(explicit_models)
+            for r in rules:
+                unsupported.add(r)
+        except Exception as exc:
+            logger.debug(f"[ModelManager] Не удалось загрузить правила Gemini: {exc}")
+
     global_cfg = j_loads(_get_active_config_path())
     if isinstance(global_cfg, dict):
         ai_sec = global_cfg.get('ai', {})
@@ -110,6 +112,15 @@ def load_unsupported_models(provider: str='gemini') -> Set[str]:
 def is_model_supported(provider: str, model_name: str) -> bool:
     """Check if model is supported for the specified provider."""
     norm = _normalize_model_name(model_name)
+    prov = provider.lower().strip()
+    if prov in ('gemini', 'gemini_cli', 'agy'):
+        try:
+            from src.ai.gemini.rules import is_gemini_model_unsupported
+            clean_name = norm.replace('agy-', '') if prov == 'agy' else norm
+            if is_gemini_model_unsupported(clean_name):
+                return False
+        except Exception:
+            pass
     unsupported = load_unsupported_models(provider)
     return norm not in unsupported
 
@@ -137,15 +148,11 @@ def add_unsupported_model(provider: str='gemini', model_name: str='', reason: st
     prov: str = provider.lower().strip()
     norm_name: str = _normalize_model_name(model_name)
     if prov in ('gemini', 'gemini_cli', 'agy'):
-        gemini_cfg = j_loads(_GEMINI_CONFIG_PATH)
-        if isinstance(gemini_cfg, dict):
-            curr_list = gemini_cfg.get('unsupported_models', [])
-            if not isinstance(curr_list, list):
-                curr_list = []
-            if norm_name not in curr_list:
-                curr_list.append(norm_name)
-                gemini_cfg['unsupported_models'] = sorted(list(set(curr_list)))
-                j_dumps(gemini_cfg, _GEMINI_CONFIG_PATH)
+        try:
+            from src.ai.gemini.rules import add_unsupported_gemini_model
+            add_unsupported_gemini_model(norm_name, reason=reason)
+        except Exception as exc:
+            logger.debug(f"[ModelManager] Ошибка добавления неподдерживаемой модели Gemini: {exc}")
     active_cfg_path = _get_active_config_path()
     global_cfg = j_loads(active_cfg_path)
     if isinstance(global_cfg, dict):
@@ -196,18 +203,27 @@ def _fetch_gemini_models_sync(api_key: str='', include_unsupported: bool=False) 
             for m in client.models.list():
                 m_name = getattr(m, 'name', '') or ''
                 norm = _normalize_model_name(m_name)
-                actions = getattr(m, 'supported_actions', []) or getattr(m, 'supported_generation_methods', []) or []
-                if actions and (not any(('generateContent' in str(a) for a in actions))):
+                actions = getattr(m, 'supported_actions', None) or getattr(m, 'supported_generation_methods', None)
+                if isinstance(actions, (list, tuple, set)) and actions and (not any(('generateContent' in str(a) for a in actions))):
                     continue
-                out_modalities = getattr(m, 'output_modalities', []) or []
-                if out_modalities and (not any(('TEXT' in str(mod).upper() for mod in out_modalities))):
+                out_modalities = getattr(m, 'output_modalities', None)
+                if isinstance(out_modalities, (list, tuple, set)) and out_modalities and (not any(('TEXT' in str(mod).upper() for mod in out_modalities))):
                     continue
                 if norm.endswith('-tts') or '-tts-' in norm or norm.startswith('tts-'):
                     continue
                 if norm and norm not in discovered:
                     discovered.append(norm)
         except Exception as e:
-            logger.debug(f'[ModelManager] Could not fetch Gemini models via SDK: {e}')
+            masked_key = f"{key_to_use[:6]}...{key_to_use[-4:]}" if len(key_to_use) > 10 else "***"
+            request_info = {
+                "method": "genai.Client.models.list()",
+                "endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
+                "api_key": masked_key,
+            }
+            logger.error(
+                f"[ModelManager] Не удалось получить список моделей Gemini через SDK: {e}. "
+                f"Параметры и тело запроса: {request_info}"
+            )
     combined: List[str] = list(discovered)
     for fb in _DEFAULT_GEMINI_FALLBACK:
         norm_fb = _normalize_model_name(fb)
@@ -219,8 +235,13 @@ def _fetch_gemini_models_sync(api_key: str='', include_unsupported: bool=False) 
                 combined.append(unsup)
         return combined
     pool: List[str] = [m for m in combined if m not in unsupported]
+    try:
+        from src.ai.gemini.rules import is_gemini_model_unsupported
+        pool = [m for m in pool if not is_gemini_model_unsupported(m)]
+    except Exception:
+        pass
     if not pool:
-        pool = ['gemini-3.5-flash-lite', 'gemini-pro-latest']
+        pool = ['gemini-3.1-flash-lite', 'gemini-pro-latest']
     return pool
 
 def _fetch_foundry_models_sync(base_url: str='', include_unsupported: bool=False) -> List[str]:

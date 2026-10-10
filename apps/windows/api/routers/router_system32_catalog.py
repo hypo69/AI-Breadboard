@@ -31,8 +31,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from logger import logger
-from apps.windows.core.system32_catalog import System32Catalog
-from apps.windows.core.system32_models import (
+from apps.windows.sdk.core.system32_catalog import System32Catalog
+from apps.windows.sdk.core.system32_models import (
     AccessType,
     ControlPlaneType,
     System32CatalogSummary,
@@ -43,7 +43,7 @@ from apps.windows.core.system32_models import (
     ToolDangerLevel,
     ToolPrivilegeLevel,
 )
-from apps.windows.core.etw_pipeline import EtwPipelineStatus, EtwTelemetryPipeline
+from apps.windows.sdk.core.etw_pipeline import EtwPipelineStatus, EtwTelemetryPipeline
 
 
 router = APIRouter(prefix='/api/v1/system32', tags=['Windows System32 Capability Catalog'])

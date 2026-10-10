@@ -30,7 +30,7 @@ def client():
     app = create_app()
     state = AppState()
     app.state.app_state = state
-    from apps.windows.modules.registry import init_router as init_reg_router
+    from apps.windows.sdk.modules.registry import init_router as init_reg_router
     from src.api.routers.core.router_admin import init_router as init_admin_router
     app.include_router(init_reg_router())
     app.include_router(init_admin_router())

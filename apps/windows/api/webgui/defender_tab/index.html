@@ -3,7 +3,7 @@
 Process Name: Windows Web Interface - Index View
 =============================================================================
 Description:
-  Шаблон клиентского веб-интерфейса index.
+  Шаблон клиентского веб-интерфейса index (Microsoft Defender Security Center).
 
 Usage Examples:
     Web Route:
@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/defender_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 12:48:00
+Updated: 2026-10-10 05:55:00
 =============================================================================
 -->
 
@@ -26,11 +26,13 @@ Updated: 2026-10-04 12:48:00
   .def-container {
     padding: 0.5rem 0.75rem;
   }
-  .def-badge-active { background: var(--status-success-bg); color: var(--status-success-text); border: 1px solid var(--status-success-border); }
-  .def-badge-disabled { background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); }
-  .def-badge-audit { background: var(--status-warning-bg); color: var(--status-warning-text); border: 1px solid var(--status-warning-border); }
-  .def-badge-warn { background: var(--status-warning-bg); color: var(--status-warning-text); border: 1px solid var(--status-warning-border); }
-  .def-badge-critical { background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); font-weight: bold; }
+  .def-badge-active { background: var(--status-success-bg, rgba(34, 197, 94, 0.15)); color: var(--status-success-text, #22c55e); border: 1px solid var(--status-success-border, rgba(34, 197, 94, 0.3)); }
+  .def-badge-disabled { background: var(--status-danger-bg, rgba(239, 68, 68, 0.15)); color: var(--status-danger-text, #ef4444); border: 1px solid var(--status-danger-border, rgba(239, 68, 68, 0.3)); }
+  .def-badge-audit { background: var(--status-warning-bg, rgba(245, 158, 11, 0.15)); color: var(--status-warning-text, #f59e0b); border: 1px solid var(--status-warning-border, rgba(245, 158, 11, 0.3)); }
+  .def-badge-warn { background: var(--status-warning-bg, rgba(245, 158, 11, 0.15)); color: var(--status-warning-text, #f59e0b); border: 1px solid var(--status-warning-border, rgba(245, 158, 11, 0.3)); }
+  .def-badge-critical { background: var(--status-danger-bg, rgba(239, 68, 68, 0.15)); color: var(--status-danger-text, #ef4444); border: 1px solid var(--status-danger-border, rgba(239, 68, 68, 0.3)); font-weight: bold; }
+  .def-clickable-row { cursor: pointer; transition: background-color 0.15s ease-in-out; }
+  .def-clickable-row:hover { background-color: var(--nav-hover-bg, rgba(0, 0, 0, 0.05)) !important; }
 </style>
 
 <div class="def-container theme-defender">
@@ -97,8 +99,8 @@ Updated: 2026-10-04 12:48:00
       </button>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge bg-dark border border-secondary" id="def-engine-ver-badge">Движок: --</span>
-      <span class="badge bg-dark border border-secondary" id="def-sigs-ver-badge">Базы: --</span>
+      <span class="badge bg-body-secondary text-body border" id="def-engine-ver-badge">Движок: --</span>
+      <span class="badge bg-body-secondary text-body border" id="def-sigs-ver-badge">Базы: --</span>
       <button class="btn btn-sm btn-outline-secondary" id="btn-def-refresh" title="Обновить">
         <i class="bi bi-arrow-clockwise"></i>
       </button>
@@ -148,7 +150,7 @@ Updated: 2026-10-04 12:48:00
               <span>Эшелоны Защиты Microsoft Defender</span>
             </div>
             <div class="table-responsive p-0">
-              <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+              <table class="table table-hover mb-0 align-middle small">
                 <thead>
                   <tr class="text-secondary">
                     <th>Компонент</th>
@@ -169,7 +171,7 @@ Updated: 2026-10-04 12:48:00
               <span>Системные Службы и Процессы</span>
             </div>
             <div class="table-responsive p-0">
-              <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+              <table class="table table-hover mb-0 align-middle small">
                 <thead>
                   <tr class="text-secondary">
                     <th>Процесс</th>
@@ -196,7 +198,7 @@ Updated: 2026-10-04 12:48:00
           <span class="badge bg-secondary" id="def-asr-count-badge">Всего: 0</span>
         </div>
         <div class="table-responsive p-0">
-          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+          <table class="table table-hover mb-0 align-middle small">
             <thead>
               <tr class="text-secondary">
                 <th>Правило ASR</th>
@@ -247,11 +249,11 @@ Updated: 2026-10-04 12:48:00
           <span>Аудит Исключений из Проверки</span>
           <span class="badge bg-warning text-dark" id="def-exc-summary-badge">0 исключений</span>
         </div>
-        <div class="p-2 mb-1 bg-dark text-muted small border-bottom border-secondary" id="def-exc-recommendation-box">
+        <div class="p-2 mb-1 bg-body-secondary text-body small border-bottom" id="def-exc-recommendation-box">
           Анализ исключений...
         </div>
         <div class="table-responsive p-0">
-          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+          <table class="table table-hover mb-0 align-middle small">
             <thead>
               <tr class="text-secondary">
                 <th>Тип</th>
@@ -276,7 +278,7 @@ Updated: 2026-10-04 12:48:00
           <span class="badge bg-danger" id="def-threats-count-badge">0 записей</span>
         </div>
         <div class="table-responsive p-0">
-          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+          <table class="table table-hover mb-0 align-middle small">
             <thead>
               <tr class="text-secondary">
                 <th>Угроза</th>
@@ -303,7 +305,7 @@ Updated: 2026-10-04 12:48:00
           <span class="badge bg-secondary" id="def-procs-count-badge">0 аномалий</span>
         </div>
         <div class="table-responsive p-0">
-          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+          <table class="table table-hover mb-0 align-middle small">
             <thead>
               <tr class="text-secondary">
                 <th>Родительский Процесс</th>
@@ -329,14 +331,14 @@ Updated: 2026-10-04 12:48:00
           <span class="badge bg-secondary" id="def-events-count-badge">0 событий</span>
         </div>
         <div class="table-responsive p-0" style="max-height: calc(100vh - 240px); min-height: 200px; overflow-y: auto;">
-          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+          <table class="table table-hover mb-0 align-middle small">
             <thead class="sticky-top" style="position: sticky; top: 0; z-index: 2;">
-              <tr class="text-secondary bg-dark">
-                <th class="bg-dark">Event ID</th>
-                <th class="bg-dark">Время</th>
-                <th class="bg-dark">Уровень</th>
-                <th class="bg-dark">Категория</th>
-                <th class="bg-dark">Сообщение</th>
+              <tr class="text-secondary">
+                <th>Event ID</th>
+                <th>Время</th>
+                <th>Уровень</th>
+                <th>Категория</th>
+                <th>Сообщение</th>
               </tr>
             </thead>
             <tbody id="def-events-tbody">
@@ -373,5 +375,77 @@ Updated: 2026-10-04 12:48:00
       </div>
     </div>
 
+  </div>
+
+  <!-- Modal for Detailed Event / Threat Inspection -->
+  <div class="modal fade" id="def-detail-modal" tabindex="-1" aria-labelledby="def-detail-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border shadow-lg">
+        <div class="modal-header border-bottom py-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-5" id="def-detail-modal-icon">📜</span>
+            <h5 class="modal-title fs-6 fw-bold mb-0" id="def-detail-modal-title">Детали события безопасности</h5>
+            <span class="badge bg-primary" id="def-detail-modal-badge">Event ID: 1151</span>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body p-3" style="font-size: 0.85rem;">
+          <!-- Key Meta Cards -->
+          <div class="row g-2 mb-3" id="def-detail-meta-cards">
+            <div class="col-sm-6 col-md-3">
+              <div class="p-2 bg-body-secondary rounded border">
+                <div class="text-secondary small">Время события</div>
+                <div class="fw-semibold text-body font-monospace" id="def-detail-time">-</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <div class="p-2 bg-body-secondary rounded border">
+                <div class="text-secondary small">Уровень важности</div>
+                <div class="fw-semibold" id="def-detail-level">-</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <div class="p-2 bg-body-secondary rounded border">
+                <div class="text-secondary small">Категория</div>
+                <div class="fw-semibold text-info" id="def-detail-category">-</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <div class="p-2 bg-body-secondary rounded border">
+                <div class="text-secondary small">Event ID / Код</div>
+                <div class="fw-semibold text-warning font-monospace" id="def-detail-id">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Structured Parameters Table (if parsed from event text) -->
+          <div id="def-detail-props-section" class="mb-3 d-none">
+            <h6 class="text-info fw-bold mb-1 d-flex align-items-center gap-1">
+              <i class="bi bi-list-columns-reverse"></i> <span>Структурированные параметры:</span>
+            </h6>
+            <div class="table-responsive border rounded">
+              <table class="table table-sm table-striped mb-0 align-middle small">
+                <tbody id="def-detail-props-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Full Raw Message -->
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h6 class="text-secondary fw-bold mb-0">Полный текст сообщения:</h6>
+              <button class="btn btn-outline-secondary btn-sm py-0 px-2" id="btn-def-copy-msg" title="Скопировать текст в буфер">
+                <i class="bi bi-clipboard"></i> <span>Копировать</span>
+              </button>
+            </div>
+            <pre class="p-2.5 bg-body-secondary text-body rounded border font-monospace mb-0" id="def-detail-raw-msg" style="white-space: pre-wrap; word-break: break-word; font-size: 0.8rem; max-height: 280px; overflow-y: auto; user-select: text;"></pre>
+          </div>
+        </div>
+        <div class="modal-footer border-top py-1.5 justify-content-between">
+          <span class="text-muted small" id="def-detail-footer-hint">Источник: Microsoft-Windows-Windows Defender/Operational</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

@@ -32,8 +32,8 @@ from src.ai.agents.windows_tools import (
     windows_hardware_benchmark,
     WINDOWS_HARDWARE_TOOLS,
 )
-from apps.windows.modules.hardware.hardware_monitor import CpuMetrics, MemoryMetrics
-from apps.windows.modules.hardware.stress_benchmark import StressTestResult, AIBenchmarkResult
+from apps.windows.sdk.modules.hardware.hardware_monitor import CpuMetrics, MemoryMetrics
+from apps.windows.sdk.modules.hardware.stress_benchmark import StressTestResult, AIBenchmarkResult
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -52,7 +52,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_hardware_monitor_summary():
     """Тест получения краткой сводки здоровья оборудования."""
-    with patch("apps.windows.modules.hardware.hardware_monitor.HardwareMonitor.get_summary") as mock_func:
+    with patch("apps.windows.sdk.modules.hardware.hardware_monitor.HardwareMonitor.get_summary") as mock_func:
         mock_func.return_value = {"status": "HEALTHY", "cpu_pct": 15.4, "memory_pct": 45.2, "warnings": []}
         res_str = await call_tool(windows_hardware_monitor, action="summary")
         res = json.loads(res_str)
@@ -64,7 +64,7 @@ async def test_windows_hardware_monitor_summary():
 @pytest.mark.asyncio
 async def test_windows_hardware_monitor_component_cpu():
     """Тест получения метрик процессора."""
-    with patch("apps.windows.modules.hardware.hardware_monitor.HardwareMonitor.get_cpu_metrics") as mock_func:
+    with patch("apps.windows.sdk.modules.hardware.hardware_monitor.HardwareMonitor.get_cpu_metrics") as mock_func:
         mock_func.return_value = CpuMetrics(
             model_name="Intel Core i9-14900K",
             physical_cores=24,
@@ -81,7 +81,7 @@ async def test_windows_hardware_monitor_component_cpu():
 @pytest.mark.asyncio
 async def test_windows_hardware_inventory_summary():
     """Тест выполнения инвентаризации оборудования."""
-    with patch("apps.windows.modules.hardware.hardware_monitor.HardwareMonitor.get_snapshot") as mock_func:
+    with patch("apps.windows.sdk.modules.hardware.hardware_monitor.HardwareMonitor.get_snapshot") as mock_func:
         mock_func.return_value = {"system": "AI Breadboard Workstation"}
         res_str = await call_tool(windows_hardware_inventory, action="summary")
         res = json.loads(res_str)
@@ -92,7 +92,7 @@ async def test_windows_hardware_inventory_summary():
 @pytest.mark.asyncio
 async def test_windows_hardware_benchmark_ai():
     """Тест выполнения бенчмарка ИИ-инференса."""
-    with patch("apps.windows.modules.hardware.stress_benchmark.StressBenchmarkEngine.run_ai_inference_benchmark") as mock_func:
+    with patch("apps.windows.sdk.modules.hardware.stress_benchmark.StressBenchmarkEngine.run_ai_inference_benchmark") as mock_func:
         mock_func.return_value = AIBenchmarkResult(
             provider="gemini",
             model_name="gemini-3.1-flash",

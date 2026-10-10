@@ -16,7 +16,7 @@
 # Package: apps.windows.wikillm
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:50:00
+# Updated: 2026-10-10 07:54:00
 # =============================================================================
 
 from __future__ import annotations
@@ -88,15 +88,18 @@ class CanonicalKeyNormalizer:
         return p
 
     @classmethod
-    def compute_canonical_key(cls, artifact: ArtifactInput) -> str:
+    def compute_canonical_key(cls, artifact: ArtifactInput | str) -> str:
         """Вычисляет стабильный канонический ключ для входного артефакта.
 
         Args:
-            artifact: Входной объект артефакта.
+            artifact: Входной объект артефакта или строка запроса.
 
         Returns:
             Строка канонического ключа (например win32:0x80070490, windows_event:DistributedCOM:10016).
         """
+        if isinstance(artifact, str):
+            artifact = ArtifactInput(raw_query=artifact)
+
         # 1. Если явно задан Event ID и Provider
         if artifact.event_id is not None or (artifact.type == ArtifactType.WINDOWS_EVENT and artifact.provider):
             prov = (artifact.provider or "Generic").strip()
@@ -137,6 +140,16 @@ class CanonicalKeyNormalizer:
         # 8. Анализ сырой строки запроса raw_query
         if artifact.raw_query:
             query = artifact.raw_query.strip()
+
+            # Прямые префиксы базы команд и телеметрии
+            for pfx in ("cmd:", "command:", "script:", "collector:", "sys32:", "sys_param:", "probe:"):
+                if query.lower().startswith(pfx):
+                    clean_pfx = "cmd:" if pfx in ("cmd:", "command:") else pfx
+                    val = query[len(pfx):].strip().lower()
+                    if clean_pfx == "sys32:" and val.endswith(".exe"):
+                        val = val[:-4]
+                    return f"{clean_pfx}{val}"
+
             # Проверка на код ошибки (0x8007..., 0xc000...)
             if cls._HEX_ERROR_RE.match(query) or query.lower().startswith("0x"):
                 norm = cls.normalize_hex_code(query)

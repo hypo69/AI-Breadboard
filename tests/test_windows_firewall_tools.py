@@ -33,7 +33,7 @@ from src.ai.agents.windows_tools import (
 )
 
 
-from apps.windows.modules.firewall_manager.core.models import FirewallProfile, FirewallRule
+from apps.windows.sdk.modules.firewall_manager.core.models import FirewallProfile, FirewallRule
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -52,7 +52,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_firewall_audit_profiles():
     """Тест аудита профилей брандмауэра."""
-    with patch("apps.windows.modules.firewall_manager.core.manager.FirewallManager.get_profiles") as mock_func:
+    with patch("apps.windows.sdk.modules.firewall_manager.core.manager.FirewallManager.get_profiles") as mock_func:
         mock_func.return_value = [
             FirewallProfile(profile_type="Domain", enabled=True, default_inbound_action="Block", default_outbound_action="Allow"),
             FirewallProfile(profile_type="Private", enabled=True, default_inbound_action="Block", default_outbound_action="Allow"),
@@ -68,7 +68,7 @@ async def test_windows_firewall_audit_profiles():
 @pytest.mark.asyncio
 async def test_windows_firewall_audit_rules():
     """Тест списка правил сетевого экрана."""
-    with patch("apps.windows.modules.firewall_manager.core.manager.FirewallManager.list_rules") as mock_func:
+    with patch("apps.windows.sdk.modules.firewall_manager.core.manager.FirewallManager.list_rules") as mock_func:
         mock_func.return_value = [
             FirewallRule(name="AI-Breadboard FastApi Server", direction="In", action="Allow", enabled=True, protocol="TCP", local_port="8000")
         ]

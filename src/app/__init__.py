@@ -211,29 +211,29 @@ def register_routers(app: FastAPI, state: 'AppState') -> None:
             logger.debug(f'Windows startup auditor router not registered: {e}')
     if is_app_enabled('windows_backup_manager'):
         try:
-            from apps.windows.modules.backup_manager.router import init_router as init_backup_manager_router
+            from apps.windows.sdk.modules.backup_manager.router import init_router as init_backup_manager_router
             app.include_router(init_backup_manager_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows backup manager router not registered: {e}')
         try:
-            from apps.windows.modules.backup_manager.versions_router import init_router as init_file_versions_router
+            from apps.windows.sdk.modules.backup_manager.versions_router import init_router as init_file_versions_router
             app.include_router(init_file_versions_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows file versions router not registered: {e}')
         try:
-            from apps.windows.modules.focus_policy.router import init_router as init_focus_policy_router
+            from apps.windows.sdk.modules.focus_policy.router import init_router as init_focus_policy_router
             app.include_router(init_focus_policy_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows focus policy router not registered: {e}')
     if is_app_enabled('windows_defender'):
         try:
-            from apps.windows.modules.defender.router import init_router as init_windows_defender_router
+            from apps.windows.sdk.modules.defender.router import init_router as init_windows_defender_router
             app.include_router(init_windows_defender_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows defender router not registered: {e}')
     if is_app_enabled('software_transparency_scanner'):
         try:
-            from apps.windows.core.software_transparency import init_software_transparency_router as init_transparency_scanner_router
+            from apps.windows.sdk.core.software_transparency import init_software_transparency_router as init_transparency_scanner_router
             app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, 'chat_model') else None))
         except (ImportError, Exception) as e:
             logger.debug(f'Software transparency scanner router not registered: {e}')

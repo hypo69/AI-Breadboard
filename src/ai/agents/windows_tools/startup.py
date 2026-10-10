@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты глубокого аудита и управления элементами автозагрузки Windows
-#   (реестр Run/RunOnce, папки автозапуска, задачи планировщика) (apps.windows.modules.startup).
+#   (реестр Run/RunOnce, папки автозапуска, задачи планировщика) (apps.windows.sdk.modules.startup).
 #   Включают:
 #     1. Сканирование и аудит рисков элементов автозагрузки (windows_startup_audit)
 #     2. Переключение состояния (включение/отключение) автозапуска SafeOps (windows_startup_action)
@@ -141,7 +141,7 @@ async def windows_startup_audit(
         JSON с результатом аудита точек автозагрузки.
     """
     try:
-        from apps.windows.modules.startup.core.auditor import StartupAuditor
+        from apps.windows.sdk.modules.startup.core.auditor import StartupAuditor
 
         auditor = StartupAuditor()
         loop = asyncio.get_running_loop()
@@ -217,8 +217,8 @@ async def windows_startup_action(
         JSON с результатом переключения элемента автозапуска.
     """
     try:
-        from apps.windows.modules.startup.core.auditor import StartupAuditor
-        from apps.windows.modules.startup.core.manager import StartupManager
+        from apps.windows.sdk.modules.startup.core.auditor import StartupAuditor
+        from apps.windows.sdk.modules.startup.core.manager import StartupManager
 
         if dry_run:
             return json.dumps({

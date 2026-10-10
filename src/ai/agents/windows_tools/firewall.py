@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой брандмауэра Windows
-#   (apps.windows.modules.firewall_manager).
+#   (apps.windows.sdk.modules.firewall_manager).
 #   Сгруппированы по 2 логическим блокам:
 #     1. Инспекция и аудит профилей и правил сетевого экрана (windows_firewall_audit)
 #     2. Безопасные действия с правилами сетевого экрана по SafeOps (windows_firewall_rule_action)
@@ -95,7 +95,7 @@ async def windows_firewall_audit(
         JSON с результатами аудита профилей, правил или сводного отчёта.
     """
     try:
-        from apps.windows.modules.firewall_manager.core.manager import FirewallManager
+        from apps.windows.sdk.modules.firewall_manager.core.manager import FirewallManager
 
         mgr = FirewallManager()
         loop = asyncio.get_running_loop()
@@ -148,8 +148,8 @@ async def windows_firewall_rule_action(
         JSON с результатом выполнения или симуляции операции над правилом.
     """
     try:
-        from apps.windows.modules.firewall_manager.core.manager import FirewallManager
-        from apps.windows.modules.firewall_manager.core.models import FirewallRuleActionRequest
+        from apps.windows.sdk.modules.firewall_manager.core.manager import FirewallManager
+        from apps.windows.sdk.modules.firewall_manager.core.models import FirewallRuleActionRequest
 
         mgr = FirewallManager()
         req = FirewallRuleActionRequest(

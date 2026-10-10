@@ -25,7 +25,7 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-from apps.windows.modules.accounts_identity.models import (
+from apps.windows.sdk.modules.accounts_identity.models import (
     RiskLevel,
     PrincipalType,
     AccountSource,
@@ -34,20 +34,20 @@ from apps.windows.modules.accounts_identity.models import (
     GroupRef,
     TokenDetails,
 )
-from apps.windows.modules.accounts_identity.catalog import (
+from apps.windows.sdk.modules.accounts_identity.catalog import (
     get_full_catalog,
     get_operation_by_id,
     get_operations_by_subsystem,
     get_operations_by_risk,
     search_catalog,
 )
-from apps.windows.modules.accounts_identity.win32_bridge import (
+from apps.windows.sdk.modules.accounts_identity.win32_bridge import (
     Win32IdentityBridge,
     WELL_KNOWN_SIDS,
 )
-from apps.windows.modules.accounts_identity.graph_engine import IdentityGraphEngine
-from apps.windows.modules.accounts_identity.service import get_accounts_identity_service
-from apps.windows.modules.accounts_identity.tui import format_principal_tree, format_pid_tree
+from apps.windows.sdk.modules.accounts_identity.graph_engine import IdentityGraphEngine
+from apps.windows.sdk.modules.accounts_identity.service import get_accounts_identity_service
+from apps.windows.sdk.modules.accounts_identity.tui import format_principal_tree, format_pid_tree
 from apps.windows.router import router as windows_router
 from fastapi import FastAPI
 

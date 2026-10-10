@@ -14,24 +14,31 @@ Project: ai-breadboard
 Package: windows/api/webgui/maintenance_recovery_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-08 03:08:00
+Updated: 2026-10-10 12:54:00
 =============================================================================
 -->
-
 <style>
   .maint-container {
     padding: 0.75rem 1rem;
   }
   .maint-header {
-    background: var(--surface-2, #1e293b);
-    border: 1px solid var(--border-color, #334155);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md, 8px);
     padding: 0.75rem 1.25rem;
+    color: var(--text-color);
   }
   .maint-card {
-    background: #0f172a;
-    border: 1px solid #334155;
+    background: var(--surface-1);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
+    color: var(--text-color);
+  }
+  .maint-sub-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-color);
   }
   .maint-table {
     width: 100%;
@@ -44,239 +51,229 @@ Updated: 2026-10-08 03:08:00
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-muted, #94a3b8);
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid var(--border-color, #334155);
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
   }
   .maint-table td {
     padding: 0.65rem 1rem;
     font-size: 0.85rem;
-    color: var(--text-color, #f8fafc);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
   }
   .maint-table tr:last-child td {
     border-bottom: none;
   }
   .maint-table tbody tr:hover td {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--nav-hover-bg, rgba(0, 0, 0, 0.04));
   }
 </style>
-
 <div class="maint-container theme-sysctl">
-  <!-- Top Header Bar -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 maint-header text-white">
-    <div>
-      <div class="d-flex align-items-center gap-2">
-        <h5 class="mb-0 fw-bold">
-          🛠️ Windows Maintenance & Recovery
+<!-- Top Header Bar -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 maint-header">
+<div>
+<div class="d-flex align-items-center gap-2">
+<h5 class="mb-0 fw-bold">
+          🛠️ Windows Maintenance &amp; Recovery
         </h5>
-        <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.75rem;">Health & Restoration</span>
-      </div>
-      <p class="mb-0 small text-light mt-1" >
+<span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.75rem;">Health &amp; Restoration</span>
+</div>
+<p class="mb-0 small text-body-secondary mt-1">
         Очистка временных файлов и кэшей, проверка целостности SFC/DISM, управление точками восстановления Windows и настройка дисковых квот теневого хранилища (VSS).
       </p>
-    </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <span class="badge rounded-pill px-3 py-2" id="maint-elevation-badge">
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="badge rounded-pill px-3 py-2" id="maint-elevation-badge">
         🔍 Checking privileges...
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-maint-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+<button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-maint-refresh">
+<i class="bi bi-arrow-clockwise me-1"></i> Обновить
       </button>
-    </div>
-  </div>
-
-  <div class="row g-3">
-    <!-- Quick Action Cards -->
-    <div class="col-md-4">
-      <div class="card maint-card p-3 h-100 d-flex flex-column justify-content-between">
-        <div>
-          <h6 class="fw-bold text-info"><i class="bi bi-trash3-fill me-1"></i> Очистка дисков и кэшей</h6>
-          <p class="small text-muted mb-2">Безопасное удаление временных файлов, логов установки и кэша обновлений Windows.</p>
-          <div class="small fw-semibold text-white mb-3" id="maint-clean-estimate-txt">Доступно к очистке: ~0 MB</div>
-        </div>
-        <button class="btn btn-sm btn-outline-info w-100 rounded-pill" id="btn-maint-action-clean">
-          <i class="bi bi-stars me-1"></i> Очистить временные файлы
+</div>
+</div>
+<div class="row g-3">
+<!-- Quick Action Cards -->
+<div class="col-md-4">
+<div class="card maint-card p-3 h-100 d-flex flex-column justify-content-between" data-panel-id="panel-maintenance-recovery-ochistka-diskov-i-keshey" id="panel-maintenance-recovery-ochistka-diskov-i-keshey">
+<div>
+<h6 class="fw-bold text-info"><i class="bi bi-trash3-fill me-1"></i> Очистка дисков и кэшей</h6>
+<p class="small text-muted mb-2">Безопасное удаление временных файлов, логов установки и кэша обновлений Windows.</p>
+<div class="small fw-semibold text-body mb-3" id="maint-clean-estimate-txt">Доступно к очистке: ~0 MB</div>
+</div>
+<button class="btn btn-sm btn-outline-info w-100 rounded-pill" id="btn-maint-action-clean">
+<i class="bi bi-stars me-1"></i> Очистить временные файлы
         </button>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card maint-card p-3 h-100 d-flex flex-column justify-content-between">
-        <div>
-          <h6 class="fw-bold text-warning"><i class="bi bi-shield-shaded me-1"></i> Проверка SFC (System File Check)</h6>
-          <p class="small text-muted mb-2">Проверка и верификация целостности защищенных системных файлов Windows (sfc /verifyonly).</p>
-        </div>
-        <button class="btn btn-sm btn-outline-warning w-100 rounded-pill" id="btn-maint-action-sfc">
-          <i class="bi bi-search me-1"></i> Запустить проверку SFC
+</div>
+</div>
+<div class="col-md-4">
+<div class="card maint-card p-3 h-100 d-flex flex-column justify-content-between" data-panel-id="panel-maintenance-recovery-proverka-sfc-system-file-check" id="panel-maintenance-recovery-proverka-sfc-system-file-check">
+<div>
+<h6 class="fw-bold text-warning"><i class="bi bi-shield-shaded me-1"></i> Проверка SFC (System File Check)</h6>
+<p class="small text-muted mb-2">Проверка и верификация целостности защищенных системных файлов Windows (sfc /verifyonly).</p>
+</div>
+<button class="btn btn-sm btn-outline-warning w-100 rounded-pill" id="btn-maint-action-sfc">
+<i class="bi bi-search me-1"></i> Запустить проверку SFC
         </button>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card maint-card p-3 h-100 d-flex flex-column justify-content-between">
-        <div>
-          <h6 class="fw-bold text-success"><i class="bi bi-heart-pulse-fill me-1"></i> Диагностика DISM Store</h6>
-          <p class="small text-muted mb-2">Проверка состояния хранилища компонентов Windows с помощью DISM /CheckHealth.</p>
-        </div>
-        <button class="btn btn-sm btn-outline-success w-100 rounded-pill" id="btn-maint-action-dism">
-          <i class="bi bi-activity me-1"></i> Проверить DISM Store
+</div>
+</div>
+<div class="col-md-4">
+<div class="card maint-card p-3 h-100 d-flex flex-column justify-content-between" data-panel-id="panel-maintenance-recovery-diagnostika-dism-store" id="panel-maintenance-recovery-diagnostika-dism-store">
+<div>
+<h6 class="fw-bold text-success"><i class="bi bi-heart-pulse-fill me-1"></i> Диагностика DISM Store</h6>
+<p class="small text-muted mb-2">Проверка состояния хранилища компонентов Windows с помощью DISM /CheckHealth.</p>
+</div>
+<button class="btn btn-sm btn-outline-success w-100 rounded-pill" id="btn-maint-action-dism">
+<i class="bi bi-activity me-1"></i> Проверить DISM Store
         </button>
-      </div>
-    </div>
-
-    <!-- System Restore Points Panel -->
-    <div class="col-12">
-      <div class="card maint-card">
-        <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span class="fw-bold text-white"><i class="bi bi-arrow-counterclockwise me-1"></i> Точки восстановления Windows (System Restore Points)</span>
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-maint-config-restore" title="Настройка квоты диска, расписания и политик хранения">
-              <i class="bi bi-gear-fill me-1"></i> Политики и квоты VSS
+</div>
+</div>
+<!-- System Restore Points Panel -->
+<div class="col-12">
+<div class="card maint-card" data-panel-id="panel-maintenance-recovery-tochki-vosstanovleniya-windows-s" id="panel-maintenance-recovery-tochki-vosstanovleniya-windows-s">
+<div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+<span class="fw-bold text-body"><i class="bi bi-arrow-counterclockwise me-1"></i> Точки восстановления Windows (System Restore Points)</span>
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-maint-config-restore" title="Настройка квоты диска, расписания и политик хранения">
+<i class="bi bi-gear-fill me-1"></i> Политики и квоты VSS
             </button>
-            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-maint-create-restore">
-              <i class="bi bi-plus-lg me-1"></i> Создать точку восстановления
+<button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-maint-create-restore">
+<i class="bi bi-plus-lg me-1"></i> Создать точку восстановления
             </button>
-          </div>
-        </div>
-        <div class="p-0 table-responsive" style="max-height: 380px; overflow-y: auto;">
-          <table class="maint-table">
-            <thead>
-              <tr>
-                <th style="width: 100px;">Номер #</th>
-                <th style="width: 45%;">Описание</th>
-                <th style="width: 25%;">Тип</th>
-                <th style="width: 20%;">Дата создания</th>
-              </tr>
-            </thead>
-            <tbody id="maint-restore-tbody">
-              <tr><td colspan="4" class="text-center text-muted p-3">Загрузка точек восстановления...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: System Restore Policy, Disk Quota & Automated Schedule -->
-  <div class="modal fade" id="modal-maint-restore-config" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content bg-dark text-white border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="modal-title fw-bold text-info">
-            <i class="bi bi-shield-shaded me-2"></i> Политики теневого хранилища, квоты и расписание VSS
+</div>
+</div>
+<div class="p-0 table-responsive" style="max-height: 380px; overflow-y: auto;">
+<table class="maint-table">
+<thead>
+<tr>
+<th style="width: 100px;">Номер #</th>
+<th style="width: 45%;">Описание</th>
+<th style="width: 25%;">Тип</th>
+<th style="width: 20%;">Дата создания</th>
+</tr>
+</thead>
+<tbody id="maint-restore-tbody">
+<tr><td class="text-center text-muted p-3" colspan="4">Загрузка точек восстановления...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal: System Restore Policy, Disk Quota & Automated Schedule -->
+<div aria-hidden="true" class="modal fade" id="modal-maint-restore-config" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content">
+<div class="modal-header border-secondary">
+<h5 class="modal-title fw-bold text-info">
+<i class="bi bi-shield-shaded me-2"></i> Политики теневого хранилища, квоты и расписание VSS
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-4">
-          <p class="small text-muted mb-3">
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-4">
+<p class="small text-muted mb-3">
             Настройка дисковой квоты теневого хранилища (VSS), сценариев автоматического создания и правил ротации точек восстановления Windows.
           </p>
-
-          <!-- 1. Disk Quota Allocation -->
-          <div class="card bg-black border-secondary p-3 mb-3">
-            <h6 class="fw-bold text-primary mb-2">
-              <i class="bi bi-hdd-fill me-1"></i> 1. Выделение дискового пространства (Shadow Storage)
+<!-- 1. Disk Quota Allocation -->
+<div class="card maint-sub-card p-3 mb-3" data-panel-id="panel-maintenance-recovery-1-vydelenie-diskovogo-prostran" id="panel-maintenance-recovery-1-vydelenie-diskovogo-prostran">
+<h6 class="fw-bold text-primary mb-2">
+<i class="bi bi-hdd-fill me-1"></i> 1. Выделение дискового пространства (Shadow Storage)
             </h6>
-            <div class="row g-3 align-items-center">
-              <div class="col-md-6">
-                <label class="form-label small text-muted">Максимальный лимит для диска C:</label>
-                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="maint-policy-storage-size">
-                  <option value="5%">5% объема диска (~15-30 GB)</option>
-                  <option value="10%" selected>10% объема диска (~30-60 GB, рекомендуется)</option>
-                  <option value="15%">15% объема диска (~45-90 GB)</option>
-                  <option value="20%">20% объема диска (~60-120 GB)</option>
-                  <option value="10GB">10 GB фиксированно</option>
-                  <option value="20GB">20 GB фиксированно</option>
-                  <option value="50GB">50 GB фиксированно</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small text-muted">Текущее заполнение VSS:</label>
-                <div class="progress bg-secondary" style="height: 10px;">
-                  <div id="maint-policy-storage-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%;"></div>
-                </div>
-                <div class="d-flex justify-content-between small text-muted mt-1 font-monospace" id="maint-policy-storage-label">
-                  <span>Used: 0 GB</span>
-                  <span>Max: 0 GB</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Schedule and Triggers -->
-          <div class="card bg-black border-secondary p-3 mb-3">
-            <h6 class="fw-bold text-success mb-2">
-              <i class="bi bi-clock-history me-1"></i> 2. Сценарий автоматического создания (Trigger)
+<div class="row g-3 align-items-center">
+<div class="col-md-6">
+<label class="form-label small text-muted">Максимальный лимит для диска C:</label>
+<select class="form-select form-select-sm" id="maint-policy-storage-size">
+<option value="5%">5% объема диска (~15-30 GB)</option>
+<option selected="" value="10%">10% объема диска (~30-60 GB, рекомендуется)</option>
+<option value="15%">15% объема диска (~45-90 GB)</option>
+<option value="20%">20% объема диска (~60-120 GB)</option>
+<option value="10GB">10 GB фиксированно</option>
+<option value="20GB">20 GB фиксированно</option>
+<option value="50GB">50 GB фиксированно</option>
+</select>
+</div>
+<div class="col-md-6">
+<label class="form-label small text-muted">Текущее заполнение VSS:</label>
+<div class="progress bg-secondary-subtle" style="height: 10px;">
+<div class="progress-bar bg-info" id="maint-policy-storage-bar" role="progressbar" style="width: 0%;"></div>
+</div>
+<div class="d-flex justify-content-between small text-muted mt-1 font-monospace" id="maint-policy-storage-label">
+<span>Used: 0 GB</span>
+<span>Max: 0 GB</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Schedule and Triggers -->
+<div class="card maint-sub-card p-3 mb-3" data-panel-id="panel-maintenance-recovery-2-stsenariy-avtomaticheskogo-soz" id="panel-maintenance-recovery-2-stsenariy-avtomaticheskogo-soz">
+<h6 class="fw-bold text-success mb-2">
+<i class="bi bi-clock-history me-1"></i> 2. Сценарий автоматического создания (Trigger)
             </h6>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label small text-muted">Сценарий запуска:</label>
-                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="maint-policy-trigger">
-                  <option value="daily">Ежедневно по расписанию (Daily)</option>
-                  <option value="startup">При каждом запуске системы (At Startup)</option>
-                  <option value="weekly">Еженедельно (Weekly Sunday)</option>
-                  <option value="disabled">Только вручную / перед изменениями (Disabled)</option>
-                </select>
-              </div>
-              <div class="col-md-6" id="maint-policy-time-wrapper">
-                <label class="form-label small text-muted">Время создания (для ежедневного/еженедельного):</label>
-                <input type="time" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="maint-policy-time" value="03:00">
-              </div>
-              <div class="col-12">
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" id="maint-policy-freq-limit" checked style="cursor: pointer;">
-                  <label class="form-check-label small text-light" for="maint-policy-freq-limit">
+<div class="row g-3">
+<div class="col-md-6">
+<label class="form-label small text-muted">Сценарий запуска:</label>
+<select class="form-select form-select-sm" id="maint-policy-trigger">
+<option value="daily">Ежедневно по расписанию (Daily)</option>
+<option value="startup">При каждом запуске системы (At Startup)</option>
+<option value="weekly">Еженедельно (Weekly Sunday)</option>
+<option value="disabled">Только вручную / перед изменениями (Disabled)</option>
+</select>
+</div>
+<div class="col-md-6" id="maint-policy-time-wrapper">
+<label class="form-label small text-muted">Время создания (для ежедневного/еженедельного):</label>
+<input class="form-control form-control-sm font-monospace" id="maint-policy-time" type="time" value="03:00"/>
+</div>
+<div class="col-12">
+<div class="form-check form-switch mt-1">
+<input checked="" class="form-check-input" id="maint-policy-freq-limit" style="cursor: pointer;" type="checkbox"/>
+<label class="form-check-label small text-body" for="maint-policy-freq-limit">
                     Снять 24-часовое системное ограничение частоты Windows (<code>CreationFrequency = 0</code>)
                   </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. Retention Policy -->
-          <div class="card bg-black border-secondary p-3 mb-3">
-            <h6 class="fw-bold text-warning mb-2">
-              <i class="bi bi-layers-half me-1"></i> 3. Политика хранения и ротация (Retention)
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Retention Policy -->
+<div class="card maint-sub-card p-3 mb-3" data-panel-id="panel-maintenance-recovery-3-politika-khraneniya-i-rotatsiya" id="panel-maintenance-recovery-3-politika-khraneniya-i-rotatsiya">
+<h6 class="fw-bold text-warning mb-2">
+<i class="bi bi-layers-half me-1"></i> 3. Политика хранения и ротация (Retention)
             </h6>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label small text-muted">Сколько последних точек хранить:</label>
-                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="maint-policy-max-points">
-                  <option value="3">Хранить 3 последние точки</option>
-                  <option value="5" selected>Хранить 5 последних точек (рекомендуется)</option>
-                  <option value="7">Хранить 7 последних точек</option>
-                  <option value="10">Хранить 10 последних точек</option>
-                  <option value="15">Хранить 15 последних точек</option>
-                  <option value="20">Хранить 20 последних точек</option>
-                </select>
-              </div>
-              <div class="col-md-6 d-flex flex-column justify-content-end">
-                <div class="form-check form-switch mb-1">
-                  <input class="form-check-input" type="checkbox" id="maint-policy-auto-prune" checked style="cursor: pointer;">
-                  <label class="form-check-label small text-light" for="maint-policy-auto-prune">
+<div class="row g-3">
+<div class="col-md-6">
+<label class="form-label small text-muted">Сколько последних точек хранить:</label>
+<select class="form-select form-select-sm" id="maint-policy-max-points">
+<option value="3">Хранить 3 последние точки</option>
+<option selected="" value="5">Хранить 5 последних точек (рекомендуется)</option>
+<option value="7">Хранить 7 последних точек</option>
+<option value="10">Хранить 10 последних точек</option>
+<option value="15">Хранить 15 последних точек</option>
+<option value="20">Хранить 20 последних точек</option>
+</select>
+</div>
+<div class="col-md-6 d-flex flex-column justify-content-end">
+<div class="form-check form-switch mb-1">
+<input checked="" class="form-check-input" id="maint-policy-auto-prune" style="cursor: pointer;" type="checkbox"/>
+<label class="form-check-label small text-body" for="maint-policy-auto-prune">
                     Автоматическая ротация при превышении (Auto-Prune FIFO)
                   </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer border-secondary d-flex justify-content-between">
-          <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-maint-policy-prune-now">
-            <i class="bi bi-trash3 me-1"></i> Очистить избыточные точки
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="modal-footer border-secondary d-flex justify-content-between">
+<button class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-maint-policy-prune-now" type="button">
+<i class="bi bi-trash3 me-1"></i> Очистить избыточные точки
           </button>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
-            <button type="button" class="btn btn-sm btn-primary rounded-pill px-4" id="btn-maint-save-restore-policy">
-              <i class="bi bi-check-lg me-1"></i> Сохранить и применить
+<div class="d-flex gap-2">
+<button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal" type="button">Закрыть</button>
+<button class="btn btn-sm btn-primary rounded-pill px-4" id="btn-maint-save-restore-policy" type="button">
+<i class="bi bi-check-lg me-1"></i> Сохранить и применить
             </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 04:11:30
+# Updated: 2026-10-10 05:40:00
 # =============================================================================
 
 from __future__ import annotations
@@ -349,10 +349,10 @@ class TelemetryLoggerService:
     def collect_and_save_defender_state(self) -> None:
         """Опрашивает текущее состояние Microsoft Defender и сохраняет снимок в базу данных SQLite."""
         try:
-            from apps.windows.modules.defender.core.defender_service import DefenderService
-            from apps.windows.modules.defender.core.asr_manager import ASRManager
-            from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
-            from apps.windows.modules.defender.core.threat_manager import ThreatManager
+            from apps.windows.sdk.modules.defender.core.defender_service import DefenderService
+            from apps.windows.sdk.modules.defender.core.asr_manager import ASRManager
+            from apps.windows.sdk.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+            from apps.windows.sdk.modules.defender.core.threat_manager import ThreatManager
 
             def_svc = DefenderService()
             asr_mgr = ASRManager(def_svc)
@@ -374,6 +374,14 @@ class TelemetryLoggerService:
                 threats=threats,
             )
             logger.debug(f'Снимок состояния Defender зафиксирован в БД ({snap_id})')
+
+            # Инкрементально опрашиваем операционные события Defender и Security
+            try:
+                from .security_collector import WindowsSecurityCollector
+                sec_collector = WindowsSecurityCollector(storage=self.storage)
+                sec_collector.collect_all_security_and_defender(batch_size=200, max_records=1000)
+            except Exception as ev_ex:
+                logger.debug(f'Ошибка сбора операционных событий Defender/Security: {ev_ex}')
         except Exception as e:
             logger.debug(f'Ошибка сбора и сохранения состояния Defender: {e}')
 

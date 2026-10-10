@@ -22,8 +22,8 @@
 """Модульные тесты для DefenderManager и SecurityCollector."""
 
 import pytest
-from apps.windows.core.defender_manager import DefenderManager
-from apps.windows.core.audits.security_collector import SecurityCollector
+from apps.windows.sdk.core.defender_manager import DefenderManager
+from apps.windows.sdk.core.audits.security_collector import SecurityCollector
 
 
 def test_defender_manager_initialization():

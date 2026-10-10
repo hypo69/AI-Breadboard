@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from apps.windows.modules.registry import BookmarkItem, RegistryKeyDetailsDTO, RegistryValueDTO, RegistryViewer, RegistryViewerTUI, SearchResponseDTO, init_router
+from apps.windows.sdk.modules.registry import BookmarkItem, RegistryKeyDetailsDTO, RegistryValueDTO, RegistryViewer, RegistryViewerTUI, SearchResponseDTO, init_router
 
 @pytest.fixture
 def viewer():
@@ -115,7 +115,7 @@ def test_api_endpoints_standalone(client):
 
 def test_registry_editor_operations_and_backups(tmp_path):
     """Проверка полного цикла создания, редактирования, бэкапа и отката параметров реестра."""
-    from apps.windows.modules.registry import RegistryViewer, SetValueRequestDTO, DeleteValueRequestDTO, CreateKeyRequestDTO, DeleteKeyRequestDTO
+    from apps.windows.sdk.modules.registry import RegistryViewer, SetValueRequestDTO, DeleteValueRequestDTO, CreateKeyRequestDTO, DeleteKeyRequestDTO
     viewer = RegistryViewer(backup_dir=tmp_path / 'backups')
     key_res = viewer.create_key(CreateKeyRequestDTO(hive='HKCU', path='Software\\AIBreadboardTestKey'))
     assert key_res.status == 'ok'

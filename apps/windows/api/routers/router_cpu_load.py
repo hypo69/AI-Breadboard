@@ -35,7 +35,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from logger import logger
-from apps.windows.modules.hardware.lhm_service import LhmService
+from apps.windows.sdk.modules.hardware.lhm_service import LhmService
 from apps.windows.telemetry.sqlite import TelemetryStorage
 
 _CORE_THREAD_RE = re.compile(r"core[\s_#]*(\d+)\s+thread[\s_#]*(\d+)", re.IGNORECASE)
@@ -591,7 +591,7 @@ def init_router(
 
             # 4. Если данных в БД недостаточно (пустая база) — дополняем через HardwareMonitor
             if not resp.cores and storage is None:
-                from apps.windows.modules.hardware.hardware_monitor import HardwareMonitor
+                from apps.windows.sdk.modules.hardware.hardware_monitor import HardwareMonitor
                 hw = HardwareMonitor()
                 cpu_m = hw.get_cpu_metrics()
                 flat_th: Dict[int, float] = {}

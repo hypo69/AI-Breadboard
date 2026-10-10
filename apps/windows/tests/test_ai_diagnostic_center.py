@@ -22,10 +22,10 @@
 """Тестовый набор для AI Windows Diagnostic & Administration Center."""
 
 import pytest
-from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
-from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
-from apps.windows.core.root_cause_engine import RootCauseEngine
-from apps.windows.core.safe_executor import SafeExecutor
+from apps.windows.sdk.core.models import ActionType, RemediationAction, RiskLevel
+from apps.windows.sdk.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
+from apps.windows.sdk.core.root_cause_engine import RootCauseEngine
+from apps.windows.sdk.core.safe_executor import SafeExecutor
 from apps.windows.router import init_router
 
 def test_clean_collector():

@@ -18,11 +18,11 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 02:15:00
+# Updated: 2026-10-10 05:40:00
 # =============================================================================
 
 from __future__ import annotations
-"""Нормализатор событий журнала безопасности Windows Security Event Log."""
+"""Нормализатор событий журнала безопасности Windows Security Event Log и Microsoft Defender."""
 
 import json
 import time
@@ -60,9 +60,10 @@ def _parse_int(val: Any, default: int = 0) -> int:
 
 
 class SecurityEventNormalizer:
-    """Нормализатор сырых XML и словарей событий Windows Security в типизированные модели."""
+    """Нормализатор сырых XML и словарей событий Windows Security и Defender в типизированные модели."""
 
     EVENT_DESCRIPTIONS = {
+        # Windows Security Event Log (Security.evtx)
         4624: 'Успешный вход пользователя в систему',
         4625: 'Неудачная попытка входа в систему',
         4634: 'Завершение сеанса пользователя (Logoff)',
@@ -88,6 +89,32 @@ class SecurityEventNormalizer:
         4771: 'Сбой предварительной проверки подлинности Kerberos',
         4776: 'Проверка учетных данных контроллером (NTLM/MSV1_0)',
         1102: 'ВНИМАНИЕ: Журнал аудита безопасности был очищен',
+
+        # Microsoft-Windows-Windows Defender/Operational
+        1000: 'Запуск сканирования Microsoft Defender',
+        1001: 'Сканирование Microsoft Defender успешно завершено',
+        1002: 'Сканирование Microsoft Defender отменено пользователем или системой',
+        1005: 'Сканирование Microsoft Defender приостановлено',
+        1013: 'Очистка истории обнаруженных угроз Defender',
+        1116: 'ВНИМАНИЕ: Microsoft Defender обнаружил вредоносную программу / угрозу',
+        1117: 'Microsoft Defender выполнил действие по нейтрализации угрозы',
+        1118: 'СБОЙ: Microsoft Defender не смог выполнить действие над угрозой',
+        1119: 'Критическая ошибка при обработке угрозы Microsoft Defender',
+        1121: 'CFA (Controlled Folder Access) заблокировал несанкционированное изменение файла',
+        1122: 'CFA (Controlled Folder Access) зафиксировал аудит изменения файла',
+        1123: 'Правило ASR (Attack Surface Reduction) заблокировало потенциально опасное действие',
+        1124: 'Правило ASR (Attack Surface Reduction) сработало в режиме аудита',
+        1127: 'Сетевая защита Microsoft Defender заблокировала сетевое соединение',
+        1128: 'Сетевая защита Microsoft Defender зафиксировала аудит сетевого соединения',
+        1150: 'Служба защиты Microsoft Defender работает в штатном режиме (Healthy)',
+        1151: 'Отчет о состоянии и работоспособности компонентов Microsoft Defender',
+        2000: 'Антивирусные сигнатуры Microsoft Defender успешно обновлены',
+        2001: 'Ошибка обновления антивирусных сигнатур Microsoft Defender',
+        2010: 'Microsoft Defender использовал облачную защиту для получения сведений о безопасности',
+        5000: 'Защита в реальном времени Microsoft Defender включена',
+        5001: 'ВНИМАНИЕ: Защита в реальном времени Microsoft Defender отключена',
+        5004: 'Изменена конфигурация антивируса Microsoft Defender',
+        5007: 'Изменены параметры защиты Microsoft Defender',
     }
 
     def normalize_event(
@@ -179,6 +206,31 @@ class SecurityEventNormalizer:
             or ''
         )
         status_code = str(ed.get('Status') or ed.get('SubStatus') or ed.get('ExitStatus') or '')
+
+        # Извлечение специфичных атрибутов Microsoft Defender
+        if 'Defender' in channel or 'Threat Name' in ed or 'ThreatName' in ed or event_id in range(1000, 1160) or event_id in range(2000, 2020) or event_id in range(5000, 5020):
+            threat_name = ed.get('Threat Name') or ed.get('ThreatName') or ''
+            threat_path = ed.get('Path') or ed.get('ThreatPath') or ''
+            p_name_def = ed.get('Process Name') or ed.get('ProcessName') or ''
+            def_user = ed.get('Detection User') or ed.get('User') or ''
+            severity = ed.get('Severity Name') or ed.get('SeverityName') or ''
+            action_name = ed.get('Action Name') or ed.get('ActionName') or ''
+            sig_ver = ed.get('Security intelligence Version') or ed.get('Signature Version') or ''
+
+            if threat_name and not object_name:
+                object_name = threat_name
+            if threat_path and not command_line:
+                command_line = threat_path
+            if p_name_def and not process_name:
+                process_name = p_name_def
+            if def_user and not subject_user:
+                subject_user = def_user
+            if severity and not status_code:
+                status_code = f"Severity:{severity}"
+            if action_name and 'Action:' not in status_code:
+                status_code = f"{status_code} Action:{action_name}".strip()
+            if sig_ver and not object_name:
+                object_name = f"Sig:{sig_ver}"
 
         # Формирование русскоязычного сообщения
         message = self._build_human_message(
@@ -335,6 +387,62 @@ class SecurityEventNormalizer:
 
         if event_id == 1102:
             return f"ВНИМАНИЕ: Журнал аудита безопасности был очищен пользователем {subject_user}!"
+
+        # События Microsoft Defender
+        if event_id == 1116:
+            threat = object_name or 'Вредоносная программа'
+            target = f" в '{command_line or process_name}'" if (command_line or process_name) else ""
+            status_p = f" [{status_code}]" if status_code else ""
+            return f"🚨 Обнаружена угроза Defender: {threat}{target}{status_p}"
+
+        if event_id == 1117:
+            threat = object_name or 'Угроза'
+            action = status_code or 'Обезврежено'
+            return f"🛡️ Угроза нейтрализована Defender: {threat} ({action})"
+
+        if event_id == 1118:
+            threat = object_name or 'Угроза'
+            return f"⚠️ Ошибка нейтрализации угрозы Defender: {threat} ({status_code})"
+
+        if event_id in (1121, 1122):
+            mode_str = "заблокировано" if event_id == 1121 else "аудит"
+            proc = p_short or 'Процесс'
+            target = f" -> {command_line}" if command_line else ""
+            return f"🛡️ Защита папок от шифровальщиков CFA ({mode_str}): {proc}{target}"
+
+        if event_id in (1123, 1124):
+            mode_str = "блокировка" if event_id == 1123 else "аудит"
+            proc = p_short or 'Процесс'
+            return f"🛡️ Срабатывание правила ASR ({mode_str}): {proc} [{object_name}]"
+
+        if event_id in (1127, 1128):
+            mode_str = "заблокировано" if event_id == 1127 else "аудит"
+            return f"🛡️ Сетевая защита Defender ({mode_str}): соединение {source_ip or command_line}"
+
+        if event_id == 1150:
+            return f"✅ Служба Microsoft Defender здорова и активна (Healthy) [{object_name or 'OK'}]"
+
+        if event_id == 1151:
+            return "ℹ️ Отчет о работоспособности компонентов Microsoft Defender"
+
+        if event_id in (2000, 2010):
+            return f"🔄 Обновление аналитики безопасности / сигнатур Defender [{object_name or 'Успешно'}]"
+
+        if event_id == 2001:
+            return f"⚠️ Ошибка обновления сигнатур Defender ({status_code})"
+
+        if event_id == 5000:
+            return "✅ Защита в реальном времени Microsoft Defender включена"
+
+        if event_id == 5001:
+            return "🚨 ВНИМАНИЕ: Защита в реальном времени Microsoft Defender была отключена!"
+
+        if event_id in (5004, 5007):
+            return f"⚙️ Изменена конфигурация/параметры Microsoft Defender ({object_name or status_code})"
+
+        if event_id in (1000, 1001, 1002, 1005):
+            scan_desc = self.EVENT_DESCRIPTIONS.get(event_id, f"Сканирование Defender ({event_id})")
+            return f"🔍 {scan_desc}"
 
         if default_msg:
             return default_msg

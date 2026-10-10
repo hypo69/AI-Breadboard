@@ -49,7 +49,7 @@ class WikiLLMConfig(BaseModel):
         description="Количество параллельных воркеров разрешения артефактов",
     )
     gemini_model_id: str = Field(
-        default="gemini-3.5-flash-lite",
+        default="gemini-3.1-flash-lite",
         description="Идентификатор модели Gemini для разрешения неизвестных сущностей",
     )
     enable_code_indexer: bool = Field(

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты глубокого анализа истории программ и артефактов исполнения Windows
-#   (apps.windows.modules.programms_history_deep_researh).
+#   (apps.windows.sdk.modules.programms_history_deep_researh).
 #   Включают:
 #     1. Сводный отчёт об установленном ПО и ассоциированных артефактах (windows_programs_history_report)
 #     2. Быстрый аудит установленных программ из реестра Windows (windows_programs_history_audit)
@@ -101,7 +101,7 @@ async def windows_programs_history_report(
         JSON с отчётом по артефактам и программам Windows.
     """
     try:
-        from apps.windows.modules.programms_history_deep_researh.report import generate_report
+        from apps.windows.sdk.modules.programms_history_deep_researh.report import generate_report
 
         loop = asyncio.get_running_loop()
         act = action.strip().lower()
@@ -156,7 +156,7 @@ async def windows_programs_history_audit(
         JSON со списком установленного ПО из реестра Windows.
     """
     try:
-        from apps.windows.modules.programms_history_deep_researh.registry_extractor import get_installed_programs
+        from apps.windows.sdk.modules.programms_history_deep_researh.registry_extractor import get_installed_programs
 
         loop = asyncio.get_running_loop()
         programs = await loop.run_in_executor(None, get_installed_programs)

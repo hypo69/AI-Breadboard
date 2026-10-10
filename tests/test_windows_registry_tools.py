@@ -61,7 +61,7 @@ async def test_windows_registry_read_bookmarks():
             icon="🚀",
         )
     ]
-    with patch("apps.windows.modules.registry.viewer.RegistryViewer.get_bookmarks", return_value=sample_bookmarks):
+    with patch("apps.windows.sdk.modules.registry.viewer.RegistryViewer.get_bookmarks", return_value=sample_bookmarks):
         res_str = await call_tool(windows_registry_read, action="bookmarks")
         res = json.loads(res_str)
         assert res["status"] == "ok"

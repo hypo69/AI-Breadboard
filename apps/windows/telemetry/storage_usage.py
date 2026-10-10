@@ -47,8 +47,8 @@ except ImportError:
     PSUTIL_AVAILABLE = False
 
 from logger import logger
-from apps.windows.modules.storage_manager.core.raw_disk_io import WindowsRawDiskIO
-from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+from apps.windows.sdk.modules.storage_manager.core.raw_disk_io import WindowsRawDiskIO
+from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 from apps.windows.telemetry.models import (
     AppDiskUsageItem,
     DiskUsagePeriodReport,

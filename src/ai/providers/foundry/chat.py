@@ -18,7 +18,7 @@
 # Package: src.ai.providers.foundry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-10 06:33:00
 # =============================================================================
 
 """Base class for chat interface with Foundry models.
@@ -176,8 +176,14 @@ class FoundryChatBase:
                     from src.ai.orchestration.model_error_hub import record_model_error
                     record_model_error(provider='foundry', model_name=self.model_id, error=error_msg, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                     add_unsupported_model('foundry', self.model_id, reason=error_msg)
+                    from src.config import is_debug_mode
+                    if is_debug_mode():
+                        raise RuntimeError(f'[DEBUG MODE] Foundry Model Error 404 ({self.model_id}): {error_msg}')
                     return None
                 logger.warning(f'[{self.model_id}] attempt {attempt} failed: {error_msg}')
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Foundry Model Error ({self.model_id}) on attempt {attempt}: {error_msg}')
                 if attempt < attempts:
                     wait = 2 ** min(attempt, 5)
                     from src.ai.orchestration.model_error_hub import record_model_error
@@ -185,6 +191,10 @@ class FoundryChatBase:
                     logger.info(f'Waiting {wait}s before retry...')
                     time.sleep(wait)
             except Exception as ex:
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    logger.critical(f'[DEBUG MODE] Исключение в Foundry ask ({self.model_id}): {ex}')
+                    raise ex
                 err_str = str(ex)
                 if '503' in err_str or 'UNAVAILABLE' in err_str:
                     from src.ai.orchestration.model_error_hub import record_model_error
@@ -216,6 +226,9 @@ class FoundryChatBase:
                     record_model_error(provider='foundry', model_name=self.model_id, error=err_str, attempt=attempt, max_attempts=attempts, action_taken='failed')
                     logger.error(f'[{self.model_id}] All {attempts} attempts failed')
                     return None
+        from src.config import is_debug_mode
+        if is_debug_mode():
+            raise RuntimeError(f'[DEBUG MODE] Превышено количество попыток для Foundry ({self.model_id})')
         return None
 
     async def chat(self, q: str, history: Optional[List[Dict[str, Any]]]=None, save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, system_instruction: Optional[str]='', attempts: int=15, flag: str='save_chat', **kwargs: Any) -> Optional[str]:
@@ -276,12 +289,22 @@ class FoundryChatBase:
                         logger.error(f'Failed to load model {self.model_id}: {load_err}')
                         from src.ai.model_manager import add_unsupported_model
                         add_unsupported_model('foundry', self.model_id, reason=f'Load failed: {load_err}')
+                        from src.config import is_debug_mode
+                        if is_debug_mode():
+                            raise RuntimeError(f'[DEBUG MODE] Не удалось загрузить модель Foundry ({self.model_id}): {load_err}')
                         return ''
                 error_msg = result.get('error', 'Unknown error')
                 logger.warning(f'[{self.model_id}] chat attempt {attempt} failed: {error_msg}')
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    raise RuntimeError(f'[DEBUG MODE] Foundry chat error ({self.model_id}) on attempt {attempt}: {error_msg}')
                 if attempt < attempts:
                     time.sleep(2 ** min(attempt, 5))
             except Exception as ex:
+                from src.config import is_debug_mode
+                if is_debug_mode():
+                    logger.critical(f'[DEBUG MODE] Исключение в Foundry chat ({self.model_id}): {ex}')
+                    raise ex
                 err_str = str(ex)
                 if '503' in err_str or 'UNAVAILABLE' in err_str:
                     from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model

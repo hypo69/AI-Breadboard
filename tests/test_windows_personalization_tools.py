@@ -32,7 +32,7 @@ from src.ai.agents.windows_tools import (
     windows_personalization_cursor_wallpaper,
     WINDOWS_PERSONALIZATION_TOOLS,
 )
-from apps.windows.modules.personalization.models import (
+from apps.windows.sdk.modules.personalization.models import (
     CursorSettings,
     PersonalizationOverviewResponse,
     WallpaperSettings,
@@ -56,7 +56,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_personalization_overview():
     """Тест получения полного обзора персонализации."""
-    with patch("apps.windows.modules.personalization.manager.PersonalizationManager.get_overview") as mock_func:
+    with patch("apps.windows.sdk.modules.personalization.manager.PersonalizationManager.get_overview") as mock_func:
         mock_func.return_value = PersonalizationOverviewResponse(
             current_theme="Windows Dark",
             is_dark_mode=True,
@@ -75,7 +75,7 @@ async def test_windows_personalization_overview():
 @pytest.mark.asyncio
 async def test_windows_personalization_theme_action():
     """Тест применения темы оформления."""
-    with patch("apps.windows.modules.personalization.manager.PersonalizationManager.apply_theme") as mock_func:
+    with patch("apps.windows.sdk.modules.personalization.manager.PersonalizationManager.apply_theme") as mock_func:
         mock_func.return_value = {"applied": True, "theme_name": "Windows Dark"}
         res_str = await call_tool(
             windows_personalization_theme_action,
@@ -90,7 +90,7 @@ async def test_windows_personalization_theme_action():
 @pytest.mark.asyncio
 async def test_windows_personalization_cursor_wallpaper():
     """Тест получения и обновления настроек указателя мыши."""
-    with patch("apps.windows.modules.personalization.manager.PersonalizationManager.get_cursor_settings") as mock_func:
+    with patch("apps.windows.sdk.modules.personalization.manager.PersonalizationManager.get_cursor_settings") as mock_func:
         mock_func.return_value = CursorSettings(size=48, shadow=True)
         res_str = await call_tool(windows_personalization_cursor_wallpaper, action="cursor")
         res = json.loads(res_str)

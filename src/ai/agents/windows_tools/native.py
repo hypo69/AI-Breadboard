@@ -3,7 +3,7 @@
 # Process Name: AI-Breadboard AI Agents - Windows Native FFI Tools Module
 # =============================================================================
 # Description:
-#   Нативные инструменты прямого взаимодействия с Win32 C API (apps.windows.native).
+#   Нативные инструменты прямого взаимодействия с Win32 C API (apps.windows.sdk.native).
 #
 # File: native.py
 # Project: ai-breadboard
@@ -14,7 +14,7 @@
 # =============================================================================
 
 from __future__ import annotations
-"""Нативные инструменты прямого взаимодействия с Win32 C API (apps.windows.native)."""
+"""Нативные инструменты прямого взаимодействия с Win32 C API (apps.windows.sdk.native)."""
 
 import asyncio
 import json
@@ -64,7 +64,7 @@ async def windows_native_event_log_query(
         event_id: Конкретный идентификатор события (EventID) или 0 для всех.
     """
     try:
-        from apps.windows.native import WindowsEventLogAPI
+        from apps.windows.sdk.native import WindowsEventLogAPI
         wevt = WindowsEventLogAPI()
         if not wevt.is_available():
             return json.dumps({'status': 'error', 'message': 'wevtapi.dll недоступна в текущей среде.'}, ensure_ascii=False)
@@ -91,7 +91,7 @@ async def windows_native_network_sockets(include_arp: bool = True) -> str:
         include_arp: Включать ли таблицу ARP-соседей локальной сети.
     """
     try:
-        from apps.windows.native import IPHelperAPI
+        from apps.windows.sdk.native import IPHelperAPI
         iphlp = IPHelperAPI()
         
         tcp = await asyncio.to_thread(iphlp.get_tcp_connections)
@@ -123,7 +123,7 @@ async def windows_native_pnp_devices(only_problems: bool = False) -> str:
         only_problems: Возвращать только устройства с аппаратными проблемами и ошибками.
     """
     try:
-        from apps.windows.native import SetupAPI
+        from apps.windows.sdk.native import SetupAPI
         setup = SetupAPI()
         
         devices = await asyncio.to_thread(setup.get_problem_devices if only_problems else setup.get_all_devices, only_present=True)
@@ -148,7 +148,7 @@ async def windows_native_services_enum(max_services: int = 200, only_running: bo
         only_running: Фильтровать только запущенные службы.
     """
     try:
-        from apps.windows.native import ServiceManagerFFI
+        from apps.windows.sdk.native import ServiceManagerFFI
         scm = ServiceManagerFFI()
         
         services = await asyncio.to_thread(scm.enum_services)
@@ -181,7 +181,7 @@ async def windows_native_tasks_enum(max_tasks: int = 100) -> str:
         max_tasks: Лимит возвращаемых задач.
     """
     try:
-        from apps.windows.native import TaskSchedulerFFI
+        from apps.windows.sdk.native import TaskSchedulerFFI
         ts = TaskSchedulerFFI()
         if not ts.is_available:
             return json.dumps({'status': 'error', 'message': 'COM-интерфейс Task Scheduler недоступен.'}, ensure_ascii=False)
@@ -206,7 +206,7 @@ async def windows_native_error_decode(code: str) -> str:
         code: Код ошибки в числовом или шестнадцатеричном виде (например, '5', '0x80070005', '0xC0000005', '0xD1').
     """
     try:
-        from apps.windows.native import WindowsErrorDecoder
+        from apps.windows.sdk.native import WindowsErrorDecoder
         decoder = WindowsErrorDecoder()
         
         uint_code, hex_code = decoder.parse_error_code(code)
@@ -231,7 +231,7 @@ async def windows_native_error_decode(code: str) -> str:
 async def windows_native_performance_counters() -> str:
     """Собирает ключевые счетчики производительности Windows в реальном времени через PDH API (pdh.dll)."""
     try:
-        from apps.windows.native import PDHManager
+        from apps.windows.sdk.native import PDHManager
         pdh = PDHManager()
         if not pdh.is_available:
             return json.dumps({'status': 'error', 'message': 'pdh.dll недоступна в текущей среде.'}, ensure_ascii=False)

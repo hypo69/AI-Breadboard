@@ -24,8 +24,8 @@
 """Tests for core modules."""
 
 import unittest
-from apps.windows.core.data_model import ProcessInfo, ThreadInfo, SystemState
-from apps.windows.core.correlation_engine import CorrelationEngine
+from apps.windows.sdk.core.data_model import ProcessInfo, ThreadInfo, SystemState
+from apps.windows.sdk.core.correlation_engine import CorrelationEngine
 
 class TestDataModels(unittest.TestCase):
     """Test data models."""

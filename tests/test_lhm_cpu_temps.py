@@ -18,7 +18,7 @@ from __future__ import annotations
 """Тесты интеграции температур ядер CPU из LibreHardwareMonitor."""
 
 from apps.windows.api.routers.router_cpu_load import build_cpu_load
-from apps.windows.modules.hardware.lhm_service import LhmService, parse_sensor_value
+from apps.windows.sdk.modules.hardware.lhm_service import LhmService, parse_sensor_value
 from apps.windows.telemetry.sensor_collector import SensorCollector
 
 

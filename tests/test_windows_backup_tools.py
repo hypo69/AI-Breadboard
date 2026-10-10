@@ -52,7 +52,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_backup_health_check():
     """Тест вызова диагностики здоровья бэкапов."""
-    with patch("apps.windows.modules.backup_manager.core.health_checker.BackupHealthChecker.generate_report") as mock_func:
+    with patch("apps.windows.sdk.modules.backup_manager.core.health_checker.BackupHealthChecker.generate_report") as mock_func:
         mock_func.return_value = {"health_score": 90, "recommendations": ["Всё в порядке"]}
         res_str = await call_tool(windows_backup_health_check)
         res = json.loads(res_str)
@@ -66,7 +66,7 @@ async def test_windows_backup_file_history_status():
     """Тест получения статуса Истории файлов."""
     mock_status = MagicMock()
     mock_status.to_dict.return_value = {"service_status": "Running", "service_start_type": "Automatic"}
-    with patch("apps.windows.modules.backup_manager.core.file_history_manager.FileHistoryManager.get_status") as mock_func:
+    with patch("apps.windows.sdk.modules.backup_manager.core.file_history_manager.FileHistoryManager.get_status") as mock_func:
         mock_func.return_value = mock_status
         res_str = await call_tool(windows_backup_file_history, action="status")
         res = json.loads(res_str)
@@ -77,7 +77,7 @@ async def test_windows_backup_file_history_status():
 @pytest.mark.asyncio
 async def test_windows_backup_file_history_trigger():
     """Тест принудительного запуска архивации."""
-    with patch("apps.windows.modules.backup_manager.core.file_history_manager.FileHistoryManager.trigger_backup_now") as mock_func:
+    with patch("apps.windows.sdk.modules.backup_manager.core.file_history_manager.FileHistoryManager.trigger_backup_now") as mock_func:
         mock_func.return_value = (True, "Запущено")
         res_str = await call_tool(windows_backup_file_history, action="trigger")
         res = json.loads(res_str)
@@ -88,7 +88,7 @@ async def test_windows_backup_file_history_trigger():
 @pytest.mark.asyncio
 async def test_windows_backup_vss_snapshots():
     """Тест получения списка снимков VSS."""
-    with patch("apps.windows.modules.backup_manager.core.vss_manager.VssManager.list_snapshots") as mock_func:
+    with patch("apps.windows.sdk.modules.backup_manager.core.vss_manager.VssManager.list_snapshots") as mock_func:
         mock_func.return_value = [{"shadow_id": "{1234}", "volume": "C:\\"}]
         res_str = await call_tool(windows_backup_vss_snapshots)
         res = json.loads(res_str)
@@ -99,7 +99,7 @@ async def test_windows_backup_vss_snapshots():
 @pytest.mark.asyncio
 async def test_windows_backup_user_folders_overview():
     """Тест получения обзора пользовательских папок."""
-    with patch("apps.windows.modules.backup_manager.core.user_folders_manager.UserFoldersManager.get_overview") as mock_func:
+    with patch("apps.windows.sdk.modules.backup_manager.core.user_folders_manager.UserFoldersManager.get_overview") as mock_func:
         mock_func.return_value = {"folders": [{"name": "Documents", "size_bytes": 1024}]}
         res_str = await call_tool(windows_backup_user_folders, action="overview")
         res = json.loads(res_str)
@@ -110,7 +110,7 @@ async def test_windows_backup_user_folders_overview():
 @pytest.mark.asyncio
 async def test_windows_backup_version_control_list():
     """Тест получения истории версий файла."""
-    with patch("apps.windows.modules.backup_manager.core.version_provider.WindowsVersionProvider.list_versions") as mock_func:
+    with patch("apps.windows.sdk.modules.backup_manager.core.version_provider.WindowsVersionProvider.list_versions") as mock_func:
         mock_func.return_value = [{"version_id": 1, "timestamp": "2026-10-08 12:00:00"}]
         res_str = await call_tool(windows_backup_version_control, action="list", file_path="C:\\test.txt")
         res = json.loads(res_str)

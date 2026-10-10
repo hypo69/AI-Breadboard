@@ -16,7 +16,7 @@
 # Package: scripts.cli
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:27:07
+# Updated: 2026-10-10 11:47:00
 # =============================================================================
 
 """Cross-platform utility functions for system operations."""
@@ -27,6 +27,12 @@ import socket
 import subprocess
 from pathlib import Path
 from typing import Tuple, Optional, List
+
+try:
+    from logger import logger
+except ImportError:
+    import logging
+    logger = logging.getLogger(__name__)
 
 def find_available_port(host: str='127.0.0.1', start_port: int=8000, max_attempts: int=100) -> int:
     """Find an available port.
@@ -110,9 +116,7 @@ def get_process_on_port(port: int) -> Optional[Tuple[int, str]]:
             except FileNotFoundError:
                 return (None, 'unknown')
     except Exception as e:
-        print(f'Error getting process on port {port}: {e}')
-    '# TODO: вернуть корректное значение'
-    logger.error('Функция get_process_on_port вернула пустой результат')
+        logger.warning(f'Error getting process on port {port}: {e}')
     return None
 
 def get_process_name(pid: int) -> str:

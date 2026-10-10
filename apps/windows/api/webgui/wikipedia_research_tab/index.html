@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/wikipedia_research_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+Updated: 2026-10-10 12:55:00
 =============================================================================
 -->
 
@@ -27,65 +27,66 @@ Updated: 2026-10-01 13:04:40
     padding: 1rem;
   }
   .wiki-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px;
+    background: var(--surface-1) !important;
+    border: 1.5px solid var(--border-color) !important;
+    border-radius: var(--radius-md, 8px);
     padding: 1.25rem;
     margin-bottom: 1rem;
+    box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.08));
   }
   .wiki-card-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #38bdf8;
+    color: var(--text-color);
     margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
   .wiki-badge-pos {
-    background: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.4);
+    background: var(--status-success-bg, rgba(34, 197, 94, 0.15));
+    color: var(--status-success-text, #166534);
+    border: 1px solid var(--status-success-border, #22c55e);
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
     font-weight: 600;
   }
   .wiki-badge-neg {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: var(--status-danger-bg, rgba(239, 68, 68, 0.15));
+    color: var(--status-danger-text, #991b1b);
+    border: 1px solid var(--status-danger-border, #ef4444);
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
     font-weight: 600;
   }
   .wiki-badge-neu {
-    background: rgba(234, 179, 8, 0.2);
-    color: #facc15;
-    border: 1px solid rgba(234, 179, 8, 0.4);
+    background: var(--status-warning-bg, rgba(234, 179, 8, 0.15));
+    color: var(--status-warning-text, #92400e);
+    border: 1px solid var(--status-warning-border, #eab308);
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
     font-weight: 600;
   }
   .wiki-table {
     width: 100%;
     font-size: 0.85rem;
     border-collapse: collapse;
-    color: #f1f5f9;
+    color: var(--text-color);
   }
   .wiki-table th {
-    background: #1e293b;
+    background: var(--surface-2);
     padding: 8px 12px;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 600;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
     text-align: left;
   }
   .wiki-table td {
     padding: 8px 12px;
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.2));
   }
   .wiki-table tr:hover {
-    background: rgba(51, 65, 85, 0.3);
+    background: rgba(56, 189, 248, 0.06);
   }
   .wiki-checkbox-grid {
     display: grid;
@@ -98,7 +99,7 @@ Updated: 2026-10-01 13:04:40
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h4 class="fw-bold text-white mb-0">🌐 Wikipedia Research & Model Laboratory</h4>
+      <h4 class="fw-bold text-body mb-0">🌐 Wikipedia Research & Model Laboratory</h4>
       <small class="text-muted">Кросс-языковой сравнительный анализ контента Википедии и бенчмарк интерпретации моделей ИИ</small>
     </div>
     <div class="d-flex gap-2">
@@ -113,15 +114,15 @@ Updated: 2026-10-01 13:04:40
     <div class="col-lg-8">
       <div class="wiki-card">
         <div class="wiki-card-title">
-          <i class="bi bi-sliders"></i> Параметры исследования
+          <i class="bi bi-sliders text-info"></i> Параметры исследования
         </div>
         
         <!-- Topic Search -->
         <div class="mb-3">
-          <label class="form-label text-light small fw-bold">Тема для исследования (Wikipedia Topic):</label>
+          <label class="form-label text-body small fw-bold">Тема для исследования (Wikipedia Topic):</label>
           <div class="input-group">
-            <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control bg-dark text-white border-secondary" id="wiki-topic-input" placeholder="Например: Israel–Gaza war, Quantum computing, Artificial intelligence" value="Israel–Gaza war">
+            <span class="input-group-text bg-body-secondary border-secondary text-info"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="wiki-topic-input" placeholder="Например: Israel–Gaza war, Quantum computing, Artificial intelligence" value="Israel–Gaza war">
             <button class="btn btn-primary px-3" id="btn-run-exp-a" title="Запустить кросс-языковое сравнение одной моделью">
               <i class="bi bi-translate"></i> Exp A: Языки
             </button>
@@ -133,31 +134,31 @@ Updated: 2026-10-01 13:04:40
 
         <!-- Languages Selector -->
         <div class="mb-3">
-          <label class="form-label text-light small fw-bold">Языковые разделы Википедии:</label>
+          <label class="form-label text-body small fw-bold">Языковые разделы Википедии:</label>
           <div class="wiki-checkbox-grid" id="wiki-languages-list">
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="en" id="lang-en" checked>
-              <label class="form-check-label text-white small" for="lang-en">English (en)</label>
+              <label class="form-check-label text-body small" for="lang-en">English (en)</label>
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="ru" id="lang-ru" checked>
-              <label class="form-check-label text-white small" for="lang-ru">Русский (ru)</label>
+              <label class="form-check-label text-body small" for="lang-ru">Русский (ru)</label>
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="he" id="lang-he" checked>
-              <label class="form-check-label text-white small" for="lang-he">עברית (he)</label>
+              <label class="form-check-label text-body small" for="lang-he">עברית (he)</label>
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="de" id="lang-de" checked>
-              <label class="form-check-label text-white small" for="lang-de">Deutsch (de)</label>
+              <label class="form-check-label text-body small" for="lang-de">Deutsch (de)</label>
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="fr" id="lang-fr" checked>
-              <label class="form-check-label text-white small" for="lang-fr">Français (fr)</label>
+              <label class="form-check-label text-body small" for="lang-fr">Français (fr)</label>
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="uk" id="lang-uk">
-              <label class="form-check-label text-white small" for="lang-uk">Українська (uk)</label>
+              <label class="form-check-label text-body small" for="lang-uk">Українська (uk)</label>
             </div>
           </div>
         </div>
@@ -165,29 +166,29 @@ Updated: 2026-10-01 13:04:40
         <!-- Models & Analysis Dimensions -->
         <div class="row">
           <div class="col-md-6">
-            <label class="form-label text-light small fw-bold">AI Модели (Experiment B):</label>
+            <label class="form-label text-body small fw-bold">AI Модели (Experiment B):</label>
             <div class="d-flex flex-wrap gap-2" id="wiki-models-list">
               <div class="form-check form-check-inline">
                 <input class="form-check-input wiki-model-check" type="checkbox" value="gemini" id="mod-gemini" checked>
-                <label class="form-check-label text-white small" for="mod-gemini">Gemini</label>
+                <label class="form-check-label text-body small" for="mod-gemini">Gemini</label>
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input wiki-model-check" type="checkbox" value="foundry" id="mod-foundry" checked>
-                <label class="form-check-label text-white small" for="mod-foundry">Foundry Local</label>
+                <label class="form-check-label text-body small" for="mod-foundry">Foundry Local</label>
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input wiki-model-check" type="checkbox" value="ollama" id="mod-ollama" checked>
-                <label class="form-check-label text-white small" for="mod-ollama">Ollama</label>
+                <label class="form-check-label text-body small" for="mod-ollama">Ollama</label>
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input wiki-model-check" type="checkbox" value="onnx" id="mod-onnx">
-                <label class="form-check-label text-white small" for="mod-onnx">ONNX DirectML</label>
+                <label class="form-check-label text-body small" for="mod-onnx">ONNX DirectML</label>
               </div>
             </div>
           </div>
           <div class="col-md-6">
-            <label class="form-label text-light small fw-bold">Базовая модель для Exp A:</label>
-            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="wiki-primary-model">
+            <label class="form-label text-body small fw-bold">Базовая модель для Exp A:</label>
+            <select class="form-select form-select-sm" id="wiki-primary-model">
               <option value="gemini" selected>Google Gemini</option>
               <option value="foundry">Microsoft Foundry Local</option>
               <option value="ollama">Ollama Local LLM</option>
@@ -202,7 +203,7 @@ Updated: 2026-10-01 13:04:40
     <div class="col-lg-4">
       <div class="wiki-card h-100">
         <div class="wiki-card-title">
-          <i class="bi bi-lightbulb"></i> Аналитические инсайты
+          <i class="bi bi-lightbulb text-warning"></i> Аналитические инсайты
         </div>
         <div id="wiki-insights-container" class="text-secondary small">
           <em>Запустите Experiment A или Experiment B для отображения выводов и кросс-сравнения...</em>
@@ -214,14 +215,14 @@ Updated: 2026-10-01 13:04:40
   <!-- Loading State -->
   <div id="wiki-loading-spinner" class="text-center my-4 d-none">
     <div class="spinner-border text-primary" role="status"></div>
-    <div class="text-light mt-2 small" id="wiki-loading-text">Выполняется сбор статей и AI-анализ...</div>
+    <div class="text-muted mt-2 small" id="wiki-loading-text">Выполняется сбор статей и AI-анализ...</div>
   </div>
 
   <!-- Results Section -->
   <div id="wiki-results-section" class="d-none">
     <div class="wiki-card">
       <div class="wiki-card-title" id="wiki-results-title">
-        <i class="bi bi-bar-chart-fill"></i> Результаты эксперимента
+        <i class="bi bi-bar-chart-fill text-info"></i> Результаты эксперимента
       </div>
       
       <div class="table-responsive">

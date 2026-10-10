@@ -22,11 +22,11 @@
 """Отключение внешних сетевых/CLI вызовов LLM для детерминированных быстрых тестов."""
 
 import pytest
-from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
-from apps.windows.core.tools.registry import ToolRegistry
-from apps.windows.core.tools.dynamic_factory import DynamicToolFactory, CreateCustomToolMetaTool
-from apps.windows.core.tools.system_tools import WindowsCollectorTool, SafePowerShellProbeTool
-from apps.windows.core.agent_loop import WindowsAgentLoop
+from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
+from apps.windows.sdk.core.tools.registry import ToolRegistry
+from apps.windows.sdk.core.tools.dynamic_factory import DynamicToolFactory, CreateCustomToolMetaTool
+from apps.windows.sdk.core.tools.system_tools import WindowsCollectorTool, SafePowerShellProbeTool
+from apps.windows.sdk.core.agent_loop import WindowsAgentLoop
 
 @pytest.fixture(autouse=True)
 def disable_external_llm(monkeypatch):
@@ -115,7 +115,7 @@ async def test_dynamic_tool_engine_audio_and_display():
 
 def test_slug_and_json_extraction():
     """Тест транслитерации слагов и парсинга JSON блоков."""
-    from apps.windows.core.dynamic_tool_engine import to_ascii_slug, extract_json_block
+    from apps.windows.sdk.core.dynamic_tool_engine import to_ascii_slug, extract_json_block
     assert to_ascii_slug('Покажи список принтеров') == 'pokazhi-spisok-printerov'
     assert to_ascii_slug('Mouse History Inspector') == 'mouse-history-inspector'
     raw_md = 'Вот план:\n```json\n{"tool_name": "test-tool", "intent": "test"}\n```\n'
@@ -127,7 +127,7 @@ def test_resolve_model_info_dynamic(monkeypatch):
     """Проверка динамического извлечения модели и провайдера из конфигурации без хардкода."""
     from types import SimpleNamespace
     import src.config as config_module
-    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicWindowsToolEngine
     engine = DynamicWindowsToolEngine()
     monkeypatch.setattr(config_module, 'ai_cfg', SimpleNamespace(provider='gemini', model='gemini-3.5-flash-lite'))
     provider, model_id, display = engine._resolve_model_info()
@@ -139,7 +139,7 @@ def test_resolve_model_info_dynamic(monkeypatch):
     assert provider == 'OLLAMA'
     assert model_id == 'llama3.2:latest'
     assert display == 'Ollama: llama3.2:latest'
-    from apps.windows.core.dynamic_tool_engine import DynamicToolPlan
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicToolPlan
     plan = DynamicToolPlan(intent='test', tool_name='test_tool', tool_title='Test Tool', description_ru='Описание', probe_type='powershell')
     agents, _ = engine.get_execution_metadata(plan, {})
     llm_agent = next((a for a in agents if a.get('type') == 'llm'))
@@ -148,7 +148,7 @@ def test_resolve_model_info_dynamic(monkeypatch):
 @pytest.mark.asyncio
 async def test_dynamic_tool_engine_prompt_generation():
     """Тест формирования и возврата точного промпта, отправляемого языковой модели."""
-    from apps.windows.core.dynamic_tool_engine import DynamicToolPlan
+    from apps.windows.sdk.core.dynamic_tool_engine import DynamicToolPlan
     engine = DynamicWindowsToolEngine()
     plan = DynamicToolPlan(intent='Инспекция сетевых соединений', tool_name='network-inspector', tool_title='Инспектор сети', description_ru='Анализ соединений', probe_type='collector', collector_name='network')
     probe_data = [{'LocalAddress': '127.0.0.1', 'Port': 8000, 'State': 'Listen'}]

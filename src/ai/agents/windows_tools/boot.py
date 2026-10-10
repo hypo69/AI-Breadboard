@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты прямого взаимодействия с подсистемой Windows Boot & Recovery Manager
-#   (apps.windows.modules.boot_recovery).
+#   (apps.windows.sdk.modules.boot_recovery).
 #   Сгруппированы по 2 логическим блокам:
 #     1. Аудит конфигурации загрузчика BCD и среды WinRE (Audit)
 #     2. Безопасное управление параметрами BCD и WinRE по протоколу SafeOps (Action)
@@ -85,7 +85,7 @@ async def windows_boot_recovery_audit() -> str:
         JSON со сводным отчетом: список BCD записей, таймаут загрузки, статус Secure Boot и путь к образу WinRE.
     """
     try:
-        from apps.windows.modules.boot_recovery.core.manager import BootRecoveryManager
+        from apps.windows.sdk.modules.boot_recovery.core.manager import BootRecoveryManager
 
         mgr = BootRecoveryManager()
         loop = asyncio.get_running_loop()
@@ -122,8 +122,8 @@ async def windows_boot_recovery_action(
         JSON с результатом выполнения или симуляции действия SafeOps.
     """
     try:
-        from apps.windows.modules.boot_recovery.core.manager import BootRecoveryManager
-        from apps.windows.modules.boot_recovery.core.models import BootActionRequest
+        from apps.windows.sdk.modules.boot_recovery.core.manager import BootRecoveryManager
+        from apps.windows.sdk.modules.boot_recovery.core.models import BootActionRequest
 
         mgr = BootRecoveryManager()
         req = BootActionRequest(

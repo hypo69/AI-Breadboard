@@ -26,8 +26,8 @@ from src.ai.agents.windows_tools.sysadmin import (
     windows_sysadmin_audit,
     windows_sysadmin_action,
 )
-from apps.windows.modules.sysadmin.src.user_collector import WindowsAccountDetails
-from apps.windows.modules.sysadmin.src.file_auditor import AuditPolicyStatus
+from apps.windows.sdk.modules.sysadmin.src.user_collector import WindowsAccountDetails
+from apps.windows.sdk.modules.sysadmin.src.file_auditor import AuditPolicyStatus
 
 
 async def call_tool(tool_obj, **kwargs):
@@ -64,7 +64,7 @@ def mock_users():
 @pytest.mark.asyncio
 async def test_windows_sysadmin_audit_users(mock_users):
     """Тестирование аудита списка пользователей."""
-    with patch("apps.windows.modules.sysadmin.src.user_collector.WindowsUserCollector.get_all_users", return_value=mock_users):
+    with patch("apps.windows.sdk.modules.sysadmin.src.user_collector.WindowsUserCollector.get_all_users", return_value=mock_users):
         res_raw = await call_tool(windows_sysadmin_audit, action="users")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"
@@ -80,7 +80,7 @@ async def test_windows_sysadmin_audit_policy():
         success_enabled=True,
         failure_enabled=False,
     )
-    with patch("apps.windows.modules.sysadmin.src.file_auditor.WindowsFileAuditor.get_audit_policy_status", return_value=mock_policy):
+    with patch("apps.windows.sdk.modules.sysadmin.src.file_auditor.WindowsFileAuditor.get_audit_policy_status", return_value=mock_policy):
         res_raw = await call_tool(windows_sysadmin_audit, action="audit_policy")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

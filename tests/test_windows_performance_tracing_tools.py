@@ -31,7 +31,7 @@ from src.ai.agents.windows_tools import (
     windows_performance_collector_action,
     WINDOWS_PERFORMANCE_TRACING_TOOLS,
 )
-from apps.windows.modules.performance_tracing.core.models import (
+from apps.windows.sdk.modules.performance_tracing.core.models import (
     PerformanceCounterSample,
     DataCollectorSet,
     PerformanceTracingReport,
@@ -54,7 +54,7 @@ async def call_tool(tool_obj, **kwargs):
 @pytest.mark.asyncio
 async def test_windows_performance_tracing_audit_counters():
     """Тест моментальных значений счетчиков производительности."""
-    with patch("apps.windows.modules.performance_tracing.core.manager.PerformanceTracingManager.get_counter_samples") as mock_func:
+    with patch("apps.windows.sdk.modules.performance_tracing.core.manager.PerformanceTracingManager.get_counter_samples") as mock_func:
         mock_func.return_value = [
             PerformanceCounterSample(path="\\Processor(_Total)\\% Processor Time", value=15.5, unit="%"),
             PerformanceCounterSample(path="\\Memory\\% Committed Bytes In Use", value=42.0, unit="%"),
@@ -69,7 +69,7 @@ async def test_windows_performance_tracing_audit_counters():
 @pytest.mark.asyncio
 async def test_windows_performance_tracing_audit_collectors():
     """Тест списка сборщиков данных ETW."""
-    with patch("apps.windows.modules.performance_tracing.core.manager.PerformanceTracingManager.list_collectors") as mock_func:
+    with patch("apps.windows.sdk.modules.performance_tracing.core.manager.PerformanceTracingManager.list_collectors") as mock_func:
         mock_func.return_value = [
             DataCollectorSet(name="System Diagnostics", status="Stopped"),
             DataCollectorSet(name="EventLog-Security", status="Running"),

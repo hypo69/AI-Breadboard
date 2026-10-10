@@ -14,7 +14,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 12:20:00
+# Updated: 2026-10-10 05:59:30
 # =============================================================================
 
 from __future__ import annotations
@@ -22,9 +22,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-_modules_dir = Path(__file__).resolve().parent / "modules"
+_modules_dir = Path(__file__).resolve().parent / "sdk" / "modules"
 if _modules_dir.exists() and str(_modules_dir) not in __path__:
     __path__.append(str(_modules_dir))
+
+from apps.windows.sdk import WindowsSDK, windows_sdk
 
 # Контракты (Слой 1)
 from apps.windows.contracts import (
@@ -51,7 +53,7 @@ from apps.windows.contracts import (
 )
 
 # C-FFI Win32 (Слой 2)
-from apps.windows.native import (
+from apps.windows.sdk.native import (
     win32_error_check,
     WindowsErrorDecoder,
     PDHManager,
@@ -62,12 +64,12 @@ from apps.windows.native import (
 )
 
 # Ядро и SafeOps (Слой 4)
-from apps.windows.core.winapi import WinAPI
-from apps.windows.core.safe_executor import SafeExecutor
-from apps.windows.core.safe_ops import SafeExecutor as SafeOpsExecutor
-from apps.windows.core.root_cause_engine import RootCauseEngine
-from apps.windows.core.software_audit import SoftwareAuditEngine
-from apps.windows.core.data_model import (
+from apps.windows.sdk.core.winapi import WinAPI
+from apps.windows.sdk.core.safe_executor import SafeExecutor
+from apps.windows.sdk.core.safe_ops import SafeExecutor as SafeOpsExecutor
+from apps.windows.sdk.core.root_cause_engine import RootCauseEngine
+from apps.windows.sdk.core.software_audit import SoftwareAuditEngine
+from apps.windows.sdk.core.data_model import (
     InstalledAppInfo,
     AppCategory,
     AppExecutionInfo,
@@ -141,4 +143,7 @@ __all__ = [
     # AI
     "WindowsAIDiagnostician",
     "WindowsAIRootCauseAnalyzer",
+    # Windows SDK
+    "WindowsSDK",
+    "windows_sdk",
 ]

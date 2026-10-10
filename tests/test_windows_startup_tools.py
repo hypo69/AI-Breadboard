@@ -26,7 +26,7 @@ from src.ai.agents.windows_tools.startup import (
     windows_startup_audit,
     windows_startup_action,
 )
-from apps.windows.modules.startup.core.models import (
+from apps.windows.sdk.modules.startup.core.models import (
     AuditReport,
     AuditSummary,
     StartupEntry,
@@ -75,7 +75,7 @@ def mock_audit_report():
 @pytest.mark.asyncio
 async def test_windows_startup_audit_summary(mock_audit_report):
     """Тестирование получения сводки элементов автозагрузки."""
-    with patch("apps.windows.modules.startup.core.auditor.StartupAuditor.run_audit", return_value=mock_audit_report):
+    with patch("apps.windows.sdk.modules.startup.core.auditor.StartupAuditor.run_audit", return_value=mock_audit_report):
         res_raw = await call_tool(windows_startup_audit, action="summary")
         res = json.loads(res_raw)
         assert res.get("status") == "ok"
@@ -86,7 +86,7 @@ async def test_windows_startup_audit_summary(mock_audit_report):
 @pytest.mark.asyncio
 async def test_windows_startup_audit_report(mock_audit_report):
     """Тестирование получения полного отчета по автозагрузке."""
-    with patch("apps.windows.modules.startup.core.auditor.StartupAuditor.run_audit", return_value=mock_audit_report):
+    with patch("apps.windows.sdk.modules.startup.core.auditor.StartupAuditor.run_audit", return_value=mock_audit_report):
         res_raw = await call_tool(windows_startup_audit, action="report", limit=10)
         res = json.loads(res_raw)
         assert res.get("status") == "ok"

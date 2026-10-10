@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 07:47:30
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import json
 from typing import Dict, List, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Request, HTTPException
 from logger import logger
-from src.api.routers.core.router_auth import verify_jwt_token
+from apps.windows.api.auth import verify_jwt_token, get_current_user_data, require_admin_user
 
 class ControlConnectionManager:
     """Менеджер WebSocket соединений для пульта, плеера и открытых компьютеров."""
@@ -176,7 +176,6 @@ async def websocket_control_endpoint(
 @router.get("/status")
 async def get_control_status(request: Request, token: Optional[str] = None, room: Optional[str] = None):
     """Получить текущее state комнаты по HTTP."""
-    from src.api.routers.core.router_auth import get_current_user_data
     get_current_user_data(request)
     cookie_token = request.cookies.get("auth_token")
     if cookie_token and not token:
@@ -196,7 +195,6 @@ async def get_control_status(request: Request, token: Optional[str] = None, room
 @router.get("/active_players")
 async def get_active_players(request: Request):
     """Получить list комнат с активными компьютерами и плеерами."""
-    from src.api.routers.core.router_auth import get_current_user_data
     user_data = get_current_user_data(request)
     user_email = user_data.email.strip().lower() if user_data and user_data.email else None
 
@@ -221,7 +219,6 @@ async def get_active_players(request: Request):
 @router.get("/rescan")
 async def rescan_storage(request: Request):
     """Принудительное пересканирование доступных хранилищ."""
-    from src.api.routers.core.router_auth import require_admin_user
     require_admin_user(request)
 
     import psutil

@@ -3,7 +3,7 @@
 # Process Name: AI-Breadboard Tests - Test Router App Logs
 # =============================================================================
 # Description:
-#   Тесты для FastAPI роутера анализа и стриминга внутренних логов программы
+#   Тесты для FastAPI роутера анализа, экспорта и стриминга внутренних логов программы
 #   из каталога %APPDATA%\AI-Breadboard\logs.
 #
 # Usage Examples:
@@ -15,7 +15,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 10:30:00
+# Updated: 2026-10-10 12:38:00
 # =============================================================================
 
 import json
@@ -81,6 +81,17 @@ def test_list_log_files(client, test_logs_dir):
     assert "info.log" in file_names
 
 
+def test_get_logs_overview(client, test_logs_dir):
+    """Проверка сводного обзора логов системы."""
+    response = client.get("/api/v1/app_logs/overview")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_files"] >= 3
+    assert data["total_size_bytes"] > 0
+    assert "system_health" in data
+    assert isinstance(data["files"], list)
+
+
 def test_get_log_records_json(client, test_logs_dir):
     """Проверка выборки и парсинга структурированных JSON записей."""
     response = client.get("/api/v1/app_logs/records?file_name=log.json")
@@ -123,6 +134,29 @@ def test_get_log_records_text(client, test_logs_dir):
     data = response.json()
     assert data["total_matches"] == 2
     assert data["records"][0]["repeat_count"] == 3 or data["records"][1]["repeat_count"] == 3
+
+
+def test_export_logs_formats(client, test_logs_dir):
+    """Проверка экспорта записей в CSV, JSON и Markdown форматы."""
+    # CSV
+    res_csv = client.get("/api/v1/app_logs/export?file_name=log.json&export_format=csv")
+    assert res_csv.status_code == 200
+    assert "text/csv" in res_csv.headers["content-type"]
+    assert "Timestamp,Level,Component" in res_csv.text
+
+    # JSON
+    res_json = client.get("/api/v1/app_logs/export?file_name=log.json&export_format=json")
+    assert res_json.status_code == 200
+    assert "application/json" in res_json.headers["content-type"]
+    data = json.loads(res_json.text)
+    assert isinstance(data, list)
+    assert len(data) == 5
+
+    # Markdown
+    res_md = client.get("/api/v1/app_logs/export?file_name=log.json&export_format=markdown")
+    assert res_md.status_code == 200
+    assert "text/markdown" in res_md.headers["content-type"]
+    assert "# 📑 Аналитический отчет" in res_md.text
 
 
 def test_tail_log(client, test_logs_dir):

@@ -362,7 +362,7 @@ class DeepDiagnosticsEngine:
         disks: List[Dict[str, Any]] = []
         battery_data: Dict[str, Any] = {'has_battery': False, 'design_capacity_mwh': 0.0, 'full_charge_capacity_mwh': 0.0, 'wear_level_pct': 0.0, 'cycle_count': 0, 'charge_rate_mw': 0.0, 'is_charging': False, 'percent': 0.0, 'power_source': 'AC Mains (Стационарное питание)'}
         try:
-            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor()
             snapshot = sensor.collect_snapshot(sync=True)
             raw_partitions = snapshot.get('sources', {}).get('partitions', [])
@@ -554,7 +554,7 @@ class DeepDiagnosticsEngine:
         """Собрать сводку телеметрии Windows Defender (CFA, ASR, исключения, угрозы)."""
         summary = DefenderTelemetrySummary()
         try:
-            from apps.windows.modules.defender.core.cfa_manager import ControlledFolderAccessManager
+            from apps.windows.sdk.modules.defender.core.cfa_manager import ControlledFolderAccessManager
             cfa_mgr = ControlledFolderAccessManager()
             cfa_info = cfa_mgr.get_cfa_status()
             summary.cfa_enabled = bool(cfa_info.enabled)
@@ -564,7 +564,7 @@ class DeepDiagnosticsEngine:
             logger.debug(f'Ошибка сбора статуса CFA Defender: {ex}')
 
         try:
-            from apps.windows.modules.defender.core.asr_manager import ASRManager
+            from apps.windows.sdk.modules.defender.core.asr_manager import ASRManager
             asr_mgr = ASRManager()
             rules = asr_mgr.get_asr_rules()
             summary.asr_rules_count = len(rules)
@@ -573,7 +573,7 @@ class DeepDiagnosticsEngine:
             logger.debug(f'Ошибка сбора правил ASR Defender: {ex}')
 
         try:
-            from apps.windows.modules.defender.core.exclusions_auditor import ExclusionsAuditor
+            from apps.windows.sdk.modules.defender.core.exclusions_auditor import ExclusionsAuditor
             excl_auditor = ExclusionsAuditor()
             excl = excl_auditor.audit_exclusions()
             paths = getattr(excl, 'path_exclusions', []) or []
@@ -585,7 +585,7 @@ class DeepDiagnosticsEngine:
             logger.debug(f'Ошибка сбора исключений Defender: {ex}')
 
         try:
-            from apps.windows.modules.defender.core.threat_manager import ThreatManager
+            from apps.windows.sdk.modules.defender.core.threat_manager import ThreatManager
             threat_mgr = ThreatManager()
             threat_history = threat_mgr.get_threats_history(limit=50)
             active_threats = [t for t in threat_history if str(getattr(t, 'status', '')).lower() == 'active']
@@ -632,7 +632,7 @@ class DeepDiagnosticsEngine:
         """Собрать состояние теневых копий томов VSS."""
         summary = VssTelemetrySummary()
         try:
-            from apps.windows.modules.backup_manager.core.vss_manager import VssManager
+            from apps.windows.sdk.modules.backup_manager.core.vss_manager import VssManager
             vss = VssManager()
             snapshots = vss.list_snapshots()
             summary.total_snapshots_count = len(snapshots)

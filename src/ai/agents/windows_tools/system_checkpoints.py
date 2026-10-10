@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Инструменты управления единым координатором контрольных точек восстановления
-#   Windows (DISM WIM-образы, WinRE и Restore Points VSS) (apps.windows.modules.system_checkpoints).
+#   Windows (DISM WIM-образы, WinRE и Restore Points VSS) (apps.windows.sdk.modules.system_checkpoints).
 #   Включают:
 #     1. Инспекция готовности и дрейфа контрольных точек (windows_checkpoints_audit)
 #     2. Создание и управление контрольными точками SafeOps (windows_checkpoints_action)
@@ -101,7 +101,7 @@ async def windows_checkpoints_audit(
     """
     try:
         try:
-            from apps.windows.modules.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
+            from apps.windows.sdk.modules.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
         except ImportError:
             from apps.windows.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
 
@@ -177,8 +177,8 @@ async def windows_checkpoints_action(
             }, ensure_ascii=False)
 
         try:
-            from apps.windows.modules.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
-            from apps.windows.modules.system_checkpoints.models import CheckpointCreateRequest, CheckpointType
+            from apps.windows.sdk.modules.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
+            from apps.windows.sdk.modules.system_checkpoints.models import CheckpointCreateRequest, CheckpointType
         except ImportError:
             from apps.windows.system_checkpoints.core.checkpoint_coordinator import CheckpointCoordinator
             from apps.windows.system_checkpoints.models import CheckpointCreateRequest, CheckpointType

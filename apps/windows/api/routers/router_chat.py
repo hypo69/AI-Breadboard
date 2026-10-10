@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 09:01:00
+# Updated: 2026-10-10 12:41:00
 # =============================================================================
 
 """Handles AI conversational endpoints, streaming responses across multiple providers,"""
@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 from logger import logger
 from src.config import ai_cfg, tts_cfg
 from src.ai.gemini.user_query_rag import index_user_query, search_user_context
+from apps.windows.api.config_helper import save_ai_config, resolve_active_config_path
 
 from header import __root__
 
@@ -140,7 +141,7 @@ class ChatSessionPayload(BaseModel):
 class SyncSessionsRequest(BaseModel):
     sessions: list[dict] = []
 
-from src.api import chat_sessions_db
+from apps.windows.api import chat_sessions_db
 
 _active_chat_models: dict[str, object] = {}
 
@@ -256,7 +257,7 @@ async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]
     settings = {}
 
     try:
-        from src.api.routers.core.router_auth import get_current_user_optional
+        from apps.windows.api.auth import get_current_user_optional
         user_data = get_current_user_optional(fastapi_req) if fastapi_req is not None else None
 
         from src.user_manager import user_manager
@@ -672,6 +673,9 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 if hasattr(target_chat_model, "model_name"):
                     target_chat_model.model_name = normalized_model
 
+            # Сохраняем в apps/windows/config.json
+            save_ai_config(provider=provider, model_name=normalized_model)
+
             return {
                 "status": "success",
                 "message": "Модель успешно обновлена",
@@ -707,7 +711,6 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
             normalized_model, provider = _normalize_model_and_provider(req.model, target_provider)
             user_identifier, _, _, _ = await _extract_user_auth(fastapi_req)
-            config_path = __root__ / 'apps' / 'windows' / 'config.json'
 
             # 1. Обновляем настройки пользователя в базе данных
             try:
@@ -729,82 +732,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     target_chat_model.model_name = normalized_model
 
             # 3. Сохраняем в apps/windows/config.json
-            if config_path.exists():
-                try:
-                    import json
-                    with open(config_path, 'r', encoding='utf-8') as f:
-                        cfg = json.load(f)
-                    
-                    ai_cfg_section = cfg.get("ai_providers_and_models_configuration", {})
-                    if "providers" not in ai_cfg_section:
-                        ai_cfg_section["providers"] = {}
-                    
-                    providers = ai_cfg_section["providers"]
-                    
-                    # Update provider/model based on selected provider
-                    if provider == 'GEMINI':
-                        providers["gemini"]["enabled"] = True
-                        providers["gemini"]["model"] = normalized_model
-                        # Disable other providers
-                        if "gemini_cli" in providers:
-                            providers["gemini_cli"]["enabled"] = False
-                        if "agy" in providers:
-                            providers["agy"]["enabled"] = False
-                        if "foundry" in providers:
-                            providers["foundry"]["enabled"] = False
-                        if "ollama" in providers:
-                            providers["ollama"]["enabled"] = False
-                        if "openai" in providers:
-                            providers["openai"]["enabled"] = False
-                    elif provider == 'GEMINI_CLI':
-                        providers["gemini_cli"]["enabled"] = True
-                        providers["gemini_cli"]["model"] = normalized_model
-                        if "gemini" in providers:
-                            providers["gemini"]["enabled"] = False
-                        if "agy" in providers:
-                            providers["agy"]["enabled"] = False
-                        if "foundry" in providers:
-                            providers["foundry"]["enabled"] = False
-                        if "ollama" in providers:
-                            providers["ollama"]["enabled"] = False
-                        if "openai" in providers:
-                            providers["openai"]["enabled"] = False
-                    elif provider == 'FOUNDRY':
-                        providers["foundry"]["enabled"] = True
-                        providers["foundry"]["model"] = normalized_model
-                        if "gemini" in providers:
-                            providers["gemini"]["enabled"] = False
-                        if "gemini_cli" in providers:
-                            providers["gemini_cli"]["enabled"] = False
-                        if "agy" in providers:
-                            providers["agy"]["enabled"] = False
-                        if "ollama" in providers:
-                            providers["ollama"]["enabled"] = False
-                        if "openai" in providers:
-                            providers["openai"]["enabled"] = False
-                    elif provider == 'OLLAMA':
-                        providers["ollama"]["enabled"] = True
-                        providers["ollama"]["model"] = normalized_model
-                        if "gemini" in providers:
-                            providers["gemini"]["enabled"] = False
-                        if "gemini_cli" in providers:
-                            providers["gemini_cli"]["enabled"] = False
-                        if "foundry" in providers:
-                            providers["foundry"]["enabled"] = False
-                        if "agy" in providers:
-                            providers["agy"]["enabled"] = False
-                        if "openai" in providers:
-                            providers["openai"]["enabled"] = False
-
-                    ai_cfg_section["providers"] = providers
-                    cfg["ai_providers_and_models_configuration"] = ai_cfg_section
-
-                    with open(config_path, 'w', encoding='utf-8') as f:
-                        json.dump(cfg, f, indent=2, ensure_ascii=False)
-                    
-                    logger.info(f"[router_chat] Saved provider '{provider}' and model '{normalized_model}' to {config_path}")
-                except Exception as e:
-                    logger.error(f"[router_chat] Error saving config to {config_path}: {e}")
+            save_ai_config(provider=provider, model_name=normalized_model)
 
             return {
                 "status": "success",
@@ -1256,8 +1184,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     return
 
                 token = request.cookies.get('auth_token') if request else None
-                from src.api.routers.core.router_control import get_room_id
-                room_id = get_room_id(token, None)
+                room_id = token or 'default'
 
                 if chat_req.generation_config.get('model'):
                     selected_model = chat_req.generation_config['model']

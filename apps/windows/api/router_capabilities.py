@@ -26,8 +26,8 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from logger import logger
-from apps.windows.core.atomic_capabilities import get_atomic_registry
-from apps.windows.core.atomic_models import (
+from apps.windows.sdk.core.atomic_capabilities import get_atomic_registry
+from apps.windows.sdk.core.atomic_models import (
     AtomicOperationExecutionRequest,
     AtomicOperationExecutionResult,
     CapabilityCategory,
@@ -138,7 +138,7 @@ async def execute_operation(payload: AtomicOperationExecutionRequest) -> AtomicO
 async def list_storage_disks() -> Dict[str, Any]:
     """Перечисление физических дисков хоста."""
     try:
-        from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.sdk.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor(timeout_sec=15)
         disks = await asyncio.to_thread(sensor.get_physical_disks)
         return {'disks': [d.to_dict() for d in disks], 'total': len(disks)}

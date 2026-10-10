@@ -145,7 +145,7 @@
   "ollama_model_id": "llama3.1",
   "preload_silero": false,
   "use_agy": true,
-  "agy_model_id": "agy-gemini-3.5-flash-lite",
+  "agy_model_id": "agy-gemini-3.1-flash-lite",
   "use_gemini_cli": true,
   "gemini_cli_model_id": "gemini-3.1-flash-lite",
   "gemini_api_key_names": "*",
@@ -164,7 +164,7 @@
 | `ollama_model_id` | `string` | Модель Ollama по умолчанию (например, `"llama3.1"`). |
 | `preload_silero` | `boolean` | Предварительная загрузка весов модели Silero (VAD/TTS) в память при старте. |
 | `use_agy` | `boolean` | Включение встроенного провайдера Antigravity CLI (AGY). |
-| `agy_model_id` | `string` | Модель по умолчанию для вызовов AGY (например, `"agy-gemini-3.5-flash-lite"`). |
+| `agy_model_id` | `string` | Модель по умолчанию для вызовов AGY (например, `"agy-gemini-3.1-flash-lite"`). |
 | `use_gemini_cli` | `boolean` | Включение провайдера Google Gemini CLI. |
 | `gemini_cli_model_id` | `string` | Идентификатор модели по умолчанию для Gemini CLI. |
 | `gemini_api_key_names` | `string` | Фильтрация используемых ключей из пула `src/secrets/gemini_keys.json`. `"*"` — все активные ключи; либо список псевдонимов через запятую (например, `"key1,key2"`). |

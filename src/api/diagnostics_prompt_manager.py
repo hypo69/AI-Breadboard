@@ -3,33 +3,35 @@
 # Process Name: AI-Breadboard API - Diagnostics Prompt Manager Module
 # =============================================================================
 # Description:
-#   Менеджер шаблонов промптов для аудита и объяснения таблиц.
+#   Менеджер шаблонов промптов и системных инструкций для аудита и объяснения таблиц.
 #
 # Usage Examples:
 #   Python API:
-#     from src.api.diagnostics_prompt_manager import DiagnosticPromptTemplate
+#     from src.api.diagnostics_prompt_manager import DiagnosticPromptTemplate, prompt_manager
 #
-#     service = DiagnosticPromptTemplate()
-#     result = service.format_prompt()
-#     print(result)
+#     tmpl = prompt_manager.get_template('user_account')
+#     prompt = tmpl.format_prompt(title='Admin', subtitle='SID: S-1-5-21...', metadata={}, raw_data='')
+#     print(tmpl.system_instruction)
 #
 # File: diagnostics_prompt_manager.py
 # Project: ai-breadboard
 # Package: src.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-08 05:15:00
+# Updated: 2026-10-10 09:28:00
 # =============================================================================
 
 from __future__ import annotations
-"""Менеджер шаблонов промптов для аудита и объяснения таблиц."""
+"""Менеджер шаблонов промптов и системных инструкций для аудита и объяснения таблиц."""
 
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 from logger import logger
+
 PROMPTS_DIR = Path('prompts/diagnostics')
+
 DEFAULT_PROMPTS: Dict[str, Dict[str, Any]] = {
     'cpu': {
         'table_type': 'cpu',
@@ -91,7 +93,7 @@ DEFAULT_PROMPTS: Dict[str, Dict[str, Any]] = {
         'table_type': 'user_account',
         'name': 'Аудит учетных записей Windows (Users & Principals)',
         'description': 'Промпт для экспертного анализа учетных записей пользователей, групп безопасности, SID/RID, прав администратора и встроенных системных аккаунтов.',
-        'system_instruction': 'Ты — ведущий системный администратор и эксперт по безопасности Active Directory и локальной безопасности Windows (SAM, LSA, SID, UAC). Используй поиск в интернете (Web Grounding) для точной идентификации назначения аккаунта (например DefaultAccount / System Managed Account для UWP, WDAGUtilityAccount, Guest, Administrator). Отвечай строго в формате чистого JSON на русском языке.',
+        'system_instruction': 'Ты — ведущий системный администратор и эксперт по безопасности Active Directory и локальной безопасности Windows (SAM, LSA, SID, UAC, SpecialAccounts). Используй поиск в интернете (Web Grounding) для точной идентификации назначения аккаунта (например DefaultAccount / System Managed Account для UWP, WDAGUtilityAccount, Guest, Administrator). Отвечай строго в формате чистого JSON на русском языке.',
         'prompt_template': 'Проведи детальный экспертный аудит учетной записи Windows с онлайн-исследованием:\n\nИмя аккаунта / Заголовок: {title}\nПодзаголовок / SID: {subtitle}\nМетаданные учетной записи:\n{metadata}\nСырые параметры / Конфигурация: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Исчерпывающее описание учетной записи (что это за аккаунт, встроенный ли он в Windows, кем и для каких задач используется, например System Managed Account для UWP/AppContainer, гостевой доступ, локальный админ и т.д.)",\n  "developer": "Принадлежность аккаунта (Операционная система Windows / Microsoft / Локальный пользователь / Домен Active Directory)",\n  "category": "Категория (Встроенная системная учетная запись / Локальный администратор / Пользовательская запись / Сервисный аккаунт)",\n  "security_verdict": "Оценка безопасности: привилегии (Admin/Standard), статус активности (Enabled/Disabled), требования к паролю и риски несанкционированного доступа",\n  "performance_impact": "Фоновые процессы, потребление оперативной памяти и размер локального профиля на диске",\n  "recommendation": "Практическая рекомендация по управлению учетной записью (оставить как есть, отключить, ограничить права, сменить пароль)",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
         'variables': ['title', 'subtitle', 'metadata', 'raw_data']
     },
@@ -99,8 +101,56 @@ DEFAULT_PROMPTS: Dict[str, Dict[str, Any]] = {
         'table_type': 'security_event',
         'name': 'Аудит событий безопасности Windows (Security Log)',
         'description': 'Промпт для анализа событий аудита безопасности (Event ID), аутентификации, входов в систему и действий с правами.',
-        'system_instruction': 'Ты — эксперт по анализу журналов безопасности Windows (Security Event Log, Windows Defender, Logon Types, Kerberos/NTLM). Отвечай строго в формате чистого JSON на русском языке.',
+        'system_instruction': 'Ты — эксперт по анализу журналов безопасности Windows (Security Event Log, Windows Defender, Logon Types, Kerberos/NTLM, Audit Policies). Отвечай строго в формате чистого JSON на русском языке.',
         'prompt_template': 'Проведи экспертный аудит события безопасности Windows:\n\nСобытие / Event ID: {title}\nКонтекст / Время: {subtitle}\nМетаданные события:\n{metadata}\nСырые данные аудита / Описание: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Подробное объяснение события безопасности: что произошло, какой механизм Windows задействован",\n  "developer": "Подсистема безопасности Windows (LSA, Kerberos, SAM, Defender, UAC)",\n  "category": "Событие безопасности (Security Audit Event)",\n  "security_verdict": "Оценка легитимности: штатное системное действие, успешная аутентификация или подозрительная активность / аномалия",\n  "performance_impact": "Влияние на журнал аудита и политику логирования",\n  "recommendation": "Рекомендации системному администратору по реагированию",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
+        'variables': ['title', 'subtitle', 'metadata', 'raw_data']
+    },
+    'task': {
+        'table_type': 'task',
+        'name': 'Аудит задач планировщика Windows (Task Scheduler)',
+        'description': 'Промпт для анализа запланированных заданий Windows, триггеров запуска, исполняемых модулей и привилегий.',
+        'system_instruction': 'Ты — ведущий системный администратор и эксперт по безопасности задач Windows (Task Scheduler, COM Handlers, Scheduled Tasks). Отвечай строго в формате чистого JSON на русском языке.',
+        'prompt_template': 'Проведи детальный аудит задачи планировщика Windows:\n\nИмя задачи / Заголовок: {title}\nПуть / Автор / Статус: {subtitle}\nМетаданные задачи:\n{metadata}\nДействие / Командная строка: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Назначение задачи планировщика и ее роль в системе",\n  "developer": "Издатель / Разработчик задачи",\n  "category": "Запланированная задача (Scheduled Task)",\n  "security_verdict": "Оценка безопасности: легитимность исполняемого пути, контекст запуска (SYSTEM/User) и риски персистентности",\n  "performance_impact": "Влияние на фоновые ресурсы и частоту запуска",\n  "recommendation": "Рекомендация по управлению задачей (включить/отключить/изменить триггеры)",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
+        'variables': ['title', 'subtitle', 'metadata', 'raw_data']
+    },
+    'registry': {
+        'table_type': 'registry',
+        'name': 'Аудит параметров системного реестра Windows',
+        'description': 'Промпт для анализа ключей реестра, политик, параметров конфигурации и твиков безопасности.',
+        'system_instruction': 'Ты — ведущий эксперт по реестру Windows (HKLM, HKCU, HKCR, Group Policies) и твикам оптимизации. Отвечай строго в формате чистого JSON на русском языке.',
+        'prompt_template': 'Проведи экспертный анализ параметра или ветки реестра Windows:\n\nПараметр реестра / Ключ: {title}\nВетка / Тип значения: {subtitle}\nМетаданные записи:\n{metadata}\nЗначение параметра / Данные: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Назначение и функционал данного параметра реестра",\n  "developer": "Подсистема Windows / Приложение",\n  "category": "Реестр Windows (Registry Setting)",\n  "security_verdict": "Влияние на безопасность: стандартное значение, системная политика или критический твик безопасности",\n  "performance_impact": "Влияние на производительность и поведение системы",\n  "recommendation": "Рекомендации по настройке или сбросу значения",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
+        'variables': ['title', 'subtitle', 'metadata', 'raw_data']
+    },
+    'disk': {
+        'table_type': 'disk',
+        'name': 'Аудит дисков и томов (Storage & Drives)',
+        'description': 'Промпт для анализа дисковых накопителей, файловых систем, разделов, SMART телеметрии и износа.',
+        'system_instruction': 'Ты — системный архитектор и специалист по дисковым подсистемам Windows, файловым системам (NTFS, ReFS) и здоровью накопителей (NVMe/SSD/HDD, SMART). Отвечай строго в формате чистого JSON на русском языке.',
+        'prompt_template': 'Проведи экспертный аудит диска или накопителя:\n\nМодель накопителя / Буква: {title}\nТип носителя / Раздел: {subtitle}\nМетаданные диска:\n{metadata}\nСырые данные / Сенсоры / SMART: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Характеристика накопителя, интерфейс подключения и назначение тома",\n  "developer": "Производитель накопителя",\n  "category": "Дисковая подсистема (Storage)",\n  "security_verdict": "Оценка надежности, шифрования BitLocker и рисков сбоя",\n  "performance_impact": "Скоростные характеристики, свободное место и износ (Wear Level)",\n  "recommendation": "Рекомендации по обслуживанию, резервному копированию и дефрагментации/TRIM",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
+        'variables': ['title', 'subtitle', 'metadata', 'raw_data']
+    },
+    'startup': {
+        'table_type': 'startup',
+        'name': 'Аудит автозагрузки Windows (Startup & Autoruns)',
+        'description': 'Промпт для анализа программ и модулей, запускающихся при старте системы.',
+        'system_instruction': 'Ты — эксперт по оптимизации Windows и анализу автозагрузки (Run keys, Startup folder, Task Scheduler autoruns). Отвечай строго в формате чистого JSON на русском языке.',
+        'prompt_template': 'Проведи аудит элемента автозагрузки:\n\nИмя элемента: {title}\nМестоположение / Источник: {subtitle}\nМетаданные элемента:\n{metadata}\nКомандная строка: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Назначение приложения в автозагрузке",\n  "developer": "Разработчик / Издатель",\n  "category": "Автозагрузка (Startup)",\n  "security_verdict": "Оценка безопасности: легитимность, цифровая подпись, необходимость автозапуска",\n  "performance_impact": "Влияние на скорость загрузки ОС и оперативную память",\n  "recommendation": "Рекомендация: оставить в автозапуске, отложить или отключить",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
+        'variables': ['title', 'subtitle', 'metadata', 'raw_data']
+    },
+    'website': {
+        'table_type': 'website',
+        'name': 'Аудит веб-ресурсов и мониторинга сайтов',
+        'description': 'Промпт для анализа веб-сайтов, трафика, аналитики GA4/GSC и доступности.',
+        'system_instruction': 'Ты — эксперт по веб-аналитике, SEO и мониторингу веб-сервисов (GA4, GSC, Web Performance). Отвечай строго в формате чистого JSON на русском языке.',
+        'prompt_template': 'Проведи аудит веб-ресурса / страницы:\n\nURL / Домен: {title}\nМетрика / Статус: {subtitle}\nМетаданные сайта:\n{metadata}\nСырые параметры аналитики: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Обзор веб-ресурса и его ключевых метрик",\n  "developer": "Владелец / Платформа",\n  "category": "Веб-ресурс (Web Intelligence)",\n  "security_verdict": "Оценка доступности, SSL сертификата и надежности",\n  "performance_impact": "Показатели трафика, конверсии и индексации",\n  "recommendation": "Рекомендации по оптимизации и мониторингу",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
+        'variables': ['title', 'subtitle', 'metadata', 'raw_data']
+    },
+    'rag_doc': {
+        'table_type': 'rag_doc',
+        'name': 'Аудит документов базы знаний RAG',
+        'description': 'Промпт для анализа документов, чанков и релевантности векторной базы знаний.',
+        'system_instruction': 'Ты — специалист по информационному поиску, эмбеддингам и архитектуре RAG. Отвечай строго в формате чистого JSON на русском языке.',
+        'prompt_template': 'Проведи анализ документа базы знаний RAG:\n\nИмя документа / Заголовок: {title}\nФормат / Размер: {subtitle}\nМетаданные документа:\n{metadata}\nСодержимое / Чанк: {raw_data}\n\nВерни СТРОГО JSON со следующей схемой:\n{{\n  "summary": "Краткое содержание и тематика документа",\n  "developer": "Источник документа",\n  "category": "База знаний RAG",\n  "security_verdict": "Оценка актуальности и конфиденциальности данных",\n  "performance_impact": "Качество индексации и векторного поиска",\n  "recommendation": "Рекомендации по обновлению или категоризации",\n  "action_steps": ["Рекомендованное действие 1", "Рекомендованное действие 2"]\n}}',
         'variables': ['title', 'subtitle', 'metadata', 'raw_data']
     },
     'generic': {
@@ -128,15 +178,22 @@ class DiagnosticPromptTemplate(BaseModel):
         """Форматирует промпт подставляя фактические значения полей."""
         meta_str = '\n'.join([f'- {k}: {v}' for k, v in metadata.items()]) if metadata else '- Нет дополнительных метаданных'
         try:
-            return self.prompt_template.format(table_type=self.table_type, title=title or 'Не указано', subtitle=subtitle or 'Нет', metadata=meta_str, raw_data=raw_data or 'Нет')
+            return self.prompt_template.format(
+                table_type=self.table_type,
+                title=title or 'Не указано',
+                subtitle=subtitle or 'Нет',
+                metadata=meta_str,
+                raw_data=raw_data or 'Нет'
+            )
         except Exception as e:
             logger.warning(f"Ошибка при подстановке переменных в промпт '{self.table_type}': {e}. Применен базовый формат.")
             return f'{self.prompt_template}\n\n[Контекст: {title} | {subtitle} | {raw_data}]'
 
+
 class DiagnosticsPromptManager:
     """Управляет жизненным циклом и сохранением шаблонов промптов для таблиц."""
 
-    def __init__(self, storage_dir: Optional[Path]=None):
+    def __init__(self, storage_dir: Optional[Path] = None):
         self.storage_dir = storage_dir or PROMPTS_DIR
         self._ensure_storage()
 
@@ -152,30 +209,74 @@ class DiagnosticsPromptManager:
         safe_type = ''.join((c for c in table_type if c.isalnum() or c in ('_', '-'))).lower()
         return self.storage_dir / f'{safe_type}.json'
 
+    def normalize_table_type(self, table_type: str) -> str:
+        """Нормализует тип таблицы с учетом алиасов."""
+        key = table_type.lower().strip()
+        aliases = {
+            'user': 'user_account',
+            'users': 'user_account',
+            'account': 'user_account',
+            'accounts': 'user_account',
+            'security': 'security_event',
+            'event': 'security_event',
+            'events': 'security_event',
+            'tasks': 'task',
+            'services': 'service',
+            'processes': 'process',
+            'disks': 'disk',
+            'apps': 'software',
+            'app': 'software',
+            'autorun': 'startup',
+            'autoruns': 'startup',
+        }
+        return aliases.get(key, key)
+
     def get_template(self, table_type: str) -> DiagnosticPromptTemplate:
         """Возвращает шаблон промпта для указанного типа таблицы.
 
         Если сохранен пользовательский файл JSON в prompts/diagnostics/, загружает его.
         Иначе возвращает стандартный шаблон по умолчанию.
         """
-        key = table_type.lower()
-        if key == 'user':
-            key = 'user_account'
-        elif key in ('event', 'security'):
-            key = 'security_event'
+        key = self.normalize_table_type(table_type)
 
         file_path = self._get_file_path(key)
         if file_path.is_file():
             try:
                 data = json.loads(file_path.read_text(encoding='utf-8'))
-                return DiagnosticPromptTemplate(table_type=data.get('table_type', key), name=data.get('name', DEFAULT_PROMPTS.get(key, {}).get('name', key.capitalize())), description=data.get('description', ''), system_instruction=data.get('system_instruction', ''), prompt_template=data.get('prompt_template', ''), variables=data.get('variables', ['title', 'subtitle', 'metadata', 'raw_data']), is_customized=True)
+                return DiagnosticPromptTemplate(
+                    table_type=data.get('table_type', key),
+                    name=data.get('name', DEFAULT_PROMPTS.get(key, {}).get('name', key.capitalize())),
+                    description=data.get('description', ''),
+                    system_instruction=data.get('system_instruction', ''),
+                    prompt_template=data.get('prompt_template', ''),
+                    variables=data.get('variables', ['title', 'subtitle', 'metadata', 'raw_data']),
+                    is_customized=True
+                )
             except Exception as e:
                 logger.warning(f'Не удалось загрузить кастомный промпт из {file_path}: {e}')
+
         if key in DEFAULT_PROMPTS:
             raw_def = DEFAULT_PROMPTS[key]
-            return DiagnosticPromptTemplate(table_type=raw_def['table_type'], name=raw_def['name'], description=raw_def['description'], system_instruction=raw_def['system_instruction'], prompt_template=raw_def['prompt_template'], variables=raw_def['variables'], is_customized=False)
+            return DiagnosticPromptTemplate(
+                table_type=raw_def['table_type'],
+                name=raw_def['name'],
+                description=raw_def['description'],
+                system_instruction=raw_def['system_instruction'],
+                prompt_template=raw_def['prompt_template'],
+                variables=raw_def['variables'],
+                is_customized=False
+            )
+
         raw_generic = DEFAULT_PROMPTS['generic']
-        return DiagnosticPromptTemplate(table_type=key, name=f'Аудит {key}', description=f'Шаблон аудита для типа {key}', system_instruction=raw_generic['system_instruction'], prompt_template=raw_generic['prompt_template'], variables=raw_generic['variables'], is_customized=False)
+        return DiagnosticPromptTemplate(
+            table_type=key,
+            name=f'Аудит {key}',
+            description=f'Шаблон аудита для типа {key}',
+            system_instruction=raw_generic['system_instruction'],
+            prompt_template=raw_generic['prompt_template'],
+            variables=raw_generic['variables'],
+            is_customized=False
+        )
 
     def list_templates(self) -> List[DiagnosticPromptTemplate]:
         """Возвращает список всех доступных шаблонов промптов."""
@@ -187,23 +288,45 @@ class DiagnosticsPromptManager:
                     all_keys.append(stem)
         return [self.get_template(k) for k in all_keys]
 
-    def save_template(self, table_type: str, system_instruction: str, prompt_template: str, name: Optional[str]=None, description: Optional[str]=None) -> DiagnosticPromptTemplate:
+    def save_template(
+        self,
+        table_type: str,
+        system_instruction: str,
+        prompt_template: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> DiagnosticPromptTemplate:
         """Сохраняет пользовательский шаблон промпта в файл."""
-        key = table_type.lower()
+        key = self.normalize_table_type(table_type)
         file_path = self._get_file_path(key)
         default_info = DEFAULT_PROMPTS.get(key, {})
         final_name = name or default_info.get('name', key.capitalize())
         final_desc = description if description is not None else default_info.get('description', '')
         variables = default_info.get('variables', ['title', 'subtitle', 'metadata', 'raw_data'])
-        payload = {'table_type': key, 'name': final_name, 'description': final_desc, 'system_instruction': system_instruction, 'prompt_template': prompt_template, 'variables': variables}
+        payload = {
+            'table_type': key,
+            'name': final_name,
+            'description': final_desc,
+            'system_instruction': system_instruction,
+            'prompt_template': prompt_template,
+            'variables': variables
+        }
         self._ensure_storage()
         file_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
         logger.info(f"Сохранен пользовательский шаблон промпта для '{key}' в {file_path}")
-        return DiagnosticPromptTemplate(table_type=key, name=final_name, description=final_desc, system_instruction=system_instruction, prompt_template=prompt_template, variables=variables, is_customized=True)
+        return DiagnosticPromptTemplate(
+            table_type=key,
+            name=final_name,
+            description=final_desc,
+            system_instruction=system_instruction,
+            prompt_template=prompt_template,
+            variables=variables,
+            is_customized=True
+        )
 
     def reset_template(self, table_type: str) -> DiagnosticPromptTemplate:
         """Сбрасывает шаблон промпта к дефолтному состоянию, удаляя файл кастомизации."""
-        key = table_type.lower()
+        key = self.normalize_table_type(table_type)
         file_path = self._get_file_path(key)
         if file_path.is_file():
             try:
@@ -212,5 +335,8 @@ class DiagnosticsPromptManager:
             except Exception as e:
                 logger.error(f'Не удалось удалить файл шаблона {file_path}: {e}')
         return self.get_template(key)
+
+
 prompt_manager = DiagnosticsPromptManager()
+
 __all__ = ['DiagnosticPromptTemplate', 'DiagnosticsPromptManager', 'prompt_manager', 'DEFAULT_PROMPTS']
